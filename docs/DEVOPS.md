@@ -60,6 +60,18 @@ Le conteneur s’exécute avec l’utilisateur non privilégié de l’image ASP
 configuration Git autorise uniquement `/repositories` et ses descendants comme
 répertoires sûrs ; elle n’utilise jamais le joker global `safe.directory=*`.
 
+## Analyse Git en lecture seule
+
+Git est détecté par le diagnostic `/health`. Chaque commande est lancée sans shell,
+avec un délai, une sortie bornée et l'annulation de tout l'arbre de processus. Le
+scanner fixe `GIT_OPTIONAL_LOCKS=0`, `GIT_NO_LAZY_FETCH=1` et
+`GIT_TERMINAL_PROMPT=0` : il ne fait ni checkout, ni fetch, ni écriture de ref.
+
+Le calcul groupé utilise l'atome `ahead-behind` lorsqu'il est disponible. Une
+installation Git plus ancienne passe automatiquement par `rev-list` avec une
+concurrence bornée. Les comparaisons utilisent toujours les identifiants capturés
+au début du scan, même si une branche bouge ensuite.
+
 ## Intégration continue
 
 Le workflow `.github/workflows/ci.yml` s’exécute sur chaque pull request. Il

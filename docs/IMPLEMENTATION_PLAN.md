@@ -1,6 +1,6 @@
 # Plan d'implémentation de GitHealth
 
-> Statut : exécution en cours — étapes 1 et 2 terminées le 28 août 2026
+> Statut : exécution en cours — étapes 1 à 3 terminées le 28 août 2026
 > Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Objectif du MVP
@@ -86,6 +86,8 @@ indépendantes de Git, de SQLite et de l'API.
 
 ## Étape 3 — Lire un dépôt avec Git
 
+> Statut : terminée le 28 août 2026
+
 ### Résultat attendu
 
 Un adaptateur testé valide un dépôt, liste ses références et calcule une comparaison
@@ -118,7 +120,7 @@ Construire les dépôts dans un répertoire temporaire avec de vrais commits :
 - branche avec merge de la référence ;
 - branche dont les dates sont anciennes ;
 - branche sans ancêtre commun ;
-- noms de branches contenant slashs, espaces autorisés ou caractères non ASCII ;
+- noms valides contenant slashs, caractères sensibles à l'échappement ou non ASCII ;
 - `.mailmap` regroupant deux identités.
 
 ### Vérifications de sortie

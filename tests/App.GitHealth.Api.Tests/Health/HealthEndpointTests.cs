@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace App.GitHealth.Api.Tests.Health;
@@ -12,9 +13,14 @@ public sealed class HealthEndpointTests(WebApplicationFactory<Program> factory)
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync("/health");
-        var content = await response.Content.ReadAsStringAsync();
+        await using var content = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(content);
+        var root = document.RootElement;
+        var git = root.GetProperty("checks").GetProperty("git");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("Healthy", content);
+        Assert.Equal("Healthy", root.GetProperty("status").GetString());
+        Assert.Equal("Healthy", git.GetProperty("status").GetString());
+        Assert.StartsWith("git version", git.GetProperty("message").GetString());
     }
 }

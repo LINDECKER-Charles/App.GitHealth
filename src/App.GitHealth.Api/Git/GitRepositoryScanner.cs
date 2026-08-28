@@ -1,0 +1,197 @@
+using System.IO.Enumeration;
+using App.GitHealth.Api.Git.Models;
+using App.GitHealth.Api.Git.Process;
+using App.GitHealth.Api.Git.Scanning;
+using App.GitHealth.Core.Analysis;
+using App.GitHealth.Core.Branches;
+using App.GitHealth.Core.Common;
+using Microsoft.Extensions.Options;
+
+namespace App.GitHealth.Api.Git;
+
+internal sealed class GitRepositoryScanner : IRepositoryScanner
+{
+    private readonly IClock _clock;
+    private readonly GitContributorReader _contributors;
+    private readonly GitScannerOptions _options;
+    private readonly IGitProcessRunner _runner;
+
+    public GitRepositoryScanner(
+        IGitProcessRunner runner,
+        IOptions<GitScannerOptions> options,
+        IClock clock)
+    {
+        _runner = runner;
+        _options = options.Value;
+        _clock = clock;
+        _contributors = new GitContributorReader(runner);
+    }
+
+    public async Task<RepositoryResult<RepositoryDescriptor>> InspectAsync(
+        string repositoryPath,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var repository = await GitRepositoryReader.CaptureAsync(
+                _runner,
+                repositoryPath,
+                cancellationToken);
+            return RepositoryResults.Success(ToDescriptor(repository));
+        }
+        catch (GitProcessException exception)
+        {
+            return RepositoryResults.Failure<RepositoryDescriptor>(
+                new RepositoryError(exception.Code, exception.Message));
+        }
+        catch (Exception exception) when (exception is ArgumentException
+            or IOException or UnauthorizedAccessException)
+        {
+            return RepositoryResults.Failure<RepositoryDescriptor>(
+                new RepositoryError(RepositoryErrorCode.PathNotFound, exception.Message));
+        }
+    }
+
+    public async Task<RepositoryResult<RepositoryScan>> ScanAsync(
+        RepositoryScanRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        try
+        {
+            var repository = await GitRepositoryReader.CaptureAsync(
+                _runner,
+                request.RepositoryPath,
+                cancellationToken);
+            var scan = await ScanCapturedAsync(repository, request, cancellationToken);
+            return RepositoryResults.Success(scan);
+        }
+        catch (GitProcessException exception)
+        {
+            return RepositoryResults.Failure<RepositoryScan>(
+                new RepositoryError(exception.Code, exception.Message));
+        }
+        catch (Exception exception) when (exception is ArgumentException
+            or IOException or UnauthorizedAccessException)
+        {
+            return RepositoryResults.Failure<RepositoryScan>(
+                new RepositoryError(RepositoryErrorCode.MalformedOutput, exception.Message));
+        }
+    }
+
+    private async Task<RepositoryScan> ScanCapturedAsync(
+        CapturedRepository repository,
+        RepositoryScanRequest request,
+        CancellationToken cancellationToken)
+    {
+        var reference = FindReference(repository, request.Reference);
+        var branches = SelectBranches(repository, request, reference);
+        var topologyReader = new GitTopologyReader(_runner, _options);
+        var topologyScan = new TopologyScan(repository, reference, branches);
+        var topology = await topologyReader.ReadAsync(topologyScan, cancellationToken);
+        var scanned = await EnrichAsync(topologyScan, topology, cancellationToken);
+        var metadata = new RepositoryScanMetadata(_clock.UtcNow, repository.GitVersion);
+        return new RepositoryScan(metadata, reference.Commit, scanned);
+    }
+
+    private async Task<IReadOnlyList<ScannedBranch>> EnrichAsync(
+        TopologyScan scan,
+        IReadOnlyDictionary<string, BranchDivergence> topology,
+        CancellationToken cancellationToken)
+    {
+        var scanned = new List<ScannedBranch>(scan.Branches.Count);
+        foreach (var branch in scan.Branches)
+        {
+            var divergence = topology[branch.Reference.FullName];
+            var comparison = new GitComparison(
+                scan.Repository.Context,
+                scan.Reference.Commit,
+                branch.Commit);
+            var contributors = divergence.AheadCount == 0
+                ? []
+                : await _contributors.ReadAsync(comparison, cancellationToken);
+            scanned.Add(ToScannedBranch(branch, divergence, contributors));
+        }
+
+        return scanned;
+    }
+
+    private static CapturedReference FindReference(
+        CapturedRepository repository,
+        GitRef reference)
+    {
+        if (repository.References.TryGetValue(reference.FullName, out var captured)
+            && captured.SymbolicTarget is null)
+        {
+            return captured;
+        }
+
+        throw new GitProcessException(
+            RepositoryErrorCode.InvalidReference,
+            "La référence choisie n’existe pas dans le dépôt.");
+    }
+
+    private static List<CapturedReference> SelectBranches(
+        CapturedRepository repository,
+        RepositoryScanRequest request,
+        CapturedReference reference)
+    {
+        return repository.References.Values
+            .Where(branch => branch.SymbolicTarget is null)
+            .Where(branch => branch.Reference != reference.Reference)
+            .Where(branch => FileSystemName.MatchesSimpleExpression(
+                request.BranchPattern,
+                branch.Reference.FullName,
+                ignoreCase: false))
+            .OrderBy(branch => branch.Reference.FullName, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private static RepositoryDescriptor ToDescriptor(CapturedRepository repository)
+    {
+        var location = new RepositoryLocation(
+            repository.Context.CanonicalPath,
+            repository.Context.GitDirectory,
+            repository.Context.WorkingTreePath);
+        var references = repository.References.Values
+            .Where(reference => reference.SymbolicTarget is null)
+            .Select(reference => reference.Reference)
+            .OrderBy(reference => reference.FullName, StringComparer.Ordinal)
+            .ToArray();
+        return new RepositoryDescriptor(location, SuggestReference(repository), references);
+    }
+
+    private static GitRef? SuggestReference(CapturedRepository repository)
+    {
+        const string originHead = "refs/remotes/origin/HEAD";
+        if (repository.References.TryGetValue(originHead, out var symbolic)
+            && symbolic.SymbolicTarget is not null
+            && repository.References.TryGetValue(symbolic.SymbolicTarget, out var target))
+        {
+            return target.Reference;
+        }
+
+        var candidates = new[]
+        {
+            "refs/heads/main",
+            "refs/remotes/origin/main",
+            "refs/heads/master",
+            "refs/remotes/origin/master",
+        };
+        return candidates
+            .Select(candidate => repository.References.GetValueOrDefault(candidate))
+            .FirstOrDefault(reference => reference?.SymbolicTarget is null)
+            ?.Reference;
+    }
+
+    private static ScannedBranch ToScannedBranch(
+        CapturedReference branch,
+        BranchDivergence divergence,
+        IReadOnlyList<Contributor> contributors)
+    {
+        var tip = new BranchTip(branch.Commit, branch.LastActivityAt, branch.TipAuthor);
+        var facts = new BranchFacts(branch.Reference, divergence, tip);
+        return new ScannedBranch(facts, contributors);
+    }
+}
