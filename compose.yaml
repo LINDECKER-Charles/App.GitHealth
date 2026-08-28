@@ -1,0 +1,38 @@
+services:
+  githealth:
+    image: app-githealth:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    ports:
+      - name: http
+        target: 8080
+        published: "8080"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      GitHealth__DataDirectory: /data
+      GitHealth__RepositoriesRoot: /repositories
+    volumes:
+      - type: volume
+        source: githealth-data
+        target: /data
+      - type: bind
+        source: ${GITHEALTH_REPOSITORIES_ROOT:-.}
+        target: /repositories
+        read_only: true
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 10s
+
+volumes:
+  githealth-data:

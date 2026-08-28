@@ -8,3 +8,4 @@ inactives, divergentes ou probablement abandonnées sans modifier le dépôt ana
 
 - [Architecture technique](ARCHITECTURE.md)
 - [Plan d'implémentation](docs/IMPLEMENTATION_PLAN.md)
+- [Exploitation et conteneur](docs/DEVOPS.md)

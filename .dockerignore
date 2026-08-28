@@ -1,0 +1,15 @@
+.git
+.github
+.vs
+.vscode
+**/bin
+**/obj
+**/node_modules
+**/dist
+artifacts
+coverage
+data
+TestResults
+.env
+.env.*
+!.env.example
