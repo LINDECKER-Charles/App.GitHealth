@@ -32,7 +32,9 @@ dotnet App.GitHealth.Api.dll
 
 Copier `.env.example` vers `.env`, puis renseigner la racine contenant les dépôts
 à rendre visibles. Ce chemin est monté dans `/repositories` en lecture seule.
-Sur Windows, utiliser des barres obliques : `D:/Dev/Repos`.
+Sur Windows, utiliser des barres obliques : `D:/Dev/Repos`. Le port hôte reste
+`8080` par défaut ; `GITHEALTH_HTTP_PORT` permet d’en choisir un autre si ce port
+est déjà réservé, sans changer l’écoute limitée à `127.0.0.1`.
 
 ```shell
 docker compose up --build

@@ -19,8 +19,10 @@ function Assert-True {
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $dockerConfigPath = Join-Path ([System.IO.Path]::GetTempPath()) "githealth-docker-config"
 $previousDockerConfig = $env:DOCKER_CONFIG
+$previousHttpPort = $env:GITHEALTH_HTTP_PORT
 [System.IO.Directory]::CreateDirectory($dockerConfigPath) | Out-Null
 $env:DOCKER_CONFIG = $dockerConfigPath
+$env:GITHEALTH_HTTP_PORT = "8080"
 
 Push-Location $repositoryRoot
 try {
@@ -60,5 +62,6 @@ try {
 }
 finally {
     $env:DOCKER_CONFIG = $previousDockerConfig
+    $env:GITHEALTH_HTTP_PORT = $previousHttpPort
     Pop-Location
 }
