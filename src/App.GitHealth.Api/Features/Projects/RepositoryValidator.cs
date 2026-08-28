@@ -19,6 +19,12 @@ internal sealed class RepositoryValidator(
                 "Le chemin du dépôt est obligatoire."));
         }
 
+        var accessFailure = CheckAccess(repositoryPath);
+        if (accessFailure is not null)
+        {
+            return ApiOutcome<RepositoryDescriptor>.Failed(accessFailure);
+        }
+
         var inspected = await scanner.InspectAsync(repositoryPath, cancellationToken);
         if (!inspected.TryGetValue(out var descriptor))
         {
@@ -26,11 +32,25 @@ internal sealed class RepositoryValidator(
                 ApiProblems.FromRepository(inspected.Error!));
         }
 
-        return IsAllowed(descriptor.Location.CanonicalPath)
+        accessFailure = CheckAccess(descriptor.Location.CanonicalPath);
+        return accessFailure is null
             ? ApiOutcome<RepositoryDescriptor>.Success(descriptor)
-            : ApiOutcome<RepositoryDescriptor>.Failed(ApiProblems.BadRequest(
+            : ApiOutcome<RepositoryDescriptor>.Failed(accessFailure);
+    }
+
+    private ApiFailure? CheckAccess(string path)
+    {
+        try
+        {
+            return IsAllowed(path) ? null : ApiProblems.BadRequest(
                 ApiErrorCodes.PathNotAllowed,
-                "Le dépôt se trouve hors de la racine autorisée."));
+                "Le dépôt se trouve hors de la racine autorisée.");
+        }
+        catch (Exception exception) when (exception is ArgumentException
+            or IOException or UnauthorizedAccessException)
+        {
+            return ApiProblems.BadRequest(ApiErrorCodes.InvalidPath, exception.Message);
+        }
     }
 
     private bool IsAllowed(string canonicalRepositoryPath)
@@ -41,35 +61,60 @@ internal sealed class RepositoryValidator(
             return true;
         }
 
-        var root = ResolvePhysicalPath(configuredRoot);
-        var repository = ResolvePhysicalPath(canonicalRepositoryPath);
-        var relative = Path.GetRelativePath(root, repository);
-        return relative != ".."
-            && !relative.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-            && !Path.IsPathRooted(relative);
+        var root = Path.GetFullPath(configuredRoot);
+        var repository = Path.GetFullPath(canonicalRepositoryPath);
+        var physicalRoot = ResolveLink(root);
+        var relative = RelativeToKnownRoot(root, physicalRoot, repository);
+        if (relative is null)
+        {
+            return false;
+        }
+
+        var physicalRepository = ResolveFromRoot(physicalRoot, relative);
+        return !LeavesRoot(Path.GetRelativePath(physicalRoot, physicalRepository));
     }
 
-    private static string ResolvePhysicalPath(string path)
+    private static string? RelativeToKnownRoot(
+        string lexicalRoot,
+        string physicalRoot,
+        string repository)
     {
-        var directory = new DirectoryInfo(Path.GetFullPath(path));
+        var lexicalRelative = Path.GetRelativePath(lexicalRoot, repository);
+        if (!LeavesRoot(lexicalRelative))
+        {
+            return lexicalRelative;
+        }
+
+        var physicalRelative = Path.GetRelativePath(physicalRoot, repository);
+        return LeavesRoot(physicalRelative) ? null : physicalRelative;
+    }
+
+    private static string ResolveFromRoot(string physicalRoot, string relativePath)
+    {
+        var current = physicalRoot;
+        foreach (var segment in relativePath.Split(
+            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+            StringSplitOptions.RemoveEmptyEntries))
+        {
+            current = ResolveLink(Path.Combine(current, segment));
+        }
+
+        return current;
+    }
+
+    private static string ResolveLink(string path)
+    {
+        var directory = new DirectoryInfo(path);
         if (!directory.Exists)
         {
             return directory.FullName;
         }
 
-        return ResolveDirectory(directory);
+        return directory.ResolveLinkTarget(returnFinalTarget: true)?.FullName
+            ?? directory.FullName;
     }
 
-    private static string ResolveDirectory(DirectoryInfo directory)
-    {
-        if (directory.Parent is null)
-        {
-            return directory.FullName;
-        }
-
-        var parent = ResolveDirectory(directory.Parent);
-        var candidate = new DirectoryInfo(Path.Combine(parent, directory.Name));
-        return candidate.ResolveLinkTarget(returnFinalTarget: true)?.FullName
-            ?? candidate.FullName;
-    }
+    private static bool LeavesRoot(string relativePath) => relativePath == ".."
+        || relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+        || Path.IsPathRooted(relativePath);
 }

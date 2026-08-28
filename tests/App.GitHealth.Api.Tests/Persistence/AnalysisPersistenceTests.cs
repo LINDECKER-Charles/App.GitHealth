@@ -59,6 +59,23 @@ public sealed class AnalysisPersistenceTests
     }
 
     [Fact]
+    public async Task SuccessfulAnalysisRestoresProjectAccessibility()
+    {
+        await using var database = await CreateDatabaseWithProjectAsync();
+        var projectId = await ReadProjectIdAsync(database);
+        await using var scope = database.CreateScope();
+        var projects = scope.ServiceProvider.GetRequiredService<IProjectRepository>();
+        var analyses = scope.ServiceProvider.GetRequiredService<IAnalysisRepository>();
+        await projects.MarkUnavailableAsync(projectId, Start, CancellationToken.None);
+
+        await CompleteAsync(analyses, projectId, Start.AddHours(1));
+
+        var project = await projects.GetAsync(projectId, CancellationToken.None);
+        Assert.True(project!.IsRepositoryAccessible);
+        Assert.Equal(Start.AddHours(1).AddMinutes(2), project.UpdatedAtUtc);
+    }
+
+    [Fact]
     public async Task FailedBatchRollsBackSnapshotsAndLastSuccessPromotion()
     {
         await using var database = await CreateDatabaseWithProjectAsync();

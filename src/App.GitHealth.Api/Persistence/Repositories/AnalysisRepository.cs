@@ -36,6 +36,7 @@ internal sealed class AnalysisRepository(IDbContextFactory<GitHealthDbContext> c
             var analysis = await FindAnalysisAsync(context, analysisId, cancellationToken);
             analysis.Complete(completion);
             analysis.Project.LastSuccessfulAnalysisId = analysis.Id;
+            analysis.Project.MarkAccessible(completion.CompletedAtUtc);
             await context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return true;

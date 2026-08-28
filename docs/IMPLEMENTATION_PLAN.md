@@ -1,6 +1,6 @@
 # Plan d'implémentation de GitHealth
 
-> Statut : exécution en cours — étapes 1 à 4 terminées le 28 août 2026
+> Statut : exécution en cours — étapes 1 à 5 terminées le 29 août 2026
 > Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Objectif du MVP
@@ -162,6 +162,8 @@ peut être exportée pendant que l'application fonctionne.
 - Un projet relocalisé conserve ses analyses historiques.
 
 ## Étape 5 — Exposer les cas d'usage par l'API
+
+> Statut : terminée le 29 août 2026
 
 ### Résultat attendu
 

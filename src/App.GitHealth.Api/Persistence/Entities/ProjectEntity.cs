@@ -83,6 +83,13 @@ internal sealed class ProjectEntity
         UpdatedAtUtc = changedAtUtc;
     }
 
+    public void MarkAccessible(DateTimeOffset changedAtUtc)
+    {
+        UtcDate.Require(changedAtUtc, nameof(changedAtUtc));
+        IsRepositoryAccessible = true;
+        UpdatedAtUtc = changedAtUtc;
+    }
+
     public void UpdateSettings(ProjectSettings settings, DateTimeOffset changedAtUtc)
     {
         ArgumentNullException.ThrowIfNull(settings);

@@ -1,4 +1,5 @@
 using App.GitHealth.Api.Features;
+using App.GitHealth.Api.Features.Common;
 using App.GitHealth.Api.Git;
 using App.GitHealth.Api.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -22,6 +23,9 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 });
 app.MapOpenApi();
 app.MapGitHealthApi();
+app.MapFallback("/api/{**path}", () => ApiProblems.Result(ApiProblems.NotFound(
+    ApiErrorCodes.EndpointNotFound,
+    "La route API demandée n’existe pas.")));
 app.MapFallbackToFile("index.html");
 
 app.Run();

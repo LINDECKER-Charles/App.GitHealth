@@ -98,7 +98,19 @@ puis normalise la copie en journal `DELETE`. Le fichier exporté est autonome : 
 peut être archivé ou restauré sans fichier `-wal` ni `-shm`. Avant une restauration
 manuelle, arrêter GitHealth, conserver une copie de la base courante, remplacer le
 fichier configuré par l'export, puis redémarrer afin d'appliquer les migrations
-éventuelles. L'endpoint HTTP de téléchargement sera branché à l'étape 5.
+éventuelles. La sauvegarde se télécharge avec `GET /api/exports/database`. Le nom
+de fichier inclut un horodatage UTC et la réponse est une base SQLite autonome.
+
+## API locale et analyses
+
+Les routes sous `/api` exposent la validation et la configuration des projets,
+la file d'analyses, leur progression, les snapshots paginés et leur détail. Une
+route API inconnue renvoie toujours un Problem Details JSON ; elle n'est jamais
+absorbée par le fallback de l'application Angular.
+
+`AnalysisQueue__Capacity` limite le nombre d'analyses en attente (32 par défaut,
+1 024 maximum). Un projet ne peut avoir qu'une analyse active et un lancement
+accepté renvoie `202 Accepted` avec l'URL de suivi dans l'en-tête `Location`.
 
 ## Intégration continue
 

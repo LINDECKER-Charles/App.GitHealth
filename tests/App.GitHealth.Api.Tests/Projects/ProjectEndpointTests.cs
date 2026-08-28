@@ -46,6 +46,25 @@ public sealed class ProjectEndpointTests
     }
 
     [Fact]
+    public async Task ValidateAcceptsPhysicalPathBehindConfiguredRootLink()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 0);
+        var linkPath = $"{repository.RootPath}-link";
+        GitTestRepository.CreateDirectoryLink(linkPath, repository.RootPath);
+
+        using var factory = CreateFactory(linkPath);
+        using var client = factory.CreateClient();
+        try
+        {
+            await AssertValidationAsync(client, repository.RepositoryPath);
+        }
+        finally
+        {
+            Directory.Delete(linkPath);
+        }
+    }
+
+    [Fact]
     public async Task ProjectCanBeValidatedCreatedListedAndUpdated()
     {
         using var repository = GitTestRepository.Create();

@@ -6,10 +6,11 @@ using App.GitHealth.Core.Branches;
 
 namespace App.GitHealth.Api.Features.Analyses;
 
-internal sealed class AnalysisWorker(
+internal sealed partial class AnalysisWorker(
     AnalysisQueue queue,
     IServiceScopeFactory scopeFactory,
-    IRepositoryScanner scanner) : BackgroundService
+    IRepositoryScanner scanner,
+    ILogger<AnalysisWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -116,6 +117,7 @@ internal sealed class AnalysisWorker(
 
     private async Task FailUnexpectedAsync(AnalysisWorkItem item, Exception exception)
     {
+        LogUnexpectedFailure(logger, item.AnalysisId, item.ProjectId, exception);
         var failure = new AnalysisFailure(
             "analysis.unexpected",
             "Une erreur inattendue a interrompu l’analyse.",
@@ -163,4 +165,14 @@ internal sealed class AnalysisWorker(
             : AnalysisPhase.Enrichment;
         queue.Update(analysisId, phase);
     }
+
+    [LoggerMessage(
+        EventId = 2001,
+        Level = LogLevel.Error,
+        Message = "L’analyse {AnalysisId} du projet {ProjectId} a échoué de façon inattendue.")]
+    private static partial void LogUnexpectedFailure(
+        ILogger logger,
+        Guid analysisId,
+        Guid projectId,
+        Exception exception);
 }
