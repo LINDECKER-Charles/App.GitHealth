@@ -1,6 +1,6 @@
 # Plan d'implémentation de GitHealth
 
-> Statut : proposition prête à être découpée en tâches  
+> Statut : exécution en cours — étape 1 terminée le 28 août 2026
 > Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Objectif du MVP
@@ -25,6 +25,8 @@ qui ne serait jamais reliée au produit final.
 
 ## Étape 1 — Construire le socle exécutable
 
+> Statut : terminée
+
 ### Résultat attendu
 
 Un squelette vide démarre depuis un seul processus ASP.NET Core, sert Angular et
@@ -46,11 +48,11 @@ un conteneur.
 
 ### Vérifications de sortie
 
-- `dotnet test` réussit depuis la racine.
-- Le build de publication contient l'application Angular.
-- L'ouverture de l'URL racine ne nécessite pas un serveur Node séparé.
-- `docker compose up --build` expose uniquement `127.0.0.1:8080`.
-- Le conteneur redémarre sans perdre un fichier témoin placé dans `/data`.
+- [x] `dotnet test` réussit depuis la racine.
+- [x] Le build de publication contient l'application Angular.
+- [x] L'ouverture de l'URL racine ne nécessite pas un serveur Node séparé.
+- [x] `docker compose up --build` expose uniquement `127.0.0.1:8080`.
+- [x] Le conteneur redémarre sans perdre un fichier témoin placé dans `/data`.
 
 ## Étape 2 — Formaliser le domaine d'analyse
 
