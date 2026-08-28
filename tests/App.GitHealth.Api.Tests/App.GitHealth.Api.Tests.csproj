@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\src\App.GitHealth.Api\App.GitHealth.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="StaticFiles\index.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

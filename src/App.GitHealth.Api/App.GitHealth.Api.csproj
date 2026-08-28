@@ -12,6 +12,29 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <FrontendRoot>$(MSBuildProjectDirectory)/../App.GitHealth.Web</FrontendRoot>
+    <FrontendDist>$(FrontendRoot)/dist/app-git-health-web/browser</FrontendDist>
+    <BuildFrontend Condition="'$(BuildFrontend)' == ''">true</BuildFrontend>
   </PropertyGroup>
+
+  <Target Name="PublishFrontend"
+          AfterTargets="ComputeFilesToPublish"
+          Condition="'$(BuildFrontend)' == 'true'">
+    <Exec WorkingDirectory="$(FrontendRoot)" Command="npm ci" />
+    <Exec WorkingDirectory="$(FrontendRoot)" Command="npm run build" />
+
+    <Error Condition="!Exists('$(FrontendDist)/index.html')"
+           Text="Le build Angular n'a pas produit index.html." />
+
+    <ItemGroup>
+      <FrontendFiles Include="$(FrontendDist)/**/*" />
+      <ResolvedFileToPublish Include="@(FrontendFiles->'%(FullPath)')"
+                             Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot/%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 
 </Project>
