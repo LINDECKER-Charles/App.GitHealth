@@ -1,1 +1,18 @@
-<router-outlet />
+<a class="skip-link" href="#main-content">Aller au contenu</a>
+<header class="app-header">
+  <a class="brand" routerLink="/" aria-label="GitHealth, accueil">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span>
+      <strong>GitHealth</strong>
+      <small>Observatoire local des branches</small>
+    </span>
+  </a>
+  <nav aria-label="Navigation principale">
+    <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+      Projets
+    </a>
+  </nav>
+</header>
+<main id="main-content" tabindex="-1">
+  <router-outlet />
+</main>

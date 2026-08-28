@@ -14,6 +14,8 @@ internal static class ProjectResponseMapper
             DisplayName = entity.DisplayName,
             RepositoryPath = entity.RepositoryPath,
             IsRepositoryAccessible = entity.IsRepositoryAccessible,
+            CreatedAtUtc = entity.CreatedAtUtc,
+            UpdatedAtUtc = entity.UpdatedAtUtc,
             ReferenceName = project.Settings.Reference?.FullName,
             BranchNamespace = project.Settings.BranchNamespace,
             ActiveUntilDays = project.Settings.Thresholds.ActiveUntilDays,

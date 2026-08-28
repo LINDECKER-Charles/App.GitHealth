@@ -21,6 +21,10 @@ internal sealed record ProjectResponse
 
     public required bool IsRepositoryAccessible { get; init; }
 
+    public required DateTimeOffset CreatedAtUtc { get; init; }
+
+    public required DateTimeOffset UpdatedAtUtc { get; init; }
+
     public string? ReferenceName { get; init; }
 
     public required string BranchNamespace { get; init; }

@@ -1,0 +1,145 @@
+.table-frame {
+  position: relative;
+  min-height: 10rem;
+  overflow-x: auto;
+  border-block: 1px solid var(--line);
+}
+
+table {
+  width: 100%;
+  min-width: 68rem;
+  border-collapse: collapse;
+  color: var(--ink);
+}
+
+caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+th,
+td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: middle;
+}
+
+thead th {
+  color: var(--ink-muted);
+  font-family: var(--font-utility);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+tbody th {
+  position: relative;
+  max-width: 21rem;
+  padding-left: 2.4rem;
+}
+
+tbody small,
+tbody strong,
+.branch-name {
+  display: block;
+}
+
+tbody small {
+  margin-top: 0.25rem;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.branch-name {
+  overflow: hidden;
+  font-family: var(--font-utility);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topology-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0.7rem;
+  width: 2px;
+  background: var(--petrol);
+}
+
+.topology-rail i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: var(--petrol);
+  box-shadow: 0 0 0 1px var(--petrol);
+  transform: translate(-50%, -50%);
+}
+
+.topology-rail.attention,
+.topology-rail.attention i {
+  background: var(--copper);
+}
+
+.topology-rail.settled,
+.topology-rail.settled i {
+  background: var(--moss);
+}
+
+.divergence {
+  font-family: var(--font-utility);
+  font-weight: 700;
+}
+
+.divergence span + span {
+  margin-left: 0.6rem;
+  color: var(--copper);
+}
+
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.state::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--petrol);
+  content: '';
+}
+
+.state[data-tone='attention']::before {
+  background: var(--copper);
+}
+
+.state[data-tone='settled']::before {
+  background: var(--moss);
+}
+
+.empty-row {
+  padding: 4rem 1rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.loading-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  margin: 0;
+  place-items: center;
+  color: var(--ink);
+  background: rgb(251 252 250 / 82%);
+}

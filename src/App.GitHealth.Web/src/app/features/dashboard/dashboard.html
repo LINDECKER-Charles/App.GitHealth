@@ -1,0 +1,213 @@
+<section class="dashboard-shell">
+  <header class="project-heading">
+    <div>
+      <p class="eyebrow">Dépôt observé</p>
+      <h1>{{ project()?.displayName ?? 'Chargement du projet…' }}</h1>
+      @if (project(); as currentProject) {
+        <p class="repository-path">{{ currentProject.repositoryPath }}</p>
+      }
+    </div>
+    <button class="button" type="button" [disabled]="isRunning()" (click)="launchAnalysis()">
+      {{ isRunning() ? 'Analyse en cours…' : 'Lancer une analyse' }}
+    </button>
+  </header>
+
+  @if (project()?.isRepositoryAccessible === false) {
+    <aside class="notice warning" role="status">
+      <strong>Dépôt inaccessible.</strong>
+      Le dernier résultat réussi reste affiché. Vérifiez le chemin avant de relancer.
+    </aside>
+  }
+
+  @if (status(); as analysis) {
+    <section class="scan-progress" aria-labelledby="scan-progress-title" aria-live="polite">
+      <div>
+        <p class="eyebrow">Analyse {{ analysis.analysisId.slice(0, 8) }}</p>
+        <h2 id="scan-progress-title">{{ phaseLabel(analysis.phase) }}</h2>
+      </div>
+      <ol>
+        @for (phase of phases; track phase) {
+          <li [class.is-complete]="isPhaseComplete(phase)">
+            <span aria-hidden="true"></span>{{ phaseLabel(phase) }}
+          </li>
+        }
+      </ol>
+    </section>
+  }
+
+  @if (error(); as errorMessage) {
+    <aside class="notice error" role="alert">
+      <strong>L’action n’a pas abouti.</strong> {{ errorMessage }}
+      <button type="button" (click)="error.set(null)">Fermer</button>
+    </aside>
+  }
+
+  @if (page(); as snapshotPage) {
+    <section class="snapshot-context" aria-label="Contexte du snapshot">
+      <div>
+        <span>Référence</span>
+        <strong>{{ displayReference(snapshotPage.referenceName) }}</strong>
+      </div>
+      <div>
+        <span>Provenance</span>
+        <strong>{{ referenceSource(snapshotPage.referenceName) }}</strong>
+      </div>
+      <div>
+        <span>Capture locale</span>
+        <strong>{{ snapshotPage.capturedAtUtc | date: 'dd/MM/yyyy, HH:mm:ss' }}</strong>
+      </div>
+      <p>GitHealth lit les références présentes sur ce poste et ne lance aucun fetch.</p>
+    </section>
+
+    <section class="branch-section" aria-labelledby="branches-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Snapshot immuable</p>
+          <h2 id="branches-title">Branches à examiner</h2>
+        </div>
+        <span class="page-count">Page {{ currentPage() }}</span>
+      </div>
+
+      <form class="filters" (ngSubmit)="applyFilters()">
+        <label class="search-field">
+          <span>Rechercher une branche</span>
+          <input
+            name="search"
+            type="search"
+            autocomplete="off"
+            placeholder="feature/connexion"
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)"
+          />
+        </label>
+        <label>
+          <span>Relation Git</span>
+          <select
+            name="relationship"
+            [ngModel]="relationship()"
+            (ngModelChange)="relationship.set($event)"
+          >
+            <option value="">Toutes</option>
+            <option value="SameCommit">Même sommet</option>
+            <option value="CommonAncestor">Ancêtre commun</option>
+            <option value="BranchIsAncestorOfReference">Fusionnées</option>
+            <option value="NoCommonAncestor">Sans base commune</option>
+          </select>
+        </label>
+        <label>
+          <span>Trier par</span>
+          <select name="sort" [ngModel]="sort()" (ngModelChange)="sort.set($event)">
+            <option value="name">Nom</option>
+            <option value="ahead">Avance</option>
+            <option value="behind">Retard</option>
+            <option value="activity">Activité</option>
+          </select>
+        </label>
+        <label>
+          <span>Ordre</span>
+          <select name="direction" [ngModel]="direction()" (ngModelChange)="direction.set($event)">
+            <option value="asc">Croissant</option>
+            <option value="desc">Décroissant</option>
+          </select>
+        </label>
+        <button class="button" type="submit">Appliquer</button>
+        <button class="button secondary" type="button" (click)="resetFilters()">
+          Réinitialiser
+        </button>
+      </form>
+
+      <div class="table-frame" [attr.aria-busy]="isLoading()">
+        <table>
+          <caption>
+            Comparaison des branches avec
+            {{
+              displayReference(snapshotPage.referenceName)
+            }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Branche</th>
+              <th scope="col">Écart</th>
+              <th scope="col">Topologie</th>
+              <th scope="col">Dernière activité</th>
+              <th scope="col">Auteur du sommet</th>
+              <th scope="col">Recommandation</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (branch of snapshotPage.items; track branch.id) {
+              <tr>
+                <th scope="row">
+                  <span class="topology-rail" [class]="topologyTone(branch)" aria-hidden="true">
+                    <i></i>
+                  </span>
+                  <span class="branch-name" [title]="branch.referenceName">
+                    {{ displayReference(branch.referenceName) }}
+                  </span>
+                  <small>{{ referenceSource(branch.referenceName) }}</small>
+                </th>
+                <td class="divergence">
+                  <span title="Commits en avance">+{{ branch.aheadCount }}</span>
+                  <span title="Commits en retard">−{{ branch.behindCount }}</span>
+                </td>
+                <td>
+                  <span class="state" [attr.data-tone]="topologyTone(branch)">{{
+                    branch.topology
+                  }}</span>
+                </td>
+                <td>
+                  <span>{{ relativeAge(branch.lastActivityAtUtc) }}</span>
+                  <small>{{ branch.lastActivityAtUtc | date: 'dd/MM/yyyy' }}</small>
+                </td>
+                <td>{{ branch.tipAuthor ?? 'Indéterminé' }}</td>
+                <td>
+                  <strong>{{ branch.recommendation }}</strong>
+                  <small>{{ branch.reason }}</small>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="empty-row" colspan="6">
+                  Aucune branche ne correspond à ces filtres. Élargissez la recherche.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (isLoading()) {
+          <p class="loading-state" role="status">Actualisation des branches…</p>
+        }
+      </div>
+
+      <nav class="pagination" aria-label="Pagination des branches">
+        <button
+          class="button secondary"
+          type="button"
+          [disabled]="!hasPrevious()"
+          (click)="previousPage()"
+        >
+          Page précédente
+        </button>
+        <button
+          class="button secondary"
+          type="button"
+          [disabled]="!snapshotPage.nextCursor"
+          (click)="nextPage()"
+        >
+          Page suivante
+        </button>
+      </nav>
+    </section>
+  } @else if (!isLoading()) {
+    <section class="first-scan">
+      <p class="eyebrow">Aucun snapshot</p>
+      <h2>Ce dépôt n’a pas encore été mesuré.</h2>
+      <p>Lancez une première analyse pour comparer ses branches sans modifier le dépôt.</p>
+      <button class="button" type="button" [disabled]="isRunning()" (click)="launchAnalysis()">
+        Lancer la première analyse
+      </button>
+    </section>
+  } @else {
+    <p class="initial-loading" role="status">Chargement du diagnostic…</p>
+  }
+</section>

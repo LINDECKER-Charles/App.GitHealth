@@ -2,3 +2,125 @@
   display: block;
   min-height: 100%;
 }
+
+.skip-link {
+  position: fixed;
+  z-index: 20;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  color: var(--paper);
+  background: var(--ink);
+  transform: translateY(-150%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 5rem;
+  padding: 0 4vw;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  display: inline-flex;
+  gap: 0.8rem;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand strong {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: -0.04em;
+}
+
+.brand small {
+  margin-top: 0.1rem;
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brand-mark {
+  position: relative;
+  display: grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  place-items: center;
+}
+
+.brand-mark::before {
+  position: absolute;
+  width: 1.7rem;
+  height: 2px;
+  background: var(--petrol);
+  content: '';
+  transform: rotate(-32deg);
+}
+
+.brand-mark i {
+  position: absolute;
+  width: 0.52rem;
+  height: 0.52rem;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: var(--copper);
+  box-shadow: 0 0 0 1px var(--copper);
+}
+
+.brand-mark i:first-child {
+  top: 0.15rem;
+  right: 0.1rem;
+}
+
+.brand-mark i:nth-child(2) {
+  top: 0.8rem;
+  left: 0.8rem;
+}
+
+.brand-mark i:last-child {
+  bottom: 0.15rem;
+  left: 0.1rem;
+}
+
+nav a {
+  padding: 0.55rem 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-muted);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+nav a.is-active {
+  border-color: var(--copper);
+  color: var(--ink);
+}
+
+main {
+  min-height: calc(100vh - 5rem);
+}
+
+@media (max-width: 36rem) {
+  .app-header {
+    min-height: 4.25rem;
+  }
+
+  .brand small {
+    display: none;
+  }
+}

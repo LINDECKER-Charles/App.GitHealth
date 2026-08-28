@@ -13,6 +13,9 @@ internal static class ApiProblems
     public static ApiFailure NotFound(string code, string detail) =>
         Create(StatusCodes.Status404NotFound, code, detail);
 
+    public static ApiFailure Forbidden(string code, string detail) =>
+        Create(StatusCodes.Status403Forbidden, code, detail);
+
     public static ApiFailure Conflict(string code, string detail) =>
         Create(StatusCodes.Status409Conflict, code, detail);
 
@@ -47,6 +50,7 @@ internal static class ApiProblems
     internal static string TitleFor(int statusCode) => statusCode switch
     {
         StatusCodes.Status400BadRequest => "Requête invalide",
+        StatusCodes.Status403Forbidden => "Accès refusé",
         StatusCodes.Status404NotFound => "Ressource introuvable",
         StatusCodes.Status409Conflict => "Conflit",
         StatusCodes.Status503ServiceUnavailable => "Service indisponible",

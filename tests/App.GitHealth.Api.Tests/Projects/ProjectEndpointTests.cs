@@ -113,7 +113,13 @@ public sealed class ProjectEndpointTests
     {
         var projects = await client.GetFromJsonAsync<JsonElement[]>("/api/projects");
         Assert.NotNull(projects);
-        Assert.Contains(projects, project => project.GetProperty("id").GetGuid() == projectId);
+        var project = Assert.Single(
+            projects,
+            candidate => candidate.GetProperty("id").GetGuid() == projectId);
+        var createdAt = project.GetProperty("createdAtUtc").GetDateTimeOffset();
+        var updatedAt = project.GetProperty("updatedAtUtc").GetDateTimeOffset();
+        Assert.Equal(TimeSpan.Zero, createdAt.Offset);
+        Assert.Equal(createdAt, updatedAt);
     }
 
     private static async Task AssertSettingsCanBeUpdatedAsync(HttpClient client, Guid projectId)
@@ -134,6 +140,9 @@ public sealed class ProjectEndpointTests
         var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal(7, payload.GetProperty("activeUntilDays").GetInt32());
         Assert.Equal(21, payload.GetProperty("inactiveAfterDays").GetInt32());
+        Assert.True(
+            payload.GetProperty("updatedAtUtc").GetDateTimeOffset()
+                >= payload.GetProperty("createdAtUtc").GetDateTimeOffset());
     }
 
 }

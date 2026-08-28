@@ -112,6 +112,22 @@ absorbée par le fallback de l'application Angular.
 1 024 maximum). Un projet ne peut avoir qu'une analyse active et un lancement
 accepté renvoie `202 Accepted` avec l'URL de suivi dans l'en-tête `Location`.
 
+## Parcours web et mode d'exécution
+
+`GET /api/runtime` indique à l'interface si GitHealth s'exécute en mode natif ou
+Docker. En conteneur, la racine configurée est affichée et l'explorateur de
+dossiers est désactivé : seuls les chemins déjà montés sous cette racine sont
+acceptés.
+
+En mode natif, `GET /api/runtime/directories` alimente l'explorateur local. Il ne
+retourne que les dossiers accessibles, triés et limités à 250 éléments par niveau ;
+il ne lit ni ne renvoie le contenu des fichiers. Les erreurs d'accès deviennent
+des Problem Details et aucune trace technique n'est exposée au navigateur.
+
+Le tableau de bord interroge l'état d'une analyse par polling, limite chaque page
+à 50 branches et conserve le dernier snapshot réussi pendant un nouveau scan ou
+après un échec. Recherche, relation Git, tri et ordre sont reflétés dans l'URL.
+
 ## Intégration continue
 
 Le workflow `.github/workflows/ci.yml` s’exécute sur chaque pull request. Il
