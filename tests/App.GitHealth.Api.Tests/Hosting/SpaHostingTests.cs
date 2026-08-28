@@ -1,11 +1,10 @@
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace App.GitHealth.Api.Tests.Hosting;
 
-public sealed class SpaHostingTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class SpaHostingTests(ApiApplicationFactory factory)
+    : IClassFixture<ApiApplicationFactory>
 {
     [Theory]
     [InlineData("/")]

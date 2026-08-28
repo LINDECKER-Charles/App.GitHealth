@@ -72,6 +72,34 @@ installation Git plus ancienne passe automatiquement par `rev-list` avec une
 concurrence bornée. Les comparaisons utilisent toujours les identifiants capturés
 au début du scan, même si une branche bouge ensuite.
 
+## Persistance SQLite
+
+La migration EF Core est appliquée au démarrage. En mode natif, la base se trouve
+par défaut dans `data/githealth.db`, relativement à la racine de contenu. Compose
+fixe explicitement `Persistence__DatabasePath=/data/githealth.db` afin que le
+fichier reste dans le volume `githealth-data`.
+
+Les options disponibles sont :
+
+| Configuration | Défaut | Effet |
+|---|---:|---|
+| `Persistence__DatabasePath` | `data/githealth.db` | chemin du fichier SQLite |
+| `Persistence__WriteTimeoutSeconds` | `5` | attente maximale d'un verrou d'écriture |
+| `Persistence__RetentionDays` | vide | ancienneté des analyses à supprimer |
+
+La rétention est désactivée lorsque sa valeur est vide. Lorsqu'elle est activée,
+elle ne supprime jamais le dernier snapshot réussi d'un projet. Les clés étrangères
+sont actives, le journal utilise WAL et chaque analyse terminée est persistée avec
+ses branches et contributeurs dans une transaction unique. Une analyse interrompue
+ou échouée ne remplace donc pas le dernier résultat réussi.
+
+L'export utilise l'API de sauvegarde SQLite pendant que l'application reste active,
+puis normalise la copie en journal `DELETE`. Le fichier exporté est autonome : il
+peut être archivé ou restauré sans fichier `-wal` ni `-shm`. Avant une restauration
+manuelle, arrêter GitHealth, conserver une copie de la base courante, remplacer le
+fichier configuré par l'export, puis redémarrer afin d'appliquer les migrations
+éventuelles. L'endpoint HTTP de téléchargement sera branché à l'étape 5.
+
 ## Intégration continue
 
 Le workflow `.github/workflows/ci.yml` s’exécute sur chaque pull request. Il

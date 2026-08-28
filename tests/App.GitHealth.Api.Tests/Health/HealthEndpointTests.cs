@@ -1,11 +1,11 @@
 using System.Net;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
+using App.GitHealth.Api.Tests.Hosting;
 
 namespace App.GitHealth.Api.Tests.Health;
 
-public sealed class HealthEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HealthEndpointTests(ApiApplicationFactory factory)
+    : IClassFixture<ApiApplicationFactory>
 {
     [Fact]
     public async Task GetHealthReturnsHealthyResponse()

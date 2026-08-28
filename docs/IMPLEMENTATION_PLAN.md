@@ -1,6 +1,6 @@
 # Plan d'implémentation de GitHealth
 
-> Statut : exécution en cours — étapes 1 à 3 terminées le 28 août 2026
+> Statut : exécution en cours — étapes 1 à 4 terminées le 28 août 2026
 > Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Objectif du MVP
@@ -132,6 +132,8 @@ Construire les dépôts dans un répertoire temporaire avec de vrais commits :
 - Une sortie ou un nom de branche malformé produit une erreur maîtrisée.
 
 ## Étape 4 — Persister projets et snapshots
+
+> Statut : terminée le 28 août 2026
 
 ### Résultat attendu
 

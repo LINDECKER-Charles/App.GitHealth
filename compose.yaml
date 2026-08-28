@@ -17,6 +17,7 @@ services:
       ASPNETCORE_HTTP_PORTS: "8080"
       GitHealth__DataDirectory: /data
       GitHealth__RepositoriesRoot: /repositories
+      Persistence__DatabasePath: /data/githealth.db
     volumes:
       - type: volume
         source: githealth-data
