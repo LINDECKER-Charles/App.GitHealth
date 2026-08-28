@@ -1,6 +1,6 @@
 # Plan d'implémentation de GitHealth
 
-> Statut : exécution en cours — étape 1 terminée le 28 août 2026
+> Statut : exécution en cours — étapes 1 et 2 terminées le 28 août 2026
 > Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Objectif du MVP
@@ -55,6 +55,8 @@ un conteneur.
 - [x] Le conteneur redémarre sans perdre un fichier témoin placé dans `/data`.
 
 ## Étape 2 — Formaliser le domaine d'analyse
+
+> Statut : terminée le 28 août 2026
 
 ### Résultat attendu
 
