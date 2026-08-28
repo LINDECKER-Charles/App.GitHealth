@@ -37,6 +37,15 @@ internal static class ApiTestWorkflow
             response);
     }
 
+    public static async Task<Guid> AnalyzeAsync(HttpClient client, Guid projectId)
+    {
+        var launch = await LaunchAsync(client, projectId);
+        using var response = launch.Response;
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        await WaitForStatusAsync(client, launch.Id, "Completed");
+        return launch.Id;
+    }
+
     public static async Task<JsonElement> WaitForStatusAsync(
         HttpClient client,
         Guid analysisId,

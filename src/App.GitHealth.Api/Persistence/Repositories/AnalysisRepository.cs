@@ -94,6 +94,43 @@ internal sealed class AnalysisRepository(IDbContextFactory<GitHealthDbContext> c
             .SingleOrDefaultAsync(branch => branch.Id == branchSnapshotId, cancellationToken);
     }
 
+    public async Task<AnalysisHistoryPage> GetHistoryAsync(
+        Guid projectId,
+        AnalysisHistoryRange range,
+        CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var query = context.AnalysisRuns.AsNoTracking()
+            .Where(analysis => analysis.ProjectId == projectId);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(analysis => analysis.StartedAtUtc)
+            .ThenByDescending(analysis => analysis.Id)
+            .Skip(range.Skip)
+            .Take(range.Take)
+            .Select(analysis => new AnalysisHistoryRecord
+            {
+                AnalysisId = analysis.Id,
+                Status = analysis.Status,
+                StartedAtUtc = analysis.StartedAtUtc,
+                CompletedAtUtc = analysis.CompletedAtUtc,
+                CapturedAtUtc = analysis.CapturedAtUtc,
+                ReferenceName = analysis.ReferenceName,
+                ReferenceCommit = analysis.ReferenceCommit,
+                BranchNamespace = analysis.BranchNamespace,
+                ActiveUntilDays = analysis.ActiveUntilDays,
+                InactiveAfterDays = analysis.InactiveAfterDays,
+                ExcludedPatternsJson = analysis.ExcludedPatternsJson,
+                ProtectedPatternsJson = analysis.ProtectedPatternsJson,
+                GitVersion = analysis.GitVersion,
+                BranchCount = analysis.Branches.Count,
+                FailureCode = analysis.FailureCode,
+                FailureMessage = analysis.FailureMessage,
+            })
+            .ToListAsync(cancellationToken);
+        return new AnalysisHistoryPage(items, totalCount);
+    }
+
     private static IQueryable<AnalysisRunEntity> ReadQuery(GitHealthDbContext context)
     {
         return context.AnalysisRuns.AsNoTracking()

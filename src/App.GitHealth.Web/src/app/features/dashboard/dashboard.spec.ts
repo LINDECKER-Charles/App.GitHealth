@@ -45,9 +45,17 @@ describe('Dashboard', () => {
       },
     ],
     nextCursor: null,
+    policy: {
+      activeUntilDays: 30,
+      excludedPatterns: [],
+      inactiveAfterDays: 90,
+      protectedPatterns: [],
+    },
     referenceName: 'refs/heads/main',
   };
   const api = {
+    branchCsvUrl: vi.fn(() => '/api/projects/project-1/branches.csv'),
+    getAnalysisSnapshots: vi.fn(() => of(page)),
     getLatestSnapshots: vi.fn(() => of(page)),
     getProject: vi.fn(() => of(project)),
     launchAnalysis: vi.fn(),
@@ -95,6 +103,19 @@ describe('Dashboard', () => {
     expect(api.getLatestSnapshots).toHaveBeenCalledWith(
       'project-1',
       expect.objectContaining({ search: 'été' }),
+    );
+  });
+
+  it('applique les filtres rapides côté serveur', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const buttons = Array.from(
+      element.querySelectorAll<HTMLButtonElement>('.quick-filters button'),
+    );
+    buttons.find((button) => button.textContent?.trim() === 'Divergentes')?.click();
+
+    expect(api.getLatestSnapshots).toHaveBeenLastCalledWith(
+      'project-1',
+      expect.objectContaining({ topology: 'Diverged' }),
     );
   });
 });

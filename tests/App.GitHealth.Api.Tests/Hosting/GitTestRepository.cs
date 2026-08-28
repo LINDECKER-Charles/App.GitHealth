@@ -48,6 +48,31 @@ public sealed class GitTestRepository : IDisposable
         }
     }
 
+    public void AddAheadBranchWithAuthor(string branchName, string authorName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(branchName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(authorName);
+        Run("checkout", "-b", branchName);
+        var fileName = $"{branchName.Replace('/', '-')}.txt";
+        File.WriteAllText(Path.Combine(RepositoryPath, fileName), branchName);
+        Run("add", fileName);
+        Run(
+            "-c",
+            $"user.name={authorName}",
+            "-c",
+            "user.email=formula@example.test",
+            "commit",
+            "-m",
+            $"add {branchName}");
+        Run("checkout", MainBranch);
+    }
+
+    public void AddSynchronizedBranch(string branchName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(branchName);
+        Run("branch", branchName, MainBranch);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(RootPath))

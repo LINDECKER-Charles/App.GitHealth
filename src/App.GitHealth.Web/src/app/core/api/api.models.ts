@@ -18,6 +18,8 @@ export type ActivityStatus = 'Active' | 'Aging' | 'Inactive' | 'Unknown';
 
 export type RecommendationKind = 'Keep' | 'Review' | 'CleanupCandidate' | 'Excluded';
 
+export type AttributionStatus = 'Available' | 'UnavailableAfterMerge';
+
 export type SnapshotSort = 'name' | 'ahead' | 'behind' | 'activity';
 
 export type SortDirection = 'asc' | 'desc';
@@ -54,6 +56,26 @@ export interface ProjectSettingsRequest {
   readonly inactiveAfterDays: number;
   readonly excludedPatterns: readonly string[];
   readonly protectedPatterns: readonly string[];
+}
+
+export interface PolicyUpdateRequest {
+  readonly activeUntilDays: number;
+  readonly inactiveAfterDays: number;
+  readonly excludedPatterns: readonly string[];
+  readonly protectedPatterns: readonly string[];
+}
+
+export type PolicySnapshot = PolicyUpdateRequest;
+
+export interface PolicyPreviewMatch {
+  readonly referenceName: string;
+  readonly isExcluded: boolean;
+  readonly isProtected: boolean;
+  readonly reason: string;
+}
+
+export interface PolicyPreviewResponse {
+  readonly matches: readonly PolicyPreviewMatch[];
 }
 
 export interface CreateProjectRequest {
@@ -95,6 +117,25 @@ export interface AnalysisStatusResponse {
   readonly failureMessage: string | null;
 }
 
+export interface AnalysisHistoryItem {
+  readonly analysisId: Uuid;
+  readonly status: AnalysisRunStatus;
+  readonly startedAtUtc: UtcDateTime;
+  readonly completedAtUtc: UtcDateTime | null;
+  readonly referenceName: string;
+  readonly branchNamespace: string;
+  readonly activeUntilDays: number;
+  readonly inactiveAfterDays: number;
+  readonly excludedPatterns: readonly string[];
+  readonly protectedPatterns: readonly string[];
+  readonly failureCode: string | null;
+  readonly failureMessage: string | null;
+}
+
+export interface AnalysisHistoryResponse {
+  readonly items: readonly AnalysisHistoryItem[];
+}
+
 export interface SnapshotQuery {
   readonly search?: string | null;
   readonly relationship?: string | null;
@@ -102,6 +143,11 @@ export interface SnapshotQuery {
   readonly direction?: string | null;
   readonly cursor?: string | null;
   readonly pageSize?: number;
+  readonly topology?: BranchTopology;
+  readonly activity?: ActivityStatus;
+  readonly recommendation?: RecommendationKind;
+  readonly isProtected?: boolean;
+  readonly isExcluded?: boolean;
 }
 
 export interface BranchSnapshotResponse {
@@ -127,6 +173,7 @@ export interface SnapshotPageResponse {
   readonly referenceName: string;
   readonly items: readonly BranchSnapshotResponse[];
   readonly nextCursor: string | null;
+  readonly policy: PolicySnapshot;
 }
 
 export interface ContributorResponse {
@@ -142,6 +189,9 @@ export interface SnapshotDetailResponse {
   readonly capturedAtUtc: UtcDateTime;
   readonly snapshot: BranchSnapshotResponse;
   readonly contributors: readonly ContributorResponse[];
+  readonly attributionStatus: AttributionStatus;
+  readonly mailmapApplied: boolean;
+  readonly policy: PolicySnapshot;
 }
 
 export type RepositoryValidation = RepositoryValidationResponse;

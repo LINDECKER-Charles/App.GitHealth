@@ -1,5 +1,6 @@
 using App.GitHealth.Api.Features.Analyses;
 using App.GitHealth.Api.Features.Common;
+using App.GitHealth.Api.Features.Policies;
 using App.GitHealth.Api.Features.Projects;
 using App.GitHealth.Api.Features.Snapshots;
 
@@ -21,9 +22,11 @@ internal static class GitHealthApiServiceCollectionExtensions
             .ValidateOnStart();
         services.AddSingleton<RepositoryValidator>();
         services.AddScoped<ProjectService>();
+        services.AddScoped<PolicyService>();
         services.AddSingleton<AnalysisQueue>();
         services.AddHostedService<AnalysisWorker>();
         services.AddScoped<AnalysisStatusService>();
+        services.AddScoped<AnalysisHistoryService>();
         services.AddScoped<SnapshotMapper>();
         services.AddScoped<SnapshotService>();
         return services;

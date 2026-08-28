@@ -7,11 +7,36 @@ namespace App.GitHealth.Api.Features.Snapshots;
 
 internal sealed class SnapshotMapper(IClock clock)
 {
-    public BranchSnapshotResponse Map(
+    private const bool MailmapApplied = true;
+
+    public ClassifiedSnapshot Classify(
+        BranchSnapshotEntity branch,
+        ActivityThresholds thresholds,
+        BranchPolicy policy)
+    {
+        var facts = MapFacts(branch);
+        var comparison = new BranchClassifier(clock).Classify(facts, thresholds, policy);
+        return new ClassifiedSnapshot(branch, comparison);
+    }
+
+    public static ClassifiedSnapshot ClassifyCaptured(
         AnalysisRunEntity analysis,
         BranchSnapshotEntity branch)
     {
-        var comparison = Classify(analysis, branch);
+        var capturedAt = analysis.CapturedAtUtc
+            ?? throw new InvalidOperationException("L’analyse n’a pas de date de capture.");
+        var classifier = new BranchClassifier(new CapturedAnalysisClock(capturedAt));
+        var comparison = classifier.Classify(
+            MapFacts(branch),
+            CapturedThresholds(analysis),
+            CapturedPolicy(analysis));
+        return new ClassifiedSnapshot(branch, comparison);
+    }
+
+    public static BranchSnapshotResponse Map(ClassifiedSnapshot classified)
+    {
+        var branch = classified.Branch;
+        var comparison = classified.Comparison;
         return new BranchSnapshotResponse
         {
             Id = branch.Id,
@@ -31,32 +56,43 @@ internal sealed class SnapshotMapper(IClock clock)
         };
     }
 
-    public SnapshotDetailResponse MapDetail(BranchSnapshotEntity branch)
+    public static SnapshotDetailResponse MapDetail(BranchSnapshotEntity branch)
     {
         var analysis = branch.AnalysisRun;
+        var classified = ClassifyCaptured(analysis, branch);
+        var contributors = MapContributors(branch);
         return new SnapshotDetailResponse
         {
             AnalysisId = analysis.Id,
             ReferenceName = analysis.ReferenceName,
             ReferenceCommit = analysis.ReferenceCommit!,
             CapturedAtUtc = analysis.CapturedAtUtc!.Value,
-            Snapshot = Map(analysis, branch),
-            Contributors = branch.Contributors
-                .OrderByDescending(contributor => contributor.CommitCount)
-                .ThenBy(contributor => contributor.Email, StringComparer.Ordinal)
-                .Select(contributor => new ContributorResponse(
-                    contributor.Name,
-                    contributor.Email,
-                    contributor.CommitCount))
-                .ToArray(),
+            Snapshot = Map(classified),
+            Contributors = contributors,
+            AttributionStatus = GetAttributionStatus(classified, contributors.Length).ToString(),
+            MailmapApplied = MailmapApplied,
+            Policy = MapPolicy(analysis),
         };
     }
 
-    private BranchComparison Classify(
-        AnalysisRunEntity analysis,
-        BranchSnapshotEntity branch)
+    private static AttributionStatus GetAttributionStatus(
+        ClassifiedSnapshot classified,
+        int contributorCount) => contributorCount == 0
+            && classified.Comparison.Topology == BranchTopology.Merged
+                ? AttributionStatus.UnavailableAfterMerge
+                : AttributionStatus.Available;
+
+    public static SnapshotPolicyResponse MapPolicy(AnalysisRunEntity analysis) => new()
     {
-        var facts = new BranchFacts(
+        ActiveUntilDays = analysis.ActiveUntilDays,
+        InactiveAfterDays = analysis.InactiveAfterDays,
+        ExcludedPatterns = ReadPatterns(analysis.ExcludedPatternsJson),
+        ProtectedPatterns = ReadPatterns(analysis.ProtectedPatternsJson),
+    };
+
+    internal static BranchFacts MapFacts(BranchSnapshotEntity branch)
+    {
+        return new BranchFacts(
             new GitRef(branch.ReferenceName),
             BranchDivergence.Create(
                 branch.AheadCount,
@@ -66,15 +102,30 @@ internal sealed class SnapshotMapper(IClock clock)
                 new CommitId(branch.CommitId),
                 branch.LastActivityAtUtc,
                 branch.TipAuthor));
-        var thresholds = ActivityThresholds.Create(
+    }
+
+    private static ActivityThresholds CapturedThresholds(AnalysisRunEntity analysis) =>
+        ActivityThresholds.Create(
             analysis.ActiveUntilDays,
             analysis.InactiveAfterDays);
-        var policy = BranchPolicy.Create(
+
+    private static BranchPolicy CapturedPolicy(AnalysisRunEntity analysis) =>
+        BranchPolicy.Create(
             ReadPatterns(analysis.ExcludedPatternsJson),
             ReadPatterns(analysis.ProtectedPatternsJson));
-        return new BranchClassifier(clock).Classify(facts, thresholds, policy);
-    }
+
+    private static ContributorResponse[] MapContributors(
+        BranchSnapshotEntity branch) => branch.Contributors
+            .OrderByDescending(contributor => contributor.CommitCount)
+            .ThenBy(contributor => contributor.Email, StringComparer.Ordinal)
+            .Select(contributor => new ContributorResponse(
+                contributor.Name,
+                contributor.Email,
+                contributor.CommitCount))
+            .ToArray();
 
     private static string[] ReadPatterns(string json) =>
         JsonSerializer.Deserialize<string[]>(json) ?? [];
+
+    private sealed record CapturedAnalysisClock(DateTimeOffset UtcNow) : IClock;
 }

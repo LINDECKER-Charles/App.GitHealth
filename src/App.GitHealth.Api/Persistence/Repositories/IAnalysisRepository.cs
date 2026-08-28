@@ -26,6 +26,11 @@ internal interface IAnalysisRepository
         Guid projectId,
         CancellationToken cancellationToken);
 
+    Task<AnalysisHistoryPage> GetHistoryAsync(
+        Guid projectId,
+        AnalysisHistoryRange range,
+        CancellationToken cancellationToken);
+
     Task<BranchSnapshotEntity?> GetBranchAsync(
         Guid branchSnapshotId,
         CancellationToken cancellationToken);

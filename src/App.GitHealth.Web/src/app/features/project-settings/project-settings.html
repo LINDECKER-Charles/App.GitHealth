@@ -1,0 +1,190 @@
+<section class="settings">
+  <button class="back-action" type="button" (click)="goBack()">
+    <span aria-hidden="true">←</span> Retour au projet
+  </button>
+
+  @if (loading()) {
+    <div class="state-panel" role="status">
+      <span class="loading-mark" aria-hidden="true"></span>
+      <strong>Lecture de la politique…</strong>
+    </div>
+  } @else if (loadError(); as errorMessage) {
+    <div class="state-panel error-panel" role="alert">
+      <span class="state-symbol" aria-hidden="true">!</span>
+      <strong>La politique ne peut pas être chargée</strong>
+      <p>{{ errorMessage }}</p>
+      <button class="button secondary" type="button" (click)="load()">Réessayer</button>
+    </div>
+  } @else if (project(); as currentProject) {
+    <header class="settings-heading">
+      <div>
+        <p class="eyebrow">Règles d’interprétation</p>
+        <h1>Politiques de {{ currentProject.displayName }}</h1>
+        <code>{{ currentProject.repositoryPath }}</code>
+      </div>
+      <p>
+        Ajustez la lecture des snapshots sans modifier leurs SHA, leurs compteurs ni leur
+        historique.
+      </p>
+    </header>
+
+    @if (!currentProject.isRepositoryAccessible) {
+      <aside class="repository-notice" role="note">
+        <strong>Le dépôt est actuellement inaccessible.</strong>
+        La politique reste modifiable à partir du dernier snapshot enregistré.
+      </aside>
+    }
+
+    <div class="settings-workbench">
+      <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <section aria-labelledby="thresholds-title">
+          <div class="section-heading">
+            <div>
+              <p class="section-index">01</p>
+              <h2 id="thresholds-title">Seuils d’activité</h2>
+            </div>
+            <p>Deux bornes, trois états : active, vieillissante et inactive.</p>
+          </div>
+          <div class="threshold-grid">
+            <div class="field">
+              <label for="active-days">Active jusqu’à</label>
+              <div class="number-field">
+                <input
+                  id="active-days"
+                  type="number"
+                  min="0"
+                  step="1"
+                  formControlName="activeUntilDays"
+                  aria-describedby="active-help threshold-error"
+                />
+                <span>jours</span>
+              </div>
+              <p id="active-help">La date exacte du commit reste toujours affichée.</p>
+            </div>
+            <div class="field">
+              <label for="inactive-days">Inactive après</label>
+              <div class="number-field">
+                <input
+                  id="inactive-days"
+                  type="number"
+                  min="1"
+                  step="1"
+                  formControlName="inactiveAfterDays"
+                  aria-describedby="inactive-help threshold-error"
+                />
+                <span>jours</span>
+              </div>
+              <p id="inactive-help">Entre les deux seuils, la branche est vieillissante.</p>
+            </div>
+          </div>
+          @if (form.hasError('thresholdOrder') && form.touched) {
+            <p id="threshold-error" class="field-error" role="alert">
+              Le seuil d’inactivité doit être supérieur au seuil d’activité.
+            </p>
+          }
+        </section>
+
+        <section aria-labelledby="patterns-title">
+          <div class="section-heading">
+            <div>
+              <p class="section-index">02</p>
+              <h2 id="patterns-title">Motifs de branche</h2>
+            </div>
+            <p>
+              Un motif par ligne. Les caractères <code>*</code> et <code>?</code> sont acceptés.
+            </p>
+          </div>
+          <div class="pattern-grid">
+            <div class="field">
+              <label for="protected-patterns">Branches protégées</label>
+              <textarea
+                id="protected-patterns"
+                rows="7"
+                formControlName="protectedPatterns"
+                placeholder="refs/heads/main&#10;refs/heads/release/*"
+              ></textarea>
+              <p>Jamais candidates au nettoyage, avec la raison exacte dans le détail.</p>
+            </div>
+            <div class="field">
+              <label for="excluded-patterns">Branches exclues</label>
+              <textarea
+                id="excluded-patterns"
+                rows="7"
+                formControlName="excludedPatterns"
+                placeholder="refs/remotes/origin/archive/*"
+              ></textarea>
+              <p>Conservées dans les faits, mais retirées des recommandations d’action.</p>
+            </div>
+          </div>
+        </section>
+
+        @if (actionError(); as errorMessage) {
+          <p class="action-message error" role="alert">{{ errorMessage }}</p>
+        }
+        @if (savedMessage(); as message) {
+          <p class="action-message success" role="status">{{ message }}</p>
+        }
+
+        <footer class="form-actions">
+          <button
+            class="button secondary"
+            type="button"
+            [disabled]="previewLoading()"
+            (click)="previewPolicy()"
+          >
+            {{ previewLoading() ? 'Calcul de l’aperçu…' : 'Prévisualiser' }}
+          </button>
+          <button class="button" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Enregistrement…' : 'Enregistrer la politique' }}
+          </button>
+        </footer>
+      </form>
+
+      <aside class="preview" aria-labelledby="preview-title">
+        <header>
+          <div>
+            <p class="eyebrow">Projection sans écriture Git</p>
+            <h2 id="preview-title">Correspondances</h2>
+          </div>
+          @if (previewed()) {
+            <span>{{ matches().length }} branches</span>
+          }
+        </header>
+
+        @if (previewLoading()) {
+          <div class="preview-state" role="status">Calcul des motifs sur le dernier snapshot…</div>
+        } @else if (!previewed()) {
+          <div class="preview-state">
+            <strong>Vérifiez avant d’enregistrer</strong>
+            <p>
+              L’aperçu applique les seuils et motifs aux faits déjà capturés. Aucune commande Git
+              n’est lancée.
+            </p>
+          </div>
+        } @else if (matches().length === 0) {
+          <div class="preview-state">
+            <strong>Aucune correspondance</strong>
+            <p>Les motifs proposés ne ciblent aucune branche du dernier snapshot.</p>
+          </div>
+        } @else {
+          <ul class="match-list">
+            @for (match of matches(); track match.referenceName) {
+              <li>
+                <code>{{ match.referenceName }}</code>
+                <div class="match-flags">
+                  <span [class.matched]="match.isProtected">
+                    Protégée · {{ match.isProtected ? 'oui' : 'non' }}
+                  </span>
+                  <span [class.matched]="match.isExcluded">
+                    Exclue · {{ match.isExcluded ? 'oui' : 'non' }}
+                  </span>
+                </div>
+                <p>{{ match.reason }}</p>
+              </li>
+            }
+          </ul>
+        }
+      </aside>
+    </div>
+  }
+</section>

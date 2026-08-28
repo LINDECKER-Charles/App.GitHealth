@@ -9,9 +9,25 @@ internal static class SnapshotEndpoints
         endpoints.MapGet(
             "/api/projects/{projectId:guid}/analyses/latest/branches",
             GetPageAsync).WithTags("Snapshots");
+        endpoints.MapGet(
+            "/api/analyses/{analysisId:guid}/branches",
+            GetAnalysisPageAsync).WithTags("Snapshots");
         endpoints.MapGet("/api/branch-snapshots/{snapshotId:guid}", GetDetailAsync)
             .WithTags("Snapshots");
         return endpoints;
+    }
+
+    private static async Task<IResult> GetAnalysisPageAsync(
+        Guid analysisId,
+        [AsParameters] SnapshotQueryParameters query,
+        HttpContext context)
+    {
+        var service = context.RequestServices.GetRequiredService<SnapshotService>();
+        var result = await service.GetAnalysisPageAsync(
+            analysisId,
+            query,
+            context.RequestAborted);
+        return result.IsSuccess ? Results.Ok(result.Value) : ApiProblems.Result(result.Failure!);
     }
 
     private static async Task<IResult> GetPageAsync(

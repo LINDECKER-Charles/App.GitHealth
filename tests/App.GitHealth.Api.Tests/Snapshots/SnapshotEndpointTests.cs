@@ -2,6 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using App.GitHealth.Api.Tests.Hosting;
+using App.GitHealth.Core.Common;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace App.GitHealth.Api.Tests.Snapshots;
 
@@ -20,7 +23,7 @@ public sealed class SnapshotEndpointTests
         Assert.Equal(run.AnalysisId, first.GetProperty("analysisId").GetGuid());
         var firstItems = first.GetProperty("items").EnumerateArray().ToArray();
         Assert.Equal(2, firstItems.Length);
-        Assert.All(firstItems, item => Assert.True(item.GetProperty("isProtected").GetBoolean()));
+        Assert.All(firstItems, item => Assert.False(item.GetProperty("isProtected").GetBoolean()));
         var cursor = first.GetProperty("nextCursor").GetString();
         Assert.False(string.IsNullOrWhiteSpace(cursor));
 
@@ -31,6 +34,55 @@ public sealed class SnapshotEndpointTests
             item => firstItems.Any(firstItem => SnapshotId(firstItem) == SnapshotId(item)));
         await AssertChangedFilterIsRejectedAsync(client, run.ProjectId, cursor!);
         await AssertDetailAsync(client, firstItems[0]);
+    }
+
+    [Fact]
+    public async Task AttributionIsUnavailableOnlyForMergedBranchesWithoutOwnCommits()
+    {
+        using var repository = GitTestRepository.Create();
+        repository.AddSynchronizedBranch("feature/synchronized");
+        using var factory = CreateFactory(repository.RootPath);
+        using var client = factory.CreateClient();
+        var run = await AnalyzeAsync(client, repository.RepositoryPath);
+
+        var merged = await GetSingleSnapshotAsync(client, run.ProjectId, "behind");
+        var synchronized = await GetSingleSnapshotAsync(
+            client,
+            run.ProjectId,
+            "synchronized");
+
+        await AssertAttributionStatusAsync(client, merged, "UnavailableAfterMerge");
+        await AssertAttributionStatusAsync(client, synchronized, "Available");
+    }
+
+    [Fact]
+    public async Task HistoricalActivityUsesCaptureTimeWhileLatestUsesCurrentTime()
+    {
+        using var repository = GitTestRepository.Create();
+        var clock = new MutableClock(DateTimeOffset.UtcNow);
+        using var factory = new ApiApplicationFactory
+        {
+            RepositoriesRoot = repository.RootPath,
+            TestServices = services =>
+            {
+                services.RemoveAll<IClock>();
+                services.AddSingleton<IClock>(clock);
+            },
+        };
+        using var client = factory.CreateClient();
+        var run = await AnalyzeAsync(client, repository.RepositoryPath);
+        clock.UtcNow = clock.UtcNow.AddDays(120);
+
+        var latest = await GetSingleSnapshotAsync(client, run.ProjectId, "near-00");
+        var historical = await GetAnalysisSnapshotAsync(client, run.AnalysisId, "near-00");
+        Assert.Equal("Inactive", latest.GetProperty("activity").GetString());
+        Assert.Equal("Active", historical.GetProperty("activity").GetString());
+
+        var detail = await client.GetFromJsonAsync<JsonElement>(
+            $"/api/branch-snapshots/{SnapshotId(historical)}");
+        Assert.Equal(
+            "Active",
+            detail.GetProperty("snapshot").GetProperty("activity").GetString());
     }
 
     [Fact]
@@ -106,6 +158,45 @@ public sealed class SnapshotEndpointTests
             $"/api/branch-snapshots/{snapshotId}");
         Assert.Equal(snapshotId, detail.GetProperty("snapshot").GetProperty("id").GetGuid());
         Assert.NotEmpty(detail.GetProperty("contributors").EnumerateArray());
+        Assert.True(detail.GetProperty("snapshot").GetProperty("isProtected").GetBoolean());
+        Assert.Equal("Available", detail.GetProperty("attributionStatus").GetString());
+        Assert.True(detail.GetProperty("mailmapApplied").GetBoolean());
+        Assert.Equal(
+            ["refs/heads/feature/near-*"],
+            detail.GetProperty("policy").GetProperty("protectedPatterns")
+                .EnumerateArray()
+                .Select(pattern => pattern.GetString()));
+    }
+
+    private static async Task<JsonElement> GetSingleSnapshotAsync(
+        HttpClient client,
+        Guid projectId,
+        string search)
+    {
+        var page = await client.GetFromJsonAsync<JsonElement>(
+            $"/api/projects/{projectId}/analyses/latest/branches?search={search}");
+        return Assert.Single(page.GetProperty("items").EnumerateArray());
+    }
+
+    private static async Task<JsonElement> GetAnalysisSnapshotAsync(
+        HttpClient client,
+        Guid analysisId,
+        string search)
+    {
+        var page = await client.GetFromJsonAsync<JsonElement>(
+            $"/api/analyses/{analysisId}/branches?search={search}");
+        return Assert.Single(page.GetProperty("items").EnumerateArray());
+    }
+
+    private static async Task AssertAttributionStatusAsync(
+        HttpClient client,
+        JsonElement snapshot,
+        string expectedStatus)
+    {
+        var detail = await client.GetFromJsonAsync<JsonElement>(
+            $"/api/branch-snapshots/{SnapshotId(snapshot)}");
+        Assert.Empty(detail.GetProperty("contributors").EnumerateArray());
+        Assert.Equal(expectedStatus, detail.GetProperty("attributionStatus").GetString());
     }
 
     private static async Task RemoveCurrentPoliciesAsync(HttpClient client, Guid projectId)
@@ -126,4 +217,9 @@ public sealed class SnapshotEndpointTests
     }
 
     private static Guid SnapshotId(JsonElement item) => item.GetProperty("id").GetGuid();
+
+    private sealed class MutableClock(DateTimeOffset utcNow) : IClock
+    {
+        public DateTimeOffset UtcNow { get; set; } = utcNow;
+    }
 }

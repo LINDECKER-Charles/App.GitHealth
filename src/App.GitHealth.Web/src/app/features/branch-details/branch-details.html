@@ -1,0 +1,183 @@
+<section class="branch-details">
+  <button class="back-action" type="button" (click)="goBack()">
+    <span aria-hidden="true">←</span> Retour au tableau
+  </button>
+
+  @if (loading()) {
+    <div class="state-panel" role="status">
+      <span class="loading-mark" aria-hidden="true"></span>
+      <strong>Lecture des faits Git…</strong>
+    </div>
+  } @else if (error(); as errorMessage) {
+    <div class="state-panel error-panel" role="alert">
+      <span class="state-symbol" aria-hidden="true">!</span>
+      <strong>La branche ne peut pas être expliquée</strong>
+      <p>{{ errorMessage }}</p>
+      <button class="button secondary" type="button" (click)="load()">Réessayer</button>
+    </div>
+  } @else if (detail(); as branchDetail) {
+    <header class="branch-heading">
+      <div>
+        <p class="eyebrow">Fiche de branche · faits capturés</p>
+        <h1>{{ displayReference(branchDetail.snapshot.referenceName) }}</h1>
+        <code class="full-reference">{{ branchDetail.snapshot.referenceName }}</code>
+      </div>
+      <div
+        class="recommendation"
+        [attr.data-tone]="recommendationTone(branchDetail.snapshot.recommendation)"
+      >
+        <span>Recommandation</span>
+        <strong>{{ recommendationLabel(branchDetail.snapshot.recommendation) }}</strong>
+        <p>{{ branchDetail.snapshot.reason }}</p>
+        <div class="flags" aria-label="Règles appliquées">
+          @if (branchDetail.snapshot.isProtected) {
+            <span>Protégée</span>
+          }
+          @if (branchDetail.snapshot.isExcluded) {
+            <span>Exclue du diagnostic</span>
+          }
+          @if (!branchDetail.snapshot.isProtected && !branchDetail.snapshot.isExcluded) {
+            <span>Aucune règle d’exclusion</span>
+          }
+        </div>
+      </div>
+    </header>
+
+    <section class="coordinates" aria-labelledby="coordinates-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Coordonnées du snapshot</p>
+          <h2 id="coordinates-title">Ce que Git a réellement observé</h2>
+        </div>
+        <time [attr.datetime]="branchDetail.capturedAtUtc">
+          Capturé le {{ branchDetail.capturedAtUtc | date: "dd/MM/yyyy 'à' HH:mm:ss" }}
+        </time>
+      </div>
+      <dl>
+        <div>
+          <dt>SHA de la branche</dt>
+          <dd>
+            <code>{{ branchDetail.snapshot.commitId }}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>SHA de la référence</dt>
+          <dd>
+            <code>{{ branchDetail.referenceCommit }}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>Référence comparée</dt>
+          <dd>
+            <code>{{ branchDetail.referenceName }}</code>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="facts" aria-labelledby="facts-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Lecture de la topologie</p>
+          <h2 id="facts-title">{{ topologyLabel(branchDetail.snapshot.topology) }}</h2>
+        </div>
+        <span class="activity-state">
+          Activité · {{ activityLabel(branchDetail.snapshot.activity) }}
+        </span>
+      </div>
+      <dl class="fact-grid">
+        <div>
+          <dt>Avance</dt>
+          <dd>{{ branchDetail.snapshot.aheadCount }}</dd>
+          <p>Commits accessibles depuis cette branche, mais pas depuis la référence.</p>
+        </div>
+        <div>
+          <dt>Retard</dt>
+          <dd>{{ branchDetail.snapshot.behindCount }}</dd>
+          <p>Commits accessibles depuis la référence, mais absents de cette branche.</p>
+        </div>
+        <div>
+          <dt>Dernière activité</dt>
+          <dd>
+            @if (branchDetail.snapshot.lastActivityAtUtc; as activityAt) {
+              <time [attr.datetime]="activityAt">{{ activityAt | date: 'dd/MM/yyyy' }}</time>
+            } @else {
+              Indéterminée
+            }
+          </dd>
+          <p>Date du commit pointé par la branche, exprimée à partir des faits Git capturés.</p>
+        </div>
+      </dl>
+    </section>
+
+    <section class="contributors" aria-labelledby="contributors-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Commits propres hors fusions</p>
+          <h2 id="contributors-title">Contributeurs</h2>
+        </div>
+        <span class="mailmap-state">
+          {{
+            branchDetail.mailmapApplied
+              ? 'Identités normalisées par .mailmap'
+              : 'Aucun .mailmap appliqué'
+          }}
+        </span>
+      </div>
+
+      @if (branchDetail.attributionStatus === 'UnavailableAfterMerge') {
+        <div class="attribution-note" role="note">
+          <strong>Attribution impossible après fusion</strong>
+          <p>
+            La plage entre la référence et la branche est vide. Git ne permet plus d’attribuer avec
+            certitude les commits à leur branche d’origine.
+          </p>
+        </div>
+      } @else if (branchDetail.contributors.length === 0) {
+        <p class="empty-contributors">Aucun commit propre n’est attribuable à cette branche.</p>
+      } @else {
+        <ul class="contributor-list">
+          @for (contributor of branchDetail.contributors; track contributor.email) {
+            <li>
+              <span class="contributor-rank" aria-hidden="true">{{ $index + 1 }}</span>
+              <div>
+                <strong>{{ contributor.name }}</strong>
+                <span>{{ contributor.email }}</span>
+              </div>
+              <span class="commit-count">{{ commitLabel(contributor.commitCount) }}</span>
+            </li>
+          }
+        </ul>
+      }
+      <p class="mailmap-help">
+        GitHealth demande toujours à Git d’appliquer <code>.mailmap</code> lorsqu’il est présent.
+        Les adresses restent stockées localement.
+      </p>
+    </section>
+
+    <aside class="policy" aria-labelledby="policy-title">
+      <div>
+        <p class="eyebrow">Politique au moment du scan</p>
+        <h2 id="policy-title">Interprétation traçable</h2>
+      </div>
+      <dl>
+        <div>
+          <dt>Active jusqu’à</dt>
+          <dd>{{ branchDetail.policy.activeUntilDays }} jours</dd>
+        </div>
+        <div>
+          <dt>Inactive après</dt>
+          <dd>{{ branchDetail.policy.inactiveAfterDays }} jours</dd>
+        </div>
+        <div>
+          <dt>Motifs protégés</dt>
+          <dd>{{ branchDetail.policy.protectedPatterns.length }}</dd>
+        </div>
+        <div>
+          <dt>Motifs exclus</dt>
+          <dd>{{ branchDetail.policy.excludedPatterns.length }}</dd>
+        </div>
+      </dl>
+    </aside>
+  }
+</section>

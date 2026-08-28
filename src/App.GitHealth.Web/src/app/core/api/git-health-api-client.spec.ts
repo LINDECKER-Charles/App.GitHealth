@@ -200,6 +200,12 @@ describe('GitHealthApiClient', () => {
       referenceName: 'refs/heads/main',
       items: [snapshot],
       nextCursor: 'next-page',
+      policy: {
+        activeUntilDays: 30,
+        excludedPatterns: [],
+        inactiveAfterDays: 90,
+        protectedPatterns: [],
+      },
     };
     const pageResult = firstValueFrom(
       client.getLatestSnapshots(projectId, {
@@ -230,6 +236,14 @@ describe('GitHealthApiClient', () => {
       capturedAtUtc: page.capturedAtUtc,
       snapshot,
       contributors: [{ name: 'Ada Lovelace', email: 'ada@example.test', commitCount: 2 }],
+      attributionStatus: 'Available',
+      mailmapApplied: true,
+      policy: {
+        activeUntilDays: 30,
+        inactiveAfterDays: 90,
+        excludedPatterns: [],
+        protectedPatterns: ['refs/heads/main'],
+      },
     };
     const detailResult = firstValueFrom(client.getSnapshot(snapshotId));
     const detailRequest = http.expectOne(`/api/branch-snapshots/${snapshotId}`);

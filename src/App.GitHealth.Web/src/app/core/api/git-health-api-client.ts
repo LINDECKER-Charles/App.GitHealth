@@ -3,10 +3,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
 import { ApiError } from './api-error';
 import {
+  AnalysisHistoryResponse,
   AnalysisLaunchResponse,
   AnalysisStatusResponse,
   CreateProjectRequest,
   DirectoryListing,
+  PolicyPreviewResponse,
+  PolicyUpdateRequest,
   ProjectResponse,
   ProjectSettingsRequest,
   RepositoryValidationResponse,
@@ -87,6 +90,40 @@ export class GitHealthApiClient {
     return this.request(this.http.get<SnapshotDetailResponse>(url));
   }
 
+  updatePolicy(projectId: string, policy: PolicyUpdateRequest): Observable<ProjectResponse> {
+    return this.request(this.http.put<ProjectResponse>(`${projectUrl(projectId)}/policy`, policy));
+  }
+
+  previewPolicy(projectId: string, policy: PolicyUpdateRequest): Observable<PolicyPreviewResponse> {
+    return this.request(
+      this.http.post<PolicyPreviewResponse>(`${projectUrl(projectId)}/policy/preview`, policy),
+    );
+  }
+
+  getAnalysisHistory(projectId: string): Observable<AnalysisHistoryResponse> {
+    return this.request(
+      this.http.get<AnalysisHistoryResponse>(`${projectUrl(projectId)}/analyses`),
+    );
+  }
+
+  getAnalysisSnapshots(
+    analysisId: string,
+    query: SnapshotQuery = {},
+  ): Observable<SnapshotPageResponse> {
+    const id = encodeURIComponent(analysisId);
+    return this.request(
+      this.http.get<SnapshotPageResponse>(`${apiRoot}/analyses/${id}/branches`, {
+        params: snapshotParams(query),
+      }),
+    );
+  }
+
+  branchCsvUrl(projectId: string, query: SnapshotQuery = {}): string {
+    const params = snapshotParams(query).toString();
+    const url = `${projectUrl(projectId)}/analyses/latest/branches.csv`;
+    return params.length === 0 ? url : `${url}?${params}`;
+  }
+
   private request<T>(source: Observable<T>): Observable<T> {
     return source.pipe(catchError((error: unknown) => throwError(() => ApiError.from(error))));
   }
@@ -103,13 +140,18 @@ function snapshotParams(query: SnapshotQuery): HttpParams {
   params = setParam(params, 'sort', query.sort);
   params = setParam(params, 'direction', query.direction);
   params = setParam(params, 'cursor', query.cursor);
-  return setParam(params, 'pageSize', query.pageSize);
+  params = setParam(params, 'pageSize', query.pageSize);
+  params = setParam(params, 'topology', query.topology);
+  params = setParam(params, 'activity', query.activity);
+  params = setParam(params, 'recommendation', query.recommendation);
+  params = setParam(params, 'isProtected', query.isProtected);
+  return setParam(params, 'isExcluded', query.isExcluded);
 }
 
 function setParam(
   params: HttpParams,
   name: string,
-  value: string | number | null | undefined,
+  value: string | number | boolean | null | undefined,
 ): HttpParams {
   return value === undefined || value === null ? params : params.set(name, value.toString());
 }

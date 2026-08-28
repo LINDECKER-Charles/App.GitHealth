@@ -9,15 +9,18 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription, switchMap, timer } from 'rxjs';
 import { ApiError } from '../../core/api/api-error';
 import { GitHealthApiClient } from '../../core/api/git-health-api-client';
 import {
   AnalysisPhase,
   AnalysisStatusResponse,
+  ActivityStatus,
   BranchRelationship,
+  BranchTopology,
   ProjectResponse,
+  RecommendationKind,
   SnapshotPageResponse,
   SnapshotQuery,
   SnapshotSort,
@@ -34,7 +37,7 @@ import {
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule],
+  imports: [DatePipe, FormsModule, RouterLink],
   selector: 'app-dashboard',
   styleUrls: ['./dashboard.scss', './dashboard-table.scss'],
   templateUrl: './dashboard.html',
@@ -44,7 +47,8 @@ export class Dashboard {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly projectId = this.route.snapshot.paramMap.get('projectId') ?? '';
+  protected readonly projectId = this.route.snapshot.paramMap.get('projectId') ?? '';
+  private readonly analysisId = this.route.snapshot.paramMap.get('analysisId');
   private readonly cursors: Array<string | null> = [null];
   private pageIndex = 0;
   private polling?: Subscription;
@@ -63,10 +67,21 @@ export class Dashboard {
   readonly direction = signal<SortDirection>(
     this.route.snapshot.queryParamMap.get('direction') === 'desc' ? 'desc' : 'asc',
   );
+  readonly topology = signal<BranchTopology | ''>(
+    parseTopology(this.route.snapshot.queryParamMap.get('topology')),
+  );
+  readonly activity = signal<ActivityStatus | ''>(
+    parseActivity(this.route.snapshot.queryParamMap.get('activity')),
+  );
+  readonly recommendation = signal<RecommendationKind | ''>(
+    parseRecommendation(this.route.snapshot.queryParamMap.get('recommendation')),
+  );
   readonly phases = analysisPhases;
   readonly hasPrevious = signal(false);
   readonly currentPage = signal(1);
   readonly hasSnapshot = computed(() => this.page() !== null);
+  readonly isHistorical = this.analysisId !== null;
+  readonly csvUrl = computed(() => this.api.branchCsvUrl(this.projectId, this.filterQuery()));
   readonly isRunning = computed(() => {
     const value = this.status()?.status;
     return value === 'Running' || this.isLaunching();
@@ -110,6 +125,14 @@ export class Dashboard {
     this.relationship.set('');
     this.sort.set('name');
     this.direction.set('asc');
+    this.topology.set('');
+    this.activity.set('');
+    this.recommendation.set('');
+    this.applyFilters();
+  }
+
+  applyQuickFilter(recommendation: RecommendationKind | ''): void {
+    this.recommendation.set(recommendation);
     this.applyFilters();
   }
 
@@ -150,7 +173,11 @@ export class Dashboard {
 
   private loadSnapshots(cursor: string | null = null): void {
     this.isLoading.set(true);
-    this.api.getLatestSnapshots(this.projectId, this.query(cursor)).subscribe({
+    const request =
+      this.analysisId === null
+        ? this.api.getLatestSnapshots(this.projectId, this.pageQuery(cursor))
+        : this.api.getAnalysisSnapshots(this.analysisId, this.pageQuery(cursor));
+    request.subscribe({
       next: (page) => {
         this.page.set(page);
         this.finishPageLoad();
@@ -170,14 +197,23 @@ export class Dashboard {
     this.currentPage.set(this.pageIndex + 1);
   }
 
-  private query(cursor: string | null): SnapshotQuery {
+  private pageQuery(cursor: string | null): SnapshotQuery {
     return {
+      ...this.filterQuery(),
       cursor: cursor ?? undefined,
-      direction: this.direction(),
       pageSize: 50,
+    };
+  }
+
+  private filterQuery(): SnapshotQuery {
+    return {
+      direction: this.direction(),
       relationship: this.relationship() || undefined,
       search: this.search() || undefined,
       sort: this.sort(),
+      topology: this.topology() || undefined,
+      activity: this.activity() || undefined,
+      recommendation: this.recommendation() || undefined,
     };
   }
 
@@ -212,9 +248,12 @@ export class Dashboard {
     void this.router.navigate([], {
       queryParams: {
         direction: this.direction(),
+        activity: this.activity() || null,
         relationship: this.relationship() || null,
+        recommendation: this.recommendation() || null,
         search: this.search() || null,
         sort: this.sort(),
+        topology: this.topology() || null,
       },
       relativeTo: this.route,
       replaceUrl: true,
@@ -239,4 +278,25 @@ function parseRelationship(value: string | null): BranchRelationship | '' {
 function parseSort(value: string | null): SnapshotSort {
   const allowed: readonly SnapshotSort[] = ['name', 'ahead', 'behind', 'activity'];
   return allowed.includes(value as SnapshotSort) ? (value as SnapshotSort) : 'name';
+}
+
+function parseTopology(value: string | null): BranchTopology | '' {
+  const allowed: readonly BranchTopology[] = [
+    'Synchronized',
+    'Ahead',
+    'Merged',
+    'Diverged',
+    'Unrelated',
+  ];
+  return allowed.includes(value as BranchTopology) ? (value as BranchTopology) : '';
+}
+
+function parseActivity(value: string | null): ActivityStatus | '' {
+  const allowed: readonly ActivityStatus[] = ['Active', 'Aging', 'Inactive', 'Unknown'];
+  return allowed.includes(value as ActivityStatus) ? (value as ActivityStatus) : '';
+}
+
+function parseRecommendation(value: string | null): RecommendationKind | '' {
+  const allowed: readonly RecommendationKind[] = ['Keep', 'Review', 'CleanupCandidate', 'Excluded'];
+  return allowed.includes(value as RecommendationKind) ? (value as RecommendationKind) : '';
 }

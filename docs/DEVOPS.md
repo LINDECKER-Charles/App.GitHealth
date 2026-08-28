@@ -128,6 +128,26 @@ Le tableau de bord interroge l'état d'une analyse par polling, limite chaque pa
 à 50 branches et conserve le dernier snapshot réussi pendant un nouveau scan ou
 après un échec. Recherche, relation Git, tri et ordre sont reflétés dans l'URL.
 
+## Politiques, historique et export CSV
+
+La politique d'un projet se modifie avec `PUT /api/projects/{id}/policy`. Cette
+opération ne relance pas Git et ne modifie aucun fait capturé : le dernier snapshot
+est seulement reclassé avec les seuils et motifs courants. L'aperçu
+`POST /api/projects/{id}/policy/preview` applique les mêmes règles sans les
+enregistrer et indique, branche par branche, la raison d'une exclusion ou d'une
+protection.
+
+Les pages historiques sous `/api/analyses/{id}/branches` et le détail d'un
+snapshot conservent au contraire la politique capturée pendant l'analyse.
+`GET /api/projects/{id}/analyses` restitue ce reçu de configuration avec chaque
+exécution, y compris celles qui ont échoué.
+
+L'export `GET /api/projects/{id}/analyses/latest/branches.csv` applique exactement
+les filtres et l'ordre de la vue courante, sans pagination. Il est encodé en UTF-8
+et neutralise les cellules qui pourraient être interprétées comme des formules
+par un tableur. Il reste distinct de la sauvegarde SQLite, destinée à restaurer
+l'application complète.
+
 ## Intégration continue
 
 Le workflow `.github/workflows/ci.yml` s’exécute sur chaque pull request. Il

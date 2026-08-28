@@ -1,15 +1,21 @@
 <section class="dashboard-shell">
   <header class="project-heading">
     <div>
-      <p class="eyebrow">Dépôt observé</p>
+      <p class="eyebrow">{{ isHistorical ? 'Snapshot historique' : 'Dépôt observé' }}</p>
       <h1>{{ project()?.displayName ?? 'Chargement du projet…' }}</h1>
       @if (project(); as currentProject) {
         <p class="repository-path">{{ currentProject.repositoryPath }}</p>
       }
     </div>
-    <button class="button" type="button" [disabled]="isRunning()" (click)="launchAnalysis()">
-      {{ isRunning() ? 'Analyse en cours…' : 'Lancer une analyse' }}
-    </button>
+    <div class="heading-actions">
+      <a class="button secondary" [routerLink]="['/projects', projectId, 'history']">Historique</a>
+      <a class="button secondary" [routerLink]="['/projects', projectId, 'settings']">Politiques</a>
+      @if (!isHistorical) {
+        <button class="button" type="button" [disabled]="isRunning()" (click)="launchAnalysis()">
+          {{ isRunning() ? 'Analyse en cours…' : 'Lancer une analyse' }}
+        </button>
+      }
+    </div>
   </header>
 
   @if (project()?.isRepositoryAccessible === false) {
@@ -59,6 +65,14 @@
       <p>GitHealth lit les références présentes sur ce poste et ne lance aucun fetch.</p>
     </section>
 
+    @if (snapshotPage.policy; as policy) {
+      <p class="policy-context">
+        Interprétation avec les seuils {{ policy.activeUntilDays }} /
+        {{ policy.inactiveAfterDays }} jours et {{ policy.protectedPatterns.length }} motif(s)
+        protégé(s).
+      </p>
+    }
+
     <section class="branch-section" aria-labelledby="branches-title">
       <div class="section-heading">
         <div>
@@ -95,6 +109,41 @@
           </select>
         </label>
         <label>
+          <span>Topologie</span>
+          <select name="topology" [ngModel]="topology()" (ngModelChange)="topology.set($event)">
+            <option value="">Toutes</option>
+            <option value="Synchronized">Synchronisées</option>
+            <option value="Ahead">En avance</option>
+            <option value="Merged">Fusionnées</option>
+            <option value="Diverged">Divergentes</option>
+            <option value="Unrelated">Sans base</option>
+          </select>
+        </label>
+        <label>
+          <span>Activité</span>
+          <select name="activity" [ngModel]="activity()" (ngModelChange)="activity.set($event)">
+            <option value="">Toutes</option>
+            <option value="Active">Actives</option>
+            <option value="Aging">Vieillissantes</option>
+            <option value="Inactive">Inactives</option>
+            <option value="Unknown">Inconnues</option>
+          </select>
+        </label>
+        <label>
+          <span>Recommandation</span>
+          <select
+            name="recommendation"
+            [ngModel]="recommendation()"
+            (ngModelChange)="recommendation.set($event)"
+          >
+            <option value="">Toutes</option>
+            <option value="Keep">Conserver</option>
+            <option value="Review">À examiner</option>
+            <option value="CleanupCandidate">Nettoyage possible</option>
+            <option value="Excluded">Exclues</option>
+          </select>
+        </label>
+        <label>
           <span>Trier par</span>
           <select name="sort" [ngModel]="sort()" (ngModelChange)="sort.set($event)">
             <option value="name">Nom</option>
@@ -115,6 +164,21 @@
           Réinitialiser
         </button>
       </form>
+
+      <div class="quick-filters" aria-label="Filtres rapides">
+        <button type="button" (click)="topology.set('Merged'); applyFilters()">Fusionnées</button>
+        <button type="button" (click)="activity.set('Inactive'); applyFilters()">Inactives</button>
+        <button type="button" (click)="topology.set('Diverged'); applyFilters()">
+          Divergentes
+        </button>
+        <button type="button" (click)="applyQuickFilter('Review')">À examiner</button>
+        <button type="button" (click)="applyQuickFilter('CleanupCandidate')">
+          Nettoyage possible
+        </button>
+        @if (!isHistorical) {
+          <a [href]="csvUrl()" download>Exporter cette vue en CSV</a>
+        }
+      </div>
 
       <div class="table-frame" [attr.aria-busy]="isLoading()">
         <table>
@@ -141,9 +205,13 @@
                   <span class="topology-rail" [class]="topologyTone(branch)" aria-hidden="true">
                     <i></i>
                   </span>
-                  <span class="branch-name" [title]="branch.referenceName">
+                  <a
+                    class="branch-name"
+                    [routerLink]="['/branches', branch.id]"
+                    [title]="branch.referenceName"
+                  >
                     {{ displayReference(branch.referenceName) }}
-                  </span>
+                  </a>
                   <small>{{ referenceSource(branch.referenceName) }}</small>
                 </th>
                 <td class="divergence">

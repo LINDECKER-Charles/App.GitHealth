@@ -56,10 +56,15 @@ tbody small {
 
 .branch-name {
   overflow: hidden;
+  color: var(--ink);
   font-family: var(--font-utility);
   font-size: 0.82rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.branch-name:hover {
+  color: var(--copper);
 }
 
 .topology-rail {

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace App.GitHealth.Api.Features.Snapshots;
 
-internal sealed record SnapshotQueryParameters
+internal record SnapshotFilterParameters
 {
     [FromQuery(Name = "search")]
     public string? Search { get; init; }
@@ -11,17 +11,35 @@ internal sealed record SnapshotQueryParameters
     [FromQuery(Name = "relationship")]
     public string? Relationship { get; init; }
 
+    [FromQuery(Name = "topology")]
+    public string? Topology { get; init; }
+
+    [FromQuery(Name = "activity")]
+    public string? Activity { get; init; }
+
+    [FromQuery(Name = "recommendation")]
+    public string? Recommendation { get; init; }
+
+    [FromQuery(Name = "isProtected")]
+    public bool? IsProtected { get; init; }
+
+    [FromQuery(Name = "isExcluded")]
+    public bool? IsExcluded { get; init; }
+
     [FromQuery(Name = "sort")]
-    public string Sort { get; init; } = "name";
+    public string? Sort { get; init; }
 
     [FromQuery(Name = "direction")]
-    public string Direction { get; init; } = "asc";
+    public string? Direction { get; init; }
+}
 
+internal sealed record SnapshotQueryParameters : SnapshotFilterParameters
+{
     [FromQuery(Name = "cursor")]
     public string? Cursor { get; init; }
 
     [FromQuery(Name = "pageSize")]
-    public int PageSize { get; init; } = 50;
+    public int? PageSize { get; init; }
 }
 
 internal sealed record SnapshotCursorData
@@ -36,6 +54,16 @@ internal sealed record SnapshotCursorData
 
     public string? Relationship { get; init; }
 
+    public string? Topology { get; init; }
+
+    public string? Activity { get; init; }
+
+    public string? Recommendation { get; init; }
+
+    public bool? IsProtected { get; init; }
+
+    public bool? IsExcluded { get; init; }
+
     public required string SortValue { get; init; }
 
     public required string ReferenceName { get; init; }
@@ -44,8 +72,17 @@ internal sealed record SnapshotCursorData
 }
 
 internal sealed record SnapshotPageData(
-    IReadOnlyList<BranchSnapshotEntity> Branches,
+    IReadOnlyList<ClassifiedSnapshot> Branches,
     string? NextCursor);
+
+internal sealed record ClassifiedSnapshot(
+    BranchSnapshotEntity Branch,
+    App.GitHealth.Core.Branches.BranchComparison Comparison);
+
+internal sealed record SnapshotSelectionData(
+    AnalysisRunEntity Analysis,
+    IReadOnlyList<ClassifiedSnapshot> Branches,
+    SnapshotPolicyResponse Policy);
 
 internal sealed record SnapshotPageResponse
 {
@@ -54,6 +91,8 @@ internal sealed record SnapshotPageResponse
     public required DateTimeOffset CapturedAtUtc { get; init; }
 
     public required string ReferenceName { get; init; }
+
+    public required SnapshotPolicyResponse Policy { get; init; }
 
     public required IReadOnlyList<BranchSnapshotResponse> Items { get; init; }
 
@@ -106,4 +145,27 @@ internal sealed record SnapshotDetailResponse
     public required BranchSnapshotResponse Snapshot { get; init; }
 
     public required IReadOnlyList<ContributorResponse> Contributors { get; init; }
+
+    public required string AttributionStatus { get; init; }
+
+    public required bool MailmapApplied { get; init; }
+
+    public required SnapshotPolicyResponse Policy { get; init; }
+}
+
+internal sealed record SnapshotPolicyResponse
+{
+    public required int ActiveUntilDays { get; init; }
+
+    public required int InactiveAfterDays { get; init; }
+
+    public required IReadOnlyList<string> ExcludedPatterns { get; init; }
+
+    public required IReadOnlyList<string> ProtectedPatterns { get; init; }
+}
+
+internal enum AttributionStatus
+{
+    Available,
+    UnavailableAfterMerge,
 }

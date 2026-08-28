@@ -1,6 +1,6 @@
 # Plan d'implémentation de GitHealth
 
-> Statut : exécution en cours — étapes 1 à 6 terminées le 29 août 2026
+> Statut : exécution en cours — étapes 1 à 7 terminées le 29 août 2026
 > Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Objectif du MVP
@@ -229,6 +229,8 @@ Git et comprendre immédiatement quelles branches demandent son attention.
 - Une erreur d'analyse n'efface pas le résultat précédent.
 
 ## Étape 7 — Expliquer les branches et configurer les politiques
+
+> Statut : terminée le 29 août 2026
 
 ### Résultat attendu
 

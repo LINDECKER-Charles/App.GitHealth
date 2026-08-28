@@ -11,6 +11,7 @@ internal static class ApiErrorCodes
     public const string EndpointNotFound = "endpoint.not_found";
     public const string InvalidDirectory = "runtime.invalid_directory";
     public const string InvalidCursor = "pagination.invalid_cursor";
+    public const string InvalidPage = "pagination.invalid_page";
     public const string InvalidPath = "repository.invalid_path";
     public const string InvalidReference = "repository.invalid_reference";
     public const string InvalidRepository = "repository.invalid";
