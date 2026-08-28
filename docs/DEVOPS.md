@@ -2,12 +2,12 @@
 
 ## Versions verrouillées
 
-| Outil | Version |
-|---|---:|
-| SDK .NET | 10.0.400 |
-| Runtime ASP.NET Core | 10.0.11 |
-| Node.js | 24.20.0 LTS |
-| npm | 11.19.0 |
+| Outil                |     Version |
+| -------------------- | ----------: |
+| SDK .NET             |    10.0.400 |
+| Runtime ASP.NET Core |     10.0.11 |
+| Node.js              | 24.20.0 LTS |
+| npm                  |     11.19.0 |
 
 ## Publication native
 
@@ -57,3 +57,10 @@ conservées.
 Le conteneur s’exécute avec l’utilisateur non privilégié de l’image ASP.NET. Sa
 configuration Git autorise uniquement `/repositories` et ses descendants comme
 répertoires sûrs ; elle n’utilise jamais le joker global `safe.directory=*`.
+
+## Intégration continue
+
+Le workflow `.github/workflows/ci.yml` s’exécute sur chaque pull request. Il
+restaure et compile .NET, exécute les tests .NET et Angular, publie l’application
+intégrée, contrôle la présence du bundle dans `wwwroot`, valide Compose et analyse
+le Dockerfile avec BuildKit.
