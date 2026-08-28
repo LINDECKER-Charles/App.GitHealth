@@ -56,6 +56,14 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
         RepositoryScanRequest request,
         CancellationToken cancellationToken)
     {
+        return await ScanAsync(request, progress: null, cancellationToken);
+    }
+
+    public async Task<RepositoryResult<RepositoryScan>> ScanAsync(
+        RepositoryScanRequest request,
+        IProgress<RepositoryScanStage>? progress,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(request);
 
         try
@@ -64,7 +72,8 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
                 _runner,
                 request.RepositoryPath,
                 cancellationToken);
-            var scan = await ScanCapturedAsync(repository, request, cancellationToken);
+            var execution = new RepositoryScanExecution(request, progress);
+            var scan = await ScanCapturedAsync(repository, execution, cancellationToken);
             return RepositoryResults.Success(scan);
         }
         catch (GitProcessException exception)
@@ -82,14 +91,17 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
 
     private async Task<RepositoryScan> ScanCapturedAsync(
         CapturedRepository repository,
-        RepositoryScanRequest request,
+        RepositoryScanExecution execution,
         CancellationToken cancellationToken)
     {
+        var request = execution.Request;
         var reference = FindReference(repository, request.Reference);
         var branches = SelectBranches(repository, request, reference);
         var topologyReader = new GitTopologyReader(_runner, _options);
         var topologyScan = new TopologyScan(repository, reference, branches);
+        execution.Progress?.Report(RepositoryScanStage.Topology);
         var topology = await topologyReader.ReadAsync(topologyScan, cancellationToken);
+        execution.Progress?.Report(RepositoryScanStage.Enrichment);
         var scanned = await EnrichAsync(topologyScan, topology, cancellationToken);
         var metadata = new RepositoryScanMetadata(_clock.UtcNow, repository.GitVersion);
         return new RepositoryScan(metadata, reference.Commit, scanned);

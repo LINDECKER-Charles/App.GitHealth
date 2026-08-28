@@ -25,4 +25,8 @@ internal interface IAnalysisRepository
     Task<AnalysisRunEntity?> GetLastSuccessfulAsync(
         Guid projectId,
         CancellationToken cancellationToken);
+
+    Task<BranchSnapshotEntity?> GetBranchAsync(
+        Guid branchSnapshotId,
+        CancellationToken cancellationToken);
 }

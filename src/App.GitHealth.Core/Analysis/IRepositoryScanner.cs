@@ -9,4 +9,9 @@ public interface IRepositoryScanner
     Task<RepositoryResult<RepositoryScan>> ScanAsync(
         RepositoryScanRequest request,
         CancellationToken cancellationToken);
+
+    Task<RepositoryResult<RepositoryScan>> ScanAsync(
+        RepositoryScanRequest request,
+        IProgress<RepositoryScanStage> progress,
+        CancellationToken cancellationToken) => ScanAsync(request, cancellationToken);
 }

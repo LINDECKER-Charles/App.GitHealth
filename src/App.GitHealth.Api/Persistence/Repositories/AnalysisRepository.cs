@@ -82,6 +82,17 @@ internal sealed class AnalysisRepository(IDbContextFactory<GitHealthDbContext> c
                 cancellationToken);
     }
 
+    public async Task<BranchSnapshotEntity?> GetBranchAsync(
+        Guid branchSnapshotId,
+        CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.BranchSnapshots.AsNoTracking()
+            .Include(branch => branch.AnalysisRun)
+            .Include(branch => branch.Contributors)
+            .SingleOrDefaultAsync(branch => branch.Id == branchSnapshotId, cancellationToken);
+    }
+
     private static IQueryable<AnalysisRunEntity> ReadQuery(GitHealthDbContext context)
     {
         return context.AnalysisRuns.AsNoTracking()
