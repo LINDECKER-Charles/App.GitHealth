@@ -1,0 +1,40 @@
+# .NET
+bin/
+obj/
+artifacts/
+TestResults/
+coverage/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+.vscode/
+
+# Angular / Node.js
+node_modules/
+.angular/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local application data
+.githealth/
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.pem
+*.key
+
+# Operating systems
+.DS_Store
+Thumbs.db
