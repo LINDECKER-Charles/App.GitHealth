@@ -1,0 +1,300 @@
+:host {
+  display: block;
+}
+.home {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 100dvh;
+  padding: clamp(1.25rem, 3vw, 2.75rem);
+  color: var(--ink);
+  background:
+    linear-gradient(90deg, transparent 49.9%, var(--line-soft) 50%, transparent 50.1%), var(--fog);
+}
+
+.masthead,
+.next-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 2.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: 50% 50% 50% 0;
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+}
+
+.constraint,
+.status,
+.topology-heading,
+.next-step span {
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.constraint,
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.constraint span,
+.status span {
+  width: 0.55rem;
+  aspect-ratio: 1;
+  background: var(--petrol);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--petrol) 16%, transparent);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1.08fr) minmax(20rem, 0.92fr);
+  gap: clamp(1.5rem, 4vw, 4.75rem);
+  align-items: center;
+  width: min(100%, 86rem);
+  margin: clamp(3rem, 8vh, 7rem) auto;
+}
+
+.side-note {
+  margin: 0;
+  font-family: var(--font-utility);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.hero-copy {
+  max-width: 43rem;
+}
+
+.status {
+  color: var(--petrol-dark);
+}
+
+h1 {
+  max-width: 12ch;
+  margin: 1.5rem 0 1.4rem;
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 7.4vw, 7.4rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.075em;
+}
+
+.intro {
+  max-width: 38rem;
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: clamp(1rem, 1.7vw, 1.25rem);
+  line-height: 1.65;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2.25rem;
+  color: var(--ink-muted);
+  font-size: 0.88rem;
+}
+
+.primary-action {
+  padding: 0.9rem 1.1rem;
+  color: var(--paper);
+  background: var(--copper);
+  border: 2px solid var(--copper);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primary-action:hover {
+  color: var(--copper);
+  background: transparent;
+}
+
+.foundations {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 3rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.foundations div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.foundations dt {
+  color: var(--ink-muted);
+  font-family: var(--font-utility);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.foundations dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.topology {
+  overflow: hidden;
+  margin: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: 1.1rem 1.1rem 0 var(--petrol);
+}
+
+.topology-heading,
+.topology figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.topology-heading code {
+  color: var(--copper);
+}
+
+.topology svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.branch {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.branch-main {
+  stroke: var(--petrol);
+}
+
+.branch-review {
+  stroke: var(--copper);
+  stroke-dasharray: 10 14;
+  animation: inspect-branch 10s linear infinite;
+}
+
+.branch-merged {
+  stroke: var(--moss);
+}
+
+.nodes circle {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 4;
+}
+
+.topology figcaption {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}
+
+.topology figcaption strong {
+  color: var(--ink);
+}
+
+.next-step {
+  align-self: end;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.next-step p {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+@keyframes inspect-branch {
+  to {
+    stroke-dashoffset: -120;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 2rem 1fr;
+  }
+
+  .topology {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 620px) {
+  .home {
+    background: var(--fog);
+  }
+
+  .constraint,
+  .actions span {
+    display: none;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    margin-block: 3rem;
+  }
+
+  .side-note {
+    writing-mode: initial;
+    transform: none;
+  }
+
+  .topology {
+    grid-column: 1;
+    box-shadow: 0.6rem 0.6rem 0 var(--petrol);
+  }
+
+  .foundations {
+    grid-template-columns: 1fr;
+  }
+
+  .next-step {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .branch-review {
+    animation: none;
+  }
+}

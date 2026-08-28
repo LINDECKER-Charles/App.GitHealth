@@ -1,0 +1,42 @@
+:root {
+  --fog: #eef3f1;
+  --paper: #fbfcfa;
+  --ink: #17313a;
+  --ink-muted: #51666c;
+  --petrol: #147875;
+  --petrol-dark: #0d5a59;
+  --copper: #bd5738;
+  --moss: #75886b;
+  --line: #b9c9c4;
+  --line-soft: #dce6e2;
+  --font-display: 'Trebuchet MS', 'Avenir Next', sans-serif;
+  --font-body: Inter, Aptos, 'Segoe UI', sans-serif;
+  --font-utility: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+
+  color-scheme: light;
+  font-family: var(--font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  min-width: 20rem;
+  min-height: 100%;
+  background: var(--fog);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+}

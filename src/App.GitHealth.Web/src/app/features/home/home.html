@@ -1,0 +1,72 @@
+<main class="home">
+  <header class="masthead">
+    <a class="brand" href="/" aria-label="GitHealth, accueil">
+      <span class="brand-mark" aria-hidden="true">GH</span>
+      <span>GitHealth</span>
+    </a>
+    <p class="constraint">
+      <span aria-hidden="true"></span>
+      Dépôts lus, jamais modifiés
+    </p>
+  </header>
+
+  <section class="hero" aria-labelledby="page-title">
+    <p class="side-note">Diagnostic local · lecture seule</p>
+
+    <div class="hero-copy">
+      <p class="status">
+        <span aria-hidden="true"></span>
+        Socle opérationnel
+      </p>
+      <h1 id="page-title">Lire l’état des branches. Garder Git intact.</h1>
+      <p class="intro">
+        GitHealth prépare une vue fiable des branches locales et distantes, comparées à leur
+        référence sans checkout, fetch ni écriture.
+      </p>
+
+      <div class="actions">
+        <a class="primary-action" href="/health">Interroger /health</a>
+        <span>Une interface, une API, un seul processus.</span>
+      </div>
+
+      <dl class="foundations" aria-label="Fondations techniques">
+        @for (foundation of foundations; track foundation.label) {
+          <div>
+            <dt>{{ foundation.label }}</dt>
+            <dd>{{ foundation.value }}</dd>
+          </div>
+        }
+      </dl>
+    </div>
+
+    <figure class="topology" aria-labelledby="topology-caption">
+      <div class="topology-heading">
+        <span>Topologie témoin</span>
+        <code>main</code>
+      </div>
+
+      <svg viewBox="0 0 520 360" role="img" aria-label="Branches Git comparées à main">
+        <path class="branch branch-main" d="M72 292 C160 292 158 190 248 190 S344 86 448 86" />
+        <path class="branch branch-review" d="M248 190 C310 190 316 274 404 274" />
+        <path class="branch branch-merged" d="M142 244 C190 244 192 190 248 190" />
+        <g class="nodes">
+          <circle cx="72" cy="292" r="8" />
+          <circle cx="142" cy="244" r="8" />
+          <circle cx="248" cy="190" r="11" />
+          <circle cx="404" cy="274" r="8" />
+          <circle cx="448" cy="86" r="11" />
+        </g>
+      </svg>
+
+      <figcaption id="topology-caption">
+        <span>Référence observée</span>
+        <strong>Aucune commande destructive</strong>
+      </figcaption>
+    </figure>
+  </section>
+
+  <footer class="next-step">
+    <span>Prochaine étape produit</span>
+    <p>Décrire les faits Git avant de calculer les recommandations.</p>
+  </footer>
+</main>
