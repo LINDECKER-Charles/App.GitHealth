@@ -1,0 +1,189 @@
+<div class="dialog-scrim" (click)="close.emit()">
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="scan-folder-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="dialog-heading">
+      <span class="dialog-heading-mark"><ds-icon name="search" [size]="16" /></span>
+      <span id="scan-folder-title" class="dialog-heading-title">Scanner un dossier</span>
+      <button dsIconButton icon="x" label="Fermer" size="sm" (click)="close.emit()"></button>
+    </header>
+
+    <div class="dialog-body">
+      @if (scan.hasJobs()) {
+        <div class="progress-strip" role="status">
+          <ds-icon name="refresh-cw" [size]="14" />
+          <span>{{ summaryLabel() }}</span>
+        </div>
+        <div class="scan-list">
+          @for (job of scan.jobs(); track job.key) {
+            <div class="scan-row">
+              <ds-status-dot [tone]="stateTones[job.state]" [size]="7" />
+              <span class="scan-row-name">{{ job.name }}</span>
+              <span class="scan-row-detail" [class.is-error]="job.state === 'failed'">
+                {{ jobDetail(job) }}
+              </span>
+            </div>
+          }
+        </div>
+      } @else if (isBrowsing()) {
+        <app-directory-browser
+          (cancelled)="isBrowsing.set(false)"
+          (selected)="useDirectory($event)"
+        />
+      } @else {
+        <div class="field-label">Dossier à explorer</div>
+        <div class="path-row">
+          <ds-input
+            size="md"
+            [mono]="true"
+            [placeholder]="projects.runtime()?.mode === 'docker' ? '/repositories' : 'D:\\Projets'"
+            ariaLabel="Dossier à explorer"
+            [invalid]="error() !== null"
+            [(value)]="path"
+            (submit)="discover()"
+          />
+          @if (projects.runtime()?.canBrowseDirectories) {
+            <button
+              dsButton
+              size="md"
+              variant="secondary"
+              iconLeft="folder"
+              (click)="isBrowsing.set(true)"
+            >
+              Parcourir
+            </button>
+          }
+        </div>
+
+        <div class="detect-row">
+          <div class="detect-depth">
+            <span class="field-label">Profondeur</span>
+            <ds-select
+              size="sm"
+              ariaLabel="Profondeur d’exploration"
+              [options]="depthOptions"
+              [(value)]="depth"
+            />
+          </div>
+          <button
+            dsButton
+            size="md"
+            variant="secondary"
+            iconLeft="search"
+            [loading]="isDiscovering()"
+            [disabled]="path().trim().length === 0"
+            (click)="discover()"
+          >
+            Détecter les dépôts
+          </button>
+        </div>
+
+        <p class="field-hint">
+          Chaque sous-dossier est inspecté jusqu’à la profondeur choisie. Un dépôt trouvé n’est pas
+          ouvert plus loin, et les dossiers cachés ou de build sont ignorés.
+        </p>
+
+        @if (error(); as message) {
+          <p class="validation-note validation-error" role="alert">{{ message }}</p>
+        }
+
+        @if (hasDiscovered()) {
+          <div class="results">
+            <div class="results-head">
+              <ds-checkbox
+                ariaLabel="Tout sélectionner"
+                [checked]="isAllSelected()"
+                (checkedChange)="toggleAll()"
+              />
+              <span class="results-title">{{ resultsLabel() }}</span>
+              <span class="results-count">{{ selectedCount() }} retenus</span>
+            </div>
+
+            <div class="results-list">
+              @for (repository of repositories(); track repository.canonicalPath) {
+                <div class="result-row" [class.is-selected]="isSelected(repository)">
+                  <ds-checkbox
+                    [ariaLabel]="repository.suggestedName"
+                    [disabled]="repository.suggestedReference === null"
+                    [checked]="isSelected(repository)"
+                    (checkedChange)="toggle(repository, $event)"
+                  />
+                  <button
+                    class="result-main"
+                    type="button"
+                    [disabled]="repository.suggestedReference === null"
+                    (click)="toggle(repository, !isSelected(repository))"
+                  >
+                    <span class="result-name">
+                      {{ repository.suggestedName }}
+                      @if (repository.trackedProjectId !== null) {
+                        <em class="result-flag">déjà suivi</em>
+                      }
+                      @if (repository.isBare) {
+                        <em class="result-flag">bare</em>
+                      }
+                    </span>
+                    <span class="result-path">{{ repository.canonicalPath }}</span>
+                  </button>
+                  <span class="result-reference">
+                    @if (repository.suggestedReference; as reference) {
+                      {{ displayReference(reference) }}
+                    } @else {
+                      référence introuvable
+                    }
+                  </span>
+                </div>
+              } @empty {
+                <p class="results-note">
+                  Aucun dépôt Git sous ce dossier. Augmente la profondeur ou choisis un dossier
+                  parent.
+                </p>
+              }
+            </div>
+
+            @if (discovery()?.isTruncated) {
+              <p class="results-note">
+                Exploration interrompue à la limite de détection. Choisis un dossier plus précis
+                pour voir le reste.
+              </p>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    @if (!isBrowsing()) {
+      <footer class="dialog-footer">
+        <span>Lecture seule. Aucune écriture sur les dépôts.</span>
+        @if (scan.hasJobs()) {
+          <button
+            dsButton
+            size="md"
+            variant="ghost"
+            [disabled]="scan.isRunning()"
+            (click)="backToSelection()"
+          >
+            Nouvelle sélection
+          </button>
+          <button dsButton size="md" variant="primary" (click)="close.emit()">Fermer</button>
+        } @else {
+          <button dsButton size="md" variant="ghost" (click)="close.emit()">Annuler</button>
+          <button
+            dsButton
+            size="md"
+            variant="primary"
+            iconLeft="play"
+            [disabled]="!canScan()"
+            (click)="scanSelection()"
+          >
+            {{ scanLabel() }}
+          </button>
+        }
+      </footer>
+    }
+  </div>
+</div>

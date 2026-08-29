@@ -64,6 +64,14 @@
   <app-add-repository-dialog (close)="dialogs.closeAddRepository()" />
 }
 
+@if (dialogs.isScanFolderOpen()) {
+  <app-scan-folder-dialog (close)="dialogs.closeScanFolder()" />
+}
+
+@if (dialogs.projectGroupId(); as projectId) {
+  <app-project-group-dialog [projectId]="projectId" (close)="dialogs.closeProjectGroup()" />
+}
+
 @if (toast.message(); as message) {
   <div class="workspace-toast" role="status" aria-live="polite">
     <ds-status-dot tone="success" [size]="7" />

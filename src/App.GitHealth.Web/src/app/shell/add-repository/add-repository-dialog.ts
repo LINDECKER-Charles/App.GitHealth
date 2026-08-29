@@ -22,6 +22,13 @@ import {
 import { apiErrorMessage } from '../../core/api/api-error';
 import { GitHealthApiClient } from '../../core/api/git-health-api-client';
 import { RepositoryValidation } from '../../core/api/api.models';
+import {
+  branchNamespaceFor,
+  defaultActiveUntilDays,
+  defaultInactiveAfterDays,
+  localBranchNamespace,
+  remoteBranchNamespace,
+} from '../../core/scan/project-defaults';
 import { ProjectsStore } from '../../core/workspace/projects-store';
 import { ToastService } from '../../core/workspace/toast';
 import { DsButton } from '../../ui/core/ds-button';
@@ -34,13 +41,11 @@ import { DirectoryBrowser } from './directory-browser';
 import { displayReference } from '../../core/branches/branch-labels';
 
 const validationDelayMs = 400;
-const defaultActiveUntilDays = 30;
-const defaultInactiveAfterDays = 90;
 
 const scopeOptions: readonly SelectOption[] = [
   { value: 'refs/*', label: 'Toutes' },
-  { value: 'refs/heads/*', label: 'Locales' },
-  { value: 'refs/remotes/*', label: 'Suivi distant' },
+  { value: localBranchNamespace, label: 'Locales' },
+  { value: remoteBranchNamespace, label: 'Suivi distant' },
 ];
 
 type Validation =
@@ -75,7 +80,7 @@ export class AddRepositoryDialog {
   protected readonly path = signal('');
   protected readonly displayName = signal('');
   protected readonly referenceName = signal('');
-  protected readonly scope = signal('refs/heads/*');
+  protected readonly scope = signal(localBranchNamespace);
   protected readonly validation = signal<Validation>({ kind: 'idle' });
   protected readonly isValidating = signal(false);
   protected readonly isCreating = signal(false);
@@ -196,7 +201,7 @@ export class AddRepositoryDialog {
     this.displayName.set(lastSegment(result.repository.canonicalPath));
     const reference = result.repository.suggestedReference ?? result.repository.references[0] ?? '';
     this.referenceName.set(reference);
-    this.scope.set(reference.startsWith('refs/remotes/') ? 'refs/remotes/*' : 'refs/heads/*');
+    this.scope.set(branchNamespaceFor(reference));
   }
 }
 

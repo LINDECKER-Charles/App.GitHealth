@@ -9,7 +9,9 @@ import { WorkspaceDialogs } from './core/workspace/workspace-dialogs';
 import { AddRepositoryDialog } from './shell/add-repository/add-repository-dialog';
 import { BootIntro } from './shell/boot/boot-intro';
 import { CommandPalette } from './shell/palette/command-palette';
+import { ProjectGroupDialog } from './shell/project-group/project-group-dialog';
 import { ProjectRail } from './shell/rail/project-rail';
+import { ScanFolderDialog } from './shell/scan-folder/scan-folder-dialog';
 import { DsBadge } from './ui/core/ds-badge';
 import { DsIcon } from './ui/core/ds-icon';
 import { DsIconButton } from './ui/core/ds-icon-button';
@@ -32,8 +34,10 @@ const introSkippedValue = 'skipped';
     DsIconButton,
     DsKbd,
     DsStatusDot,
+    ProjectGroupDialog,
     ProjectRail,
     RouterOutlet,
+    ScanFolderDialog,
   ],
   selector: 'app-root',
   styleUrl: './app.scss',
