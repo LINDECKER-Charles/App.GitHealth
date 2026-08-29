@@ -1,0 +1,81 @@
+name: Proposition de fonctionnalité
+description: Proposer une évolution du produit
+title: 'feat: '
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci pour cette proposition.
+
+        GitHealth **observe** un dépôt, il ne le modifie jamais. Les demandes suivantes
+        sont hors périmètre et seront closes : supprimer, fusionner ou pousser une
+        branche, lancer `fetch` automatiquement, cloner un dépôt distant, s'intégrer aux
+        API de GitHub, GitLab ou Azure DevOps, exposer une instance partagée sur un
+        réseau.
+
+        Les raisons de ces frontières sont documentées dans [ARCHITECTURE.md][archi].
+
+        [archi]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/ARCHITECTURE.md
+
+  - type: checkboxes
+    id: verifications
+    attributes:
+      label: Vérifications préalables
+      options:
+        - label: J'ai lu le périmètre du produit et cette demande n'en sort pas.
+          required: true
+        - label: J'ai cherché une proposition existante, ouverte ou fermée.
+          required: true
+
+  - type: textarea
+    id: probleme
+    attributes:
+      label: Problème à résoudre
+      description: >-
+        Décrivez la situation vécue, pas la solution. Qu'essayiez-vous de faire, et
+        qu'est-ce qui vous a bloqué ?
+      placeholder: >-
+        Sur un dépôt de 400 branches, je n'arrive pas à isoler celles d'une équipe
+        donnée : le filtre par motif ne s'applique qu'à la protection et à l'exclusion.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposition
+    attributes:
+      label: Solution envisagée
+      description: Ce que vous imaginez, et comment vous l'utiliseriez.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considérées
+      description: >-
+        Contournements essayés, y compris hors de GitHealth, et pourquoi ils ne
+        suffisent pas.
+
+  - type: dropdown
+    id: zone
+    attributes:
+      label: Zone concernée
+      options:
+        - Analyse et mesures Git
+        - Politiques et recommandations
+        - Interface et navigation
+        - Historique et exports
+        - Installation, lanceur, Docker
+        - Autre ou incertain
+    validations:
+      required: true
+
+  - type: textarea
+    id: complement
+    attributes:
+      label: Complément
+      description: >-
+        Maquette, exemple d'une autre application, ou volonté de contribuer
+        l'implémentation.

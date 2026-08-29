@@ -14,4 +14,19 @@
     <VersionSuffix>rc.1</VersionSuffix>
     <InformationalVersion>$(VersionPrefix)-$(VersionSuffix)</InformationalVersion>
   </PropertyGroup>
+
+  <!--
+    La licence MIT n'exige qu'une chose : que la mention de copyright suive le
+    logiciel. Ces propriétés l'inscrivent dans les métadonnées des assemblies, donc
+    dans les binaires distribués, et pas seulement dans le fichier LICENSE du dépôt.
+  -->
+  <PropertyGroup>
+    <Product>GitHealth</Product>
+    <Authors>Charles LINDECKER</Authors>
+    <Copyright>Copyright (c) 2026 Charles LINDECKER</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/LINDECKER-Charles/App.GitHealth</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LINDECKER-Charles/App.GitHealth.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
 </Project>

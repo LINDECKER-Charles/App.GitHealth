@@ -1,0 +1,128 @@
+name: Rapport de bug
+description: Signaler un comportement incorrect et reproductible
+title: 'fix: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci pour ce signalement.
+
+        **Avant de continuer**, vérifiez le [dépannage][depannage] et les
+        [limites connues][limites] : plusieurs comportements surprenants sont des
+        conséquences assumées de la sémantique de Git, pas des bugs.
+
+        **N'incluez jamais** de chemin de dépôt d'entreprise, de nom de branche interne
+        ni d'identité d'auteur. Anonymisez avant de publier.
+
+        Une **faille de sécurité** ne se signale pas ici : utilisez un
+        [avis de sécurité privé][advisory].
+
+        [depannage]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/TROUBLESHOOTING.md
+        [limites]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/KNOWN_LIMITATIONS.md
+        [advisory]: https://github.com/LINDECKER-Charles/App.GitHealth/security/advisories/new
+
+  - type: checkboxes
+    id: verifications
+    attributes:
+      label: Vérifications préalables
+      options:
+        - label: J'ai lu le dépannage et les limites connues.
+          required: true
+        - label: J'ai cherché une issue existante, ouverte ou fermée.
+          required: true
+        - label: Ce rapport ne contient aucune donnée réelle de dépôt ou d'auteur.
+          required: true
+
+  - type: textarea
+    id: resume
+    attributes:
+      label: Résumé
+      description: Le problème en une ou deux phrases.
+      placeholder: >-
+        Une branche fusionnée reste classée « Conserver » alors que la politique
+        annonce l'échelle réduite.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Étapes de reproduction
+      description: Les étapes minimales, dans l'ordre.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Comportement attendu
+    validations:
+      required: true
+
+  - type: textarea
+    id: obtenu
+    attributes:
+      label: Comportement obtenu
+      description: >-
+        Ajoutez les messages de la console si l'application refuse de démarrer ou
+        si une analyse échoue. Anonymisez les chemins.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode d'exécution
+      options:
+        - Exécutable natif Windows x64
+        - Exécutable natif macOS Intel
+        - Exécutable natif macOS Apple Silicon
+        - Docker Compose
+        - Depuis les sources (dotnet run / ng serve)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version de GitHealth
+      description: Nom de l'archive, tag de la release, ou balise de l'image Docker.
+      placeholder: 0.1.0-rc.1
+    validations:
+      required: true
+
+  - type: input
+    id: systeme
+    attributes:
+      label: Système et version de Git
+      description: Sortie de `git --version` et système d'exploitation.
+      placeholder: Windows 11 24H2, git 2.47.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: depot
+    attributes:
+      label: Forme du dépôt analysé
+      description: >-
+        La forme compte souvent plus que la taille. Dépôt standard, *bare* ou worktree
+        lié ; nombre approximatif de branches ; présence d'un `.mailmap` ; branche de
+        référence utilisée.
+      placeholder: >-
+        Dépôt standard, ~180 branches dont 120 de suivi distant, pas de .mailmap,
+        référence `main`.
+
+  - type: textarea
+    id: complement
+    attributes:
+      label: Complément
+      description: >-
+        Captures d'écran, contournement trouvé, ou tout élément utile. Un dépôt de
+        reproduction minimal fabriqué avec des commits vides vaut mieux qu'un extrait
+        de dépôt réel.

@@ -1,0 +1,54 @@
+name: Documentation
+description: Signaler une documentation fausse, incomplète ou trompeuse
+title: 'docs: '
+labels:
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Une documentation qui décrit un comportement que le produit n'a pas est un
+        défaut à part entière. Merci de le signaler.
+
+  - type: dropdown
+    id: document
+    attributes:
+      label: Document concerné
+      options:
+        - README.md
+        - docs/USER_GUIDE.md
+        - docs/TROUBLESHOOTING.md
+        - docs/KNOWN_LIMITATIONS.md
+        - docs/DEVOPS.md
+        - docs/SECURITY_MODEL.md
+        - docs/BENCHMARKING.md
+        - ARCHITECTURE.md
+        - CONTRIBUTING.md
+        - Autre
+    validations:
+      required: true
+
+  - type: input
+    id: emplacement
+    attributes:
+      label: Emplacement précis
+      description: Titre de section, ou lien vers la ligne concernée.
+      placeholder: '« Configurer les politiques », tableau de l''échelle réduite'
+    validations:
+      required: true
+
+  - type: textarea
+    id: probleme
+    attributes:
+      label: Ce qui ne va pas
+      description: >-
+        Information fausse, étape manquante, formulation ambiguë, exemple qui ne
+        fonctionne pas.
+    validations:
+      required: true
+
+  - type: textarea
+    id: correction
+    attributes:
+      label: Correction proposée
+      description: Si vous avez la bonne formulation, écrivez-la ici.

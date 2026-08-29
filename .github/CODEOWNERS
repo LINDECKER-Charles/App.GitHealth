@@ -1,0 +1,20 @@
+# Propriétaires du code GitHealth.
+# Chaque règle attribue une revue obligatoire ; la dernière règle qui correspond gagne.
+# Voir https://docs.github.com/articles/about-code-owners
+
+# Défaut — tout le dépôt.
+*                       @LINDECKER-Charles
+
+# Sécurité, licence et attribution : relecture systématique.
+/LICENSE                @LINDECKER-Charles
+/SECURITY.md            @LINDECKER-Charles
+/SECURITY_AUDIT.md      @LINDECKER-Charles
+/CITATION.cff           @LINDECKER-Charles
+/THIRD-PARTY-NOTICES.md @LINDECKER-Charles
+/CODE_OF_CONDUCT.md     @LINDECKER-Charles
+
+# Chaîne de livraison — workflows, conteneur, publication native.
+/.github/               @LINDECKER-Charles
+/Dockerfile             @LINDECKER-Charles
+/compose.yaml           @LINDECKER-Charles
+/eng/                   @LINDECKER-Charles
