@@ -33,6 +33,10 @@ data/
 .env
 .env.*
 !.env.example
+
+# Surcouches Compose propres à un poste
+compose.override.yaml
+compose.override.yml
 *.pfx
 *.pem
 *.key
