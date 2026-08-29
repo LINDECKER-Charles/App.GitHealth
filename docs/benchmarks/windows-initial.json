@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-08-29T00:51:28.3485462+00:00",
+  "environment": {
+    "operatingSystem": "Microsoft Windows 10.0.26200",
+    "runtimeIdentifier": "win-x64",
+    "processArchitecture": "X64",
+    "framework": ".NET 10.0.11",
+    "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "logicalProcessorCount": 12,
+    "gitVersion": "git version 2.55.0.windows.5",
+    "sourceCommit": "2a9575fe77adf8254a7e913414e0c9695de92ab8",
+    "sourceWorkingTreeDirty": true
+  },
+  "configuration": {
+    "measurementIterations": 3,
+    "warmupIterations": 1,
+    "budgetsPath": "benchmarks\\budgets.json",
+    "budgetsLoaded": false
+  },
+  "scenarios": [
+    {
+      "branchCount": 100,
+      "fixtureFingerprint": "5449a8ee4b1fd3ef6513f7e0c5d4365f9d97365a5cd2e078adf8b75026a1536c",
+      "phases": [
+        {
+          "name": "topology",
+          "samplesMilliseconds": [
+            135.255,
+            161.818,
+            171.515
+          ],
+          "medianMilliseconds": 161.818,
+          "p95Milliseconds": 171.515,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "enrichment",
+          "samplesMilliseconds": [
+            9142.188,
+            9772.377,
+            9226.789
+          ],
+          "medianMilliseconds": 9226.789,
+          "p95Milliseconds": 9772.377,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "persistence",
+          "samplesMilliseconds": [
+            102.621,
+            110.714,
+            105.441
+          ],
+          "medianMilliseconds": 105.441,
+          "p95Milliseconds": 110.714,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "api",
+          "samplesMilliseconds": [
+            12.755,
+            17.398,
+            21.527
+          ],
+          "medianMilliseconds": 17.398,
+          "p95Milliseconds": 21.527,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        }
+      ]
+    },
+    {
+      "branchCount": 500,
+      "fixtureFingerprint": "22abc881b613ecdc007ab7b3544135497751827114b54a430441ebb3a72c9729",
+      "phases": [
+        {
+          "name": "topology",
+          "samplesMilliseconds": [
+            350.41,
+            285.255,
+            334.706
+          ],
+          "medianMilliseconds": 334.706,
+          "p95Milliseconds": 350.41,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "enrichment",
+          "samplesMilliseconds": [
+            43885.299,
+            49585.567,
+            47319.656
+          ],
+          "medianMilliseconds": 47319.656,
+          "p95Milliseconds": 49585.567,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "persistence",
+          "samplesMilliseconds": [
+            459.746,
+            367.854,
+            355.333
+          ],
+          "medianMilliseconds": 367.854,
+          "p95Milliseconds": 459.746,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "api",
+          "samplesMilliseconds": [
+            55.18,
+            43.664,
+            41.586
+          ],
+          "medianMilliseconds": 43.664,
+          "p95Milliseconds": 55.18,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        }
+      ]
+    },
+    {
+      "branchCount": 1000,
+      "fixtureFingerprint": "55078751d0dc13f7e6112378ba72cf30f8e2206a5276a2a209a2e67a798c96ff",
+      "phases": [
+        {
+          "name": "topology",
+          "samplesMilliseconds": [
+            548.262,
+            506.596,
+            500.511
+          ],
+          "medianMilliseconds": 506.596,
+          "p95Milliseconds": 548.262,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "enrichment",
+          "samplesMilliseconds": [
+            94344.122,
+            98289.182,
+            91698.871
+          ],
+          "medianMilliseconds": 94344.122,
+          "p95Milliseconds": 98289.182,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "persistence",
+          "samplesMilliseconds": [
+            200.178,
+            328.163,
+            290.797
+          ],
+          "medianMilliseconds": 290.797,
+          "p95Milliseconds": 328.163,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        },
+        {
+          "name": "api",
+          "samplesMilliseconds": [
+            64.459,
+            53.21,
+            50.169
+          ],
+          "medianMilliseconds": 53.21,
+          "p95Milliseconds": 64.459,
+          "maximumP95Milliseconds": null,
+          "budgetStatus": "NotConfigured"
+        }
+      ]
+    }
+  ],
+  "hasBudgetRegression": false
+}

@@ -19,6 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference
+      Include="..\..\benchmarks\App.GitHealth.Benchmarks\App.GitHealth.Benchmarks.csproj" />
     <ProjectReference Include="..\..\src\App.GitHealth.Api\App.GitHealth.Api.csproj" />
     <ProjectReference Include="..\App.GitHealth.Git.TestHost\App.GitHealth.Git.TestHost.csproj" />
   </ItemGroup>

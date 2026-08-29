@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "policy": "P95 maximal sur l'environnement Windows de référence",
+  "baseline": "docs/benchmarks/windows-initial.json",
+  "margin": "au moins 50 %, arrondi et monotone par taille",
+  "budgets": [
+    {
+      "branchCount": 100,
+      "phase": "topology",
+      "maximumP95Milliseconds": 300
+    },
+    {
+      "branchCount": 100,
+      "phase": "enrichment",
+      "maximumP95Milliseconds": 15000
+    },
+    {
+      "branchCount": 100,
+      "phase": "persistence",
+      "maximumP95Milliseconds": 200
+    },
+    {
+      "branchCount": 100,
+      "phase": "api",
+      "maximumP95Milliseconds": 50
+    },
+    {
+      "branchCount": 500,
+      "phase": "topology",
+      "maximumP95Milliseconds": 550
+    },
+    {
+      "branchCount": 500,
+      "phase": "enrichment",
+      "maximumP95Milliseconds": 75000
+    },
+    {
+      "branchCount": 500,
+      "phase": "persistence",
+      "maximumP95Milliseconds": 750
+    },
+    {
+      "branchCount": 500,
+      "phase": "api",
+      "maximumP95Milliseconds": 100
+    },
+    {
+      "branchCount": 1000,
+      "phase": "topology",
+      "maximumP95Milliseconds": 850
+    },
+    {
+      "branchCount": 1000,
+      "phase": "enrichment",
+      "maximumP95Milliseconds": 150000
+    },
+    {
+      "branchCount": 1000,
+      "phase": "persistence",
+      "maximumP95Milliseconds": 750
+    },
+    {
+      "branchCount": 1000,
+      "phase": "api",
+      "maximumP95Milliseconds": 125
+    }
+  ]
+}

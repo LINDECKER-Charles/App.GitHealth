@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\App.GitHealth.Api\App.GitHealth.Api.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>App.GitHealth.Benchmarks</AssemblyName>
+    <RootNamespace>App.GitHealth.Benchmarks</RootNamespace>
+  </PropertyGroup>
+
+</Project>
