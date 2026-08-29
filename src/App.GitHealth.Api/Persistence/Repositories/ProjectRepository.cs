@@ -92,6 +92,17 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
             cancellationToken);
     }
 
+    public Task UpdateOrganizationAsync(
+        ProjectOrganizationUpdate update,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+        return UpdateAsync(
+            update.ProjectId,
+            project => project.UpdateOrganization(update.Organization, update.ChangedAtUtc),
+            cancellationToken);
+    }
+
     private Task<bool> UpdateAsync(
         Guid projectId,
         Action<ProjectEntity> update,

@@ -23,6 +23,10 @@ internal interface IProjectRepository
 
     Task UpdateSettingsAsync(ProjectSettingsUpdate update, CancellationToken cancellationToken);
 
+    Task UpdateOrganizationAsync(
+        ProjectOrganizationUpdate update,
+        CancellationToken cancellationToken);
+
     Task MarkUnavailableAsync(
         Guid projectId,
         DateTimeOffset changedAtUtc,

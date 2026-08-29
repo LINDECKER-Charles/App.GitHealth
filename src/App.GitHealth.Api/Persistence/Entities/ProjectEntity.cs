@@ -34,6 +34,10 @@ internal sealed class ProjectEntity
 
     public string ProtectedPatternsJson { get; private set; } = "[]";
 
+    public bool IsFavorite { get; private set; }
+
+    public string? GroupName { get; private set; }
+
     public Guid? LastSuccessfulAnalysisId { get; set; }
 
     public ICollection<AnalysisRunEntity> AnalysisRuns { get; } = [];
@@ -50,7 +54,7 @@ internal sealed class ProjectEntity
             IsRepositoryAccessible = true,
             CreatedAtUtc = createdAtUtc,
             UpdatedAtUtc = createdAtUtc,
-        }.ApplySettings(project.Settings);
+        }.ApplySettings(project.Settings).ApplyOrganization(project.Organization);
     }
 
     public Project ToDomain()
@@ -64,7 +68,15 @@ internal sealed class ProjectEntity
                 DeserializePatterns(ExcludedPatternsJson),
                 DeserializePatterns(ProtectedPatternsJson)),
         };
-        return Project.Restore(Id, DisplayName, RepositoryPath) with { Settings = settings };
+        return Project.Restore(Id, DisplayName, RepositoryPath) with
+        {
+            Settings = settings,
+            Organization = new ProjectOrganization
+            {
+                IsFavorite = IsFavorite,
+                GroupName = GroupName,
+            },
+        };
     }
 
     public void Relocate(string repositoryPath, DateTimeOffset changedAtUtc)
@@ -96,6 +108,23 @@ internal sealed class ProjectEntity
         UtcDate.Require(changedAtUtc, nameof(changedAtUtc));
         ApplySettings(settings);
         UpdatedAtUtc = changedAtUtc;
+    }
+
+    public void UpdateOrganization(
+        ProjectOrganization organization,
+        DateTimeOffset changedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(organization);
+        UtcDate.Require(changedAtUtc, nameof(changedAtUtc));
+        ApplyOrganization(organization);
+        UpdatedAtUtc = changedAtUtc;
+    }
+
+    private ProjectEntity ApplyOrganization(ProjectOrganization organization)
+    {
+        IsFavorite = organization.IsFavorite;
+        GroupName = organization.GroupName;
+        return this;
     }
 
     private ProjectEntity ApplySettings(ProjectSettings settings)

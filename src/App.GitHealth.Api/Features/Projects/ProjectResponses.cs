@@ -37,5 +37,9 @@ internal sealed record ProjectResponse
 
     public required IReadOnlyList<string> ProtectedPatterns { get; init; }
 
+    public required bool IsFavorite { get; init; }
+
+    public string? GroupName { get; init; }
+
     public Guid? LastSuccessfulAnalysisId { get; init; }
 }

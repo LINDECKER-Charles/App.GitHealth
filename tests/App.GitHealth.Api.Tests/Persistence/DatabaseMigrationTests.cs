@@ -41,11 +41,14 @@ public sealed class DatabaseMigrationTests
         var migration = database.Services.GetRequiredService<IDatabaseMigrationService>();
 
         await migration.InitializeAsync(CancellationToken.None);
+        var applied = await CountAppliedMigrationsAsync(database);
         await migration.InitializeAsync(CancellationToken.None);
 
         await using var connection = database.CreateConnection();
         await connection.OpenAsync();
-        Assert.Equal(1L, await ReadIntegerAsync(
+        // Une seconde initialisation ne rejoue rien : l'historique reste celui du premier passage.
+        Assert.True(applied > 0);
+        Assert.Equal(applied, await ReadIntegerAsync(
             connection,
             "SELECT COUNT(*) FROM __EFMigrationsHistory;"));
         Assert.Equal("wal", await ReadTextAsync(connection, "PRAGMA journal_mode;"));
@@ -82,6 +85,13 @@ public sealed class DatabaseMigrationTests
         var startedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
         await projects.AddAsync(project, startedAt, CancellationToken.None);
         return await analyses.StartAsync(project.Id, startedAt, CancellationToken.None);
+    }
+
+    private static async Task<long> CountAppliedMigrationsAsync(SqliteTestDatabase database)
+    {
+        await using var connection = database.CreateConnection();
+        await connection.OpenAsync();
+        return await ReadIntegerAsync(connection, "SELECT COUNT(*) FROM __EFMigrationsHistory;");
     }
 
     private static async Task<long> ReadIntegerAsync(

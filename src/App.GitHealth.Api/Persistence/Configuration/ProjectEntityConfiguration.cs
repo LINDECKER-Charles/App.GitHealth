@@ -1,4 +1,5 @@
 using App.GitHealth.Api.Persistence.Entities;
+using App.GitHealth.Core.Projects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,6 +10,7 @@ internal sealed class ProjectEntityConfiguration : IEntityTypeConfiguration<Proj
     private const int NameLength = 200;
     private const int PathLength = 2048;
     private const int RefLength = 1024;
+    private const int GroupNameLength = ProjectOrganization.MaximumGroupNameLength;
 
     public void Configure(EntityTypeBuilder<ProjectEntity> builder)
     {
@@ -26,6 +28,8 @@ internal sealed class ProjectEntityConfiguration : IEntityTypeConfiguration<Proj
             .HasConversion<UtcDateTimeOffsetConverter>();
         builder.Property(project => project.UpdatedAtUtc)
             .HasConversion<UtcDateTimeOffsetConverter>();
+        builder.Property(project => project.GroupName).HasMaxLength(GroupNameLength);
+        builder.HasIndex(project => project.GroupName);
         builder.HasIndex(project => project.LastSuccessfulAnalysisId);
         builder.HasMany(project => project.AnalysisRuns)
             .WithOne(analysis => analysis.Project)

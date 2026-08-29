@@ -17,6 +17,8 @@ public sealed record Project
 
     public ProjectSettings Settings { get; init; } = ProjectSettings.Default;
 
+    public ProjectOrganization Organization { get; init; } = ProjectOrganization.None;
+
     public static Project Create(string displayName, string repositoryPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);

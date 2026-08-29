@@ -16,6 +16,13 @@ internal sealed record RelocateProjectRequest
     public string? RepositoryPath { get; init; }
 }
 
+internal sealed record ProjectOrganizationRequest
+{
+    public bool IsFavorite { get; init; }
+
+    public string? GroupName { get; init; }
+}
+
 internal sealed record ProjectSettingsRequest
 {
     public string? ReferenceName { get; init; }

@@ -22,6 +22,8 @@ internal static class ProjectResponseMapper
             InactiveAfterDays = project.Settings.Thresholds.InactiveAfterDays,
             ExcludedPatterns = project.Settings.Policy.ExcludedPatterns,
             ProtectedPatterns = project.Settings.Policy.ProtectedPatterns,
+            IsFavorite = project.Organization.IsFavorite,
+            GroupName = project.Organization.GroupName,
             LastSuccessfulAnalysisId = entity.LastSuccessfulAnalysisId,
         };
     }

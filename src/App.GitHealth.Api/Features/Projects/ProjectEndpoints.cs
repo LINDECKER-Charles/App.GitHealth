@@ -13,6 +13,7 @@ internal static class ProjectEndpoints
         group.MapGet("/{projectId:guid}", GetAsync);
         group.MapPut("/{projectId:guid}/repository", RelocateAsync);
         group.MapPut("/{projectId:guid}/settings", UpdateAsync);
+        group.MapPut("/{projectId:guid}/organization", OrganizeAsync);
         return endpoints;
     }
 
@@ -58,6 +59,16 @@ internal static class ProjectEndpoints
         HttpContext context)
     {
         var service = context.RequestServices.GetRequiredService<ProjectService>();
+        var result = await service.UpdateAsync(projectId, request, context.RequestAborted);
+        return result.IsSuccess ? Results.Ok(result.Value) : ApiProblems.Result(result.Failure!);
+    }
+
+    private static async Task<IResult> OrganizeAsync(
+        Guid projectId,
+        ProjectOrganizationRequest request,
+        HttpContext context)
+    {
+        var service = context.RequestServices.GetRequiredService<ProjectOrganizationService>();
         var result = await service.UpdateAsync(projectId, request, context.RequestAborted);
         return result.IsSuccess ? Results.Ok(result.Value) : ApiProblems.Result(result.Failure!);
     }
