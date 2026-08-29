@@ -52,7 +52,7 @@ public sealed class RuntimeEndpointTests
         var payload = await client.GetFromJsonAsync<JsonElement>("/api/runtime");
 
         Assert.Equal(repositoriesRoot, payload.GetProperty("repositoriesRoot").GetString());
-        Assert.False(payload.GetProperty("canBrowseDirectories").GetBoolean());
+        Assert.True(payload.GetProperty("canBrowseDirectories").GetBoolean());
         Assert.Equal("docker", payload.GetProperty("mode").GetString());
     }
 
@@ -154,22 +154,71 @@ public sealed class RuntimeEndpointTests
     }
 
     [Fact]
-    public async Task DirectoriesAreHiddenInDockerMode()
+    public async Task DirectoriesStartAtConfiguredRootInDockerMode()
     {
+        using var directory = TemporaryDirectory.Create();
+        directory.AddDirectory("repository");
         using var factory = new ApiApplicationFactory
         {
-            RepositoriesRoot = "/repositories",
+            RepositoriesRoot = directory.Path,
         };
         using var client = factory.CreateClient();
 
-        using var response = await client.GetAsync("/api/runtime/directories");
+        var payload = await client.GetFromJsonAsync<JsonElement>(
+            "/api/runtime/directories");
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(directory.Path, payload.GetProperty("currentPath").GetString());
+        Assert.Equal(JsonValueKind.Null, payload.GetProperty("parentPath").ValueKind);
+        Assert.Equal(["repository"], DirectoryNames(payload));
+    }
+
+    [Fact]
+    public async Task DirectoriesRejectPathOutsideConfiguredRootInDockerMode()
+    {
+        using var root = TemporaryDirectory.Create();
+        using var outside = TemporaryDirectory.Create();
+        using var factory = new ApiApplicationFactory
+        {
+            RepositoriesRoot = root.Path,
+        };
+        using var client = factory.CreateClient();
+
+        using var response = await client.GetAsync(DirectoryUrl(outside.Path));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal(
-            "runtime.directory_browsing_unavailable",
+            "runtime.directory_not_allowed",
             problem.GetProperty("code").GetString());
         Assert.True(problem.TryGetProperty("traceId", out _));
+    }
+
+    [Fact]
+    public async Task DirectoriesHideSymbolicLinksLeavingConfiguredRoot()
+    {
+        using var root = TemporaryDirectory.Create();
+        using var outside = TemporaryDirectory.Create();
+        var linkPath = Path.Combine(root.Path, "outside-link");
+        GitTestRepository.CreateDirectoryLink(linkPath, outside.Path);
+        using var factory = new ApiApplicationFactory
+        {
+            RepositoriesRoot = root.Path,
+        };
+        using var client = factory.CreateClient();
+
+        try
+        {
+            var payload = await client.GetFromJsonAsync<JsonElement>(
+                "/api/runtime/directories");
+            using var response = await client.GetAsync(DirectoryUrl(linkPath));
+
+            Assert.Empty(DirectoryNames(payload));
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+        finally
+        {
+            Directory.Delete(linkPath);
+        }
     }
 
     private static async Task<JsonElement> GetDirectoriesAsync(

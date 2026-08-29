@@ -5,8 +5,8 @@ internal static class ApiErrorCodes
     public const string AnalysisNotFound = "analysis.not_found";
     public const string AnalysisNotAvailable = "analysis.no_successful_result";
     public const string DatabaseBusy = "database.busy";
-    public const string DirectoryBrowsingUnavailable = "runtime.directory_browsing_unavailable";
     public const string DirectoryInaccessible = "runtime.directory_inaccessible";
+    public const string DirectoryNotAllowed = "runtime.directory_not_allowed";
     public const string DirectoryNotFound = "runtime.directory_not_found";
     public const string EndpointNotFound = "endpoint.not_found";
     public const string CrossSiteRequest = "security.cross_site_request";

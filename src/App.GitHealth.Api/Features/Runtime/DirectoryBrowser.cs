@@ -1,5 +1,6 @@
 using System.Security;
 using App.GitHealth.Api.Features.Common;
+using App.GitHealth.Api.Git.Paths;
 
 namespace App.GitHealth.Api.Features.Runtime;
 
@@ -7,11 +8,21 @@ internal static class DirectoryBrowser
 {
     internal const int MaximumDirectoryCount = 250;
 
-    public static ApiOutcome<DirectoryListingResponse> Browse(string? requestedPath)
+    public static ApiOutcome<DirectoryListingResponse> Browse(
+        string? requestedPath,
+        string? allowedRoot)
     {
         try
         {
-            var directory = new DirectoryInfo(ResolveRequestedPath(requestedPath));
+            var resolvedPath = ResolveRequestedPath(requestedPath, allowedRoot);
+            if (!RepositoryPathGuard.IsAllowed(allowedRoot, resolvedPath))
+            {
+                return Failure(ApiProblems.Forbidden(
+                    ApiErrorCodes.DirectoryNotAllowed,
+                    "Le dossier demandé se trouve hors de la racine autorisée."));
+            }
+
+            var directory = new DirectoryInfo(resolvedPath);
             if (!directory.Exists)
             {
                 return Failure(ApiProblems.NotFound(
@@ -19,7 +30,8 @@ internal static class DirectoryBrowser
                     "Le dossier demandé n’existe pas."));
             }
 
-            return ApiOutcome<DirectoryListingResponse>.Success(CreateListing(directory));
+            return ApiOutcome<DirectoryListingResponse>.Success(
+                CreateListing(directory, allowedRoot));
         }
         catch (Exception exception) when (IsAccessFailure(exception))
         {
@@ -35,13 +47,18 @@ internal static class DirectoryBrowser
         }
     }
 
-    private static DirectoryListingResponse CreateListing(DirectoryInfo directory)
+    private static DirectoryListingResponse CreateListing(
+        DirectoryInfo directory,
+        string? allowedRoot)
     {
-        var directories = ReadAccessibleDirectories(directory, out var isTruncated);
+        var directories = ReadAccessibleDirectories(
+            directory,
+            allowedRoot,
+            out var isTruncated);
         return new DirectoryListingResponse
         {
             CurrentPath = directory.FullName,
-            ParentPath = directory.Parent?.FullName,
+            ParentPath = AllowedParent(directory.Parent, allowedRoot),
             Directories = directories,
             IsTruncated = isTruncated,
         };
@@ -49,13 +66,14 @@ internal static class DirectoryBrowser
 
     private static DirectoryEntryResponse[] ReadAccessibleDirectories(
         DirectoryInfo directory,
+        string? allowedRoot,
         out bool isTruncated)
     {
         var entries = new List<DirectoryEntryResponse>(MaximumDirectoryCount);
         isTruncated = false;
         foreach (var candidate in directory.EnumerateDirectories())
         {
-            if (!CanBrowse(candidate))
+            if (!CanBrowse(candidate, allowedRoot))
             {
                 continue;
             }
@@ -81,32 +99,54 @@ internal static class DirectoryBrowser
         Path = directory.FullName,
     };
 
-    private static bool CanBrowse(DirectoryInfo directory)
+    private static bool CanBrowse(DirectoryInfo directory, string? allowedRoot)
     {
         try
         {
+            if (!RepositoryPathGuard.IsAllowed(allowedRoot, directory.FullName))
+            {
+                return false;
+            }
+
             using var enumerator = directory.EnumerateFileSystemInfos().GetEnumerator();
             _ = enumerator.MoveNext();
             return true;
         }
         catch (Exception exception) when (IsAccessFailure(exception)
-            || exception is IOException)
+            || IsInvalidPathFailure(exception))
         {
             return false;
         }
     }
 
-    private static string ResolveRequestedPath(string? requestedPath)
+    private static string ResolveRequestedPath(string? requestedPath, string? allowedRoot)
     {
         if (!string.IsNullOrWhiteSpace(requestedPath))
         {
             return Path.GetFullPath(requestedPath);
         }
 
+        if (!string.IsNullOrWhiteSpace(allowedRoot))
+        {
+            return Path.GetFullPath(allowedRoot);
+        }
+
         var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         return string.IsNullOrWhiteSpace(userProfile)
             ? Environment.CurrentDirectory
             : userProfile;
+    }
+
+    private static string? AllowedParent(DirectoryInfo? parent, string? allowedRoot)
+    {
+        if (parent is null)
+        {
+            return null;
+        }
+
+        return RepositoryPathGuard.IsAllowed(allowedRoot, parent.FullName)
+            ? parent.FullName
+            : null;
     }
 
     private static bool IsAccessFailure(Exception exception) =>

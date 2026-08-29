@@ -17,7 +17,11 @@ public sealed class GitRepositoryScannerTests
         var bare = await scanner.InspectAsync(repository.CreateBareClone(), default);
         var worktree = await scanner.InspectAsync(repository.CreateLinkedWorktree(), default);
 
-        Assert.True(standard.TryGetValue(out var standardValue));
+        Assert.True(
+            standard.TryGetValue(out var standardValue),
+            standard.Error is null
+                ? null
+                : $"{standard.Error.Code}: {standard.Error.Message}");
         Assert.Equal("refs/remotes/origin/main", standardValue.SuggestedReference?.FullName);
         Assert.DoesNotContain(
             standardValue.References,

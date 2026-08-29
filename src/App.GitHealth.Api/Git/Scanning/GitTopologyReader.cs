@@ -185,7 +185,9 @@ internal sealed class GitTopologyReader(
         CancellationToken cancellationToken)
     {
         var commandArguments = new[] { "-C", context.InvocationPath }.Concat(arguments);
-        var command = GitCommand.Create(Environment.CurrentDirectory, commandArguments);
+        var command = GitCommand.CreateRepository(
+            context.InvocationPath,
+            commandArguments);
         return runner.RunAsync(command, cancellationToken);
     }
 

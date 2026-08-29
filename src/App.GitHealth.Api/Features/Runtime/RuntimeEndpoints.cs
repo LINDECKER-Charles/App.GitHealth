@@ -20,13 +20,13 @@ internal static class RuntimeEndpoints
     private static IResult GetRuntimeInfo(IOptions<RepositoryAccessOptions> options)
     {
         var repositoriesRoot = NormalizeRoot(options.Value.RepositoriesRoot);
-        var canBrowseDirectories = repositoriesRoot is null;
+        var isNativeMode = repositoriesRoot is null;
         return Results.Ok(new RuntimeInfoResponse
         {
             InitialRepositoryPath = NormalizeRoot(options.Value.InitialRepositoryPath),
             RepositoriesRoot = repositoriesRoot,
-            CanBrowseDirectories = canBrowseDirectories,
-            Mode = canBrowseDirectories ? NativeMode : DockerMode,
+            CanBrowseDirectories = true,
+            Mode = isNativeMode ? NativeMode : DockerMode,
         });
     }
 
@@ -34,14 +34,7 @@ internal static class RuntimeEndpoints
         string? path,
         IOptions<RepositoryAccessOptions> options)
     {
-        if (NormalizeRoot(options.Value.RepositoriesRoot) is not null)
-        {
-            return ApiProblems.Result(ApiProblems.NotFound(
-                ApiErrorCodes.DirectoryBrowsingUnavailable,
-                "L’explorateur de dossiers est indisponible dans ce mode."));
-        }
-
-        var result = DirectoryBrowser.Browse(path);
+        var result = DirectoryBrowser.Browse(path, options.Value.RepositoriesRoot);
         return result.IsSuccess ? Results.Ok(result.Value) : ApiProblems.Result(result.Failure!);
     }
 

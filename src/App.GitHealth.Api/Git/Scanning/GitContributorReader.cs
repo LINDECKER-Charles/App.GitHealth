@@ -39,7 +39,7 @@ internal sealed class GitContributorReader(IGitProcessRunner runner)
             "log", "--no-merges", "--use-mailmap", "--no-show-signature",
             "--no-patch", "-z", "--format=%aN%x00%aE%x00", range, "--",
         };
-        return GitCommand.Create(Environment.CurrentDirectory, arguments);
+        return GitCommand.CreateRepository(comparison.Context.InvocationPath, arguments);
     }
 
     private static void EnsureSuccess(GitCommandResult result)

@@ -55,6 +55,7 @@ internal static class GitRepositoryReader
         var result = await RunAsync(
             runner,
             CreateLocationArguments(fullPath),
+            fullPath,
             cancellationToken);
         if (result.ExitCode != 0)
         {
@@ -109,6 +110,7 @@ internal static class GitRepositoryReader
         var rootResult = await RunAsync(
             runner,
             ["-C", fullPath, "rev-parse", "--show-toplevel"],
+            fullPath,
             cancellationToken);
         EnsureSuccess(rootResult, "Impossible de déterminer le worktree Git.");
         return Path.GetFullPath(rootResult.StandardOutput.Trim());
@@ -139,7 +141,11 @@ internal static class GitRepositoryReader
             "refs/heads",
             "refs/remotes",
         };
-        var result = await RunAsync(runner, arguments, cancellationToken);
+        var result = await RunAsync(
+            runner,
+            arguments,
+            context.InvocationPath,
+            cancellationToken);
         EnsureSuccess(result, "Impossible de lire les références Git.");
         return GitOutputParser.ParseReferences(result.StandardOutput);
     }
@@ -150,6 +156,16 @@ internal static class GitRepositoryReader
         CancellationToken cancellationToken)
     {
         var command = GitCommand.Create(Environment.CurrentDirectory, arguments);
+        return runner.RunAsync(command, cancellationToken);
+    }
+
+    private static Task<GitCommandResult> RunAsync(
+        IGitProcessRunner runner,
+        IEnumerable<string> arguments,
+        string safeDirectory,
+        CancellationToken cancellationToken)
+    {
+        var command = GitCommand.CreateRepository(safeDirectory, arguments);
         return runner.RunAsync(command, cancellationToken);
     }
 

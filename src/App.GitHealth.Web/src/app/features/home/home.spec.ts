@@ -160,6 +160,38 @@ describe('Home', () => {
     expect(element<HTMLInputElement>('#repository-path').value).toBe('D:\\Dev\\alpha');
   });
 
+  it('browses only the mounted repository folder in Docker mode', () => {
+    api.getRuntime.mockReturnValue(
+      of({
+        canBrowseDirectories: true,
+        initialRepositoryPath: null,
+        mode: 'docker',
+        repositoriesRoot: '/repositories',
+      }),
+    );
+    api.browseDirectories
+      .mockReturnValueOnce(
+        of(
+          directoryListing('/repositories', [
+            { name: 'Omnicard-app', path: '/repositories/Omnicard-app' },
+          ]),
+        ),
+      )
+      .mockReturnValueOnce(of(directoryListing('/repositories/Omnicard-app')));
+    createFixture();
+
+    button('Parcourir').click();
+    fixture.detectChanges();
+    button('Omnicard-app').click();
+    fixture.detectChanges();
+    button('Utiliser ce chemin').click();
+    fixture.detectChanges();
+
+    expect(api.browseDirectories).toHaveBeenNthCalledWith(1, null);
+    expect(api.browseDirectories).toHaveBeenNthCalledWith(2, '/repositories/Omnicard-app');
+    expect(element<HTMLInputElement>('#repository-path').value).toBe('/repositories/Omnicard-app');
+  });
+
   function createFixture(): void {
     fixture = TestBed.createComponent(Home);
     fixture.detectChanges();

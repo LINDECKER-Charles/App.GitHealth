@@ -38,12 +38,13 @@ dossier parent des dépôts, puis lancer :
 docker compose up --build
 ```
 
-Ouvrir ensuite `http://127.0.0.1:8080`. Dans l'interface, employer les chemins du
-conteneur, par exemple `/repositories/mon-depot`.
+Ouvrir ensuite `http://127.0.0.1:8080`. Le bouton **Parcourir** affiche les dossiers
+montés sous `/repositories` et permet de choisir le dépôt sans saisir son chemin de
+conteneur.
 
 ## Ajouter un dépôt
 
-1. Saisir son chemin absolu, ou utiliser **Parcourir** en mode natif.
+1. Saisir son chemin absolu, ou utiliser **Parcourir**.
 2. Sélectionner **Vérifier**.
 3. Choisir le nom affiché, la référence de comparaison et le périmètre des branches.
 4. Sélectionner **Ajouter et ouvrir**.

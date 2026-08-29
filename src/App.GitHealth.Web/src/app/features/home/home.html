@@ -125,7 +125,11 @@
                   (input)="pathChanged()"
                   autocomplete="off"
                   spellcheck="false"
-                  placeholder="D:\Projets\mon-depot"
+                  [attr.placeholder]="
+                    runtime()?.mode === 'docker'
+                      ? '/repositories/mon-depot'
+                      : 'D:\\Projets\\mon-depot'
+                  "
                   aria-describedby="path-hint"
                   [attr.aria-invalid]="pathControl.invalid && pathControl.touched"
                 />
@@ -143,7 +147,11 @@
                 </button>
               </div>
               <p id="path-hint" class="field-hint">
-                Dépôt standard, bare repository ou worktree lié.
+                @if (runtime()?.mode === 'docker') {
+                  Parcourez le dossier monté pour choisir un dépôt.
+                } @else {
+                  Dépôt standard, bare repository ou worktree lié.
+                }
               </p>
               @if (pathControl.invalid && pathControl.touched) {
                 <p class="field-error">Saisissez le chemin du dépôt.</p>
@@ -255,7 +263,9 @@
   >
     <header class="directory-heading">
       <div>
-        <p class="eyebrow">Explorateur local</p>
+        <p class="eyebrow">
+          {{ runtime()?.mode === 'docker' ? 'Dossier monté' : 'Explorateur local' }}
+        </p>
         <h2 id="directory-title">Choisir un dossier</h2>
       </div>
       <button

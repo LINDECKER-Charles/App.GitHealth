@@ -131,7 +131,9 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
         {
             "-C", repository.Context.InvocationPath, "cat-file", "-e", "--", expression,
         };
-        var command = GitCommand.Create(Environment.CurrentDirectory, arguments);
+        var command = GitCommand.CreateRepository(
+            repository.Context.InvocationPath,
+            arguments);
         var result = await _runner.RunAsync(command, cancellationToken);
         return result.ExitCode == 0;
     }

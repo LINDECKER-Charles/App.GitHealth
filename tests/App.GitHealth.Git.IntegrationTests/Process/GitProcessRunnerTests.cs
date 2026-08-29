@@ -123,6 +123,21 @@ public sealed class GitProcessRunnerTests
     }
 
     [Fact]
+    public void StartInfoTrustsOnlyTheExplicitRepositoryDirectory()
+    {
+        var repositoryPath = Path.GetFullPath(
+            Path.Combine(Path.GetTempPath(), "repository with spaces"));
+        var command = GitCommand.CreateRepository(
+            repositoryPath,
+            ["-C", repositoryPath, "status", "--short"]);
+
+        var startInfo = GitProcessRunner.CreateStartInfo(command);
+
+        Assert.Contains($"safe.directory={repositoryPath}", startInfo.ArgumentList);
+        Assert.DoesNotContain("safe.directory=*", startInfo.ArgumentList);
+    }
+
+    [Fact]
     public void HostTraceAndConfigurationOverridesAreRemoved()
     {
         var environment = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)

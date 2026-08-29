@@ -36,7 +36,6 @@ USER root
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends ca-certificates curl git \
     && git config --system --add safe.directory /repositories \
-    && git config --system --add safe.directory '/repositories/*' \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

@@ -129,7 +129,7 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
             CreateNoWindow = true,
         };
 
-        AddConfiguration(startInfo.ArgumentList);
+        AddBaseConfiguration(startInfo.ArgumentList, command.SafeDirectory);
         foreach (var argument in command.Arguments)
         {
             startInfo.ArgumentList.Add(argument);
@@ -159,7 +159,9 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
         }
     }
 
-    private static void AddConfiguration(Collection<string> arguments)
+    private static void AddBaseConfiguration(
+        Collection<string> arguments,
+        string? safeDirectory)
     {
         arguments.Add("--no-pager");
         AddConfiguration(arguments, "color.ui=false");
@@ -171,6 +173,10 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
         AddConfiguration(arguments, "maintenance.auto=false");
         AddConfiguration(arguments, "gc.auto=0");
         AddConfiguration(arguments, "fetch.writeCommitGraph=false");
+        if (safeDirectory is not null)
+        {
+            AddConfiguration(arguments, $"safe.directory={safeDirectory}");
+        }
     }
 
     private static void AddConfiguration(Collection<string> arguments, string value)

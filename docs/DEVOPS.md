@@ -148,9 +148,10 @@ conservées.
 
 ## Sécurité du montage Git
 
-Le conteneur s’exécute avec l’utilisateur non privilégié de l’image ASP.NET. Sa
-configuration Git autorise uniquement `/repositories` et ses descendants comme
-répertoires sûrs ; elle n’utilise jamais le joker global `safe.directory=*`.
+Le conteneur s’exécute avec l’utilisateur non privilégié de l’image ASP.NET. Chaque
+commande Git autorise comme répertoire sûr uniquement le dépôt déjà contrôlé sous
+`/repositories`. Elle n’utilise ni le joker global `safe.directory=*` ni un joker
+de descendants dépendant de la version de Git.
 
 ## Analyse Git en lecture seule
 
@@ -242,8 +243,9 @@ Details contrôlés et interviennent avant le lancement de Git.
 
 `GET /api/runtime` indique à l'interface si GitHealth s'exécute en mode natif ou
 Docker. En conteneur, la racine configurée est affichée et l'explorateur de
-dossiers est désactivé : seuls les chemins déjà montés sous cette racine sont
-acceptés.
+dossiers démarre à cette racine. Il ne permet ni de remonter au-dessus d'elle ni
+de suivre un lien symbolique qui en sort ; seuls les chemins déjà montés sous
+cette racine sont acceptés.
 
 En mode natif, `GET /api/runtime/directories` alimente l'explorateur local. Il ne
 retourne que les dossiers accessibles, triés et limités à 250 éléments par niveau ;
