@@ -10,9 +10,12 @@ import {
   DirectoryListing,
   PolicyPreviewResponse,
   PolicyUpdateRequest,
+  ProjectOrganizationRequest,
   ProjectResponse,
   ProjectSettingsRequest,
   RelocateProjectRequest,
+  RepositoryDiscoveryRequest,
+  RepositoryDiscoveryResponse,
   RepositoryValidationResponse,
   RuntimeInfo,
   SnapshotDetailResponse,
@@ -52,6 +55,14 @@ export class GitHealthApiClient {
     );
   }
 
+  discoverRepositories(
+    request: RepositoryDiscoveryRequest,
+  ): Observable<RepositoryDiscoveryResponse> {
+    return this.request(
+      this.http.post<RepositoryDiscoveryResponse>(`${apiRoot}/repositories/discover`, request),
+    );
+  }
+
   createProject(request: CreateProjectRequest): Observable<ProjectResponse> {
     return this.request(this.http.post<ProjectResponse>(projectsUrl, request));
   }
@@ -62,6 +73,15 @@ export class GitHealthApiClient {
   ): Observable<ProjectResponse> {
     return this.request(
       this.http.put<ProjectResponse>(`${projectUrl(projectId)}/settings`, settings),
+    );
+  }
+
+  updateProjectOrganization(
+    projectId: string,
+    request: ProjectOrganizationRequest,
+  ): Observable<ProjectResponse> {
+    return this.request(
+      this.http.put<ProjectResponse>(`${projectUrl(projectId)}/organization`, request),
     );
   }
 

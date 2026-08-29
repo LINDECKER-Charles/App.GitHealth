@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { ProjectResponse } from '../../core/api/api.models';
 import { displayReference, recommendationLabels } from '../../core/branches/branch-labels';
 import { SnapshotExporter } from '../../core/branches/snapshot-export';
+import { ProjectOrganizer } from '../../core/organization/project-organizer';
 import { ProjectsStore } from '../../core/workspace/projects-store';
 import { ThemeService } from '../../core/workspace/theme';
 import { plural } from '../../core/workspace/plural';
@@ -48,6 +49,7 @@ const maximumProjectResults = 4;
 export class CommandPalette {
   private readonly context = inject(ProjectContext);
   private readonly exporter = inject(SnapshotExporter);
+  private readonly organizer = inject(ProjectOrganizer);
   private readonly router = inject(Router);
   private readonly store = inject(ProjectsStore);
   private readonly theme = inject(ThemeService);
@@ -160,11 +162,34 @@ export class CommandPalette {
         this.context.launchAnalysis();
       }),
       ...exportAction,
+      ...this.organizationActions(project),
       action('settings', 'Ouvrir les politiques', () =>
         this.go(['/projects', project.id, 'settings'], {}),
       ),
       action('clock', 'Ouvrir l’historique', () =>
         this.go(['/projects', project.id, 'history'], {}),
+      ),
+    ];
+  }
+
+  /** Le rangement se lit toujours sur la version en magasin : le rail vient peut-être de l'écrire. */
+  private organizationActions(project: ProjectResponse): readonly PaletteItem[] {
+    const current =
+      this.store.projects().find((candidate) => candidate.id === project.id) ?? project;
+    return [
+      action(
+        current.isFavorite ? 'star-filled' : 'star',
+        current.isFavorite ? 'Retirer des favoris' : 'Mettre en favori',
+        () => {
+          this.dialogs.closePalette();
+          this.organizer.toggleFavorite(current);
+        },
+      ),
+      action(
+        'folder-open',
+        'Ranger dans un groupe',
+        () => this.dialogs.openProjectGroup(current.id),
+        current.groupName ?? 'sans groupe',
       ),
     ];
   }
@@ -178,6 +203,10 @@ export class CommandPalette {
       action('plus', 'Ajouter un dépôt', () => {
         this.dialogs.closePalette();
         this.dialogs.openAddRepository();
+      }),
+      action('folder', 'Scanner un dossier', () => {
+        this.dialogs.closePalette();
+        this.dialogs.openScanFolder();
       }),
     ];
   }

@@ -1,6 +1,7 @@
 /**
  * Glyphes Lucide copiés dans `public/ds/icons`. Le type ferme la liste : un nom
  * absent du dossier ne compile pas, donc aucune icône ne peut disparaître à l'exécution.
+ * `star-filled` reprend le tracé de `star`, rempli : un favori se lit plein, pas seulement coloré.
  */
 export type IconName =
   | 'arrow-right'
@@ -19,6 +20,7 @@ export type IconName =
   | 'eye'
   | 'eye-off'
   | 'folder'
+  | 'folder-open'
   | 'funnel'
   | 'git-branch'
   | 'info'
@@ -31,6 +33,8 @@ export type IconName =
   | 'refresh-cw'
   | 'search'
   | 'settings'
+  | 'star'
+  | 'star-filled'
   | 'sun'
   | 'trash-2'
   | 'triangle-alert'

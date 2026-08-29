@@ -50,6 +50,27 @@ export interface RepositoryValidationResponse {
   readonly references: readonly string[];
 }
 
+export interface RepositoryDiscoveryRequest {
+  readonly path: string;
+  readonly depth?: number;
+}
+
+export interface DiscoveredRepository {
+  readonly canonicalPath: string;
+  readonly suggestedName: string;
+  readonly suggestedReference: string | null;
+  readonly referenceCount: number;
+  readonly isBare: boolean;
+  /** Projet déjà enregistré sur ce dépôt, ou `null` s'il reste à ajouter. */
+  readonly trackedProjectId: Uuid | null;
+}
+
+export interface RepositoryDiscoveryResponse {
+  readonly rootPath: string;
+  readonly repositories: readonly DiscoveredRepository[];
+  readonly isTruncated: boolean;
+}
+
 export interface ProjectSettingsRequest {
   readonly referenceName: string | null;
   readonly branchNamespace: string;
@@ -79,6 +100,12 @@ export interface PolicyPreviewResponse {
   readonly matches: readonly PolicyPreviewMatch[];
 }
 
+export interface ProjectOrganizationRequest {
+  readonly isFavorite: boolean;
+  /** Groupe d'appartenance ; `null` range le dépôt hors groupe. */
+  readonly groupName: string | null;
+}
+
 export interface CreateProjectRequest {
   readonly displayName: string;
   readonly repositoryPath: string;
@@ -102,6 +129,8 @@ export interface ProjectResponse {
   readonly inactiveAfterDays: number;
   readonly excludedPatterns: readonly string[];
   readonly protectedPatterns: readonly string[];
+  readonly isFavorite: boolean;
+  readonly groupName: string | null;
   readonly lastSuccessfulAnalysisId: Uuid | null;
 }
 

@@ -2,6 +2,13 @@
   <span class="rail-title">Dépôts observés</span>
   <button
     dsIconButton
+    icon="folder"
+    label="Scanner un dossier"
+    size="sm"
+    (click)="dialogs.openScanFolder()"
+  ></button>
+  <button
+    dsIconButton
     icon="plus"
     label="Ajouter un dépôt"
     size="sm"
@@ -21,23 +28,65 @@
 </div>
 
 <div class="rail-list">
-  @for (entry of entries(); track entry.project.id) {
-    <a
-      class="rail-entry"
-      [class.is-selected]="isSelected(entry.project)"
-      [routerLink]="['/projects', entry.project.id]"
-    >
-      <span class="rail-entry-mark">
-        <ds-status-dot [tone]="entry.tone" [size]="7" />
-      </span>
-      <span class="rail-entry-body">
-        <span class="rail-entry-name">{{ entry.project.displayName }}</span>
-        <span class="rail-entry-path">{{ entry.project.repositoryPath }}</span>
-      </span>
-      <span class="rail-entry-count" title="Branches du dernier snapshot lu">
-        {{ entry.branchCount }}
-      </span>
-    </a>
+  @for (section of sections(); track section.key) {
+    <section class="rail-section">
+      @if (hasHeadings()) {
+        <button
+          class="rail-section-head"
+          type="button"
+          [attr.aria-expanded]="isExpanded(section)"
+          [title]="isExpanded(section) ? 'Réduire ' + section.title : 'Déplier ' + section.title"
+          (click)="toggleSection(section.key)"
+        >
+          <ds-icon
+            class="rail-section-chevron"
+            [name]="isExpanded(section) ? 'chevron-down' : 'chevron-right'"
+            [size]="13"
+          />
+          <ds-icon class="rail-section-mark" [name]="section.icon" [size]="12" />
+          <span class="rail-section-title">{{ section.title }}</span>
+          <span class="rail-section-count">{{ section.entries.length }}</span>
+        </button>
+      }
+
+      @if (isExpanded(section)) {
+        @for (entry of section.entries; track entry.project.id) {
+          <div class="rail-entry-row" [class.is-selected]="isSelected(entry.project)">
+            <a class="rail-entry" [routerLink]="['/projects', entry.project.id]">
+              <span class="rail-entry-mark">
+                <ds-status-dot [tone]="entry.tone" [size]="7" />
+              </span>
+              <span class="rail-entry-body">
+                <span class="rail-entry-name">{{ entry.project.displayName }}</span>
+                <span class="rail-entry-path">{{ entry.project.repositoryPath }}</span>
+              </span>
+              <span class="rail-entry-count" title="Branches du dernier snapshot lu">
+                {{ entry.branchCount }}
+              </span>
+            </a>
+            <span class="rail-entry-actions">
+              <button
+                dsIconButton
+                size="sm"
+                class="rail-entry-star"
+                [class.is-pinned]="entry.project.isFavorite"
+                [icon]="favoriteIcon(entry.project)"
+                [label]="favoriteLabel(entry.project)"
+                [active]="entry.project.isFavorite"
+                (click)="organizer.toggleFavorite(entry.project)"
+              ></button>
+              <button
+                dsIconButton
+                size="sm"
+                icon="folder-open"
+                label="Ranger dans un groupe"
+                (click)="dialogs.openProjectGroup(entry.project.id)"
+              ></button>
+            </span>
+          </div>
+        }
+      }
+    </section>
   }
 
   @if (store.isLoading()) {
@@ -60,5 +109,20 @@
   >
     Ajouter un dépôt
   </button>
+  <button
+    dsButton
+    size="sm"
+    variant="ghost"
+    iconLeft="folder"
+    [block]="true"
+    (click)="dialogs.openScanFolder()"
+  >
+    Scanner un dossier
+  </button>
+  @if (scan.hasJobs()) {
+    <p class="rail-scan" role="status">
+      Scan groupé · {{ scan.summary().done }}/{{ scan.summary().total }} analysés
+    </p>
+  }
   <p>Aucun clone, aucun fetch, aucune écriture Git. Les identités restent sur ce poste.</p>
 </div>

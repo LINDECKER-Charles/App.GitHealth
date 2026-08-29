@@ -44,6 +44,8 @@ const project: ProjectResponse = {
   inactiveAfterDays: settings.inactiveAfterDays,
   excludedPatterns: settings.excludedPatterns,
   protectedPatterns: settings.protectedPatterns,
+  isFavorite: false,
+  groupName: null,
   lastSuccessfulAnalysisId: analysisId,
 };
 

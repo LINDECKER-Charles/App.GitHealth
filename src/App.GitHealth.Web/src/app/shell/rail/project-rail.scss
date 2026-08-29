@@ -36,11 +36,77 @@
   overflow: auto;
 }
 
+.rail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail-section + .rail-section {
+  margin-top: 6px;
+}
+
+.rail-section-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rail-section-head:hover {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+}
+
+.rail-section-chevron,
+.rail-section-mark {
+  flex: none;
+}
+
+.rail-section-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rail-section-count {
+  flex: none;
+  font: var(--type-code-sm);
+  text-transform: none;
+}
+
+.rail-entry-row {
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--radius-sm);
+}
+
+.rail-entry-row:hover {
+  background: var(--surface-hover);
+}
+
+.rail-entry-row.is-selected {
+  background: var(--surface-selected);
+}
+
 .rail-entry {
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 7px 8px;
   border: 0;
   border-radius: var(--radius-sm);
@@ -52,14 +118,43 @@
 }
 
 .rail-entry:hover {
-  background: var(--surface-hover);
   color: var(--text-secondary);
   text-decoration: none;
 }
 
-.rail-entry.is-selected {
-  background: var(--surface-selected);
+.rail-entry-row.is-selected .rail-entry {
   color: var(--primary-soft-fg);
+}
+
+.rail-entry-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex: none;
+  padding-right: 4px;
+}
+
+/* Les actions ne s'invitent qu'au survol ; seule l'étoile d'un favori reste, car elle dit un état. */
+.rail-entry-actions .etb-iconbtn {
+  opacity: 0;
+}
+
+.rail-entry-actions .rail-entry-star.is-pinned,
+.rail-entry-row:hover .rail-entry-actions .etb-iconbtn,
+.rail-entry-actions .etb-iconbtn:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .rail-entry-actions .etb-iconbtn {
+    opacity: 1;
+  }
+}
+
+/* Une étoile pleine se lit déjà comme un état : elle n'a pas besoin du fond « actif ». */
+.rail-entry-actions .etb-iconbtn--active {
+  background: transparent;
+  color: var(--status-warning-fg);
 }
 
 .rail-entry-mark {
@@ -111,13 +206,20 @@
 }
 
 .rail-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   padding: 8px 10px;
   border-top: 1px solid var(--divider);
 }
 
 .rail-footer p {
-  margin: 8px 2px 2px;
+  margin: 4px 2px 2px;
   font: var(--type-caption);
   color: var(--text-muted);
   text-wrap: pretty;
+}
+
+.rail-footer p.rail-scan {
+  color: var(--text-secondary);
 }

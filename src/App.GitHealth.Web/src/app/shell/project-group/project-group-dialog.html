@@ -1,0 +1,93 @@
+<div class="dialog-scrim" (click)="close.emit()">
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="project-group-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="dialog-heading">
+      <span class="dialog-heading-mark"><ds-icon name="folder-open" [size]="16" /></span>
+      <span id="project-group-title" class="dialog-heading-title">Ranger dans un groupe</span>
+      <button dsIconButton icon="x" label="Fermer" size="sm" (click)="close.emit()"></button>
+    </header>
+
+    <div class="dialog-body">
+      @if (project(); as target) {
+        <p class="dialog-lead">{{ target.displayName }}</p>
+
+        <div class="field-label">Groupe</div>
+        <div class="group-list" role="radiogroup" aria-label="Groupe du dépôt">
+          <button
+            class="group-option"
+            type="button"
+            role="radio"
+            [attr.aria-checked]="selected() === null"
+            [class.is-selected]="selected() === null"
+            (click)="pick(null)"
+          >
+            <ds-icon name="minus" [size]="14" />
+            <span class="group-option-name">Sans groupe</span>
+          </button>
+
+          @for (name of groups(); track name) {
+            <button
+              class="group-option"
+              type="button"
+              role="radio"
+              [attr.aria-checked]="selected() === name"
+              [class.is-selected]="selected() === name"
+              (click)="pick(name)"
+            >
+              <ds-icon name="folder-open" [size]="14" />
+              <span class="group-option-name">{{ name }}</span>
+              <span class="group-option-count">{{ countIn(name) }}</span>
+            </button>
+          }
+        </div>
+
+        <div class="field-label group-create-label">Nouveau groupe</div>
+        <div class="group-create">
+          <ds-input
+            size="sm"
+            placeholder="Ex. Back-office"
+            ariaLabel="Nom du nouveau groupe"
+            [(value)]="newGroup"
+            (submit)="createGroup()"
+          />
+          <button
+            dsButton
+            size="sm"
+            variant="secondary"
+            iconLeft="plus"
+            [disabled]="!canCreate()"
+            (click)="createGroup()"
+          >
+            Créer
+          </button>
+        </div>
+        <p class="field-hint">
+          Un groupe se replie dans le rail. {{ maximumGroupNameLength }} caractères au plus ; un
+          groupe vidé de ses dépôts disparaît de lui-même.
+        </p>
+      } @else {
+        <p class="field-hint">Ce dépôt n’est plus dans la liste observée.</p>
+      }
+    </div>
+
+    <footer class="dialog-footer">
+      <span>Le rangement ne touche ni le dépôt ni ses analyses.</span>
+      <button dsButton size="md" variant="ghost" (click)="close.emit()">Annuler</button>
+      <button
+        dsButton
+        size="md"
+        variant="primary"
+        iconLeft="check"
+        [disabled]="!isDirty()"
+        (click)="save()"
+      >
+        Ranger
+      </button>
+    </footer>
+  </div>
+</div>
