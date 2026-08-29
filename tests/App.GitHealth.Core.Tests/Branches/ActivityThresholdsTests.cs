@@ -7,6 +7,8 @@ public sealed class ActivityThresholdsTests
     private static readonly DateTimeOffset Now =
         new(2026, 8, 28, 12, 0, 0, TimeSpan.Zero);
 
+    // Ces bornes valent pour une branche qui porte des commits propres : elle seule
+    // est mesurée sur l'échelle du projet.
     [Theory]
     [InlineData(30, ActivityStatus.Active)]
     [InlineData(31, ActivityStatus.Aging)]
@@ -15,7 +17,7 @@ public sealed class ActivityThresholdsTests
     public void ClassifyHonorsThresholdBoundaries(int ageInDays, ActivityStatus expected)
     {
         var classifier = new BranchClassifier(new TestClock(Now));
-        var original = BranchFactsBuilder.Create();
+        var original = BranchFactsBuilder.Create(ahead: 2);
         var tip = new BranchTip(original.Commit, Now.AddDays(-ageInDays), original.TipAuthor);
         var facts = new BranchFacts(original.Reference, original.Divergence, tip);
 
@@ -30,7 +32,7 @@ public sealed class ActivityThresholdsTests
     public void ClassifyChangesImmediatelyAfterThreshold(int threshold, ActivityStatus expected)
     {
         var classifier = new BranchClassifier(new TestClock(Now));
-        var original = BranchFactsBuilder.Create();
+        var original = BranchFactsBuilder.Create(ahead: 2);
         var tip = new BranchTip(original.Commit, Now.AddDays(-threshold).AddTicks(-1), null);
         var facts = new BranchFacts(original.Reference, original.Divergence, tip);
 
