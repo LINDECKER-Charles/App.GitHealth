@@ -23,6 +23,7 @@ le navigateur ne communique donc qu'avec un seul processus et une seule origine.
 ### MVP
 
 - Enregistrer un dépôt déjà présent sur la machine.
+- Détecter les dépôts d'un dossier et en analyser plusieurs en une fois.
 - Détecter ses branches locales et ses branches de suivi distant.
 - Choisir une référence et le jeu de branches à comparer.
 - Calculer l'avance, le retard, la fusion et la dernière activité observable.
@@ -148,10 +149,10 @@ des données déterministes.
 src/
 ├── App.GitHealth.Core/{Analysis,Branches,Common,Projects,Shared}/
 ├── App.GitHealth.Api/
-│   ├── Features/{Projects,Analyses,Policies,Snapshots,Exports,Runtime,Security}/
+│   ├── Features/{Projects,Analyses,Discovery,Policies,Snapshots,Exports,Runtime,Security}/
 │   └── {Git,Persistence,Hosting}/
 └── App.GitHealth.Web/src/app/
-    ├── core/
+    ├── core/{api,branches,scan,workspace}/
     └── features/{home,dashboard,branch-details,project-settings,analysis-history}/
 tests/
 ├── App.GitHealth.Core.Tests/
@@ -248,6 +249,22 @@ commit de référence connu. Une réservation par projet exclut toute analyse co
 5. L'utilisateur confirme la référence et les filtres de branches.
 6. La configuration est persistée.
 
+### Découverte des dépôts d'un dossier
+
+1. L'utilisateur indique un dossier et une profondeur d'exploration.
+2. L'API applique les racines autorisées, puis parcourt l'arborescence en largeur.
+3. Un dossier reconnu comme dépôt — `.git`, fichier `.git` d'un worktree, ou disposition
+   bare — arrête la descente : ses sous-modules ne sont pas proposés séparément.
+4. Les dossiers cachés et les dossiers de build sont écartés ; le nombre de résultats est
+   borné et la troncature est signalée.
+5. Chaque candidat est confirmé par une lecture Git en lecture seule, avec un parallélisme
+   borné ; un dossier illisible est écarté du résultat.
+6. Les dépôts déjà rattachés à un projet sont renvoyés avec son identifiant.
+
+Le front enregistre les dépôts retenus qui ne le sont pas encore, puis lance une analyse
+par dépôt. La file d'analyses reste seule maîtresse du rythme : un dépôt refusé pour file
+pleine est relancé dès qu'une place se libère.
+
 ### Relocalisation d'un projet
 
 1. L'utilisateur indique le nouveau chemin depuis les paramètres du projet.
@@ -290,9 +307,11 @@ Les routes sont groupées sous `/api` et renvoient des DTO dédiés.
 | `GET /api/session` | Initialiser session locale et jeton anti-forgery |
 | `GET /api/projects` | Lister les projets et leur dernier état |
 | `POST /api/projects/validate` | Valider un chemin sans le persister |
+| `POST /api/repositories/discover` | Détecter les dépôts contenus dans un dossier |
 | `POST /api/projects` | Enregistrer un projet |
 | `PUT /api/projects/{id}/repository` | Relocaliser un dépôt en conservant l'historique |
 | `PUT /api/projects/{id}/settings` | Modifier référence, seuils et exclusions |
+| `PUT /api/projects/{id}/organization` | Mettre en favori et ranger dans un groupe |
 | `POST /api/projects/{id}/analyses` | Démarrer une analyse |
 | `GET /api/analyses/{id}` | Lire état et progression |
 | `GET /api/projects/{id}/analyses/latest/branches` | Lister les snapshots |
@@ -308,6 +327,8 @@ navigateur.
 - SQLite est la source de vérité des configurations et analyses terminées.
 - La file et la progression des analyses sont détenues en mémoire par l'hôte.
 - Un seul scan peut être actif par projet ; la concurrence globale est bornée.
+- `AnalysisQueue:MaximumParallelAnalyses` fixe le nombre de lecteurs de la file, donc
+  d'analyses menées de front. À `1`, la file redevient strictement séquentielle.
 - Le front utilise des services Angular et Signals par fonctionnalité.
 - Les paramètres de filtre dans l'URL permettent de partager et restaurer une vue.
 - Aucun NgRx n'est introduit tant qu'un besoin de coordination globale ne l'exige.

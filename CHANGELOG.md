@@ -7,12 +7,32 @@ suit Keep a Changelog et le versionnage sémantique.
 
 ### Ajouté
 
+- **favoris et groupes de dépôts** : le rail épingle les dépôts favoris en tête et range
+  les autres dans des groupes nommés, chacun repliable d'un clic. Le rangement est écrit
+  dans la base — il suit la sauvegarde SQLite — tandis que l'état replié reste local au
+  navigateur. Un rail sans favori ni groupe garde sa liste plate d'origine ;
+- **scan d'un dossier entier** : GitHealth y détecte les dépôts Git jusqu'à une profondeur
+  choisie, signale ceux déjà suivis, et analyse la sélection retenue en une fois. Les
+  dépôts inconnus sont enregistrés au passage, chacun partant en analyse dès son
+  enregistrement ;
+- les analyses avancent désormais **en parallèle** — `AnalysisQueue:MaximumParallelAnalyses`
+  fixe le nombre de lecteurs de la file, quatre par défaut, `1` restaurant le comportement
+  strictement séquentiel. Un dépôt refusé par une file pleine repart dès qu'une place se
+  libère ;
 - design system Établi : jetons, polices IBM Plex et glyphes Lucide servis localement ;
 - espace de travail unifié avec rail des dépôts, onglets et fiche de branche latérale ;
 - palette de commandes `⌘K` pour atteindre une branche, un dépôt ou une action ;
 - thème sombre mémorisé et séquence d'ouverture, toutes deux coupables au clavier ;
 - tuiles de répartition, jetons de filtres actifs et actions groupées sur une sélection ;
-- projection immédiate d'une politique en cours d'édition sur le dernier snapshot.
+- projection immédiate d'une politique en cours d'édition sur le dernier snapshot ;
+- **licence MIT** : l'usage, la modification et la redistribution sont libres, à
+  condition de conserver la mention de copyright ; `CITATION.cff` fournit les
+  métadonnées pour citer le projet d'origine ;
+- code de conduite, guide de contribution, page de support et mentions des composants
+  tiers redistribués — polices IBM Plex sous SIL OFL 1.1 et glyphes Lucide sous ISC ;
+- gabarits d'issues et de pull request, et propriétaires de code ;
+- guide utilisateur complété : périmètre du produit, options du lanceur, lecture des
+  recommandations, raccourcis clavier et questions fréquentes.
 
 ### Modifié
 
