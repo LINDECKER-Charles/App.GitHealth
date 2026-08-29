@@ -1,5 +1,6 @@
 using App.GitHealth.Api.Features.Analyses;
 using App.GitHealth.Api.Features.Common;
+using App.GitHealth.Api.Features.Discovery;
 using App.GitHealth.Api.Features.Policies;
 using App.GitHealth.Api.Features.Projects;
 using App.GitHealth.Api.Features.Snapshots;
@@ -20,9 +21,12 @@ internal static class GitHealthApiServiceCollectionExtensions
             .Bind(configuration.GetSection(AnalysisQueueOptions.SectionName))
             .Validate(IsQueueCapacityValid, "Capacité de file d’analyses invalide.")
             .Validate(IsAnalysisTimeoutValid, "Délai global d’analyse invalide.")
+            .Validate(IsParallelAnalysisCountValid, "Parallélisme d’analyses invalide.")
             .ValidateOnStart();
         services.AddSingleton<RepositoryValidator>();
+        services.AddScoped<RepositoryDiscoveryService>();
         services.AddScoped<ProjectService>();
+        services.AddScoped<ProjectOrganizationService>();
         services.AddScoped<PolicyService>();
         services.AddSingleton<AnalysisQueue>();
         services.AddHostedService<AnalysisWorker>();
@@ -39,6 +43,10 @@ internal static class GitHealthApiServiceCollectionExtensions
     private static bool IsAnalysisTimeoutValid(AnalysisQueueOptions options) =>
         options.TimeoutSeconds is >= AnalysisQueueOptions.MinimumTimeoutSeconds
             and <= AnalysisQueueOptions.MaximumTimeoutSeconds;
+
+    private static bool IsParallelAnalysisCountValid(AnalysisQueueOptions options) =>
+        options.MaximumParallelAnalyses is >= AnalysisQueueOptions.MinimumParallelAnalyses
+            and <= AnalysisQueueOptions.MaximumParallelAnalysesLimit;
 
     private static void ConfigureProblemDetails(ProblemDetailsOptions options)
     {
