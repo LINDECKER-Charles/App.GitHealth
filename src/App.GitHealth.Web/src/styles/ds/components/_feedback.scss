@@ -1,0 +1,195 @@
+/* Établi — Callout, EmptyState, CodeBlock, KeyValueList : ce que l'application répond. */
+
+/* ---- Callout ---- */
+.etb-callout {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--status-info-border);
+  border-radius: var(--radius-md);
+  background: var(--status-info-bg);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+}
+
+.etb-callout__icon {
+  color: var(--status-info-fg);
+  flex: none;
+  margin-top: 1px;
+}
+
+.etb-callout__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.etb-callout--success {
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+}
+
+.etb-callout--success .etb-callout__icon {
+  color: var(--status-success-fg);
+}
+
+.etb-callout--warning {
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+}
+
+.etb-callout--warning .etb-callout__icon {
+  color: var(--status-warning-fg);
+}
+
+.etb-callout--danger {
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
+}
+
+.etb-callout--danger .etb-callout__icon {
+  color: var(--status-danger-fg);
+}
+
+.etb-callout--neutral {
+  background: var(--status-neutral-bg);
+  border-color: var(--status-neutral-border);
+}
+
+.etb-callout--neutral .etb-callout__icon {
+  color: var(--text-muted);
+}
+
+/* ---- EmptyState ---- */
+.etb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+}
+
+.etb-empty__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.etb-empty__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.etb-empty__desc {
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-muted);
+  max-width: 42ch;
+}
+
+/* ---- CodeBlock ---- */
+.etb-code {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-code);
+  background: var(--surface-code);
+  overflow: hidden;
+}
+
+.etb-code__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 30px;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border-bottom: 1px solid var(--divider);
+  background: var(--surface-chrome);
+}
+
+.etb-code__lang {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.etb-code__spacer {
+  flex: 1;
+}
+
+.etb-code__pre {
+  margin: 0;
+  padding: var(--space-3);
+  overflow: auto;
+  font: var(--type-code);
+  color: var(--text-code);
+  tab-size: 2;
+}
+
+.etb-code--sm .etb-code__pre {
+  font: var(--type-code-sm);
+}
+
+.etb-tok-kw {
+  color: var(--syn-keyword);
+  font-weight: var(--weight-medium);
+}
+
+.etb-tok-str {
+  color: var(--syn-string);
+}
+
+.etb-tok-num {
+  color: var(--syn-number);
+}
+
+.etb-tok-fn {
+  color: var(--syn-fn);
+}
+
+.etb-tok-com {
+  color: var(--syn-comment);
+  font-style: italic;
+}
+
+/* ---- KeyValueList ---- */
+.etb-kv {
+  display: grid;
+  grid-template-columns: minmax(96px, max-content) minmax(0, 1fr);
+  gap: var(--space-15) var(--space-4);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.etb-kv dt {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  padding-top: 1px;
+}
+
+.etb-kv dd {
+  margin: 0;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.etb-kv--bordered dt,
+.etb-kv--bordered dd {
+  padding-bottom: var(--space-15);
+  border-bottom: 1px solid var(--border-subtle);
+}

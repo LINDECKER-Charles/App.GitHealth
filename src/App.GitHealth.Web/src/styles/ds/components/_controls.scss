@@ -1,0 +1,188 @@
+/* Établi — Icon, Button, IconButton. Chaque règle est pilotée par les tokens ;
+   aucune couleur n'est écrite en dur. Préfixe : .etb- */
+
+/* ---- Icon ---- */
+.etb-icon {
+  display: inline-block;
+  flex: none;
+  background-color: currentcolor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  vertical-align: -0.15em;
+}
+
+.etb-icon--spin {
+  animation: etb-spin 0.9s linear infinite;
+}
+
+@keyframes etb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Button ---- */
+.etb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-inline);
+  height: var(--control-h-md);
+  padding: 0 var(--control-px-md);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  letter-spacing: var(--tracking-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--transition-control);
+  user-select: none;
+  text-decoration: none;
+}
+
+.etb-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+  border-color: var(--border-focus);
+}
+
+.etb-btn:disabled,
+.etb-btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.etb-btn--sm {
+  height: var(--control-h-sm);
+  padding: 0 var(--control-px-sm);
+  font-size: var(--text-sm);
+  gap: var(--space-1);
+}
+
+.etb-btn--lg {
+  height: var(--control-h-lg);
+  padding: 0 var(--control-px-lg);
+  font-size: var(--text-md);
+}
+
+.etb-btn--block {
+  width: 100%;
+}
+
+.etb-btn--primary {
+  background: var(--primary-bg);
+  color: var(--primary-fg);
+}
+
+.etb-btn--primary:hover:not(:disabled) {
+  background: var(--primary-bg-hover);
+}
+
+.etb-btn--primary:active:not(:disabled) {
+  background: var(--primary-bg-active);
+}
+
+.etb-btn--secondary {
+  background: var(--secondary-bg);
+  color: var(--secondary-fg);
+  border-color: var(--secondary-border);
+  box-shadow: var(--shadow-xs);
+}
+
+.etb-btn--secondary:hover:not(:disabled) {
+  background: var(--secondary-bg-hover);
+  border-color: var(--secondary-border-hover);
+}
+
+.etb-btn--secondary:active:not(:disabled) {
+  background: var(--secondary-bg-active);
+}
+
+.etb-btn--ghost {
+  color: var(--ghost-fg);
+}
+
+.etb-btn--ghost:hover:not(:disabled) {
+  background: var(--ghost-bg-hover);
+  color: var(--text-primary);
+}
+
+.etb-btn--ghost:active:not(:disabled) {
+  background: var(--ghost-bg-active);
+}
+
+.etb-btn--danger {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.etb-btn--danger:hover:not(:disabled) {
+  background: var(--danger-bg-hover);
+}
+
+.etb-btn--danger:focus-visible {
+  box-shadow: var(--ring-danger);
+}
+
+/* ---- IconButton ---- */
+.etb-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h-md);
+  height: var(--control-h-md);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ghost-fg);
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+
+.etb-iconbtn:hover:not(:disabled) {
+  background: var(--ghost-bg-hover);
+  color: var(--text-primary);
+}
+
+.etb-iconbtn:active:not(:disabled) {
+  background: var(--ghost-bg-active);
+}
+
+.etb-iconbtn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+  border-color: var(--border-focus);
+}
+
+.etb-iconbtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.etb-iconbtn--sm {
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+}
+
+.etb-iconbtn--bordered {
+  background: var(--secondary-bg);
+  border-color: var(--secondary-border);
+  color: var(--secondary-fg);
+  box-shadow: var(--shadow-xs);
+}
+
+.etb-iconbtn--bordered:hover:not(:disabled) {
+  background: var(--secondary-bg-hover);
+  border-color: var(--secondary-border-hover);
+}
+
+.etb-iconbtn--active {
+  background: var(--surface-selected);
+  color: var(--primary-soft-fg);
+}

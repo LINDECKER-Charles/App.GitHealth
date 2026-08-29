@@ -1,0 +1,15 @@
+:root {
+  /* Shadows are near-invisible; a 1px border does most of the separating work. */
+  --shadow-xs: 0 1px 1px rgb(26 24 21 / 4%);
+  --shadow-sm: 0 1px 2px rgb(26 24 21 / 6%), 0 1px 3px rgb(26 24 21 / 4%);
+  --shadow-md: 0 2px 4px rgb(26 24 21 / 5%), 0 4px 12px rgb(26 24 21 / 6%);
+  --shadow-lg: 0 2px 6px rgb(26 24 21 / 6%), 0 8px 24px rgb(26 24 21 / 10%);
+  --shadow-overlay: 0 4px 12px rgb(26 24 21 / 8%), 0 16px 48px rgb(26 24 21 / 16%);
+  --shadow-inset-top: inset 0 1px 0 rgb(255 255 255 / 70%);
+  --shadow-inset-field: inset 0 1px 2px rgb(26 24 21 / 5%);
+  --ring-width: 3px;
+  --ring-focus: 0 0 0 var(--ring-width) rgb(46 69 201 / 22%);
+  --ring-danger: 0 0 0 var(--ring-width) rgb(192 50 43 / 20%);
+  --scrim: rgb(26 24 21 / 42%);
+  --blur-overlay: saturate(1.1) blur(3px);
+}

@@ -1,0 +1,210 @@
+/* Établi — Badge, Tag, Kbd, Spinner, StatusDot : les marqueurs d'état des vues denses. */
+
+/* ---- Badge ---- */
+.etb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 20px;
+  padding: 0 var(--space-15);
+  border: 1px solid var(--status-neutral-border);
+  border-radius: var(--radius-sm);
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.etb-badge--sm {
+  height: 17px;
+  font-size: var(--text-2xs);
+  padding: 0 var(--space-1);
+}
+
+.etb-badge--success {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+  border-color: var(--status-success-border);
+}
+
+.etb-badge--warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+  border-color: var(--status-warning-border);
+}
+
+.etb-badge--danger {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-fg);
+  border-color: var(--status-danger-border);
+}
+
+.etb-badge--info {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+  border-color: var(--status-info-border);
+}
+
+.etb-badge--brand {
+  background: var(--status-brand-bg);
+  color: var(--status-brand-fg);
+  border-color: var(--status-brand-border);
+}
+
+.etb-badge--merged {
+  background: var(--status-merged-bg);
+  color: var(--status-merged-fg);
+  border-color: var(--status-merged-border);
+}
+
+.etb-badge--solid {
+  border-color: transparent;
+  color: var(--text-inverse);
+  background: var(--status-neutral-solid);
+}
+
+.etb-badge--solid.etb-badge--success {
+  background: var(--status-success-solid);
+  color: #fff;
+}
+
+.etb-badge--solid.etb-badge--warning {
+  background: var(--status-warning-solid);
+  color: #fff;
+}
+
+.etb-badge--solid.etb-badge--danger {
+  background: var(--status-danger-solid);
+  color: #fff;
+}
+
+.etb-badge--solid.etb-badge--info {
+  background: var(--status-info-solid);
+  color: #fff;
+}
+
+.etb-badge--solid.etb-badge--brand {
+  background: var(--status-brand-solid);
+  color: #fff;
+}
+
+.etb-badge--solid.etb-badge--merged {
+  background: var(--status-merged-solid);
+  color: #fff;
+}
+
+.etb-badge--mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-mono);
+}
+
+/* ---- Tag ---- */
+.etb-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 22px;
+  padding: 0 var(--space-15);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.etb-tag__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: -2px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.etb-tag__x:hover {
+  opacity: 1;
+  background: var(--ghost-bg-hover);
+}
+
+/* ---- Kbd ---- */
+.etb-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border: 1px solid var(--border-default);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.etb-kbd-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+}
+
+/* ---- Spinner ---- */
+.etb-spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--primary-bg);
+  animation: etb-spin 0.7s linear infinite;
+}
+
+/* ---- StatusDot ---- */
+.etb-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--status-neutral-solid);
+}
+
+.etb-dot--success {
+  background: var(--status-success-solid);
+}
+
+.etb-dot--warning {
+  background: var(--status-warning-solid);
+}
+
+.etb-dot--danger {
+  background: var(--status-danger-solid);
+}
+
+.etb-dot--info {
+  background: var(--status-info-solid);
+}
+
+.etb-dot--brand {
+  background: var(--status-brand-solid);
+}
+
+.etb-dot--merged {
+  background: var(--status-merged-solid);
+}

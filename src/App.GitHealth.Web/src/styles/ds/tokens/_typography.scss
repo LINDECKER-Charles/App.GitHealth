@@ -1,0 +1,54 @@
+:root {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-display: var(--font-sans);
+
+  /* Size / line-height pairs. Base UI size is 14px — dense but never cramped. */
+  --text-2xs: 11px;
+  --lh-2xs: 16px;
+  --text-xs: 12px;
+  --lh-xs: 16px;
+  --text-sm: 13px;
+  --lh-sm: 20px;
+  --text-base: 14px;
+  --lh-base: 22px;
+  --text-md: 15px;
+  --lh-md: 24px;
+  --text-lg: 17px;
+  --lh-lg: 26px;
+  --text-xl: 20px;
+  --lh-xl: 28px;
+  --text-2xl: 24px;
+  --lh-2xl: 32px;
+  --text-3xl: 30px;
+  --lh-3xl: 38px;
+  --text-4xl: 38px;
+  --lh-4xl: 44px;
+  --text-5xl: 48px;
+  --lh-5xl: 52px;
+
+  --weight-regular: 400;
+  --weight-book: 450;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-display: -0.022em;
+  --tracking-heading: -0.014em;
+  --tracking-body: -0.004em;
+  --tracking-mono: 0em;
+  --tracking-label: 0.06em;
+
+  /* Role aliases */
+  --type-display: var(--weight-semibold) var(--text-4xl) / var(--lh-4xl) var(--font-display);
+  --type-title: var(--weight-semibold) var(--text-2xl) / var(--lh-2xl) var(--font-display);
+  --type-heading: var(--weight-semibold) var(--text-lg) / var(--lh-lg) var(--font-sans);
+  --type-subheading: var(--weight-medium) var(--text-md) / var(--lh-md) var(--font-sans);
+  --type-body: var(--weight-regular) var(--text-base) / var(--lh-base) var(--font-sans);
+  --type-body-strong: var(--weight-medium) var(--text-base) / var(--lh-base) var(--font-sans);
+  --type-small: var(--weight-regular) var(--text-sm) / var(--lh-sm) var(--font-sans);
+  --type-caption: var(--weight-regular) var(--text-xs) / var(--lh-xs) var(--font-sans);
+  --type-label: var(--weight-semibold) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  --type-code: var(--weight-regular) var(--text-sm) / var(--lh-sm) var(--font-mono);
+  --type-code-sm: var(--weight-regular) var(--text-xs) / var(--lh-xs) var(--font-mono);
+}

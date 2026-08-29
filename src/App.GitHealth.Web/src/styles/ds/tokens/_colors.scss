@@ -1,0 +1,77 @@
+/* Établi base palette. Raw ramps only — never reference these directly in components; use tokens/semantic aliases. */
+:root {
+  /* Graphite — warm neutral, the whole chassis of the UI */
+  --gr-0: #ffffff;
+  --gr-25: #fcfbf9;
+  --gr-50: #f7f5f2;
+  --gr-100: #f0eee9;
+  --gr-150: #e7e4de;
+  --gr-200: #dcd8d1;
+  --gr-300: #c4bfb6;
+  --gr-400: #a39d93;
+  --gr-500: #847e74;
+  --gr-600: #68635a;
+  --gr-700: #4e4a43;
+  --gr-750: #3c3831;
+  --gr-800: #2c2925;
+  --gr-850: #211f1b;
+  --gr-900: #1a1815;
+  --gr-950: #111010;
+
+  /* Cobalt — the single interactive colour: primary actions, links, focus, selection */
+  --co-50: #eef2fe;
+  --co-100: #dce3fc;
+  --co-200: #bcc8f8;
+  --co-300: #93a6f2;
+  --co-400: #6b82e8;
+  --co-500: #4760dc;
+  --co-600: #2e45c9;
+  --co-700: #2434a6;
+  --co-800: #1f2c85;
+  --co-900: #1b2668;
+
+  /* Brass — the brand mark colour. Highlights, pinned/favourite state, never a plain button */
+  --br-50: #fbf3e3;
+  --br-100: #f5e5c6;
+  --br-200: #e9ce95;
+  --br-300: #d9b25f;
+  --br-400: #c2933a;
+  --br-500: #a87b27;
+  --br-600: #8a6420;
+  --br-700: #6b4c19;
+
+  /* Semantic hues */
+  --gn-50: #e6f4ec;
+  --gn-100: #c9e7d6;
+  --gn-200: #93cfae;
+  --gn-500: #1e9a5c;
+  --gn-600: #157f4b;
+  --gn-700: #0f6039;
+  --am-50: #fdf0de;
+  --am-100: #f9dcb4;
+  --am-200: #f3c37c;
+  --am-500: #d97a10;
+  --am-600: #b45b09;
+  --am-700: #8c4507;
+  --rd-50: #fcecea;
+  --rd-100: #f8d5d1;
+  --rd-200: #f0b0a9;
+  --rd-500: #d94238;
+  --rd-600: #c0322b;
+  --rd-700: #9a2620;
+  --pl-50: #f6eefa;
+  --pl-100: #e9d9f2;
+  --pl-500: #8b4bab;
+  --pl-600: #7b3e9d;
+  --pl-700: #63317e;
+
+  /* Code syntax — light */
+  --syn-keyword: #2434a6;
+  --syn-string: #0f6039;
+  --syn-number: #8a6420;
+  --syn-fn: #7b3e9d;
+  --syn-comment: #847e74;
+  --syn-punct: #68635a;
+  --syn-tag: #c0322b;
+  --syn-attr: #b45b09;
+}

@@ -1,0 +1,105 @@
+/* Semantic aliases — the only colour tokens components are allowed to reference. */
+:root {
+  /* Surfaces */
+  --canvas: var(--gr-25);
+  --surface: var(--gr-0);
+  --surface-raised: var(--gr-0);
+  --surface-sunken: var(--gr-50);
+  --surface-muted: var(--gr-100);
+  --surface-hover: var(--gr-50);
+  --surface-active: var(--gr-100);
+  --surface-selected: var(--co-50);
+  --surface-inverse: var(--gr-900);
+  --surface-chrome: var(--gr-50);
+  --surface-code: var(--gr-25);
+  --surface-overlay: var(--gr-0);
+
+  /* Text */
+  --text-primary: var(--gr-900);
+  --text-secondary: var(--gr-700);
+  --text-muted: var(--gr-500);
+  --text-disabled: var(--gr-400);
+  --text-inverse: var(--gr-0);
+  --text-link: var(--co-700);
+  --text-link-hover: var(--co-800);
+  --text-on-primary: var(--gr-0);
+  --text-brand: var(--br-600);
+  --text-code: var(--gr-800);
+
+  /* Borders */
+  --border-subtle: var(--gr-150);
+  --border-default: var(--gr-200);
+  --border-strong: var(--gr-300);
+  --border-inverse: var(--gr-750);
+  --border-focus: var(--co-600);
+  --divider: var(--gr-150);
+
+  /* Interactive — primary */
+  --primary-bg: var(--co-600);
+  --primary-bg-hover: var(--co-700);
+  --primary-bg-active: var(--co-800);
+  --primary-fg: var(--gr-0);
+  --primary-soft-bg: var(--co-50);
+  --primary-soft-fg: var(--co-700);
+  --primary-border: var(--co-700);
+
+  /* Interactive — secondary (bordered, on surface) */
+  --secondary-bg: var(--gr-0);
+  --secondary-bg-hover: var(--gr-50);
+  --secondary-bg-active: var(--gr-100);
+  --secondary-fg: var(--gr-800);
+  --secondary-border: var(--gr-200);
+  --secondary-border-hover: var(--gr-300);
+
+  /* Interactive — ghost */
+  --ghost-bg: transparent;
+  --ghost-bg-hover: var(--gr-100);
+  --ghost-bg-active: var(--gr-150);
+  --ghost-fg: var(--gr-700);
+
+  /* Interactive — danger */
+  --danger-bg: var(--rd-600);
+  --danger-bg-hover: var(--rd-700);
+  --danger-fg: var(--gr-0);
+
+  /* Fields */
+  --field-bg: var(--gr-0);
+  --field-bg-disabled: var(--gr-50);
+  --field-border: var(--gr-200);
+  --field-border-hover: var(--gr-300);
+  --field-placeholder: var(--gr-400);
+
+  /* Status */
+  --status-success-fg: var(--gn-700);
+  --status-success-bg: var(--gn-50);
+  --status-success-border: var(--gn-200);
+  --status-success-solid: var(--gn-600);
+  --status-warning-fg: var(--am-700);
+  --status-warning-bg: var(--am-50);
+  --status-warning-border: var(--am-200);
+  --status-warning-solid: var(--am-600);
+  --status-danger-fg: var(--rd-700);
+  --status-danger-bg: var(--rd-50);
+  --status-danger-border: var(--rd-200);
+  --status-danger-solid: var(--rd-600);
+  --status-info-fg: var(--co-700);
+  --status-info-bg: var(--co-50);
+  --status-info-border: var(--co-200);
+  --status-info-solid: var(--co-600);
+  --status-neutral-fg: var(--gr-700);
+  --status-neutral-bg: var(--gr-100);
+  --status-neutral-border: var(--gr-200);
+  --status-neutral-solid: var(--gr-500);
+  --status-merged-fg: var(--pl-700);
+  --status-merged-bg: var(--pl-50);
+  --status-merged-border: var(--pl-100);
+  --status-merged-solid: var(--pl-600);
+  --status-brand-fg: var(--br-700);
+  --status-brand-bg: var(--br-50);
+  --status-brand-border: var(--br-200);
+  --status-brand-solid: var(--br-500);
+
+  /* Selection + focus */
+  --selection-bg: var(--co-100);
+  --selection-fg: var(--gr-900);
+}

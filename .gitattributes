@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Ressources binaires : aucune normalisation de fin de ligne, sur aucun système.
+*.ttf binary
+*.ico binary

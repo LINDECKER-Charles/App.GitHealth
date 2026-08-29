@@ -1,0 +1,10 @@
+IBM Plex Sans (variable) et IBM Plex Mono (400 / 500 / 600) sont distribués sous
+la licence SIL Open Font License 1.1.
+
+Copyright © 2017 IBM Corp. with Reserved Font Name "Plex".
+
+Texte intégral de la licence : https://openfontlicense.org
+Source amont : https://github.com/google/fonts (ofl/ibmplexsans, ofl/ibmplexmono)
+
+Ces fichiers sont servis localement par GitHealth. L'application ne contacte
+aucun CDN ni aucun service distant pour charger ses polices.

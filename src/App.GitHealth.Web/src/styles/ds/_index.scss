@@ -1,0 +1,17 @@
+/* Point d'entrée du design system Établi : tokens puis classes de composants.
+   L'ordre reproduit celui de `styles.css` livré avec le système. */
+@use 'tokens/fonts';
+@use 'tokens/colors';
+@use 'tokens/typography';
+@use 'tokens/spacing';
+@use 'tokens/radius';
+@use 'tokens/elevation';
+@use 'tokens/motion';
+@use 'tokens/semantic';
+@use 'tokens/theme-dark';
+@use 'tokens/base';
+@use 'components/controls';
+@use 'components/indicators';
+@use 'components/forms';
+@use 'components/panels';
+@use 'components/feedback';

@@ -1,126 +1,153 @@
-:root {
-  --fog: #eef3f1;
-  --paper: #fbfcfa;
-  --ink: #17313a;
-  --ink-muted: #51666c;
-  --petrol: #147875;
-  --petrol-dark: #0d5a59;
-  --copper: #bd5738;
-  --moss: #75886b;
-  --line: #b9c9c4;
-  --line-soft: #dce6e2;
-  --success: #4f765e;
-  --warning: #a75835;
-  --danger: #9a3f3f;
-  --shadow: 0 1.2rem 3rem rgb(23 49 58 / 10%);
-  --font-display: 'Trebuchet MS', 'Avenir Next', sans-serif;
-  --font-body: Inter, Aptos, 'Segoe UI', sans-serif;
-  --font-utility: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
-
-  color-scheme: light;
-  font-family: var(--font-body);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-}
+@use 'styles/ds';
 
 html {
-  min-width: 20rem;
-  min-height: 100%;
-  background: var(--fog);
+  height: 100%;
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 body {
-  min-height: 100%;
-  margin: 0;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-a:focus-visible {
-  outline: 3px solid var(--ink);
-  outline-offset: 4px;
-}
-
-button,
-input,
-select {
-  font: inherit;
-}
-
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
-}
-
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--petrol) 40%, transparent);
-  outline-offset: 2px;
-}
-
-.button {
-  display: inline-flex;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: center;
-  padding: 0.65rem 1rem;
-  border: 1px solid var(--ink);
-  border-radius: 0.35rem;
-  color: var(--paper);
-  background: var(--ink);
-  font-weight: 750;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.button:hover:not(:disabled) {
-  background: var(--petrol-dark);
-}
-
-.button.secondary {
-  color: var(--ink);
-  background: transparent;
-}
-
-.button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.eyebrow {
-  margin: 0 0 0.7rem;
-  color: var(--petrol-dark);
-  font-family: var(--font-utility);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
+  height: 100%;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}
+
+/* Entrées de l'application : opacité plus 6 px de translation, aucun rebond. */
+@keyframes gh-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gh-slide {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gh-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gh-hide {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes gh-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes gh-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gh-left {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gh-grow {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes gh-track {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes gh-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes gh-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes gh-caret {
+  0%,
+  48% {
+    opacity: 1;
+  }
+
+  49%,
+  100% {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
