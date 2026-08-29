@@ -1,0 +1,76 @@
+:host {
+  display: block;
+}
+
+.browser-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 8px;
+}
+
+.browser-path code {
+  flex: 1;
+  min-width: 0;
+  font: var(--type-code-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.browser-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--border-subtle);
+}
+
+.browser-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: var(--type-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.browser-entry:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.browser-entry span {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.browser-note {
+  padding: 12px 10px;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.browser-note-error {
+  color: var(--status-danger-fg);
+}
+
+.browser-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 12px;
+}

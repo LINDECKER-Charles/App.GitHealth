@@ -3,6 +3,40 @@
 Toutes les évolutions notables de GitHealth sont consignées dans ce fichier. Le format
 suit Keep a Changelog et le versionnage sémantique.
 
+## [Non publié]
+
+### Ajouté
+
+- design system Établi : jetons, polices IBM Plex et glyphes Lucide servis localement ;
+- espace de travail unifié avec rail des dépôts, onglets et fiche de branche latérale ;
+- palette de commandes `⌘K` pour atteindre une branche, un dépôt ou une action ;
+- thème sombre mémorisé et séquence d'ouverture, toutes deux coupables au clavier ;
+- tuiles de répartition, jetons de filtres actifs et actions groupées sur une sélection ;
+- projection immédiate d'une politique en cours d'édition sur le dernier snapshot.
+
+### Modifié
+
+- une branche sans commit propre — fusionnée dans la référence, ou pointant sur le même
+  commit — suit désormais une échelle d'activité réduite : vieillissante après 7 jours,
+  inactive après 30. Elle n'est plus jamais recommandée « Conserver », alors que la règle
+  précédente la laissait à conserver pendant trois mois ;
+- nouvelle recommandation **« Terminée »**, en violet, pour une branche fusionnée dont le
+  délai court encore. Le vert de « Conserver » signalait à tort qu'il n'y avait rien à
+  faire et qu'il ne fallait pas y toucher ;
+- nouvelle famille sémantique `--status-merged-*` dans le design system, déclinée en clair
+  et en sombre sur la rampe prune existante ;
+- le snapshot est chargé une fois puis filtré, trié et compté sans nouvel appel ;
+- l'export CSV est produit localement et suit la vue ou la sélection ;
+- l'historique affiche le nombre de branches lues et l'écart avec le passage précédent.
+
+### Corrigé
+
+- la feuille de styles globale ne s'appliquait pas dans le paquet publié : le
+  gestionnaire `onload` du CSS critique était bloqué par la politique de sécurité ;
+- une adresse profonde rechargée servait une page vide : `base-uri 'none'` bloquait
+  la balise `<base href="/">`, et les URL relatives d'`index.html` se résolvaient
+  depuis la route courante. La directive passe à `'self'`.
+
 ## [0.1.0-rc.1] - 2026-08-29
 
 ### Ajouté

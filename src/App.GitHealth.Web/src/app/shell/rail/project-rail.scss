@@ -1,0 +1,123 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface-chrome);
+  border-right: 1px solid var(--divider);
+  animation: gh-left 440ms var(--ease-out) 130ms both;
+}
+
+.rail-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 10px 6px;
+}
+
+.rail-title {
+  flex: 1;
+  font: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rail-filter {
+  padding: 0 10px 8px;
+}
+
+.rail-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 0 8px 8px;
+  overflow: auto;
+}
+
+.rail-entry {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font: var(--type-body);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.rail-entry:hover {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.rail-entry.is-selected {
+  background: var(--surface-selected);
+  color: var(--primary-soft-fg);
+}
+
+.rail-entry-mark {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  flex: none;
+}
+
+.rail-entry-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.rail-entry-name {
+  display: block;
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rail-entry-path {
+  display: block;
+  font: var(--type-code-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rail-entry-count {
+  flex: none;
+  padding-top: 2px;
+  font: var(--type-code-sm);
+  color: var(--text-muted);
+}
+
+.rail-note {
+  padding: 16px 8px;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.rail-note-error {
+  color: var(--status-danger-fg);
+}
+
+.rail-footer {
+  padding: 8px 10px;
+  border-top: 1px solid var(--divider);
+}
+
+.rail-footer p {
+  margin: 8px 2px 2px;
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}

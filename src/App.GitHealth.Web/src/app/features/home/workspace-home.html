@@ -1,0 +1,26 @@
+@if (store.isLoading()) {
+  <p class="home-state" role="status">Lecture de la configuration locale…</p>
+} @else if (store.error(); as message) {
+  <div class="home-notice">
+    <ds-callout tone="danger" title="Les dépôts ne répondent pas">{{ message }}</ds-callout>
+    <button dsButton size="md" variant="secondary" iconLeft="refresh-cw" (click)="store.load()">
+      Réessayer
+    </button>
+  </div>
+} @else {
+  <ds-empty-state
+    icon="git-branch"
+    title="Aucun dépôt observé pour l'instant"
+    description="Ajoute un dépôt déjà présent sur cette machine. GitHealth lit ses références sans checkout, sans fetch et sans écriture."
+  >
+    <button
+      dsButton
+      size="md"
+      variant="primary"
+      iconLeft="plus"
+      (click)="dialogs.openAddRepository()"
+    >
+      Ajouter un dépôt
+    </button>
+  </ds-empty-state>
+}

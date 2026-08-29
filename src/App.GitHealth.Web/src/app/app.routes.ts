@@ -3,31 +3,40 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./features/home/home').then(({ Home }) => Home),
-  },
-  {
-    path: 'projects/:projectId/history',
+    pathMatch: 'full',
     loadComponent: () =>
-      import('./features/analysis-history/analysis-history').then(
-        ({ AnalysisHistory }) => AnalysisHistory,
-      ),
-  },
-  {
-    path: 'projects/:projectId/settings',
-    loadComponent: () =>
-      import('./features/project-settings/project-settings').then(
-        ({ ProjectSettings }) => ProjectSettings,
-      ),
-  },
-  {
-    path: 'projects/:projectId/analyses/:analysisId',
-    loadComponent: () =>
-      import('./features/dashboard/dashboard').then(({ Dashboard }) => Dashboard),
+      import('./features/home/workspace-home').then(({ WorkspaceHome }) => WorkspaceHome),
   },
   {
     path: 'projects/:projectId',
     loadComponent: () =>
-      import('./features/dashboard/dashboard').then(({ Dashboard }) => Dashboard),
+      import('./features/project/project-shell').then(({ ProjectShell }) => ProjectShell),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard').then(({ Dashboard }) => Dashboard),
+      },
+      {
+        path: 'history',
+        loadComponent: () =>
+          import('./features/analysis-history/analysis-history').then(
+            ({ AnalysisHistory }) => AnalysisHistory,
+          ),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/project-settings/project-settings').then(
+            ({ ProjectSettings }) => ProjectSettings,
+          ),
+      },
+      {
+        path: 'analyses/:analysisId',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard').then(({ Dashboard }) => Dashboard),
+      },
+    ],
   },
   {
     path: 'branches/:snapshotId',

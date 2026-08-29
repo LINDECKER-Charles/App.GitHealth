@@ -1,31 +1,33 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { apiErrorMessage } from '../../core/api/api-error';
 import { GitHealthApiClient } from '../../core/api/git-health-api-client';
-import { AnalysisHistoryItem, AnalysisRunStatus } from '../../core/api/api.models';
+import { AnalysisHistoryResponse } from '../../core/api/api.models';
+import { DsBadge } from '../../ui/core/ds-badge';
+import { DsButton } from '../../ui/core/ds-button';
+import { DsStatusDot } from '../../ui/core/ds-status-dot';
+import { DsTag } from '../../ui/core/ds-tag';
+import { DsCallout } from '../../ui/surfaces/ds-callout';
+import { DsEmptyState } from '../../ui/surfaces/ds-empty-state';
+import { AnalysisRun, toRuns } from './analysis-run';
 
-interface StatusPresentation {
-  readonly label: string;
-  readonly mark: string;
-  readonly tone: string;
-}
+const historyPageSize = 100;
 
-const statusPresentations: Record<AnalysisRunStatus, StatusPresentation> = {
-  Running: { label: 'En cours', mark: '…', tone: 'running' },
-  Completed: { label: 'Réussie', mark: '✓', tone: 'success' },
-  Failed: { label: 'Échec', mark: '×', tone: 'failed' },
-  Cancelled: { label: 'Annulée', mark: '—', tone: 'cancelled' },
-};
-
-const missingProjectMessage = 'Le projet demandé est absent de l’adresse.';
-const loadingErrorMessage = 'Impossible de charger l’historique des analyses.';
-
+/** Journal des passages : chacun conserve sa référence et ses règles. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, DsBadge, DsButton, DsCallout, DsEmptyState, DsStatusDot, DsTag, RouterLink],
   selector: 'app-analysis-history',
   styleUrl: './analysis-history.scss',
   templateUrl: './analysis-history.html',
@@ -34,50 +36,50 @@ export class AnalysisHistory {
   private readonly api = inject(GitHealthApiClient);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly params = toSignal(this.route.parent?.paramMap ?? this.route.paramMap, {
+    requireSync: true,
+  });
+  private readonly history = signal<AnalysisHistoryResponse | null>(null);
 
-  protected readonly projectId = this.route.snapshot.paramMap.get('projectId') ?? '';
-  protected readonly items = signal<readonly AnalysisHistoryItem[]>([]);
   protected readonly isLoading = signal(true);
   protected readonly error = signal<string | null>(null);
+  protected readonly expandedId = signal<string | null>(null);
+
+  protected readonly projectId = computed(() => this.params().get('projectId') ?? '');
+  protected readonly runs = computed<readonly AnalysisRun[]>(() =>
+    toRuns(this.history()?.items ?? []),
+  );
+
+  protected readonly hiddenCount = computed(() => {
+    const response = this.history();
+    return response === null ? 0 : Math.max(0, response.totalCount - response.items.length);
+  });
 
   constructor() {
-    this.loadHistory();
+    effect(() => this.load(this.projectId()));
   }
 
-  protected loadHistory(): void {
-    if (this.projectId.length === 0) {
-      this.error.set(missingProjectMessage);
-      this.isLoading.set(false);
+  protected toggle(runId: string): void {
+    this.expandedId.update((current) => (current === runId ? null : runId));
+  }
+
+  protected load(projectId: string): void {
+    if (projectId.length === 0) {
       return;
     }
 
     this.isLoading.set(true);
     this.error.set(null);
     this.api
-      .getAnalysisHistory(this.projectId)
+      .getAnalysisHistory(projectId, historyPageSize)
       .pipe(
         finalize(() => this.isLoading.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (history) => this.items.set(history.items),
-        error: (error: unknown) => this.error.set(apiErrorMessage(error, loadingErrorMessage)),
+        next: (history) => this.history.set(history),
+        error: (error: unknown) =>
+          this.error.set(apiErrorMessage(error, 'Le journal n’a pas pu être lu.')),
       });
-  }
-
-  protected statusLabel(status: AnalysisRunStatus): string {
-    return statusPresentations[status].label;
-  }
-
-  protected statusMark(status: AnalysisRunStatus): string {
-    return statusPresentations[status].mark;
-  }
-
-  protected statusTone(status: AnalysisRunStatus): string {
-    return statusPresentations[status].tone;
-  }
-
-  protected displayReference(referenceName: string): string {
-    return referenceName.replace(/^refs\/heads\//, '').replace(/^refs\/remotes\//, '');
   }
 }

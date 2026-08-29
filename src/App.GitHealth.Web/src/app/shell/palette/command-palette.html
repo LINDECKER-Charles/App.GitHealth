@@ -1,0 +1,49 @@
+<div class="palette-scrim" (click)="dialogs.closePalette()">
+  <div
+    class="palette"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Palette de commandes"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="palette-search">
+      <span class="palette-search-mark"><ds-icon name="command" [size]="15" /></span>
+      <input
+        #search
+        class="palette-input"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Branche, dépôt ou action…"
+        aria-label="Rechercher une branche, un dépôt ou une action"
+        [value]="query()"
+        (input)="onQuery(search.value)"
+        (keydown.arrowdown)="$event.preventDefault(); move(1)"
+        (keydown.arrowup)="$event.preventDefault(); move(-1)"
+        (keydown.enter)="runHighlighted()"
+      />
+      <ds-kbd keys="esc" />
+    </div>
+
+    <div class="palette-results">
+      @for (group of groups(); track group.title) {
+        <div class="palette-group">{{ group.title }}</div>
+        @for (item of group.items; track item.label) {
+          <button
+            class="palette-item"
+            type="button"
+            [class.is-highlighted]="indexOf(item) === highlighted()"
+            (click)="item.run()"
+          >
+            <span class="palette-item-mark"><ds-icon [name]="item.icon" [size]="14" /></span>
+            <span class="palette-item-label" [class.is-mono]="item.mono">{{ item.label }}</span>
+            <span class="palette-item-meta">{{ item.meta }}</span>
+          </button>
+        }
+      }
+      @if (isEmpty()) {
+        <div class="palette-empty">Rien ne correspond à cette saisie.</div>
+      }
+    </div>
+  </div>
+</div>

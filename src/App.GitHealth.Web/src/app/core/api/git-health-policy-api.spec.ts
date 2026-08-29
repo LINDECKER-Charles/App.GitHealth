@@ -60,9 +60,13 @@ describe('GitHealthApiClient policy and history', () => {
   });
 
   it('loads history and a historical snapshot page', async () => {
-    const history: AnalysisHistoryResponse = { items: [] };
-    const historyResult = firstValueFrom(client.getAnalysisHistory(projectId));
-    http.expectOne(`/api/projects/${projectId}/analyses`).flush(history);
+    const history: AnalysisHistoryResponse = { items: [], page: 1, pageSize: 100, totalCount: 0 };
+    const historyResult = firstValueFrom(client.getAnalysisHistory(projectId, 100));
+    const historyRequest = http.expectOne(
+      (request) => request.url === `/api/projects/${projectId}/analyses`,
+    );
+    expect(historyRequest.request.params.get('pageSize')).toBe('100');
+    historyRequest.flush(history);
     expect(await historyResult).toEqual(history);
 
     const page = { items: [] } as unknown as SnapshotPageResponse;

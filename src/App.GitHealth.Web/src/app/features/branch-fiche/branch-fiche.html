@@ -1,0 +1,146 @@
+<div class="fiche-heading">
+  <div class="fiche-identity">
+    <div class="fiche-label">Fiche de branche</div>
+    <div class="fiche-name">{{ branchName() }}</div>
+    <div class="fiche-flags">
+      @if (detail()) {
+        <ds-badge size="sm" tone="neutral">{{ source() }}</ds-badge>
+      }
+      @for (flag of flags(); track flag.label) {
+        <ds-badge size="sm" [tone]="flag.tone">{{ flag.label }}</ds-badge>
+      }
+    </div>
+  </div>
+  <button dsIconButton icon="x" label="Fermer la fiche" size="sm" (click)="closed.emit()"></button>
+</div>
+
+<div class="fiche-body">
+  @if (isLoading() && detail() === null) {
+    <p class="fiche-state" role="status">Lecture des faits Git…</p>
+  } @else if (error(); as message) {
+    <p class="fiche-state fiche-state-error" role="alert">{{ message }}</p>
+  } @else if (detail(); as branch) {
+    <div class="fiche-reco" [attr.data-tone]="recommendationTone()">
+      <div class="fiche-reco-head">
+        <ds-icon [name]="recommendationIcons[branch.snapshot.recommendation]" [size]="15" />
+        <span>{{ recommendationLabels[branch.snapshot.recommendation] }}</span>
+      </div>
+      <p>{{ branch.snapshot.reason }}</p>
+    </div>
+
+    <section>
+      <div class="fiche-section-label">Pourquoi cette recommandation</div>
+      <div class="fiche-trace">
+        @for (line of trace(); track $index) {
+          <div class="fiche-trace-line">
+            <span class="fiche-trace-mark"><ds-icon [name]="line.icon" [size]="14" /></span>
+            <div>
+              <div class="fiche-trace-text">{{ line.text }}</div>
+              <div class="fiche-trace-rule">{{ line.rule }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section>
+      <div class="fiche-section-label">Écart avec {{ displayReference(branch.referenceName) }}</div>
+      <div class="fiche-divergence">
+        <div class="fiche-divergence-card">
+          <div class="fiche-caption">Avance</div>
+          <div class="fiche-count">+{{ branch.snapshot.aheadCount }}</div>
+          <div class="fiche-caption">commits absents de la référence</div>
+        </div>
+        <div class="fiche-divergence-card">
+          <div class="fiche-caption">Retard</div>
+          <div class="fiche-count">−{{ branch.snapshot.behindCount }}</div>
+          <div class="fiche-caption">commits absents de la branche</div>
+        </div>
+      </div>
+      <div class="fiche-divergence-bar">
+        <span class="is-ahead" [style.width]="divergenceShare().ahead"></span>
+        <span class="is-gap"></span>
+        <span class="is-behind" [style.width]="divergenceShare().behind"></span>
+      </div>
+    </section>
+
+    <section>
+      <div class="fiche-section-label">Coordonnées du snapshot</div>
+      <ds-key-value-list [items]="coordinates()" [bordered]="true" />
+    </section>
+
+    <section>
+      <div class="fiche-section-head">
+        <span class="fiche-section-label">Contributeurs</span>
+        <span class="fiche-caption">
+          {{
+            branch.mailmapApplied ? 'identités normalisées par .mailmap' : 'aucun .mailmap appliqué'
+          }}
+        </span>
+      </div>
+
+      @if (branch.attributionStatus === 'UnavailableAfterMerge') {
+        <p class="fiche-note">
+          Attribution impossible après fusion : la plage entre la référence et la branche est vide,
+          Git ne peut plus rattacher les commits à leur branche d'origine.
+        </p>
+      } @else {
+        @for (contributor of branch.contributors; track contributor.email) {
+          <div class="fiche-contributor">
+            <span class="fiche-contributor-rank">{{ $index + 1 }}</span>
+            <div class="fiche-contributor-identity">
+              <div class="fiche-contributor-name">{{ contributor.name }}</div>
+              <div class="fiche-contributor-email">{{ contributor.email }}</div>
+            </div>
+            <span class="fiche-contributor-count">
+              {{ contributor.commitCount }} commit{{ contributor.commitCount > 1 ? 's' : '' }}
+            </span>
+          </div>
+        } @empty {
+          <p class="fiche-note">Aucun commit propre n'est attribuable à cette branche.</p>
+        }
+      }
+    </section>
+
+    <section>
+      <div class="fiche-section-label">Suppression manuelle</div>
+      <ds-code-block size="sm" language="bash" [code]="command()" />
+      <p class="fiche-note">
+        GitHealth n'exécute jamais cette commande. Copie-la si tu décides de nettoyer.
+      </p>
+    </section>
+  }
+</div>
+
+@if (detail(); as branch) {
+  <div class="fiche-footer">
+    @if (canEditPolicy()) {
+      <button
+        dsButton
+        size="sm"
+        variant="secondary"
+        iconLeft="lock"
+        [disabled]="branch.snapshot.isProtected"
+        (click)="protect()"
+      >
+        {{ branch.snapshot.isProtected ? 'Protégée' : 'Protéger' }}
+      </button>
+      <button
+        dsButton
+        size="sm"
+        variant="secondary"
+        iconLeft="eye-off"
+        [disabled]="branch.snapshot.isExcluded"
+        (click)="exclude()"
+      >
+        {{ branch.snapshot.isExcluded ? 'Exclue' : 'Exclure' }}
+      </button>
+    }
+    <span class="fiche-footer-spacer"></span>
+    @if (hasNext()) {
+      <button dsButton size="sm" variant="ghost" iconLeft="chevron-down" (click)="next()">
+        Suivante
+      </button>
+    }
+  </div>
+}

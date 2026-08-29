@@ -1,0 +1,53 @@
+@if (listing(); as current) {
+  <div class="browser-path">
+    @if (current.parentPath !== null) {
+      <button
+        dsButton
+        size="sm"
+        variant="ghost"
+        iconLeft="chevron-left"
+        (click)="browse(current.parentPath)"
+      >
+        Dossier parent
+      </button>
+    }
+    <code>{{ current.currentPath }}</code>
+  </div>
+
+  @if (current.isTruncated) {
+    <p class="browser-note" role="status">
+      Seuls les 250 premiers dossiers sont affichés. Affine depuis un dossier parent.
+    </p>
+  }
+
+  <div class="browser-list">
+    @for (directory of current.directories; track directory.path) {
+      <button class="browser-entry" type="button" (click)="browse(directory.path)">
+        <ds-icon name="folder" [size]="13" />
+        <span>{{ directory.name }}</span>
+        <ds-icon name="chevron-right" [size]="13" />
+      </button>
+    } @empty {
+      <p class="browser-note">Ce dossier ne contient aucun sous-dossier accessible.</p>
+    }
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="browser-note" role="status">Lecture des dossiers…</p>
+} @else if (error(); as message) {
+  <p class="browser-note browser-note-error" role="alert">{{ message }}</p>
+}
+
+<div class="browser-actions">
+  <button dsButton size="sm" variant="ghost" (click)="cancelled.emit()">Annuler</button>
+  <button
+    dsButton
+    size="sm"
+    variant="primary"
+    [disabled]="listing() === null"
+    (click)="useCurrent()"
+  >
+    Utiliser ce chemin
+  </button>
+</div>

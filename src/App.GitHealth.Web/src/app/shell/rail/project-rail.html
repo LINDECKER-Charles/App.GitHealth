@@ -1,0 +1,64 @@
+<div class="rail-heading">
+  <span class="rail-title">Dépôts observés</span>
+  <button
+    dsIconButton
+    icon="plus"
+    label="Ajouter un dépôt"
+    size="sm"
+    (click)="dialogs.openAddRepository()"
+  ></button>
+</div>
+
+<div class="rail-filter">
+  <ds-input
+    size="sm"
+    type="search"
+    iconLeft="search"
+    placeholder="Filtrer"
+    ariaLabel="Filtrer les dépôts observés"
+    [(value)]="filter"
+  />
+</div>
+
+<div class="rail-list">
+  @for (entry of entries(); track entry.project.id) {
+    <a
+      class="rail-entry"
+      [class.is-selected]="isSelected(entry.project)"
+      [routerLink]="['/projects', entry.project.id]"
+    >
+      <span class="rail-entry-mark">
+        <ds-status-dot [tone]="entry.tone" [size]="7" />
+      </span>
+      <span class="rail-entry-body">
+        <span class="rail-entry-name">{{ entry.project.displayName }}</span>
+        <span class="rail-entry-path">{{ entry.project.repositoryPath }}</span>
+      </span>
+      <span class="rail-entry-count" title="Branches du dernier snapshot lu">
+        {{ entry.branchCount }}
+      </span>
+    </a>
+  }
+
+  @if (store.isLoading()) {
+    <p class="rail-note">Lecture de la configuration locale…</p>
+  } @else if (store.error(); as message) {
+    <p class="rail-note rail-note-error" role="alert">{{ message }}</p>
+  } @else if (isEmpty()) {
+    <p class="rail-note">Aucun dépôt ne correspond.</p>
+  }
+</div>
+
+<div class="rail-footer">
+  <button
+    dsButton
+    size="sm"
+    variant="secondary"
+    iconLeft="plus"
+    [block]="true"
+    (click)="dialogs.openAddRepository()"
+  >
+    Ajouter un dépôt
+  </button>
+  <p>Aucun clone, aucun fetch, aucune écriture Git. Les identités restent sur ce poste.</p>
+</div>

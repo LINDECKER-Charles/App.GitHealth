@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { openWorkspace } from "../support/workspace.js";
 
 const dockerUrl = process.env["GITHEALTH_DOCKER_URL"];
 const repositoryName = process.env["GITHEALTH_DOCKER_REPOSITORY"] ?? "";
@@ -28,7 +29,8 @@ test("ajoute le dépôt et termine sa première analyse", async ({ page }) => {
   test.skip(!completeFlow, "Parcours persistant non demandé.");
 
   await selectAndValidateRepository(page);
-  await page.getByRole("button", { name: "Ajouter et ouvrir" }).click();
+  await page.getByLabel("Nom affiché").fill(repositoryName);
+  await page.getByRole("button", { name: "Ajouter le dépôt" }).click();
   await expect(
     page.getByRole("heading", { level: 1, name: repositoryName }),
   ).toBeVisible();
@@ -36,26 +38,21 @@ test("ajoute le dépôt et termine sa première analyse", async ({ page }) => {
   await page
     .getByRole("button", { name: "Lancer la première analyse", exact: true })
     .click();
-  await expect(
-    page.getByRole("heading", { name: "Branches à examiner" }),
-  ).toBeVisible({ timeout: 60_000 });
-  await expect(page.locator("tbody tr")).not.toHaveCount(0);
+  await expect(page.locator(".dashboard-table tbody tr")).not.toHaveCount(0, {
+    timeout: 60_000,
+  });
 });
 
-async function selectAndValidateRepository(
-  page: import("@playwright/test").Page,
-): Promise<void> {
-  await page.goto(dockerUrl!);
-  await expect(page.getByText("Chemins du conteneur")).toBeVisible();
+async function selectAndValidateRepository(page: Page): Promise<void> {
+  await openWorkspace(page, dockerUrl!);
+  await page.getByRole("button", { name: "Ajouter un dépôt" }).last().click();
+  await expect(page.getByPlaceholder("/repositories/mon-depot")).toBeVisible();
 
   await page.getByRole("button", { name: "Parcourir" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByRole("button", { name: repositoryName }).click();
   const repositoryPath = `/repositories/${repositoryName}`;
   await expect(page.getByText(repositoryPath)).toBeVisible();
   await page.getByRole("button", { name: "Utiliser ce chemin" }).click();
 
   await expect(page.getByLabel("Chemin du dépôt")).toHaveValue(repositoryPath);
-  await page.getByRole("button", { name: "Vérifier" }).click();
-  await expect(page.getByText("Dépôt reconnu")).toBeVisible();
 }

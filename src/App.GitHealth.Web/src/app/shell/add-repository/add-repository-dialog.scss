@@ -1,0 +1,123 @@
+.dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 10vh;
+  background: var(--scrim);
+  backdrop-filter: var(--blur-overlay);
+}
+
+.dialog {
+  width: 600px;
+  max-width: 92vw;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+  animation: gh-in var(--dur-base) var(--ease-out);
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.dialog-heading-mark {
+  display: flex;
+  color: var(--text-secondary);
+}
+
+.dialog-heading-title {
+  flex: 1;
+  font: var(--type-heading);
+  letter-spacing: var(--tracking-heading);
+}
+
+.dialog-body {
+  padding: 14px;
+}
+
+.field-label {
+  margin-bottom: 4px;
+  font: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.path-row {
+  display: flex;
+  gap: 6px;
+}
+
+.path-row ds-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.validation-note {
+  margin: 8px 0 0;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.validation-error {
+  color: var(--status-danger-fg);
+}
+
+.validated {
+  margin-top: 12px;
+  animation: gh-in var(--dur-fast) var(--ease-out);
+}
+
+.validated-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--status-success-border);
+  border-radius: var(--radius-md);
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+  font: var(--type-small);
+}
+
+.validated-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.validated-scope {
+  margin-top: 12px;
+}
+
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--divider);
+  background: var(--surface-chrome);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.dialog-footer span {
+  flex: 1;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}

@@ -16,7 +16,7 @@ export type BranchTopology = 'Synchronized' | 'Ahead' | 'Merged' | 'Diverged' | 
 
 export type ActivityStatus = 'Active' | 'Aging' | 'Inactive' | 'Unknown';
 
-export type RecommendationKind = 'Keep' | 'Review' | 'CleanupCandidate' | 'Excluded';
+export type RecommendationKind = 'Keep' | 'Review' | 'CleanupCandidate' | 'Excluded' | 'Merged';
 
 export type AttributionStatus = 'Available' | 'UnavailableAfterMerge';
 
@@ -127,18 +127,25 @@ export interface AnalysisHistoryItem {
   readonly status: AnalysisRunStatus;
   readonly startedAtUtc: UtcDateTime;
   readonly completedAtUtc: UtcDateTime | null;
+  readonly capturedAtUtc: UtcDateTime | null;
   readonly referenceName: string;
+  readonly referenceCommit: string | null;
   readonly branchNamespace: string;
   readonly activeUntilDays: number;
   readonly inactiveAfterDays: number;
   readonly excludedPatterns: readonly string[];
   readonly protectedPatterns: readonly string[];
+  readonly gitVersion: string | null;
+  readonly branchCount: number;
   readonly failureCode: string | null;
   readonly failureMessage: string | null;
 }
 
 export interface AnalysisHistoryResponse {
   readonly items: readonly AnalysisHistoryItem[];
+  readonly page: number;
+  readonly pageSize: number;
+  readonly totalCount: number;
 }
 
 export interface SnapshotQuery {

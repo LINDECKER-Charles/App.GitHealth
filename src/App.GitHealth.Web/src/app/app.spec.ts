@@ -1,34 +1,68 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { WorkspaceDialogs } from './core/workspace/workspace-dialogs';
+import { databaseBackupUrl } from './core/workspace/app-identity';
 
 describe('App', () => {
   beforeEach(async () => {
+    window.sessionStorage.setItem('githealth.intro', 'skipped');
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter([])],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+  afterEach(() => window.sessionStorage.clear());
 
-  it('should host routed features', async () => {
+  async function render() {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
+    return fixture;
+  }
+
+  it('monte la coquille : barre supérieure, rail et zone routée', async () => {
+    const compiled = (await render()).nativeElement as HTMLElement;
+    expect(compiled.querySelector('.topbar')).not.toBeNull();
+    expect(compiled.querySelector('app-project-rail')).not.toBeNull();
     expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
 
-  it('should expose the local database backup', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const link = fixture.nativeElement.querySelector('.backup-action') as HTMLAnchorElement;
-
-    expect(link.getAttribute('href')).toBe('/api/exports/database');
+  it('expose la sauvegarde locale de la base', async () => {
+    const compiled = (await render()).nativeElement as HTMLElement;
+    const link = compiled.querySelector('.backup-action') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe(databaseBackupUrl);
     expect(link.hasAttribute('download')).toBe(true);
+  });
+
+  it('ouvre la palette au clic sur le champ de recherche', async () => {
+    const fixture = await render();
+    const dialogs = TestBed.inject(WorkspaceDialogs);
+    expect(dialogs.isPaletteOpen()).toBe(false);
+
+    (fixture.nativeElement.querySelector('.topbar-search') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(dialogs.isPaletteOpen()).toBe(true);
+    expect(fixture.nativeElement.querySelector('app-command-palette')).not.toBeNull();
+  });
+
+  it('ouvre et ferme la palette au clavier', async () => {
+    const fixture = await render();
+    const dialogs = TestBed.inject(WorkspaceDialogs);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+    await fixture.whenStable();
+    expect(dialogs.isPaletteOpen()).toBe(true);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await fixture.whenStable();
+    expect(dialogs.isPaletteOpen()).toBe(false);
+  });
+
+  it('ne rejoue pas l’introduction une fois passée dans la session', async () => {
+    const fixture = await render();
+    expect(fixture.nativeElement.querySelector('app-boot-intro')).toBeNull();
   });
 });

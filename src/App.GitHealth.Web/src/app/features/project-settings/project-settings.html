@@ -1,193 +1,219 @@
-<section class="settings">
-  <button class="back-action" type="button" (click)="goBack()">
-    <span aria-hidden="true">←</span> Retour au projet
-  </button>
+<div class="settings-grid">
+  <div class="settings-column">
+    <ds-panel title="Seuils d'activité" icon="clock">
+      <div class="panel-content">
+        <p class="panel-intro">
+          Deux bornes, trois états. Les seuils changent l'interprétation, jamais les SHA ni les
+          compteurs déjà capturés.
+        </p>
 
-  @if (loading()) {
-    <div class="state-panel" role="status">
-      <span class="loading-mark" aria-hidden="true"></span>
-      <strong>Lecture de la politique…</strong>
-    </div>
-  } @else if (loadError(); as errorMessage) {
-    <div class="state-panel error-panel" role="alert">
-      <span class="state-symbol" aria-hidden="true">!</span>
-      <strong>La politique ne peut pas être chargée</strong>
-      <p>{{ errorMessage }}</p>
-      <button class="button secondary" type="button" (click)="load()">Réessayer</button>
-    </div>
-  } @else if (project(); as currentProject) {
-    <header class="settings-heading">
-      <div>
-        <p class="eyebrow">Règles d’interprétation</p>
-        <h1>Politiques de {{ currentProject.displayName }}</h1>
-        <code>{{ currentProject.repositoryPath }}</code>
+        <div class="threshold-row">
+          <div class="threshold-field">
+            <div class="field-label">Active jusqu'à</div>
+            <ds-input
+              size="sm"
+              type="number"
+              inputMode="numeric"
+              [min]="0"
+              [mono]="true"
+              suffix="jours"
+              ariaLabel="Active jusqu'à, en jours"
+              [(value)]="activeUntilDays"
+            />
+          </div>
+          <div class="threshold-field">
+            <div class="field-label">Inactive après</div>
+            <ds-input
+              size="sm"
+              type="number"
+              inputMode="numeric"
+              [min]="1"
+              [mono]="true"
+              suffix="jours"
+              ariaLabel="Inactive après, en jours"
+              [invalid]="hasThresholdError()"
+              [(value)]="inactiveAfterDays"
+            />
+          </div>
+          <span class="threshold-spacer"></span>
+        </div>
+
+        <div class="threshold-bands">
+          <div class="band-track">
+            <span class="band-active" [style.width]="bands().active"></span>
+            <span class="band-aging" [style.width]="bands().aging"></span>
+            <span class="band-inactive"></span>
+          </div>
+          <div class="band-scale">
+            <span [style.width]="bands().active">0 j</span>
+            <span [style.width]="bands().aging">{{ draft().activeUntilDays }} j</span>
+            <span class="band-last">{{ draft().inactiveAfterDays }} j</span>
+          </div>
+          <div class="band-legend">
+            <span [style.width]="bands().active">Active</span>
+            <span [style.width]="bands().aging">Vieillissante</span>
+            <span class="band-last">Inactive</span>
+          </div>
+        </div>
+
+        <p class="panel-footnote">
+          Ces bornes valent pour les branches qui portent des commits propres. Une branche
+          fusionnée, ou au même sommet que la référence, ne détient plus rien d'unique : elle suit
+          une échelle réduite, vieillissante après {{ mergedActiveUntilDays }} jours et inactive
+          après {{ mergedInactiveAfterDays }} jours.
+        </p>
+
+        @if (hasThresholdError()) {
+          <div class="panel-alert">
+            <ds-callout tone="danger" title="Seuils incohérents">
+              Le seuil d'inactivité doit être supérieur au seuil d'activité.
+            </ds-callout>
+          </div>
+        }
       </div>
-      <p>
-        Ajustez la lecture des snapshots sans modifier leurs SHA, leurs compteurs ni leur
-        historique.
-      </p>
-    </header>
+    </ds-panel>
 
-    @if (!currentProject.isRepositoryAccessible) {
-      <aside class="repository-notice" role="note">
-        <strong>Le dépôt est actuellement inaccessible.</strong>
-        La politique reste modifiable à partir du dernier snapshot enregistré. Relocalisez-le
-        ci-dessous pour reprendre les analyses sans perdre cet historique.
-      </aside>
-    }
-
-    <app-repository-relocation [project]="currentProject" (relocated)="applyRelocation($event)" />
-
-    <div class="settings-workbench">
-      <form class="policy-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
-        <section aria-labelledby="thresholds-title">
-          <div class="section-heading">
-            <div>
-              <p class="section-index">01</p>
-              <h2 id="thresholds-title">Seuils d’activité</h2>
-            </div>
-            <p>Deux bornes, trois états : active, vieillissante et inactive.</p>
+    <ds-panel title="Motifs de branche" icon="funnel">
+      <div class="panel-content pattern-grid">
+        <div>
+          <div class="pattern-title">
+            <span class="pattern-mark is-brand"><ds-icon name="lock" [size]="13" /></span>
+            <span>Branches protégées</span>
           </div>
-          <div class="threshold-grid">
-            <div class="field">
-              <label for="active-days">Active jusqu’à</label>
-              <div class="number-field">
-                <input
-                  id="active-days"
-                  type="number"
-                  min="0"
-                  step="1"
-                  formControlName="activeUntilDays"
-                  aria-describedby="active-help threshold-error"
-                />
-                <span>jours</span>
-              </div>
-              <p id="active-help">La date exacte du commit reste toujours affichée.</p>
-            </div>
-            <div class="field">
-              <label for="inactive-days">Inactive après</label>
-              <div class="number-field">
-                <input
-                  id="inactive-days"
-                  type="number"
-                  min="1"
-                  step="1"
-                  formControlName="inactiveAfterDays"
-                  aria-describedby="inactive-help threshold-error"
-                />
-                <span>jours</span>
-              </div>
-              <p id="inactive-help">Entre les deux seuils, la branche est vieillissante.</p>
-            </div>
-          </div>
-          @if (form.hasError('thresholdOrder') && form.touched) {
-            <p id="threshold-error" class="field-error" role="alert">
-              Le seuil d’inactivité doit être supérieur au seuil d’activité.
-            </p>
-          }
-        </section>
-
-        <section aria-labelledby="patterns-title">
-          <div class="section-heading">
-            <div>
-              <p class="section-index">02</p>
-              <h2 id="patterns-title">Motifs de branche</h2>
-            </div>
-            <p>
-              Un motif par ligne. Les caractères <code>*</code> et <code>?</code> sont acceptés.
-            </p>
-          </div>
-          <div class="pattern-grid">
-            <div class="field">
-              <label for="protected-patterns">Branches protégées</label>
-              <textarea
-                id="protected-patterns"
-                rows="7"
-                formControlName="protectedPatterns"
-                placeholder="refs/heads/main&#10;refs/heads/release/*"
-              ></textarea>
-              <p>Jamais candidates au nettoyage, avec la raison exacte dans le détail.</p>
-            </div>
-            <div class="field">
-              <label for="excluded-patterns">Branches exclues</label>
-              <textarea
-                id="excluded-patterns"
-                rows="7"
-                formControlName="excludedPatterns"
-                placeholder="refs/remotes/origin/archive/*"
-              ></textarea>
-              <p>Conservées dans les faits, mais retirées des recommandations d’action.</p>
-            </div>
-          </div>
-        </section>
-
-        @if (actionError(); as errorMessage) {
-          <p class="action-message error" role="alert">{{ errorMessage }}</p>
-        }
-        @if (savedMessage(); as message) {
-          <p class="action-message success" role="status">{{ message }}</p>
-        }
-
-        <footer class="form-actions">
-          <button
-            class="button secondary"
-            type="button"
-            [disabled]="previewLoading()"
-            (click)="previewPolicy()"
-          >
-            {{ previewLoading() ? 'Calcul de l’aperçu…' : 'Prévisualiser' }}
-          </button>
-          <button class="button" type="submit" [disabled]="saving()">
-            {{ saving() ? 'Enregistrement…' : 'Enregistrer la politique' }}
-          </button>
-        </footer>
-      </form>
-
-      <aside class="preview" aria-labelledby="preview-title">
-        <header>
-          <div>
-            <p class="eyebrow">Projection sans écriture Git</p>
-            <h2 id="preview-title">Correspondances</h2>
-          </div>
-          @if (previewed()) {
-            <span>{{ matches().length }} branches</span>
-          }
-        </header>
-
-        @if (previewLoading()) {
-          <div class="preview-state" role="status">Calcul des motifs sur le dernier snapshot…</div>
-        } @else if (!previewed()) {
-          <div class="preview-state">
-            <strong>Vérifiez avant d’enregistrer</strong>
-            <p>
-              L’aperçu applique les seuils et motifs aux faits déjà capturés. Aucune commande Git
-              n’est lancée.
-            </p>
-          </div>
-        } @else if (matches().length === 0) {
-          <div class="preview-state">
-            <strong>Aucune correspondance</strong>
-            <p>Les motifs proposés ne ciblent aucune branche du dernier snapshot.</p>
-          </div>
-        } @else {
-          <ul class="match-list">
-            @for (match of matches(); track match.referenceName) {
-              <li>
-                <code>{{ match.referenceName }}</code>
-                <div class="match-flags">
-                  <span [class.matched]="match.isProtected">
-                    Protégée · {{ match.isProtected ? 'oui' : 'non' }}
-                  </span>
-                  <span [class.matched]="match.isExcluded">
-                    Exclue · {{ match.isExcluded ? 'oui' : 'non' }}
-                  </span>
-                </div>
-                <p>{{ match.reason }}</p>
-              </li>
+          <p class="pattern-hint">
+            Retirées des recommandations d'action. La raison exacte reste lisible dans la fiche.
+          </p>
+          <div class="pattern-tags">
+            @for (pattern of protectedPatterns(); track pattern) {
+              <ds-tag [removable]="true" (remove)="removeProtected(pattern)">{{ pattern }}</ds-tag>
             }
-          </ul>
-        }
-      </aside>
+          </div>
+          <form class="pattern-form" (submit)="$event.preventDefault(); addProtected()">
+            <ds-input
+              size="sm"
+              [mono]="true"
+              placeholder="refs/heads/release/*"
+              ariaLabel="Nouveau motif protégé"
+              [(value)]="newProtected"
+            />
+            <button dsButton size="sm" variant="secondary" type="submit">Ajouter</button>
+          </form>
+        </div>
+
+        <div>
+          <div class="pattern-title">
+            <span class="pattern-mark"><ds-icon name="eye-off" [size]="13" /></span>
+            <span>Branches exclues</span>
+          </div>
+          <p class="pattern-hint">
+            Conservées dans les faits, retirées des recommandations d'action.
+          </p>
+          <div class="pattern-tags">
+            @for (pattern of excludedPatterns(); track pattern) {
+              <ds-tag [removable]="true" (remove)="removeExcluded(pattern)">{{ pattern }}</ds-tag>
+            }
+          </div>
+          <form class="pattern-form" (submit)="$event.preventDefault(); addExcluded()">
+            <ds-input
+              size="sm"
+              [mono]="true"
+              placeholder="refs/remotes/origin/archive/*"
+              ariaLabel="Nouveau motif d'exclusion"
+              [(value)]="newExcluded"
+            />
+            <button dsButton size="sm" variant="secondary" type="submit">Ajouter</button>
+          </form>
+        </div>
+      </div>
+    </ds-panel>
+
+    <ds-panel title="Relocaliser le dépôt" icon="folder">
+      <div class="panel-content">
+        <p class="panel-intro">
+          Rattache ce projet à un nouveau chemin sans perdre ses analyses. Le dépôt doit contenir la
+          référence et le dernier commit connus.
+        </p>
+        <form class="relocation-form" (submit)="$event.preventDefault(); relocate()">
+          <ds-input
+            size="sm"
+            [mono]="true"
+            [placeholder]="context.project()?.repositoryPath ?? ''"
+            ariaLabel="Nouveau chemin du dépôt"
+            [(value)]="relocationPath"
+          />
+          <button
+            dsButton
+            size="sm"
+            variant="secondary"
+            iconLeft="folder"
+            type="submit"
+            [loading]="isRelocating()"
+          >
+            Relocaliser
+          </button>
+        </form>
+      </div>
+    </ds-panel>
+
+    <div class="settings-actions">
+      <span class="settings-dirty">{{ dirtyLabel() }}</span>
+      <button dsButton size="md" variant="ghost" [disabled]="!isDirty()" (click)="reset()">
+        Annuler
+      </button>
+      <button
+        dsButton
+        size="md"
+        variant="primary"
+        iconLeft="check"
+        [disabled]="hasThresholdError() || !isDirty()"
+        [loading]="context.isSavingPolicy()"
+        (click)="save()"
+      >
+        Enregistrer la politique
+      </button>
     </div>
-  }
-</section>
+  </div>
+
+  <div class="settings-preview">
+    <ds-panel title="Effet sur le dernier snapshot" icon="eye">
+      <div class="panel-content">
+        @if (branches().length === 0) {
+          <p class="panel-intro">
+            Aucun snapshot enregistré : lance une analyse pour projeter l'effet de cette politique.
+          </p>
+        } @else {
+          <div class="preview-stats">
+            @for (stat of stats(); track stat.label) {
+              <div class="preview-stat">
+                <div class="preview-stat-head">
+                  <ds-status-dot [tone]="stat.tone" [size]="6" />
+                  <span>{{ stat.label }}</span>
+                </div>
+                <div class="preview-stat-count">{{ stat.count }}</div>
+                <div class="preview-stat-delta">{{ stat.delta }}</div>
+              </div>
+            }
+          </div>
+
+          <div class="field-label">Branches touchées par les motifs</div>
+          @if (matches().length === 0) {
+            <p class="preview-empty">Aucun motif ne cible une branche de ce snapshot.</p>
+          } @else {
+            <div class="preview-matches">
+              @for (match of matches(); track match.referenceName) {
+                <div class="preview-match">
+                  <span>{{ match.referenceName }}</span>
+                  <ds-badge size="sm" [tone]="match.tone">{{ match.flag }}</ds-badge>
+                </div>
+              }
+            </div>
+          }
+
+          <p class="preview-note">
+            Projection calculée sur les faits déjà capturés. Aucune commande Git n'est lancée.
+          </p>
+        }
+      </div>
+    </ds-panel>
+  </div>
+</div>

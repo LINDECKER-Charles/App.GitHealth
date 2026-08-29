@@ -1,281 +1,306 @@
-<section class="dashboard-shell">
-  <header class="project-heading">
-    <div>
-      <p class="eyebrow">{{ isHistorical ? 'Snapshot historique' : 'Dépôt observé' }}</p>
-      <h1>{{ project()?.displayName ?? 'Chargement du projet…' }}</h1>
-      @if (project(); as currentProject) {
-        <p class="repository-path">{{ currentProject.repositoryPath }}</p>
-      }
+@if (snapshot(); as loaded) {
+  @if (isHistorical()) {
+    <div class="dashboard-notice">
+      <ds-callout tone="neutral" title="Snapshot historique">
+        Analyse {{ loaded.analysisId.slice(0, 8) }}, relue avec la politique capturée à l'époque.
+        Les motifs ne se modifient pas depuis cette vue.
+      </ds-callout>
     </div>
-    <div class="heading-actions">
-      <a class="button secondary" [routerLink]="['/projects', projectId, 'history']">Historique</a>
-      <a class="button secondary" [routerLink]="['/projects', projectId, 'settings']">Politiques</a>
-      @if (!isHistorical) {
-        <button class="button" type="button" [disabled]="isRunning()" (click)="launchAnalysis()">
-          {{ isRunning() ? 'Analyse en cours…' : 'Lancer une analyse' }}
-        </button>
-      }
+  }
+
+  @if (loaded.isTruncated) {
+    <div class="dashboard-notice">
+      <ds-callout tone="warning" title="Lecture partielle">
+        Ce dépôt dépasse la limite de lecture d'une page : seules les
+        {{ loaded.branches.length }} premières branches sont affichées.
+      </ds-callout>
     </div>
-  </header>
-
-  @if (project()?.isRepositoryAccessible === false) {
-    <aside class="notice warning" role="status">
-      <strong>Dépôt inaccessible.</strong>
-      Le dernier résultat réussi reste affiché. Vérifiez le chemin avant de relancer.
-    </aside>
   }
 
-  @if (status(); as analysis) {
-    <section class="scan-progress" aria-labelledby="scan-progress-title" aria-live="polite">
-      <div>
-        <p class="eyebrow">Analyse {{ analysis.analysisId.slice(0, 8) }}</p>
-        <h2 id="scan-progress-title">{{ phaseLabel(analysis.phase) }}</h2>
-      </div>
-      <ol>
-        @for (phase of phases; track phase) {
-          <li [class.is-complete]="isPhaseComplete(phase)">
-            <span aria-hidden="true"></span>{{ phaseLabel(phase) }}
-          </li>
-        }
-      </ol>
-    </section>
-  }
-
-  @if (error(); as errorMessage) {
-    <aside class="notice error" role="alert">
-      <strong>L’action n’a pas abouti.</strong> {{ errorMessage }}
-      <button type="button" (click)="error.set(null)">Fermer</button>
-    </aside>
-  }
-
-  @if (page(); as snapshotPage) {
-    <section class="snapshot-context" aria-label="Contexte du snapshot">
-      <div>
-        <span>Référence</span>
-        <strong>{{ displayReference(snapshotPage.referenceName) }}</strong>
-      </div>
-      <div>
-        <span>Provenance</span>
-        <strong>{{ referenceSource(snapshotPage.referenceName) }}</strong>
-      </div>
-      <div>
-        <span>Capture locale</span>
-        <strong>{{ snapshotPage.capturedAtUtc | date: 'dd/MM/yyyy, HH:mm:ss' }}</strong>
-      </div>
-      <p>GitHealth lit les références présentes sur ce poste et ne lance aucun fetch.</p>
-    </section>
-
-    @if (snapshotPage.policy; as policy) {
-      <p class="policy-context">
-        Interprétation avec les seuils {{ policy.activeUntilDays }} /
-        {{ policy.inactiveAfterDays }} jours et {{ policy.protectedPatterns.length }} motif(s)
-        protégé(s).
-      </p>
+  <div class="dashboard-tiles">
+    @for (tile of tiles(); track tile.id) {
+      <button
+        class="dashboard-tile"
+        type="button"
+        [class.is-active]="filters().view === tile.id"
+        (click)="update({ view: tile.id })"
+      >
+        <span class="dashboard-tile-head">
+          <ds-status-dot [tone]="tile.tone" [size]="6" />
+          <span>{{ tile.label }}</span>
+        </span>
+        <span class="dashboard-tile-count">{{ tile.count }}</span>
+        <span class="dashboard-tile-bar" [attr.data-tone]="tile.tone">
+          <span [style.width]="tile.share"></span>
+        </span>
+      </button>
     }
+  </div>
 
-    <section class="branch-section" aria-labelledby="branches-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Snapshot immuable</p>
-          <h2 id="branches-title">Branches à examiner</h2>
-        </div>
-        <span class="page-count">Page {{ currentPage() }}</span>
+  <div class="dashboard-filters">
+    <div class="filter-search">
+      <ds-input
+        size="sm"
+        type="search"
+        iconLeft="search"
+        placeholder="Nom de branche"
+        ariaLabel="Filtrer par nom de branche"
+        [value]="filters().search"
+        (valueChange)="update({ search: $event })"
+      />
+    </div>
+    <div class="filter-topology">
+      <ds-select
+        size="sm"
+        ariaLabel="Topologie"
+        [options]="topologyOptions"
+        [value]="filters().topology"
+        (valueChange)="update({ topology: $any($event) })"
+      />
+    </div>
+    <div class="filter-activity">
+      <ds-select
+        size="sm"
+        ariaLabel="Activité"
+        [options]="activityOptions"
+        [value]="filters().activity"
+        (valueChange)="update({ activity: $any($event) })"
+      />
+    </div>
+    <button
+      dsButton
+      size="sm"
+      variant="ghost"
+      iconLeft="funnel"
+      (click)="showMoreFilters.set(!showMoreFilters())"
+    >
+      {{ showMoreFilters() ? 'Moins de filtres' : 'Plus de filtres' }}
+    </button>
+    <span class="filter-spacer"></span>
+    <span class="filter-caption">Trier</span>
+    <div class="filter-sort">
+      <ds-select
+        size="sm"
+        ariaLabel="Trier les branches"
+        [options]="sortOptions"
+        [value]="filters().sort"
+        (valueChange)="update({ sort: $any($event) })"
+      />
+    </div>
+    <button
+      dsIconButton
+      size="sm"
+      [icon]="filters().direction === 'desc' ? 'chevron-down' : 'chevron-up'"
+      label="Inverser l'ordre"
+      (click)="toggleDirection()"
+    ></button>
+  </div>
+
+  @if (showMoreFilters()) {
+    <div class="dashboard-filters dashboard-filters-more">
+      <span class="filter-caption">Relation Git</span>
+      <div class="filter-relationship">
+        <ds-select
+          size="sm"
+          ariaLabel="Relation Git"
+          [options]="relationshipOptions"
+          [value]="filters().relationship"
+          (valueChange)="update({ relationship: $any($event) })"
+        />
       </div>
+      <span class="filter-divider"></span>
+      <ds-switch
+        ariaLabel="Ne montrer que les branches sans activité récente"
+        [checked]="filters().onlyStale"
+        (checkedChange)="update({ onlyStale: $event })"
+      />
+      <span class="filter-label">
+        Sans activité depuis plus de {{ loaded.policy.inactiveAfterDays }} jours
+      </span>
+      <span class="filter-spacer"></span>
+      <button dsButton size="sm" variant="ghost" iconLeft="x" (click)="resetFilters()">
+        Tout réinitialiser
+      </button>
+    </div>
+  }
 
-      <form class="filters" (ngSubmit)="applyFilters()">
-        <label class="search-field">
-          <span>Rechercher une branche</span>
-          <input
-            name="search"
-            type="search"
-            autocomplete="off"
-            placeholder="feature/connexion"
-            [ngModel]="search()"
-            (ngModelChange)="search.set($event)"
-          />
-        </label>
-        <label>
-          <span>Relation Git</span>
-          <select
-            name="relationship"
-            [ngModel]="relationship()"
-            (ngModelChange)="relationship.set($event)"
+  @if (chips().length > 0) {
+    <div class="dashboard-chips">
+      <span class="filter-caption">Filtres actifs</span>
+      @for (chip of chips(); track chip.label) {
+        <ds-tag [removable]="true" (remove)="update(chip.patch)">{{ chip.label }}</ds-tag>
+      }
+    </div>
+  }
+
+  <div class="dashboard-table" [attr.aria-busy]="isLoading()">
+    <table [attr.aria-label]="'Branches comparées à ' + loaded.referenceName">
+      <thead>
+        <tr>
+          <th class="column-select">
+            <ds-checkbox
+              ariaLabel="Tout sélectionner"
+              [checked]="areAllSelected()"
+              (checkedChange)="toggleAll()"
+            />
+          </th>
+          <th>Branche</th>
+          <th class="column-gap">Écart</th>
+          <th class="column-topology">Topologie</th>
+          <th class="column-activity">Activité</th>
+          <th class="column-recommendation">Recommandation</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.id) {
+          <tr
+            [class.is-checked]="row.isSelected"
+            [class.is-open]="row.id === openBranchId()"
+            (click)="openBranch(row.id)"
           >
-            <option value="">Toutes</option>
-            <option value="SameCommit">Même sommet</option>
-            <option value="CommonAncestor">Ancêtre commun</option>
-            <option value="BranchIsAncestorOfReference">Fusionnées</option>
-            <option value="NoCommonAncestor">Sans base commune</option>
-          </select>
-        </label>
-        <label>
-          <span>Topologie</span>
-          <select name="topology" [ngModel]="topology()" (ngModelChange)="topology.set($event)">
-            <option value="">Toutes</option>
-            <option value="Synchronized">Synchronisées</option>
-            <option value="Ahead">En avance</option>
-            <option value="Merged">Fusionnées</option>
-            <option value="Diverged">Divergentes</option>
-            <option value="Unrelated">Sans base</option>
-          </select>
-        </label>
-        <label>
-          <span>Activité</span>
-          <select name="activity" [ngModel]="activity()" (ngModelChange)="activity.set($event)">
-            <option value="">Toutes</option>
-            <option value="Active">Actives</option>
-            <option value="Aging">Vieillissantes</option>
-            <option value="Inactive">Inactives</option>
-            <option value="Unknown">Inconnues</option>
-          </select>
-        </label>
-        <label>
-          <span>Recommandation</span>
-          <select
-            name="recommendation"
-            [ngModel]="recommendation()"
-            (ngModelChange)="recommendation.set($event)"
-          >
-            <option value="">Toutes</option>
-            <option value="Keep">Conserver</option>
-            <option value="Review">À examiner</option>
-            <option value="CleanupCandidate">Nettoyage possible</option>
-            <option value="Excluded">Exclues</option>
-          </select>
-        </label>
-        <label>
-          <span>Trier par</span>
-          <select name="sort" [ngModel]="sort()" (ngModelChange)="sort.set($event)">
-            <option value="name">Nom</option>
-            <option value="ahead">Avance</option>
-            <option value="behind">Retard</option>
-            <option value="activity">Activité</option>
-          </select>
-        </label>
-        <label>
-          <span>Ordre</span>
-          <select name="direction" [ngModel]="direction()" (ngModelChange)="direction.set($event)">
-            <option value="asc">Croissant</option>
-            <option value="desc">Décroissant</option>
-          </select>
-        </label>
-        <button class="button" type="submit">Appliquer</button>
-        <button class="button secondary" type="button" (click)="resetFilters()">
-          Réinitialiser
-        </button>
-      </form>
-
-      <div class="quick-filters" aria-label="Filtres rapides">
-        <button type="button" (click)="topology.set('Merged'); applyFilters()">Fusionnées</button>
-        <button type="button" (click)="activity.set('Inactive'); applyFilters()">Inactives</button>
-        <button type="button" (click)="topology.set('Diverged'); applyFilters()">
-          Divergentes
-        </button>
-        <button type="button" (click)="applyQuickFilter('Review')">À examiner</button>
-        <button type="button" (click)="applyQuickFilter('CleanupCandidate')">
-          Nettoyage possible
-        </button>
-        @if (!isHistorical) {
-          <a [href]="csvUrl()" download>Exporter cette vue en CSV</a>
-        }
-      </div>
-
-      <div class="table-frame" [attr.aria-busy]="isLoading()">
-        <table>
-          <caption>
-            Comparaison des branches avec
-            {{
-              displayReference(snapshotPage.referenceName)
-            }}
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Branche</th>
-              <th scope="col">Écart</th>
-              <th scope="col">Topologie</th>
-              <th scope="col">Dernière activité</th>
-              <th scope="col">Auteur du sommet</th>
-              <th scope="col">Recommandation</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (branch of snapshotPage.items; track branch.id) {
-              <tr>
-                <th scope="row">
-                  <span class="topology-rail" [class]="topologyTone(branch)" aria-hidden="true">
-                    <i></i>
+            <td class="column-select" (click)="$event.stopPropagation(); toggleSelection(row.id)">
+              <ds-checkbox
+                [ariaLabel]="'Sélectionner ' + row.name"
+                [checked]="row.isSelected"
+                (checkedChange)="toggleSelection(row.id)"
+              />
+            </td>
+            <td>
+              <div class="branch-name">
+                <button
+                  class="branch-open"
+                  type="button"
+                  [attr.aria-label]="'Expliquer ' + row.name"
+                  (click)="$event.stopPropagation(); openBranch(row.id)"
+                >
+                  {{ row.name }}
+                </button>
+                @if (row.isProtected) {
+                  <span class="branch-flag is-brand" title="Protégée">
+                    <ds-icon name="lock" [size]="12" />
                   </span>
-                  <a
-                    class="branch-name"
-                    [routerLink]="['/branches', branch.id]"
-                    [title]="branch.referenceName"
-                  >
-                    {{ displayReference(branch.referenceName) }}
-                  </a>
-                  <small>{{ referenceSource(branch.referenceName) }}</small>
-                </th>
-                <td class="divergence">
-                  <span title="Commits en avance">+{{ branch.aheadCount }}</span>
-                  <span title="Commits en retard">−{{ branch.behindCount }}</span>
-                </td>
-                <td>
-                  <span class="state" [attr.data-tone]="topologyTone(branch)">{{
-                    branch.topology
-                  }}</span>
-                </td>
-                <td>
-                  <span>{{ relativeAge(branch.lastActivityAtUtc) }}</span>
-                  <small>{{ branch.lastActivityAtUtc | date: 'dd/MM/yyyy' }}</small>
-                </td>
-                <td>{{ branch.tipAuthor ?? 'Indéterminé' }}</td>
-                <td>
-                  <strong>{{ branch.recommendation }}</strong>
-                  <small>{{ branch.reason }}</small>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td class="empty-row" colspan="6">
-                  Aucune branche ne correspond à ces filtres. Élargissez la recherche.
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        @if (isLoading()) {
-          <p class="loading-state" role="status">Actualisation des branches…</p>
+                }
+                @if (row.isExcluded) {
+                  <span class="branch-flag" title="Exclue">
+                    <ds-icon name="eye-off" [size]="12" />
+                  </span>
+                }
+              </div>
+              <div class="branch-subtitle">{{ row.subtitle }}</div>
+            </td>
+            <td class="column-gap">
+              <span class="gap-ahead">{{ row.ahead }}</span>
+              <span class="gap-separator"> / </span>
+              <span class="gap-behind">{{ row.behind }}</span>
+            </td>
+            <td class="column-topology">
+              <ds-badge size="sm" [tone]="row.topologyTone">{{ row.topologyLabel }}</ds-badge>
+            </td>
+            <td class="column-activity">
+              <div class="activity-cell">
+                <ds-status-dot [tone]="row.activityTone" [size]="6" />
+                <span>{{ row.age }}</span>
+              </div>
+            </td>
+            <td class="column-recommendation">
+              <ds-badge size="sm" [tone]="row.recommendationTone" [icon]="row.recommendationIcon">
+                {{ row.recommendationLabel }}
+              </ds-badge>
+            </td>
+          </tr>
         }
-      </div>
+      </tbody>
+    </table>
 
-      <nav class="pagination" aria-label="Pagination des branches">
-        <button
-          class="button secondary"
-          type="button"
-          [disabled]="!hasPrevious()"
-          (click)="previousPage()"
-        >
-          Page précédente
+    @if (rows().length === 0) {
+      <div class="dashboard-empty-rows">
+        <ds-empty-state
+          icon="funnel"
+          title="Aucune branche ne correspond"
+          description="Élargis la recherche ou repars de la vue Toutes."
+        />
+      </div>
+    }
+  </div>
+
+  <div class="dashboard-footer">
+    @if (selectedCount() > 0) {
+      <div class="selection-bar">
+        <ds-badge size="sm" tone="info" [solid]="true">{{ selectedCount() }}</ds-badge>
+        <span class="selection-label">
+          branche{{ selectedCount() > 1 ? 's' : '' }} sélectionnée{{
+            selectedCount() > 1 ? 's' : ''
+          }}
+        </span>
+        <span class="filter-divider"></span>
+        @if (!isHistorical()) {
+          <button
+            dsButton
+            size="sm"
+            variant="secondary"
+            iconLeft="lock"
+            (click)="addSelectionToPolicy('protected')"
+          >
+            Protéger
+          </button>
+          <button
+            dsButton
+            size="sm"
+            variant="secondary"
+            iconLeft="eye-off"
+            (click)="addSelectionToPolicy('excluded')"
+          >
+            Exclure
+          </button>
+        }
+        <button dsButton size="sm" variant="secondary" iconLeft="copy" (click)="copyCommands()">
+          Copier les commandes git
         </button>
         <button
-          class="button secondary"
-          type="button"
-          [disabled]="!snapshotPage.nextCursor"
-          (click)="nextPage()"
+          dsButton
+          size="sm"
+          variant="secondary"
+          iconLeft="download"
+          (click)="exportSelection()"
         >
-          Page suivante
+          Exporter la sélection
         </button>
-      </nav>
-    </section>
-  } @else if (!isLoading()) {
-    <section class="first-scan">
-      <p class="eyebrow">Aucun snapshot</p>
-      <h2>Ce dépôt n’a pas encore été mesuré.</h2>
-      <p>Lancez une première analyse pour comparer ses branches sans modifier le dépôt.</p>
-      <button class="button" type="button" [disabled]="isRunning()" (click)="launchAnalysis()">
+        <span class="filter-spacer"></span>
+        <button dsButton size="sm" variant="ghost" (click)="toggleAll()">
+          Tout désélectionner
+        </button>
+      </div>
+    } @else {
+      <div class="footer-summary">
+        <span>{{ countLabel() }}</span>
+        <span>·</span>
+        <span>Clique une ligne pour l'expliquer</span>
+      </div>
+    }
+  </div>
+} @else if (isLoading()) {
+  <p class="dashboard-state" role="status">Lecture du dernier snapshot…</p>
+} @else if (error(); as message) {
+  <div class="dashboard-notice">
+    <ds-callout tone="danger" title="Snapshot illisible">{{ message }}</ds-callout>
+  </div>
+} @else {
+  <div class="dashboard-first-scan">
+    <ds-empty-state
+      icon="git-branch"
+      title="Ce dépôt n'a pas encore été mesuré"
+      description="Une analyse lit les références présentes sur ce poste et n'écrit rien : ni refs, ni index, ni worktree, ni reflog."
+    >
+      <button
+        dsButton
+        size="md"
+        variant="primary"
+        iconLeft="play"
+        [loading]="context.isRunning()"
+        (click)="context.launchAnalysis()"
+      >
         Lancer la première analyse
       </button>
-    </section>
-  } @else {
-    <p class="initial-loading" role="status">Chargement du diagnostic…</p>
-  }
-</section>
+    </ds-empty-state>
+  </div>
+}

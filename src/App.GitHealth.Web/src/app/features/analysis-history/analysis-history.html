@@ -1,162 +1,114 @@
-<section class="history-shell" aria-labelledby="history-title">
-  <header class="history-heading">
-    <div>
-      <p class="eyebrow">Journal immuable</p>
-      <h1 id="history-title">Historique des analyses</h1>
-      <p class="history-intro">
-        Chaque passage conserve sa référence et ses règles. Un échec n’efface jamais la dernière
-        lecture réussie.
-      </p>
-    </div>
-    <a class="back-link" [routerLink]="['/projects', projectId]">
-      <span aria-hidden="true">←</span>
-      Revenir au diagnostic courant
-    </a>
-  </header>
+<p class="history-intro">
+  Chaque passage conserve sa référence et ses règles. Un échec n'efface jamais la dernière lecture
+  réussie.
+</p>
 
-  @if (isLoading()) {
-    <div class="state-panel loading-state" role="status" aria-live="polite">
-      <span class="loading-node" aria-hidden="true"></span>
-      <div>
-        <strong>Lecture du journal…</strong>
-        <p>GitHealth rassemble les exécutions conservées pour ce projet.</p>
-      </div>
-    </div>
-  } @else if (error(); as errorMessage) {
-    <div class="state-panel error-state" role="alert">
-      <p class="eyebrow">Historique indisponible</p>
-      <h2>Le journal n’a pas pu être lu.</h2>
-      <p>{{ errorMessage }}</p>
-      <button class="button" type="button" (click)="loadHistory()">Réessayer</button>
-    </div>
-  } @else if (items().length === 0) {
-    <div class="state-panel empty-state">
-      <p class="eyebrow">Premier repère à poser</p>
-      <h2>Aucune analyse enregistrée.</h2>
-      <p>Lancez une analyse depuis le diagnostic pour créer le premier point de comparaison.</p>
-      <a class="button" [routerLink]="['/projects', projectId]">Ouvrir le diagnostic</a>
-    </div>
-  } @else {
-    <ol class="history-list" aria-label="Analyses de la plus récente à la plus ancienne">
-      @for (item of items(); track item.analysisId) {
-        <li class="history-entry" [attr.data-status]="statusTone(item.status)">
-          <span class="history-node" aria-hidden="true">{{ statusMark(item.status) }}</span>
+@if (isLoading()) {
+  <p class="history-state" role="status">Lecture du journal…</p>
+} @else if (error(); as message) {
+  <ds-callout tone="danger" title="Historique indisponible">{{ message }}</ds-callout>
+  <button dsButton size="sm" variant="secondary" iconLeft="refresh-cw" (click)="load(projectId())">
+    Réessayer
+  </button>
+} @else if (runs().length === 0) {
+  <ds-empty-state
+    icon="clock"
+    title="Aucune analyse enregistrée"
+    description="Lance une analyse depuis le diagnostic pour créer le premier point de comparaison."
+  />
+} @else {
+  <div class="history-list">
+    @for (run of runs(); track run.id) {
+      <article class="run-card">
+        <header class="run-head">
+          <ds-status-dot [tone]="run.tone" [size]="8" />
+          <span class="run-id">Analyse {{ run.shortId }}</span>
+          <ds-badge size="sm" [tone]="run.tone">{{ run.statusLabel }}</ds-badge>
+          <span class="run-when">{{ run.startedAtUtc | date: 'dd/MM/yyyy, HH:mm:ss' }}</span>
+          <span class="run-spacer"></span>
+          <span class="run-duration">{{ run.duration }}</span>
+          <button
+            dsButton
+            size="sm"
+            variant="ghost"
+            [iconLeft]="expandedId() === run.id ? 'chevron-up' : 'chevron-down'"
+            (click)="toggle(run.id)"
+          >
+            {{ expandedId() === run.id ? 'Masquer' : 'Politique' }}
+          </button>
+          @if (run.isOpenable) {
+            <a
+              class="etb-btn etb-btn--secondary etb-btn--sm"
+              [routerLink]="['/projects', projectId(), 'analyses', run.id]"
+            >
+              Ouvrir ce snapshot
+            </a>
+          } @else {
+            <span class="run-unavailable">Aucun snapshot consultable</span>
+          }
+        </header>
 
-          <article class="run-card">
-            <header class="run-heading">
-              <div>
-                <span class="status-badge">{{ statusLabel(item.status) }}</span>
-                <p class="run-id">Analyse {{ item.analysisId.slice(0, 8) }}</p>
-              </div>
-              @if (item.status === 'Completed') {
-                <a
-                  class="history-link"
-                  [routerLink]="['/projects', projectId, 'analyses', item.analysisId]"
-                >
-                  Ouvrir cette vue historique
-                  <span aria-hidden="true">→</span>
-                </a>
-              } @else {
-                <span class="snapshot-absence">Aucun snapshot consultable</span>
-              }
-            </header>
+        <div class="run-facts">
+          <div>
+            <div class="run-fact-label">Référence</div>
+            <div class="run-fact-value">{{ run.reference }}</div>
+          </div>
+          <div>
+            <div class="run-fact-label">Branches lues</div>
+            <div class="run-fact-value">{{ run.branchCount }}</div>
+          </div>
+          <div>
+            <div class="run-fact-label">Seuils</div>
+            <div class="run-fact-value">{{ run.thresholds }}</div>
+          </div>
+          <div>
+            <div class="run-fact-label">Écart avec la veille</div>
+            <div class="run-fact-value">{{ run.delta }}</div>
+          </div>
+        </div>
 
-            <dl class="run-meta">
-              <div>
-                <dt>Démarrée</dt>
-                <dd>
-                  <time [attr.datetime]="item.startedAtUtc">
-                    {{ item.startedAtUtc | date: 'dd/MM/yyyy, HH:mm:ss' }}
-                  </time>
-                </dd>
-              </div>
-              <div>
-                <dt>Terminée</dt>
-                <dd>
-                  @if (item.completedAtUtc) {
-                    <time [attr.datetime]="item.completedAtUtc">
-                      {{ item.completedAtUtc | date: 'dd/MM/yyyy, HH:mm:ss' }}
-                    </time>
-                  } @else {
-                    En cours
-                  }
-                </dd>
-              </div>
-              <div>
-                <dt>Référence</dt>
-                <dd>
-                  <strong>{{ displayReference(item.referenceName) }}</strong>
-                  <small>{{ item.referenceName }}</small>
-                </dd>
-              </div>
-            </dl>
+        @if (run.failureMessage !== null || run.failureCode !== null) {
+          <div class="run-failure">
+            <ds-callout tone="danger" [title]="run.failureCode ?? 'Analyse interrompue'">
+              {{ run.failureMessage ?? 'Aucun détail supplémentaire.' }}
+            </ds-callout>
+          </div>
+        }
 
-            @if (item.status === 'Failed' || item.status === 'Cancelled') {
-              <aside class="failure-note">
-                <strong>
-                  {{ item.status === 'Cancelled' ? 'Analyse interrompue' : 'Analyse échouée' }}
-                </strong>
-                <span>{{ item.failureMessage ?? 'Aucun détail supplémentaire.' }}</span>
-                @if (item.failureCode) {
-                  <code>{{ item.failureCode }}</code>
+        @if (expandedId() === run.id) {
+          <div class="run-policy">
+            <div>
+              <div class="run-fact-label">Motifs protégés</div>
+              <div class="run-patterns">
+                @for (pattern of run.protectedPatterns; track pattern) {
+                  <ds-tag>{{ pattern }}</ds-tag>
+                } @empty {
+                  <span class="run-empty-patterns">Aucun motif</span>
                 }
-              </aside>
-            }
-
-            <details class="policy-receipt">
-              <summary>Politique capturée lors de l’analyse</summary>
-              <div class="policy-grid">
-                <dl>
-                  <div>
-                    <dt>Espace observé</dt>
-                    <dd>
-                      <code>{{ item.branchNamespace }}</code>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Activité</dt>
-                    <dd>Active jusqu’à {{ item.activeUntilDays }} jours</dd>
-                  </div>
-                  <div>
-                    <dt>Inactivité</dt>
-                    <dd>Inactive après {{ item.inactiveAfterDays }} jours</dd>
-                  </div>
-                </dl>
-
-                <section aria-label="Motifs exclus">
-                  <h3>Motifs exclus</h3>
-                  @if (item.excludedPatterns.length > 0) {
-                    <ul class="pattern-list">
-                      @for (pattern of item.excludedPatterns; track pattern) {
-                        <li>
-                          <code>{{ pattern }}</code>
-                        </li>
-                      }
-                    </ul>
-                  } @else {
-                    <p>Aucun motif</p>
-                  }
-                </section>
-
-                <section aria-label="Motifs protégés">
-                  <h3>Motifs protégés</h3>
-                  @if (item.protectedPatterns.length > 0) {
-                    <ul class="pattern-list">
-                      @for (pattern of item.protectedPatterns; track pattern) {
-                        <li>
-                          <code>{{ pattern }}</code>
-                        </li>
-                      }
-                    </ul>
-                  } @else {
-                    <p>Aucun motif</p>
-                  }
-                </section>
               </div>
-            </details>
-          </article>
-        </li>
-      }
-    </ol>
+            </div>
+            <div>
+              <div class="run-fact-label">Motifs exclus</div>
+              <div class="run-patterns">
+                @for (pattern of run.excludedPatterns; track pattern) {
+                  <ds-tag>{{ pattern }}</ds-tag>
+                } @empty {
+                  <span class="run-empty-patterns">Aucun motif</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </article>
+    }
+  </div>
+
+  @if (hiddenCount() > 0) {
+    <p class="history-state">
+      {{ hiddenCount() }} analyse{{ hiddenCount() > 1 ? 's' : '' }} plus ancienne{{
+        hiddenCount() > 1 ? 's' : ''
+      }}
+      restent conservées et ne sont pas affichées ici.
+    </p>
   }
-</section>
+}

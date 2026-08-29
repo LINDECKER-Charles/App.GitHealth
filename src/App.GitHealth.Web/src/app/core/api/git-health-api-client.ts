@@ -107,9 +107,10 @@ export class GitHealthApiClient {
     );
   }
 
-  getAnalysisHistory(projectId: string): Observable<AnalysisHistoryResponse> {
+  getAnalysisHistory(projectId: string, pageSize?: number): Observable<AnalysisHistoryResponse> {
+    const params = setParam(new HttpParams(), 'pageSize', pageSize);
     return this.request(
-      this.http.get<AnalysisHistoryResponse>(`${projectUrl(projectId)}/analyses`),
+      this.http.get<AnalysisHistoryResponse>(`${projectUrl(projectId)}/analyses`, { params }),
     );
   }
 

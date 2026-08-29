@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 24px;
+}
+
+.home-state {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.home-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 520px;
+  max-width: 100%;
+}
+
+ds-empty-state {
+  width: 520px;
+  max-width: 100%;
+}

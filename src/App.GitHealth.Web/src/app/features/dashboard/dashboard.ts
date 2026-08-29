@@ -1,43 +1,90 @@
-import { DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subscription, switchMap, timer } from 'rxjs';
-import { ApiError } from '../../core/api/api-error';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
+import { apiErrorMessage } from '../../core/api/api-error';
 import { GitHealthApiClient } from '../../core/api/git-health-api-client';
+import { BranchSnapshotResponse, RecommendationKind } from '../../core/api/api.models';
+import { deleteCommand, recommendationLabels } from '../../core/branches/branch-labels';
+import { SnapshotExporter } from '../../core/branches/snapshot-export';
 import {
-  AnalysisPhase,
-  AnalysisStatusResponse,
-  ActivityStatus,
-  BranchRelationship,
-  BranchTopology,
-  ProjectResponse,
-  RecommendationKind,
-  SnapshotPageResponse,
-  SnapshotQuery,
-  SnapshotSort,
-  SortDirection,
-} from '../../core/api/api.models';
+  LoadedSnapshot,
+  loadEntireSnapshot,
+  snapshotPageSize,
+} from '../../core/branches/snapshot-loader';
+import { ToastService } from '../../core/workspace/toast';
+import { plural } from '../../core/workspace/plural';
+import { DsBadge } from '../../ui/core/ds-badge';
+import { DsButton } from '../../ui/core/ds-button';
+import { DsIcon } from '../../ui/core/ds-icon';
+import { DsIconButton } from '../../ui/core/ds-icon-button';
+import { DsStatusDot } from '../../ui/core/ds-status-dot';
+import { DsTag } from '../../ui/core/ds-tag';
+import { Tone } from '../../ui/icon-name';
+import { DsCheckbox } from '../../ui/forms/ds-checkbox';
+import { DsInput } from '../../ui/forms/ds-input';
+import { DsSelect } from '../../ui/forms/ds-select';
+import { DsSwitch } from '../../ui/forms/ds-switch';
+import { DsCallout } from '../../ui/surfaces/ds-callout';
+import { DsEmptyState } from '../../ui/surfaces/ds-empty-state';
+import { ProjectContext } from '../project/project-context';
+import { DashboardChip, buildChips } from './dashboard-chips';
+import { BranchRow, toRow } from './dashboard-row';
 import {
-  analysisPhases,
-  displayReference,
-  phaseLabel,
-  referenceSource,
-  relativeAge,
-  topologyTone,
-} from './dashboard.helpers';
+  BranchFilters,
+  RecommendationView,
+  activityOptions,
+  countByRecommendation,
+  defaultFilters,
+  filterBranches,
+  relationshipOptions,
+  sortBranches,
+  sortOptions,
+  topologyOptions,
+} from './dashboard-filters';
 
+interface Tile {
+  readonly id: RecommendationView;
+  readonly label: string;
+  readonly tone: Tone;
+  readonly count: number;
+  readonly share: string;
+}
+
+const tileDefinitions: readonly { id: RecommendationView; label: string; tone: Tone }[] = [
+  { id: 'all', label: 'Toutes', tone: 'info' },
+  { id: 'Keep', label: recommendationLabels.Keep, tone: 'success' },
+  { id: 'Merged', label: recommendationLabels.Merged, tone: 'merged' },
+  { id: 'Review', label: recommendationLabels.Review, tone: 'warning' },
+  { id: 'CleanupCandidate', label: recommendationLabels.CleanupCandidate, tone: 'danger' },
+  { id: 'Excluded', label: recommendationLabels.Excluded, tone: 'neutral' },
+];
+
+/** Vue Diagnostic : tuiles, filtres et tableau des branches du snapshot chargé. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule, RouterLink],
+  imports: [
+    DsBadge,
+    DsButton,
+    DsCallout,
+    DsCheckbox,
+    DsEmptyState,
+    DsIcon,
+    DsIconButton,
+    DsInput,
+    DsSelect,
+    DsStatusDot,
+    DsSwitch,
+    DsTag,
+  ],
   selector: 'app-dashboard',
   styleUrls: ['./dashboard.scss', './dashboard-table.scss'],
   templateUrl: './dashboard.html',
@@ -45,258 +92,191 @@ import {
 export class Dashboard {
   private readonly api = inject(GitHealthApiClient);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly exporter = inject(SnapshotExporter);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  protected readonly projectId = this.route.snapshot.paramMap.get('projectId') ?? '';
-  private readonly analysisId = this.route.snapshot.paramMap.get('analysisId');
-  private readonly cursors: Array<string | null> = [null];
-  private pageIndex = 0;
-  private polling?: Subscription;
+  private readonly toast = inject(ToastService);
 
-  readonly project = signal<ProjectResponse | null>(null);
-  readonly page = signal<SnapshotPageResponse | null>(null);
-  readonly status = signal<AnalysisStatusResponse | null>(null);
-  readonly error = signal<string | null>(null);
-  readonly isLoading = signal(true);
-  readonly isLaunching = signal(false);
-  readonly search = signal(this.route.snapshot.queryParamMap.get('search') ?? '');
-  readonly relationship = signal<BranchRelationship | ''>(
-    parseRelationship(this.route.snapshot.queryParamMap.get('relationship')),
+  protected readonly context = inject(ProjectContext);
+  protected readonly topologyOptions = topologyOptions;
+  protected readonly activityOptions = activityOptions;
+  protected readonly relationshipOptions = relationshipOptions;
+  protected readonly sortOptions = sortOptions;
+
+  private readonly params = toSignal(this.route.paramMap, { requireSync: true });
+  private readonly queryParams = toSignal(this.route.queryParamMap, { requireSync: true });
+  private readonly historical = signal<LoadedSnapshot | null>(null);
+  private readonly isLoadingHistorical = signal(false);
+  private readonly historicalError = signal<string | null>(null);
+
+  protected readonly analysisId = computed(() => this.params().get('analysisId'));
+  protected readonly openBranchId = computed(() => this.queryParams().get('branch'));
+  protected readonly isHistorical = computed(() => this.analysisId() !== null);
+  protected readonly filters = signal<BranchFilters>(defaultFilters);
+  protected readonly showMoreFilters = signal(false);
+  protected readonly selection = signal<ReadonlySet<string>>(new Set());
+
+  protected readonly snapshot = computed(() =>
+    this.isHistorical() ? this.historical() : this.context.snapshot(),
   );
-  readonly sort = signal<SnapshotSort>(parseSort(this.route.snapshot.queryParamMap.get('sort')));
-  readonly direction = signal<SortDirection>(
-    this.route.snapshot.queryParamMap.get('direction') === 'desc' ? 'desc' : 'asc',
+
+  protected readonly isLoading = computed(() =>
+    this.isHistorical() ? this.isLoadingHistorical() : this.context.isLoadingSnapshot(),
   );
-  readonly topology = signal<BranchTopology | ''>(
-    parseTopology(this.route.snapshot.queryParamMap.get('topology')),
-  );
-  readonly activity = signal<ActivityStatus | ''>(
-    parseActivity(this.route.snapshot.queryParamMap.get('activity')),
-  );
-  readonly recommendation = signal<RecommendationKind | ''>(
-    parseRecommendation(this.route.snapshot.queryParamMap.get('recommendation')),
-  );
-  readonly phases = analysisPhases;
-  readonly hasPrevious = signal(false);
-  readonly currentPage = signal(1);
-  readonly hasSnapshot = computed(() => this.page() !== null);
-  readonly isHistorical = this.analysisId !== null;
-  readonly csvUrl = computed(() => this.api.branchCsvUrl(this.projectId, this.filterQuery()));
-  readonly isRunning = computed(() => {
-    const value = this.status()?.status;
-    return value === 'Running' || this.isLaunching();
+
+  protected readonly error = computed(() => this.historicalError());
+  protected readonly branches = computed(() => this.snapshot()?.branches ?? []);
+  protected readonly counts = computed(() => countByRecommendation(this.branches()));
+
+  protected readonly tiles = computed<readonly Tile[]>(() => {
+    const counts = this.counts();
+    const total = Math.max(counts.all, 1);
+    return tileDefinitions.map((tile) => ({
+      ...tile,
+      count: counts[tile.id],
+      share: `${Math.round((counts[tile.id] / total) * 100)}%`,
+    }));
   });
 
-  readonly displayReference = displayReference;
-  readonly phaseLabel = phaseLabel;
-  readonly referenceSource = referenceSource;
-  readonly relativeAge = relativeAge;
-  readonly topologyTone = topologyTone;
+  protected readonly visible = computed(() => {
+    const filters = this.filters();
+    const threshold = this.snapshot()?.policy.inactiveAfterDays ?? 0;
+    return sortBranches(
+      filterBranches(this.branches(), filters, threshold),
+      filters.sort,
+      filters.direction,
+    );
+  });
+
+  protected readonly rows = computed<readonly BranchRow[]>(() =>
+    this.visible().map((branch) => toRow(branch, this.selection().has(branch.id))),
+  );
+
+  protected readonly chips = computed<readonly DashboardChip[]>(() =>
+    buildChips(this.filters(), this.snapshot()?.policy.inactiveAfterDays ?? 0),
+  );
+
+  protected readonly selectedCount = computed(() => this.selection().size);
+  protected readonly areAllSelected = computed(
+    () => this.rows().length > 0 && this.selectedCount() >= this.rows().length,
+  );
+
+  protected readonly countLabel = computed(() => {
+    const total = this.counts().all;
+    const shown = this.rows().length;
+    return shown === total ? plural(total, 'branche') : `${plural(shown, 'branche')} sur ${total}`;
+  });
 
   constructor() {
-    this.loadProject();
-    this.loadSnapshots();
+    effect(() => this.loadHistorical(this.analysisId()));
+    effect(() => this.context.visibleBranchIds.set(this.rows().map((row) => row.id)));
   }
 
-  launchAnalysis(): void {
-    this.isLaunching.set(true);
-    this.error.set(null);
-    this.api.launchAnalysis(this.projectId).subscribe({
-      next: (launch) => {
-        this.isLaunching.set(false);
-        this.startPolling(launch.analysisId);
-      },
-      error: (error: unknown) => {
-        this.isLaunching.set(false);
-        this.error.set(errorMessage(error));
-      },
+  protected update(patch: Partial<BranchFilters>): void {
+    this.filters.update((filters) => ({ ...filters, ...patch }));
+    this.selection.set(new Set());
+  }
+
+  protected resetFilters(): void {
+    this.filters.set(defaultFilters);
+    this.selection.set(new Set());
+  }
+
+  protected toggleDirection(): void {
+    this.update({ direction: this.filters().direction === 'desc' ? 'asc' : 'desc' });
+  }
+
+  protected toggleSelection(id: string): void {
+    this.selection.update((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) {
+        next.add(id);
+      }
+
+      return next;
     });
   }
 
-  applyFilters(): void {
-    this.cursors.splice(1);
-    this.pageIndex = 0;
-    this.updateNavigationState();
-    this.loadSnapshots();
-  }
-
-  resetFilters(): void {
-    this.search.set('');
-    this.relationship.set('');
-    this.sort.set('name');
-    this.direction.set('asc');
-    this.topology.set('');
-    this.activity.set('');
-    this.recommendation.set('');
-    this.applyFilters();
-  }
-
-  applyQuickFilter(recommendation: RecommendationKind | ''): void {
-    this.recommendation.set(recommendation);
-    this.applyFilters();
-  }
-
-  nextPage(): void {
-    const cursor = this.page()?.nextCursor;
-    if (cursor === null || cursor === undefined) {
-      return;
-    }
-
-    this.pageIndex += 1;
-    this.cursors[this.pageIndex] = cursor;
-    this.loadSnapshots(cursor);
-  }
-
-  previousPage(): void {
-    if (this.pageIndex === 0) {
-      return;
-    }
-
-    this.pageIndex -= 1;
-    this.loadSnapshots(this.cursors[this.pageIndex]);
-  }
-
-  isPhaseComplete(phase: AnalysisPhase): boolean {
-    const current = this.status()?.phase;
-    return (
-      current === 'Finished' ||
-      (current !== undefined && this.phases.indexOf(phase) <= this.phases.indexOf(current))
+  protected toggleAll(): void {
+    this.selection.update((current) =>
+      current.size > 0 ? new Set() : new Set(this.rows().map((row) => row.id)),
     );
   }
 
-  private loadProject(): void {
-    this.api.getProject(this.projectId).subscribe({
-      next: (project) => this.project.set(project),
-      error: (error: unknown) => this.error.set(errorMessage(error)),
+  protected openBranch(id: string): void {
+    void this.router.navigate([], {
+      queryParams: { branch: id },
+      queryParamsHandling: 'merge',
+      relativeTo: this.route,
     });
   }
 
-  private loadSnapshots(cursor: string | null = null): void {
-    this.isLoading.set(true);
-    const request =
-      this.analysisId === null
-        ? this.api.getLatestSnapshots(this.projectId, this.pageQuery(cursor))
-        : this.api.getAnalysisSnapshots(this.analysisId, this.pageQuery(cursor));
-    request.subscribe({
-      next: (page) => {
-        this.page.set(page);
-        this.finishPageLoad();
-      },
-      error: (error: unknown) => {
-        if (!(error instanceof ApiError && error.code === 'analysis.no_successful_result')) {
-          this.error.set(errorMessage(error));
-        }
-        this.finishPageLoad();
-      },
-    });
+  protected exportSelection(): void {
+    const project = this.context.project();
+    if (project !== null) {
+      this.exporter.export(project.displayName, this.selectedBranches());
+    }
   }
 
-  private finishPageLoad(): void {
-    this.isLoading.set(false);
-    this.hasPrevious.set(this.pageIndex > 0);
-    this.currentPage.set(this.pageIndex + 1);
+  protected copyCommands(): void {
+    const commands = this.selectedBranches().map(deleteCommand).join('\n');
+    void navigator.clipboard?.writeText(commands);
+    this.toast.show(`${this.selectedCount()} commandes git copiées dans le presse-papier`);
   }
 
-  private pageQuery(cursor: string | null): SnapshotQuery {
-    return {
-      ...this.filterQuery(),
-      cursor: cursor ?? undefined,
-      pageSize: 50,
-    };
-  }
-
-  private filterQuery(): SnapshotQuery {
-    return {
-      direction: this.direction(),
-      relationship: this.relationship() || undefined,
-      search: this.search() || undefined,
-      sort: this.sort(),
-      topology: this.topology() || undefined,
-      activity: this.activity() || undefined,
-      recommendation: this.recommendation() || undefined,
-    };
-  }
-
-  private startPolling(analysisId: string): void {
-    this.polling?.unsubscribe();
-    this.polling = timer(0, 800)
-      .pipe(
-        switchMap(() => this.api.getAnalysis(analysisId)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe({
-        next: (status) => this.handleStatus(status),
-        error: (error: unknown) => this.error.set(errorMessage(error)),
-      });
-  }
-
-  private handleStatus(status: AnalysisStatusResponse): void {
-    this.status.set(status);
-    if (status.status === 'Running') {
+  protected addSelectionToPolicy(kind: 'protected' | 'excluded'): void {
+    const project = this.context.project();
+    if (project === null) {
       return;
     }
 
-    this.polling?.unsubscribe();
-    this.loadProject();
-    this.loadSnapshots();
-    if (status.failureMessage) {
-      this.error.set(status.failureMessage);
-    }
-  }
-
-  private updateNavigationState(): void {
-    void this.router.navigate([], {
-      queryParams: {
-        direction: this.direction(),
-        activity: this.activity() || null,
-        relationship: this.relationship() || null,
-        recommendation: this.recommendation() || null,
-        search: this.search() || null,
-        sort: this.sort(),
-        topology: this.topology() || null,
+    const references = this.selectedBranches().map((branch) => branch.referenceName);
+    const isProtected = kind === 'protected';
+    const merged = Array.from(
+      new Set([
+        ...(isProtected ? project.protectedPatterns : project.excludedPatterns),
+        ...references,
+      ]),
+    );
+    this.context.savePolicy(
+      {
+        activeUntilDays: project.activeUntilDays,
+        inactiveAfterDays: project.inactiveAfterDays,
+        protectedPatterns: isProtected ? merged : project.protectedPatterns,
+        excludedPatterns: isProtected ? project.excludedPatterns : merged,
       },
-      relativeTo: this.route,
-      replaceUrl: true,
-    });
+      `${references.length} motif${references.length > 1 ? 's' : ''} ${isProtected ? 'protégé' : 'd’exclusion'}${references.length > 1 && isProtected ? 's' : ''} ajouté${references.length > 1 ? 's' : ''}`,
+    );
+    this.selection.set(new Set());
   }
-}
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
-}
+  private selectedBranches(): readonly BranchSnapshotResponse[] {
+    const selection = this.selection();
+    return this.visible().filter((branch) => selection.has(branch.id));
+  }
 
-function parseRelationship(value: string | null): BranchRelationship | '' {
-  const allowed: readonly BranchRelationship[] = [
-    'SameCommit',
-    'CommonAncestor',
-    'BranchIsAncestorOfReference',
-    'NoCommonAncestor',
-  ];
-  return allowed.includes(value as BranchRelationship) ? (value as BranchRelationship) : '';
-}
+  private loadHistorical(analysisId: string | null): void {
+    if (analysisId === null) {
+      this.historical.set(null);
+      return;
+    }
 
-function parseSort(value: string | null): SnapshotSort {
-  const allowed: readonly SnapshotSort[] = ['name', 'ahead', 'behind', 'activity'];
-  return allowed.includes(value as SnapshotSort) ? (value as SnapshotSort) : 'name';
-}
-
-function parseTopology(value: string | null): BranchTopology | '' {
-  const allowed: readonly BranchTopology[] = [
-    'Synchronized',
-    'Ahead',
-    'Merged',
-    'Diverged',
-    'Unrelated',
-  ];
-  return allowed.includes(value as BranchTopology) ? (value as BranchTopology) : '';
-}
-
-function parseActivity(value: string | null): ActivityStatus | '' {
-  const allowed: readonly ActivityStatus[] = ['Active', 'Aging', 'Inactive', 'Unknown'];
-  return allowed.includes(value as ActivityStatus) ? (value as ActivityStatus) : '';
-}
-
-function parseRecommendation(value: string | null): RecommendationKind | '' {
-  const allowed: readonly RecommendationKind[] = ['Keep', 'Review', 'CleanupCandidate', 'Excluded'];
-  return allowed.includes(value as RecommendationKind) ? (value as RecommendationKind) : '';
+    this.isLoadingHistorical.set(true);
+    this.historicalError.set(null);
+    loadEntireSnapshot((cursor) =>
+      this.api.getAnalysisSnapshots(analysisId, {
+        cursor: cursor ?? undefined,
+        pageSize: snapshotPageSize,
+      }),
+    )
+      .pipe(
+        finalize(() => this.isLoadingHistorical.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (snapshot) => this.historical.set(snapshot),
+        error: (error: unknown) =>
+          this.historicalError.set(apiErrorMessage(error, 'Ce snapshot ne peut pas être relu.')),
+      });
+  }
 }

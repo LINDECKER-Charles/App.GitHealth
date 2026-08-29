@@ -1,121 +1,111 @@
 import { provideHttpClient } from '@angular/common/http';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
-import { GitHealthApiClient } from '../../core/api/git-health-api-client';
-import { ProjectResponse, SnapshotPageResponse } from '../../core/api/api.models';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { BranchSnapshotResponse } from '../../core/api/api.models';
+import { LoadedSnapshot } from '../../core/branches/snapshot-loader';
+import { ProjectContext } from '../project/project-context';
 import { Dashboard } from './dashboard';
 
-describe('Dashboard', () => {
-  let fixture: ComponentFixture<Dashboard>;
-  const project: ProjectResponse = {
+const day = 86_400_000;
+
+function branch(
+  name: string,
+  overrides: Partial<BranchSnapshotResponse> = {},
+): BranchSnapshotResponse {
+  return {
+    id: name,
+    referenceName: `refs/heads/${name}`,
+    commitId: '1f484960946cabcdef',
+    aheadCount: 4,
+    behindCount: 3,
+    relationship: 'CommonAncestor',
+    lastActivityAtUtc: new Date(Date.now() - 3 * day).toISOString(),
+    tipAuthor: 'Camille Rousseau',
+    topology: 'Diverged',
+    activity: 'Active',
+    recommendation: 'Review',
+    reason: 'Historique divergent à examiner',
+    isProtected: false,
+    isExcluded: false,
+    ...overrides,
+  };
+}
+
+const snapshot: LoadedSnapshot = {
+  analysisId: 'c80c2489-0000-0000-0000-000000000000',
+  capturedAtUtc: '2026-08-29T11:21:16Z',
+  referenceName: 'refs/heads/main',
+  policy: {
     activeUntilDays: 30,
-    branchNamespace: 'refs/heads/*',
-    createdAtUtc: '2026-08-29T08:00:00Z',
-    displayName: 'Dépôt café',
-    excludedPatterns: [],
-    id: 'project-1',
     inactiveAfterDays: 90,
-    isRepositoryAccessible: true,
-    lastSuccessfulAnalysisId: 'analysis-1',
-    protectedPatterns: [],
-    referenceName: 'refs/heads/main',
-    repositoryPath: 'D:/Dépôts/café',
-    updatedAtUtc: '2026-08-29T09:00:00Z',
-  };
-  const page: SnapshotPageResponse = {
-    analysisId: 'analysis-1',
-    capturedAtUtc: '2026-08-29T09:00:00Z',
-    items: [
-      {
-        activity: 'Active',
-        aheadCount: 3,
-        behindCount: 1,
-        commitId: 'abc123',
-        id: 'snapshot-1',
-        isExcluded: false,
-        isProtected: false,
-        lastActivityAtUtc: '2026-08-28T09:00:00Z',
-        reason: 'La branche contient des commits propres.',
-        recommendation: 'Review',
-        referenceName: 'refs/heads/feature/été-à-Tokyo',
-        relationship: 'CommonAncestor',
-        tipAuthor: 'Zoë Martin',
-        topology: 'Diverged',
-      },
-    ],
-    nextCursor: null,
-    policy: {
-      activeUntilDays: 30,
-      excludedPatterns: [],
-      inactiveAfterDays: 90,
-      protectedPatterns: [],
-    },
-    referenceName: 'refs/heads/main',
-  };
-  const api = {
-    branchCsvUrl: vi.fn(() => '/api/projects/project-1/branches.csv'),
-    getAnalysisSnapshots: vi.fn(() => of(page)),
-    getLatestSnapshots: vi.fn(() => of(page)),
-    getProject: vi.fn(() => of(project)),
-    launchAnalysis: vi.fn(),
-  };
+    excludedPatterns: ['refs/heads/archive/*'],
+    protectedPatterns: ['refs/heads/main'],
+  },
+  branches: [
+    branch('feature/export-csv'),
+    branch('docs/guide', { topology: 'Ahead', behindCount: 0, recommendation: 'Keep' }),
+    branch('archive/2023-legacy', { recommendation: 'Excluded', isExcluded: true }),
+  ],
+  isTruncated: false,
+};
+
+describe('Dashboard', () => {
+  let context: ProjectContext;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Dashboard],
-      providers: [
-        provideHttpClient(),
-        provideRouter([]),
-        { provide: GitHealthApiClient, useValue: api },
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              paramMap: convertToParamMap({ projectId: 'project-1' }),
-              queryParamMap: convertToParamMap({ search: 'été' }),
-            },
-          },
-        },
-      ],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
-    fixture = TestBed.createComponent(Dashboard);
-    fixture.detectChanges();
+    context = TestBed.inject(ProjectContext);
+    context.snapshot.set(snapshot);
+    context.isLoadingSnapshot.set(false);
+  });
+
+  async function render() {
+    const fixture = TestBed.createComponent(Dashboard);
     await fixture.whenStable();
-    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('affiche une ligne par branche du snapshot', async () => {
+    const rows = (await render()).nativeElement.querySelectorAll('.dashboard-table tbody tr');
+    expect(rows).toHaveLength(3);
   });
 
-  it('affiche les faits Git sans dépendre uniquement de la couleur', () => {
-    const content = fixture.nativeElement.textContent;
-    expect(content).toContain('Dépôt café');
-    expect(content).toContain('feature/été-à-Tokyo');
-    expect(content).toContain('+3');
-    expect(content).toContain('−1');
-    expect(content).toContain('Diverged');
-    expect(content).toContain('Zoë Martin');
+  it('compte les recommandations dans les tuiles', async () => {
+    const counts = Array.from(
+      (await render()).nativeElement.querySelectorAll('.dashboard-tile-count'),
+    ).map((node) => (node as HTMLElement).textContent?.trim());
+    expect(counts).toEqual(['3', '1', '0', '1', '0', '1']);
   });
 
-  it('restaure la recherche depuis les paramètres de route', () => {
-    const input = fixture.nativeElement.querySelector(
-      'input[type="search"]',
-    ) as HTMLInputElement | null;
-    expect(input?.value).toBe('été');
-    expect(api.getLatestSnapshots).toHaveBeenCalledWith(
-      'project-1',
-      expect.objectContaining({ search: 'été' }),
-    );
+  it('signale une branche exclue par une icône', async () => {
+    const compiled = (await render()).nativeElement as HTMLElement;
+    expect(compiled.querySelectorAll('.branch-flag')).toHaveLength(1);
   });
 
-  it('applique les filtres rapides côté serveur', () => {
-    const element = fixture.nativeElement as HTMLElement;
-    const buttons = Array.from(
-      element.querySelectorAll<HTMLButtonElement>('.quick-filters button'),
-    );
-    buttons.find((button) => button.textContent?.trim() === 'Divergentes')?.click();
+  it('publie l’ordre affiché pour la navigation de la fiche', async () => {
+    await render();
+    expect(context.visibleBranchIds()).toHaveLength(3);
+  });
 
-    expect(api.getLatestSnapshots).toHaveBeenLastCalledWith(
-      'project-1',
-      expect.objectContaining({ topology: 'Diverged' }),
-    );
+  it('vide le tableau et propose un état vide quand aucun filtre ne correspond', async () => {
+    const fixture = await render();
+    const search = fixture.nativeElement.querySelector('.filter-search input') as HTMLInputElement;
+    search.value = 'introuvable';
+    search.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelectorAll('.dashboard-table tbody tr')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelector('ds-empty-state')).not.toBeNull();
+  });
+
+  it('propose la première analyse quand aucun snapshot n’existe', async () => {
+    context.snapshot.set(null);
+    const compiled = (await render()).nativeElement as HTMLElement;
+    expect(compiled.querySelector('.dashboard-first-scan')).not.toBeNull();
+    expect(compiled.textContent).toContain("Ce dépôt n'a pas encore été mesuré");
   });
 });

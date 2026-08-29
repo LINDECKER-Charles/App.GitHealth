@@ -1,0 +1,119 @@
+<div class="dialog-scrim" (click)="close.emit()">
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="add-repository-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="dialog-heading">
+      <span class="dialog-heading-mark"><ds-icon name="folder" [size]="16" /></span>
+      <span id="add-repository-title" class="dialog-heading-title">Ajouter un dépôt</span>
+      <button dsIconButton icon="x" label="Fermer" size="sm" (click)="close.emit()"></button>
+    </header>
+
+    <div class="dialog-body">
+      @if (isBrowsing()) {
+        <app-directory-browser
+          (cancelled)="isBrowsing.set(false)"
+          (selected)="useDirectory($event)"
+        />
+      } @else {
+        <div class="field-label">Chemin du dépôt</div>
+        <div class="path-row">
+          <ds-input
+            size="md"
+            [mono]="true"
+            [placeholder]="
+              store.runtime()?.mode === 'docker'
+                ? '/repositories/mon-depot'
+                : 'D:\\Projets\\mon-depot'
+            "
+            ariaLabel="Chemin du dépôt"
+            [invalid]="errorMessage() !== null"
+            [(value)]="path"
+          />
+          @if (store.runtime()?.canBrowseDirectories) {
+            <button
+              dsButton
+              size="md"
+              variant="secondary"
+              iconLeft="folder"
+              (click)="isBrowsing.set(true)"
+            >
+              Parcourir
+            </button>
+          }
+        </div>
+        <p class="field-hint">
+          Dépôt standard, bare repository ou worktree lié. Le chemin est vérifié pendant la saisie.
+        </p>
+
+        @if (isValidating()) {
+          <p class="validation-note" role="status">Lecture du dépôt…</p>
+        } @else if (errorMessage(); as message) {
+          <p class="validation-note validation-error" role="alert">{{ message }}</p>
+        }
+
+        @if (repository(); as validated) {
+          <div class="validated">
+            <div class="validated-strip">
+              <ds-icon name="circle-check" [size]="14" />
+              <span>
+                Dépôt reconnu · {{ validated.references.length }} référence{{
+                  validated.references.length > 1 ? 's' : ''
+                }}
+                candidate{{ validated.references.length > 1 ? 's' : '' }} ·
+                {{ validated.isBare ? 'bare repository' : 'dépôt standard' }}
+              </span>
+            </div>
+
+            <div class="validated-grid">
+              <div>
+                <div class="field-label">Nom affiché</div>
+                <ds-input size="sm" ariaLabel="Nom affiché" [(value)]="displayName" />
+              </div>
+              <div>
+                <div class="field-label">Référence de comparaison</div>
+                <ds-select
+                  size="sm"
+                  ariaLabel="Référence de comparaison"
+                  [options]="referenceOptions()"
+                  [(value)]="referenceName"
+                />
+              </div>
+            </div>
+
+            <div class="validated-scope">
+              <div class="field-label">Périmètre observé</div>
+              <ds-segmented-control size="sm" [options]="scopeOptions" [(value)]="scope" />
+            </div>
+
+            <p class="field-hint">
+              Seuils initiaux : active jusqu'à {{ defaultActiveUntilDays }} jours, inactive après
+              {{ defaultInactiveAfterDays }} jours. Modifiables à tout moment depuis Politiques.
+            </p>
+          </div>
+        }
+      }
+    </div>
+
+    @if (!isBrowsing()) {
+      <footer class="dialog-footer">
+        <span>Lecture seule. Aucune écriture sur le dépôt.</span>
+        <button dsButton size="md" variant="ghost" (click)="close.emit()">Annuler</button>
+        <button
+          dsButton
+          size="md"
+          variant="primary"
+          iconLeft="play"
+          [disabled]="!canCreate()"
+          [loading]="isCreating()"
+          (click)="create()"
+        >
+          Ajouter le dépôt
+        </button>
+      </footer>
+    }
+  </div>
+</div>

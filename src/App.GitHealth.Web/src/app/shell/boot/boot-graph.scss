@@ -1,0 +1,59 @@
+/* Graphe de topologie de la séquence d'ouverture : les délais vivent dans le gabarit. */
+.boot-graph {
+  display: block;
+  overflow: visible;
+}
+
+.boot-trunk {
+  fill: none;
+  stroke: var(--status-info-solid);
+  stroke-width: 1.6;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: gh-draw 1100ms var(--ease-out) 1250ms forwards;
+}
+
+.boot-fork {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.4;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation-name: gh-draw;
+  animation-duration: 900ms;
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: forwards;
+}
+
+.boot-node {
+  fill: var(--status-info-solid);
+  opacity: 0;
+  animation-name: gh-fade;
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: forwards;
+}
+
+.boot-node.is-muted {
+  fill: var(--text-muted);
+}
+
+.boot-node.is-danger {
+  fill: var(--status-danger-solid);
+}
+
+.boot-graph-label {
+  font: 11px/1 var(--font-mono);
+  fill: var(--text-secondary);
+  opacity: 0;
+  animation: gh-fade 260ms var(--ease-out) 2400ms forwards;
+}
+
+.boot-graph-note {
+  margin-top: 10px;
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-wrap: pretty;
+  opacity: 0;
+  animation: gh-fade 300ms var(--ease-out) 4900ms forwards;
+}

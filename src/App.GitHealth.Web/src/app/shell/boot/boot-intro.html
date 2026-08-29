@@ -1,0 +1,167 @@
+<div class="boot-stage">
+  <div class="boot-brand">
+    <span class="boot-mark"><ds-icon name="git-branch" [size]="18" /></span>
+    <span class="boot-name">GitHealth</span>
+    <span class="boot-version"
+      ><ds-badge size="sm" [mono]="true">{{ version }}</ds-badge></span
+    >
+    <span class="boot-spacer"></span>
+    <span class="boot-promise">tout est local · rien n'est envoyé</span>
+  </div>
+
+  <div class="boot-rule"></div>
+
+  <div class="boot-columns">
+    <div>
+      <div class="boot-label">Séquence de démarrage</div>
+      @for (step of steps; track step.label) {
+        <div class="boot-step" [style.animation-delay.ms]="step.revealDelayMs">
+          <span class="boot-step-dot">
+            <span
+              class="boot-step-pending"
+              [style.animation-delay]="step.revealDelayMs + 'ms, ' + step.settleDelayMs + 'ms'"
+            ></span>
+            <span class="boot-step-done" [style.animation-delay.ms]="step.settleDelayMs"></span>
+          </span>
+          <span class="boot-step-label">
+            @if ($index === 2) {
+              Résolution de <code>{{ referenceLabel() }}</code>
+            } @else {
+              {{ step.label }}
+            }
+          </span>
+        </div>
+      }
+    </div>
+
+    <div>
+      <div class="boot-label">Topologie lue</div>
+      <svg viewBox="0 0 320 200" width="320" height="200" aria-hidden="true" class="boot-graph">
+        <path class="boot-trunk" d="M28,20 L28,180" pathLength="1"></path>
+        <path
+          class="boot-fork boot-fork-1"
+          style="animation-delay: 2100ms"
+          d="M28,56 C28,74 80,64 80,84 L80,104 C80,124 28,112 28,128"
+          pathLength="1"
+        ></path>
+        <path
+          class="boot-fork boot-fork-2"
+          style="animation-delay: 2900ms"
+          d="M28,92 C28,110 120,100 120,120 L120,160"
+          pathLength="1"
+        ></path>
+        <path
+          class="boot-fork boot-fork-3"
+          style="animation-delay: 3700ms"
+          d="M28,20 C28,38 164,28 164,46 L164,58"
+          pathLength="1"
+        ></path>
+        <circle
+          class="boot-node boot-node-1"
+          style="animation-delay: 1400ms"
+          cx="28"
+          cy="20"
+          r="3.4"
+        ></circle>
+        <circle
+          class="boot-node boot-node-2"
+          style="animation-delay: 1620ms"
+          cx="28"
+          cy="56"
+          r="3.4"
+        ></circle>
+        <circle
+          class="boot-node boot-node-3"
+          style="animation-delay: 1840ms"
+          cx="28"
+          cy="92"
+          r="3.4"
+        ></circle>
+        <circle
+          class="boot-node boot-node-4"
+          style="animation-delay: 2060ms"
+          cx="28"
+          cy="128"
+          r="3.4"
+        ></circle>
+        <circle
+          class="boot-node boot-node-5"
+          style="animation-delay: 2280ms"
+          cx="28"
+          cy="164"
+          r="3.4"
+        ></circle>
+        <circle
+          class="boot-node boot-node-6 is-muted"
+          style="animation-delay: 2600ms"
+          cx="80"
+          cy="84"
+          r="3"
+        ></circle>
+        <circle
+          class="boot-node boot-node-7"
+          style="animation-delay: 3700ms"
+          cx="120"
+          cy="160"
+          r="3.6"
+        ></circle>
+        <circle
+          class="boot-node boot-node-8 is-danger"
+          style="animation-delay: 4500ms"
+          cx="164"
+          cy="58"
+          r="3.6"
+        ></circle>
+        <text class="boot-graph-label boot-graph-trunk" x="40" y="176">{{ referenceLabel() }}</text>
+      </svg>
+      <p class="boot-graph-note">
+        Références lues en place. Ni fetch, ni écriture, ni reflog touché.
+      </p>
+    </div>
+  </div>
+
+  <div class="boot-tiles">
+    <div class="boot-tile" [style.animation-delay.ms]="5400">
+      <div class="boot-tile-head">
+        <ds-status-dot [tone]="totalTile().tone" [size]="6" />
+        <span>{{ totalTile().label }}</span>
+      </div>
+      <div class="boot-tile-count">{{ totalTile().count }}</div>
+      <span class="boot-tile-bar">
+        <span [style.transform]="'scaleX(' + totalTile().share + ')'"></span>
+      </span>
+    </div>
+    @for (tile of tiles(); track tile.label) {
+      <div class="boot-tile" [style.animation-delay.ms]="5470 + $index * 70">
+        <div class="boot-tile-head">
+          <ds-status-dot [tone]="tile.tone" [size]="6" />
+          <span>{{ tile.label }}</span>
+        </div>
+        <div class="boot-tile-count">{{ tile.count }}</div>
+        <span class="boot-tile-bar" [attr.data-tone]="tile.tone">
+          <span [style.transform]="'scaleX(' + tile.share + ')'"></span>
+        </span>
+      </div>
+    }
+  </div>
+
+  <div class="boot-status">
+    <span class="boot-status-dot"><ds-status-dot tone="success" [size]="7" /></span>
+    <span class="boot-status-text">
+      {{ branchCount() }} branche{{ branchCount() > 1 ? 's' : '' }} lue{{
+        branchCount() > 1 ? 's' : ''
+      }}
+      · aucune écriture Git
+    </span>
+    <span class="boot-spacer"></span>
+    <span class="boot-ready">prêt</span>
+    <span class="boot-caret"></span>
+  </div>
+
+  <div class="boot-track"><span></span></div>
+</div>
+
+<button class="boot-skip" type="button" (click)="skip()">
+  <span>Passer l'introduction</span>
+  <kbd class="etb-kbd">esc</kbd>
+</button>

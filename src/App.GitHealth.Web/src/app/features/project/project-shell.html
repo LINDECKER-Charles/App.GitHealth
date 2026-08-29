@@ -1,0 +1,112 @@
+<div class="project-column">
+  <div class="project-heading">
+    <div class="project-heading-row">
+      <div class="project-identity">
+        <h1>{{ context.project()?.displayName ?? 'Lecture du dépôt…' }}</h1>
+        <div class="project-path">{{ context.project()?.repositoryPath }}</div>
+      </div>
+      <div class="project-actions">
+        <button
+          dsButton
+          size="sm"
+          variant="ghost"
+          iconLeft="download"
+          [disabled]="!context.hasSnapshot()"
+          (click)="exportSnapshot()"
+        >
+          Exporter en CSV
+        </button>
+        <button
+          dsButton
+          size="sm"
+          variant="primary"
+          iconLeft="refresh-cw"
+          [loading]="context.isRunning()"
+          (click)="context.launchAnalysis()"
+        >
+          {{ runLabel() }}
+        </button>
+      </div>
+    </div>
+    <div class="project-meta">
+      <ds-badge size="sm" tone="info" icon="git-branch" [mono]="true">
+        {{ referenceLabel() }}
+      </ds-badge>
+      <span>{{ meta() }}</span>
+    </div>
+  </div>
+
+  @if (context.isRunning()) {
+    <div class="project-progress" role="status" aria-live="polite">
+      <div class="project-progress-head">
+        <ds-spinner [size]="13" />
+        <strong>{{ currentPhaseLabel() }}</strong>
+        <span class="project-progress-spacer"></span>
+        <span class="project-progress-step">{{ progressStep() }}</span>
+      </div>
+      <div class="project-progress-bars">
+        @for (phase of phases; track phase) {
+          <span [class.is-done]="$index <= currentPhaseIndex()"></span>
+        }
+      </div>
+    </div>
+  }
+
+  @if (context.project()?.isRepositoryAccessible === false) {
+    <div class="project-notice">
+      <ds-callout tone="warning" title="Dépôt inaccessible à ce chemin">
+        Le dernier résultat réussi reste consultable. Relocalise le dépôt depuis l'onglet Politiques
+        pour reprendre les analyses sans perdre l'historique.
+      </ds-callout>
+    </div>
+  }
+
+  @if (context.error(); as message) {
+    <div class="project-notice">
+      <ds-callout tone="danger" title="L'action n'a pas abouti">{{ message }}</ds-callout>
+    </div>
+  }
+
+  <div class="project-tabs">
+    <nav class="etb-tabs" aria-label="Vues du dépôt">
+      <a
+        class="etb-tabs__tab"
+        [class.etb-tabs__tab--on]="activeTab() === 'diagnostic'"
+        [routerLink]="['/projects', projectId()]"
+      >
+        <ds-icon name="list" [size]="14" />
+        Diagnostic
+        @if (context.snapshot(); as snapshot) {
+          <span class="etb-tabs__count">{{ snapshot.branches.length }}</span>
+        }
+      </a>
+      <a
+        class="etb-tabs__tab"
+        [class.etb-tabs__tab--on]="activeTab() === 'history'"
+        [routerLink]="['/projects', projectId(), 'history']"
+      >
+        <ds-icon name="clock" [size]="14" />
+        Historique
+      </a>
+      <a
+        class="etb-tabs__tab"
+        [class.etb-tabs__tab--on]="activeTab() === 'settings'"
+        [routerLink]="['/projects', projectId(), 'settings']"
+      >
+        <ds-icon name="settings" [size]="14" />
+        Politiques
+      </a>
+    </nav>
+  </div>
+
+  <router-outlet />
+</div>
+
+@if (branchId(); as snapshotId) {
+  <app-branch-fiche
+    class="project-panel"
+    [snapshotId]="snapshotId"
+    (closed)="closeBranch()"
+    (moved)="openBranch($event)"
+  />
+}

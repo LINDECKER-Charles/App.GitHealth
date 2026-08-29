@@ -1,204 +1,170 @@
-import { Location } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { finalize } from 'rxjs';
-import { apiErrorMessage } from '../../core/api/api-error';
-import { GitHealthApiClient } from '../../core/api/git-health-api-client';
-import {
-  PolicyPreviewMatch,
-  PolicyUpdateRequest,
-  ProjectResponse,
-} from '../../core/api/api.models';
-import { RepositoryRelocation } from './repository-relocation';
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
+import { PolicySnapshot } from '../../core/api/api.models';
+import { mergedActiveUntilDays, mergedInactiveAfterDays } from '../../core/branches/branch-policy';
+import { DsBadge } from '../../ui/core/ds-badge';
+import { DsButton } from '../../ui/core/ds-button';
+import { DsIcon } from '../../ui/core/ds-icon';
+import { DsStatusDot } from '../../ui/core/ds-status-dot';
+import { DsTag } from '../../ui/core/ds-tag';
+import { DsInput } from '../../ui/forms/ds-input';
+import { DsCallout } from '../../ui/surfaces/ds-callout';
+import { DsPanel } from '../../ui/surfaces/ds-panel';
+import { ProjectContext } from '../project/project-context';
+import { PolicyMatch, PolicyStat, projectMatches, projectStats } from './policy-projection';
 
+const minimumBandDays = 120;
+const bandHeadroom = 1.6;
+
+/** Vue Politiques : seuils, motifs, relocalisation et projection sur le dernier snapshot. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RepositoryRelocation],
+  imports: [DsBadge, DsButton, DsCallout, DsIcon, DsInput, DsPanel, DsStatusDot, DsTag],
   selector: 'app-project-settings',
   styleUrl: './project-settings.scss',
   templateUrl: './project-settings.html',
 })
 export class ProjectSettings {
-  private readonly api = inject(GitHealthApiClient);
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly location = inject(Location);
-  private readonly projectId = inject(ActivatedRoute).snapshot.paramMap.get('projectId') ?? '';
+  protected readonly context = inject(ProjectContext);
 
-  protected readonly actionError = signal<string | null>(null);
-  protected readonly loadError = signal<string | null>(null);
-  protected readonly loading = signal(true);
-  protected readonly matches = signal<readonly PolicyPreviewMatch[]>([]);
-  protected readonly previewed = signal(false);
-  protected readonly previewLoading = signal(false);
-  protected readonly project = signal<ProjectResponse | null>(null);
-  protected readonly savedMessage = signal<string | null>(null);
-  protected readonly saving = signal(false);
+  protected readonly mergedActiveUntilDays = mergedActiveUntilDays;
+  protected readonly mergedInactiveAfterDays = mergedInactiveAfterDays;
 
-  protected readonly form = new FormGroup(
-    {
-      activeUntilDays: new FormControl(30, {
-        nonNullable: true,
-        validators: [Validators.required, Validators.min(0)],
-      }),
-      inactiveAfterDays: new FormControl(90, {
-        nonNullable: true,
-        validators: [Validators.required, Validators.min(1)],
-      }),
-      excludedPatterns: new FormControl('', { nonNullable: true }),
-      protectedPatterns: new FormControl('', { nonNullable: true }),
-    },
-    { validators: thresholdOrderValidator },
+  protected readonly activeUntilDays = signal('30');
+  protected readonly inactiveAfterDays = signal('90');
+  protected readonly protectedPatterns = signal<readonly string[]>([]);
+  protected readonly excludedPatterns = signal<readonly string[]>([]);
+  protected readonly newProtected = signal('');
+  protected readonly newExcluded = signal('');
+  protected readonly relocationPath = signal('');
+  protected readonly isRelocating = signal(false);
+
+  protected readonly draft = computed<PolicySnapshot>(() => ({
+    activeUntilDays: toDays(this.activeUntilDays(), 0),
+    inactiveAfterDays: toDays(this.inactiveAfterDays(), 1),
+    protectedPatterns: this.protectedPatterns(),
+    excludedPatterns: this.excludedPatterns(),
+  }));
+
+  protected readonly hasThresholdError = computed(
+    () => this.draft().inactiveAfterDays <= this.draft().activeUntilDays,
+  );
+
+  protected readonly isDirty = computed(() => {
+    const project = this.context.project();
+    if (project === null) {
+      return false;
+    }
+
+    const draft = this.draft();
+    return (
+      draft.activeUntilDays !== project.activeUntilDays ||
+      draft.inactiveAfterDays !== project.inactiveAfterDays ||
+      !sameSet(draft.protectedPatterns, project.protectedPatterns) ||
+      !sameSet(draft.excludedPatterns, project.excludedPatterns)
+    );
+  });
+
+  protected readonly dirtyLabel = computed(() =>
+    this.isDirty()
+      ? 'Modifications non enregistrées — l’aperçu est déjà à jour.'
+      : 'Politique à jour.',
+  );
+
+  protected readonly bands = computed(() => {
+    const draft = this.draft();
+    const span = Math.max(draft.inactiveAfterDays * bandHeadroom, minimumBandDays);
+    return {
+      active: `${Math.round((draft.activeUntilDays / span) * 100)}%`,
+      aging: `${Math.round(((draft.inactiveAfterDays - draft.activeUntilDays) / span) * 100)}%`,
+    };
+  });
+
+  protected readonly branches = computed(() => this.context.snapshot()?.branches ?? []);
+  protected readonly stats = computed<readonly PolicyStat[]>(() =>
+    projectStats(this.branches(), this.draft()),
+  );
+  protected readonly matches = computed<readonly PolicyMatch[]>(() =>
+    projectMatches(this.branches(), this.draft()),
   );
 
   constructor() {
-    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.matches.set([]);
-      this.previewed.set(false);
-      this.actionError.set(null);
-      this.savedMessage.set(null);
-    });
-    this.load();
+    effect(() => this.reset());
   }
 
-  protected load(): void {
-    if (this.projectId.length === 0) {
-      this.loading.set(false);
-      this.loadError.set('Aucun projet n’a été indiqué.');
+  protected reset(): void {
+    const project = this.context.project();
+    if (project === null) {
       return;
     }
 
-    this.loading.set(true);
-    this.loadError.set(null);
-    this.api
-      .getProject(this.projectId)
-      .pipe(
-        finalize(() => this.loading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe({
-        next: (project) => this.populate(project),
-        error: (error: unknown) =>
-          this.loadError.set(
-            apiErrorMessage(error, 'Les politiques de ce projet ne peuvent pas être chargées.'),
-          ),
-      });
+    this.activeUntilDays.set(String(project.activeUntilDays));
+    this.inactiveAfterDays.set(String(project.inactiveAfterDays));
+    this.protectedPatterns.set(project.protectedPatterns);
+    this.excludedPatterns.set(project.excludedPatterns);
   }
 
-  protected previewPolicy(): void {
-    if (!this.ensureValid() || this.previewLoading()) {
-      return;
-    }
+  protected addProtected(): void {
+    this.protectedPatterns.update((patterns) => append(patterns, this.newProtected()));
+    this.newProtected.set('');
+  }
 
-    this.previewLoading.set(true);
-    this.actionError.set(null);
-    this.api
-      .previewPolicy(this.projectId, this.request())
-      .pipe(
-        finalize(() => this.previewLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe({
-        next: (preview) => {
-          this.matches.set(preview.matches);
-          this.previewed.set(true);
-        },
-        error: (error: unknown) =>
-          this.actionError.set(apiErrorMessage(error, 'L’aperçu des correspondances a échoué.')),
-      });
+  protected addExcluded(): void {
+    this.excludedPatterns.update((patterns) => append(patterns, this.newExcluded()));
+    this.newExcluded.set('');
+  }
+
+  protected removeProtected(pattern: string): void {
+    this.protectedPatterns.update((patterns) => patterns.filter((value) => value !== pattern));
+  }
+
+  protected removeExcluded(pattern: string): void {
+    this.excludedPatterns.update((patterns) => patterns.filter((value) => value !== pattern));
   }
 
   protected save(): void {
-    if (!this.ensureValid() || this.saving()) {
+    if (this.hasThresholdError()) {
       return;
     }
 
-    this.saving.set(true);
-    this.actionError.set(null);
-    this.savedMessage.set(null);
-    this.api
-      .updatePolicy(this.projectId, this.request())
-      .pipe(
-        finalize(() => this.saving.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe({
-        next: (project) => {
-          this.populate(project);
-          this.savedMessage.set('Politique enregistrée. Les faits Git sont restés inchangés.');
-        },
-        error: (error: unknown) =>
-          this.actionError.set(apiErrorMessage(error, 'La politique n’a pas pu être enregistrée.')),
-      });
-  }
-
-  protected goBack(): void {
-    this.location.back();
-  }
-
-  protected applyRelocation(project: ProjectResponse): void {
-    this.project.set(project);
-  }
-
-  private populate(project: ProjectResponse): void {
-    this.project.set(project);
-    this.form.reset(
-      {
-        activeUntilDays: project.activeUntilDays,
-        excludedPatterns: project.excludedPatterns.join('\n'),
-        inactiveAfterDays: project.inactiveAfterDays,
-        protectedPatterns: project.protectedPatterns.join('\n'),
-      },
-      { emitEvent: false },
+    this.context.savePolicy(
+      this.draft(),
+      'Politique enregistrée · les SHA et les compteurs sont inchangés',
     );
   }
 
-  private ensureValid(): boolean {
-    this.form.markAllAsTouched();
-    if (this.form.valid) {
-      return true;
+  protected relocate(): void {
+    const path = this.relocationPath().trim();
+    if (path.length === 0 || this.isRelocating()) {
+      return;
     }
 
-    this.actionError.set('Corrigez les seuils avant de continuer.');
-    return false;
-  }
-
-  private request(): PolicyUpdateRequest {
-    const value = this.form.getRawValue();
-    return {
-      activeUntilDays: value.activeUntilDays,
-      excludedPatterns: parsePatterns(value.excludedPatterns),
-      inactiveAfterDays: value.inactiveAfterDays,
-      protectedPatterns: parsePatterns(value.protectedPatterns),
-    };
+    this.isRelocating.set(true);
+    this.context.relocate(path, (succeeded) => {
+      this.isRelocating.set(false);
+      if (succeeded) {
+        this.relocationPath.set('');
+      }
+    });
   }
 }
 
-function thresholdOrderValidator(control: AbstractControl): ValidationErrors | null {
-  const active = control.get('activeUntilDays')?.value;
-  const inactive = control.get('inactiveAfterDays')?.value;
-  if (typeof active !== 'number' || typeof inactive !== 'number') {
-    return null;
-  }
-
-  return inactive > active ? null : { thresholdOrder: true };
+function append(patterns: readonly string[], candidate: string): readonly string[] {
+  const pattern = candidate.trim();
+  return pattern.length === 0 || patterns.includes(pattern) ? patterns : [...patterns, pattern];
 }
 
-function parsePatterns(value: string): readonly string[] {
-  return Array.from(
-    new Set(
-      value
-        .split(/\r?\n/)
-        .map((pattern) => pattern.trim())
-        .filter((pattern) => pattern.length > 0),
-    ),
-  );
+function sameSet(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function toDays(value: string, minimum: number): number {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? minimum : Math.max(minimum, parsed);
 }

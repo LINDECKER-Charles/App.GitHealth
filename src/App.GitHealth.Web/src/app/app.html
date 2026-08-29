@@ -1,19 +1,76 @@
-<a class="skip-link" href="#main-content">Aller au contenu</a>
-<header class="app-header">
-  <a class="brand" routerLink="/" aria-label="GitHealth, accueil">
-    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-    <span>
-      <strong>GitHealth</strong>
-      <small>Observatoire local des branches</small>
-    </span>
-  </a>
-  <nav aria-label="Navigation principale">
-    <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
-      Projets
+<a class="skip-link" href="#workspace-content">Aller au contenu</a>
+
+<div class="workspace">
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="topbar-mark"><ds-icon name="git-branch" [size]="15" /></span>
+      <span class="topbar-name">GitHealth</span>
+      <ds-badge size="sm" [mono]="true">{{ version }}</ds-badge>
+    </div>
+
+    <button class="topbar-search" type="button" (click)="dialogs.openPalette()">
+      <span class="topbar-search-mark"><ds-icon name="search" [size]="14" /></span>
+      <span class="topbar-search-label">Aller à une branche, un dépôt, une action…</span>
+      <ds-kbd keys="cmd+k" />
+    </button>
+
+    <span class="topbar-spacer"></span>
+
+    <div class="topbar-promise">
+      <ds-status-dot tone="success" [size]="6" />
+      <span>tout est local · lecture seule</span>
+    </div>
+
+    <button
+      dsIconButton
+      [icon]="themeIcon()"
+      label="Basculer le thème"
+      (click)="theme.toggle()"
+    ></button>
+    <a
+      class="etb-iconbtn backup-action"
+      [href]="backupUrl"
+      download
+      title="Sauvegarder les données"
+      aria-label="Sauvegarder les données"
+    >
+      <ds-icon name="download" [size]="16" />
     </a>
-    <a class="backup-action" href="/api/exports/database" download> Sauvegarder les données </a>
-  </nav>
-</header>
-<main id="main-content" tabindex="-1">
-  <router-outlet />
-</main>
+    <a
+      class="etb-iconbtn"
+      [href]="guideUrl"
+      target="_blank"
+      rel="noreferrer"
+      title="Guide utilisateur"
+      aria-label="Guide utilisateur"
+    >
+      <ds-icon name="book-open" [size]="16" />
+    </a>
+  </header>
+
+  <div class="workspace-body">
+    <app-project-rail />
+    <main id="workspace-content" class="workspace-main" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+@if (dialogs.isPaletteOpen()) {
+  <app-command-palette />
+}
+
+@if (dialogs.isAddRepositoryOpen()) {
+  <app-add-repository-dialog (close)="dialogs.closeAddRepository()" />
+}
+
+@if (toast.message(); as message) {
+  <div class="workspace-toast" role="status" aria-live="polite">
+    <ds-status-dot tone="success" [size]="7" />
+    <span>{{ message }}</span>
+  </div>
+}
+
+@if (isIntroVisible()) {
+  <app-boot-intro (done)="dismissIntro(false)" (skipped)="dismissIntro(true)" />
+}
