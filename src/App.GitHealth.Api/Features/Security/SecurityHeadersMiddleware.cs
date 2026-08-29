@@ -2,8 +2,12 @@ namespace App.GitHealth.Api.Features.Security;
 
 internal sealed class SecurityHeadersMiddleware(RequestDelegate next)
 {
+    // base-uri 'self' et non 'none' : l'application Angular déclare <base href="/">.
+    // Bloquée, la balise laissait les URL relatives d'index.html se résoudre depuis
+    // la route courante, et toute adresse profonde rechargée servait une page vide.
+    // 'self' interdit toujours la seule menace visée : un <base> vers une autre origine.
     private const string ContentSecurityPolicy =
-        "default-src 'self'; base-uri 'none'; object-src 'none'; "
+        "default-src 'self'; base-uri 'self'; object-src 'none'; "
         + "frame-ancestors 'none'; form-action 'self'; "
         + "script-src 'self'; style-src 'self' 'unsafe-inline'; "
         + "img-src 'self' data:; font-src 'self'; connect-src 'self'";

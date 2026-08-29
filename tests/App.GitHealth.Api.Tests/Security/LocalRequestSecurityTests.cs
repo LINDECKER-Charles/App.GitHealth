@@ -233,6 +233,11 @@ public sealed class LocalRequestSecurityTests(ApiApplicationFactory factory)
         Assert.Contains(
             "frame-ancestors 'none'",
             response.Headers.GetValues("Content-Security-Policy").Single());
+
+        // Angular déclare <base href="/"> : 'none' rendrait toute adresse profonde illisible.
+        Assert.Contains(
+            "base-uri 'self'",
+            response.Headers.GetValues("Content-Security-Policy").Single());
         Assert.Contains(
             "geolocation=()",
             response.Headers.GetValues("Permissions-Policy").Single());

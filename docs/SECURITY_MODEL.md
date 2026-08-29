@@ -41,8 +41,13 @@ après douze heures.
 
 Toutes les réponses reçoivent une politique CSP limitée à la même origine, ainsi que
 `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`
-et une `Permissions-Policy` restrictive. OpenAPI n'est publié qu'en développement.
-`/health` reste volontairement public sur loopback pour les smoke tests.
+et une `Permissions-Policy` restrictive. `base-uri` vaut `'self'` : l'application déclare
+`<base href="/">`, et l'interdire entièrement rendait illisible toute adresse profonde
+rechargée. La menace visée — un `<base>` injecté vers une autre origine — reste bloquée.
+L'inlining du CSS critique d'Angular est désactivé pour la même raison : le gestionnaire
+`onload` qu'il génère est un script en ligne, que `script-src 'self'` refuse.
+OpenAPI n'est publié qu'en développement. `/health` reste volontairement public sur
+loopback pour les smoke tests.
 
 Ces protections ne transforment pas GitHealth en service réseau. Il ne faut pas ajouter
 une écoute LAN, un proxy inverse ou des origines non loopback sans concevoir une vraie
