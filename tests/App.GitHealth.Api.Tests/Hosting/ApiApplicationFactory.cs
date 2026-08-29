@@ -21,6 +21,8 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
 
     public string DatabasePath => Path.Combine(_directory, "githealth.db");
 
+    public string? InitialRepositoryPath { get; init; }
+
     public string? RepositoriesRoot { get; init; }
 
     public int QueueCapacity { get; init; } = DefaultQueueCapacity;
@@ -38,6 +40,7 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Persistence:DatabasePath"] = DatabasePath,
+                ["GitHealth:InitialRepositoryPath"] = InitialRepositoryPath,
                 ["GitHealth:RepositoriesRoot"] = RepositoriesRoot,
                 ["AnalysisQueue:Capacity"] = QueueCapacity.ToString(
                     CultureInfo.InvariantCulture),

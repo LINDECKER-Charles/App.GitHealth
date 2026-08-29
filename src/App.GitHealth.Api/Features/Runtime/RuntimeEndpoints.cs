@@ -23,6 +23,7 @@ internal static class RuntimeEndpoints
         var canBrowseDirectories = repositoriesRoot is null;
         return Results.Ok(new RuntimeInfoResponse
         {
+            InitialRepositoryPath = NormalizeRoot(options.Value.InitialRepositoryPath),
             RepositoriesRoot = repositoriesRoot,
             CanBrowseDirectories = canBrowseDirectories,
             Mode = canBrowseDirectories ? NativeMode : DockerMode,

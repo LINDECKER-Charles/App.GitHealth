@@ -26,6 +26,7 @@ export type SortDirection = 'asc' | 'desc';
 
 export interface RuntimeInfo {
   readonly mode: RuntimeMode;
+  readonly initialRepositoryPath: string | null;
   readonly repositoriesRoot: string | null;
   readonly canBrowseDirectories: boolean;
 }

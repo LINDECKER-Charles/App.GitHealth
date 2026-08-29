@@ -1,0 +1,82 @@
+name: Publication
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: ${{ matrix.runtime }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-latest
+            runtime: win-x64
+          - runner: macos-15-intel
+            runtime: osx-x64
+          - runner: macos-15
+            runtime: osx-arm64
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v7
+
+      - name: Installer .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: src/App.GitHealth.Web/package-lock.json
+
+      - name: Tester les fixtures Git sur la plateforme
+        run: >-
+          dotnet test
+          tests/App.GitHealth.Git.IntegrationTests/App.GitHealth.Git.IntegrationTests.csproj
+          --configuration Release
+
+      - name: Publier l’artefact autonome
+        shell: pwsh
+        run: ./eng/Publish-Native.ps1 -RuntimeIdentifier ${{ matrix.runtime }}
+
+      - name: Exécuter le smoke test natif
+        shell: pwsh
+        run: >-
+          ./tests/Infrastructure/Invoke-NativeSmokeTest.ps1
+          -PublishDirectory artifacts/publish/${{ matrix.runtime }}
+
+      - name: Charger l’artefact
+        uses: actions/upload-artifact@v7
+        with:
+          name: githealth-${{ matrix.runtime }}
+          path: artifacts/publish/githealth-${{ matrix.runtime }}.*
+          if-no-files-found: error
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v7
+
+      - name: Exécuter le smoke test Docker
+        shell: pwsh
+        run: ./tests/Infrastructure/Invoke-DockerSmokeTest.ps1

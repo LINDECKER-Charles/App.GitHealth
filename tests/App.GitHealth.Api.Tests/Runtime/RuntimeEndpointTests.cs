@@ -17,8 +17,26 @@ public sealed class RuntimeEndpointTests
         var payload = await client.GetFromJsonAsync<JsonElement>("/api/runtime");
 
         Assert.Equal(JsonValueKind.Null, payload.GetProperty("repositoriesRoot").ValueKind);
+        Assert.Equal(JsonValueKind.Null, payload.GetProperty("initialRepositoryPath").ValueKind);
         Assert.True(payload.GetProperty("canBrowseDirectories").GetBoolean());
         Assert.Equal("native", payload.GetProperty("mode").GetString());
+    }
+
+    [Fact]
+    public async Task RuntimeExposesTheRepositoryProvidedByTheLauncher()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), "githealth-initial-repository");
+        using var factory = new ApiApplicationFactory
+        {
+            InitialRepositoryPath = repositoryPath,
+        };
+        using var client = factory.CreateClient();
+
+        var payload = await client.GetFromJsonAsync<JsonElement>("/api/runtime");
+
+        Assert.Equal(
+            repositoryPath,
+            payload.GetProperty("initialRepositoryPath").GetString());
     }
 
     [Fact]

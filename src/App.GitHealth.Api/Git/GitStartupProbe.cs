@@ -4,8 +4,15 @@ namespace App.GitHealth.Api.Git;
 
 internal sealed class GitStartupProbe(
     IGitProcessRunner runner,
-    GitRuntimeDiagnostic diagnostic) : IHostedService
+    GitRuntimeDiagnostic diagnostic,
+    ILogger<GitStartupProbe> logger) : IHostedService
 {
+    private static readonly Action<ILogger, string, Exception?> LogGitUnavailable =
+        LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            new EventId(1, nameof(GitStartupProbe)),
+            "Git est indisponible au démarrage. Le diagnostic /health expose la cause : {Reason}");
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         var command = GitCommand.Create(Environment.CurrentDirectory, ["--version"]);
@@ -18,11 +25,11 @@ internal sealed class GitStartupProbe(
                 return;
             }
 
-            diagnostic.ReportUnavailable("Git est installé mais son diagnostic a échoué.");
+            ReportUnavailable("Git est installé mais son diagnostic a échoué.");
         }
         catch (GitProcessException exception)
         {
-            diagnostic.ReportUnavailable(exception.Message);
+            ReportUnavailable(exception.Message);
         }
     }
 
@@ -30,5 +37,11 @@ internal sealed class GitStartupProbe(
     {
         _ = cancellationToken;
         return Task.CompletedTask;
+    }
+
+    private void ReportUnavailable(string reason)
+    {
+        diagnostic.ReportUnavailable(reason);
+        LogGitUnavailable(logger, reason, null);
     }
 }

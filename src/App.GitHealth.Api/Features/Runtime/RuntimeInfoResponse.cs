@@ -2,6 +2,8 @@ namespace App.GitHealth.Api.Features.Runtime;
 
 internal sealed record RuntimeInfoResponse
 {
+    public string? InitialRepositoryPath { get; init; }
+
     public string? RepositoriesRoot { get; init; }
 
     public required bool CanBrowseDirectories { get; init; }

@@ -1,6 +1,6 @@
 # Plan d'implémentation de GitHealth
 
-> Statut : exécution en cours — étapes 1 à 7 terminées le 29 août 2026
+> Statut : exécution en cours — étapes 1 à 8 terminées le 29 août 2026
 > Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Objectif du MVP
@@ -259,6 +259,8 @@ peuvent être adaptées aux conventions du dépôt.
 
 ## Étape 8 — Finaliser les points d'entrée Windows, macOS et Docker
 
+> Statut : terminée le 29 août 2026
+
 ### Résultat attendu
 
 Les trois distributions lancent le même produit et utilisent les mêmes migrations
@@ -336,11 +338,11 @@ de vrais dépôts d'entreprise.
 | Références distantes obsolètes | Afficher que l'analyse ne fait pas de fetch et dater le scan |
 | Git ancien sur macOS | Détection de capacités et chemin de repli |
 | Milliers de branches | Calcul groupé, enrichissement différé, cache et virtualisation |
-| Branche fusionnée sans attribution fiable | Afficher indéterminé et conserver l'historique antérieur |
+| Branche fusionnée sans attribution fiable | Afficher indéterminé et garder l'historique |
 | Chemins Docker différents du poste | Racine explicite, canonicalisation et relocalisation |
 | Copie SQLite incohérente | Endpoint utilisant l'API de sauvegarde |
 | Commande hostile issue d'un nom de branche | Aucun shell, arguments séparés et tests dédiés |
-| Blocage macOS d'un binaire non signé | Documenter le MVP puis traiter signature/notarisation avant diffusion large |
+| Blocage macOS d'un binaire non signé | Documenter puis signer avant diffusion large |
 
 ## Après le MVP
 

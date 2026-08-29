@@ -12,9 +12,9 @@ public sealed class SpaHostingTests(ApiApplicationFactory factory)
     public async Task GetClientRouteReturnsSpaEntryPoint(string path)
     {
         var webRoot = Path.Combine(AppContext.BaseDirectory, "StaticFiles");
-        using var client = factory
-            .WithWebHostBuilder(builder => builder.UseWebRoot(webRoot))
-            .CreateClient();
+        using var configuredFactory = factory.WithWebHostBuilder(
+            builder => builder.UseWebRoot(webRoot));
+        using var client = configuredFactory.CreateClient();
 
         using var response = await client.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();

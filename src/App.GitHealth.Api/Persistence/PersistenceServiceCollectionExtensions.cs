@@ -23,6 +23,7 @@ internal static class PersistenceServiceCollectionExtensions
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<IAnalysisRepository, AnalysisRepository>();
         services.AddScoped<IRetentionService, RetentionService>();
+        services.AddSingleton<DatabaseInstanceLease>();
         services.AddSingleton<IDatabaseMigrationService, DatabaseMigrationService>();
         services.AddSingleton<IDatabaseBackupService, SqliteDatabaseBackupService>();
         services.AddHostedService<DatabaseMigrationHostedService>();

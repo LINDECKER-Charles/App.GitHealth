@@ -81,6 +81,7 @@ describe('GitHealthApiClient', () => {
   it('gets the runtime contract', async () => {
     const expected: RuntimeInfo = {
       mode: 'docker',
+      initialRepositoryPath: null,
       repositoriesRoot: '/repositories',
       canBrowseDirectories: false,
     };

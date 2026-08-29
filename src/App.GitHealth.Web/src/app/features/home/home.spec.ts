@@ -12,6 +12,7 @@ import { Home } from './home';
 
 const nativeRuntime: RuntimeInfo = {
   canBrowseDirectories: true,
+  initialRepositoryPath: null,
   mode: 'native',
   repositoriesRoot: null,
 };
@@ -85,6 +86,17 @@ describe('Home', () => {
 
     expect(text()).toContain('Aucun dépôt observé pour l’instant');
     expect(text()).toContain('Son historique restera intact');
+  });
+
+  it('validates the repository supplied by the native launcher', () => {
+    api.getRuntime.mockReturnValue(
+      of({ ...nativeRuntime, initialRepositoryPath: 'D:\\Dev\\alpha' }),
+    );
+
+    createFixture();
+
+    expect(api.validateRepository).toHaveBeenCalledWith('D:\\Dev\\alpha');
+    expect(element<HTMLInputElement>('#project-name').value).toBe('alpha');
   });
 
   it('shows a load error and retries the request', () => {

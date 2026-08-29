@@ -46,7 +46,8 @@ RUN mkdir --parents /data /repositories \
 
 COPY --from=backend-build /app/publish/ ./
 
-ENV ASPNETCORE_HTTP_PORTS=8080
+ENV ASPNETCORE_HTTP_PORTS=8080 \
+    GitHealth__DataDirectory=/data
 
 EXPOSE 8080
 VOLUME ["/data"]
@@ -54,6 +55,8 @@ VOLUME ["/data"]
 USER $APP_UID
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD curl --fail --silent --show-error --output /dev/null http://localhost:8080/health
+    CMD curl --fail --silent --show-error --output /dev/null http://127.0.0.1:8080/health
 
-ENTRYPOINT ["dotnet", "App.GitHealth.Api.dll"]
+STOPSIGNAL SIGTERM
+
+ENTRYPOINT ["dotnet", "githealth.dll"]

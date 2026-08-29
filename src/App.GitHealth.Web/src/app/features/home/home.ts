@@ -93,7 +93,7 @@ export class Home {
       .subscribe({
         next: ({ projects, runtime }) => {
           this.projects.set(projects);
-          this.runtime.set(runtime);
+          this.configureRuntime(runtime);
         },
         error: (error: unknown) =>
           this.loadError.set(
@@ -237,6 +237,16 @@ export class Home {
       displayName: this.defaultProjectName(repository.canonicalPath),
       referenceName,
     });
+  }
+
+  private configureRuntime(runtime: RuntimeInfo): void {
+    this.runtime.set(runtime);
+    if (runtime.initialRepositoryPath === null || this.pathControl.value.length > 0) {
+      return;
+    }
+
+    this.pathControl.setValue(runtime.initialRepositoryPath);
+    this.validatePath();
   }
 
   private buildRequest(repository: RepositoryValidation): CreateProjectRequest {

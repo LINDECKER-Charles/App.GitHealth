@@ -1,10 +1,26 @@
 namespace App.GitHealth.Api.Persistence.Services;
 
 internal sealed class DatabaseMigrationHostedService(
-    IDatabaseMigrationService migrationService) : IHostedService
+    IDatabaseMigrationService migrationService,
+    DatabaseInstanceLease instanceLease) : IHostedService
 {
-    public Task StartAsync(CancellationToken cancellationToken) =>
-        migrationService.InitializeAsync(cancellationToken);
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        instanceLease.Acquire();
+        try
+        {
+            await migrationService.InitializeAsync(cancellationToken);
+        }
+        catch
+        {
+            instanceLease.Dispose();
+            throw;
+        }
+    }
 
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        instanceLease.Dispose();
+        return Task.CompletedTask;
+    }
 }
