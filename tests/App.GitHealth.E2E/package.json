@@ -1,0 +1,21 @@
+{
+  "name": "app-git-health-e2e",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format:check": "prettier --check .",
+    "test": "playwright test",
+    "test:ci": "playwright test --reporter=line,junit",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": "^24.20.0 || ^26.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "24.13.3",
+    "prettier": "3.8.1",
+    "typescript": "~6.0.2"
+  }
+}

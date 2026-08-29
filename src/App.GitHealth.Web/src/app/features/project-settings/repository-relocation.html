@@ -1,0 +1,38 @@
+<section class="relocation" aria-labelledby="relocation-title">
+  <div>
+    <p class="eyebrow">Continuité du suivi</p>
+    <h2 id="relocation-title">Relocaliser le dépôt</h2>
+    <p>Rattachez ce projet au nouveau dépôt sans perdre ses analyses.</p>
+  </div>
+
+  <form (submit)="relocate(); $event.preventDefault()" novalidate>
+    <label for="repository-path">Nouveau chemin absolu</label>
+    <div class="relocation-action">
+      <input
+        id="repository-path"
+        type="text"
+        autocomplete="off"
+        [formControl]="repositoryPath"
+        [placeholder]="project().repositoryPath"
+        aria-describedby="relocation-help relocation-feedback"
+      />
+      <button class="button secondary" type="submit" [disabled]="relocating()">
+        {{ relocating() ? 'Vérification…' : 'Relocaliser' }}
+      </button>
+    </div>
+    <p id="relocation-help">
+      Le dépôt doit contenir la référence et le dernier commit connus. Attendez la fin du scan.
+    </p>
+    @if (repositoryPath.touched && repositoryPath.invalid) {
+      <p id="relocation-feedback" class="feedback error" role="alert">
+        Indiquez un chemin de dépôt valide.
+      </p>
+    } @else if (error(); as errorMessage) {
+      <p id="relocation-feedback" class="feedback error" role="alert">{{ errorMessage }}</p>
+    } @else if (success(); as successMessage) {
+      <p id="relocation-feedback" class="feedback success" role="status">
+        {{ successMessage }}
+      </p>
+    }
+  </form>
+</section>

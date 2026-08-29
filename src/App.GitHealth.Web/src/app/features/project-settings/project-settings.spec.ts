@@ -115,7 +115,7 @@ describe('ProjectSettings', () => {
   it('saves through the policy endpoint without validating Git access', () => {
     createFixture();
     setValue('#excluded-patterns', 'refs/heads/archive/*\nrefs/heads/obsolete/*');
-    submit('form');
+    submit('.policy-form');
     fixture.detectChanges();
 
     expect(api.updatePolicy).toHaveBeenCalledWith(projectId, {

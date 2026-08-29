@@ -18,10 +18,11 @@ import {
   PolicyUpdateRequest,
   ProjectResponse,
 } from '../../core/api/api.models';
+import { RepositoryRelocation } from './repository-relocation';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RepositoryRelocation],
   selector: 'app-project-settings',
   styleUrl: './project-settings.scss',
   templateUrl: './project-settings.html',
@@ -141,6 +142,10 @@ export class ProjectSettings {
 
   protected goBack(): void {
     this.location.back();
+  }
+
+  protected applyRelocation(project: ProjectResponse): void {
+    this.project.set(project);
   }
 
   private populate(project: ProjectResponse): void {

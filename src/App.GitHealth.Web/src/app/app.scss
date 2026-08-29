@@ -98,7 +98,13 @@
   left: 0.1rem;
 }
 
-nav a {
+.app-header nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.app-header nav a {
   padding: 0.55rem 0;
   border-bottom: 2px solid transparent;
   color: var(--ink-muted);
@@ -106,7 +112,7 @@ nav a {
   text-decoration: none;
 }
 
-nav a.is-active {
+.app-header nav a.is-active {
   border-color: var(--copper);
   color: var(--ink);
 }
@@ -122,5 +128,9 @@ main {
 
   .brand small {
     display: none;
+  }
+
+  .backup-action {
+    font-size: 0.8rem;
   }
 }

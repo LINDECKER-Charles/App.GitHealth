@@ -12,6 +12,7 @@ import {
   PolicyUpdateRequest,
   ProjectResponse,
   ProjectSettingsRequest,
+  RelocateProjectRequest,
   RepositoryValidationResponse,
   RuntimeInfo,
   SnapshotDetailResponse,
@@ -61,6 +62,12 @@ export class GitHealthApiClient {
   ): Observable<ProjectResponse> {
     return this.request(
       this.http.put<ProjectResponse>(`${projectUrl(projectId)}/settings`, settings),
+    );
+  }
+
+  relocateProject(projectId: string, request: RelocateProjectRequest): Observable<ProjectResponse> {
+    return this.request(
+      this.http.put<ProjectResponse>(`${projectUrl(projectId)}/repository`, request),
     );
   }
 

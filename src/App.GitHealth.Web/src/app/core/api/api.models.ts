@@ -85,6 +85,10 @@ export interface CreateProjectRequest {
   readonly settings?: ProjectSettingsRequest;
 }
 
+export interface RelocateProjectRequest {
+  readonly repositoryPath: string;
+}
+
 export interface ProjectResponse {
   readonly id: Uuid;
   readonly displayName: string;

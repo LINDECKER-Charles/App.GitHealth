@@ -144,7 +144,7 @@ describe('GitHealthApiClient', () => {
     expect(await result).toEqual(expected);
   });
 
-  it('creates a project and updates its settings', async () => {
+  it('creates and configures a project', async () => {
     const creation: CreateProjectRequest = {
       displayName: project.displayName,
       repositoryPath: project.repositoryPath,
@@ -163,6 +163,20 @@ describe('GitHealthApiClient', () => {
     expect(updateRequest.request.body).toEqual(settings);
     updateRequest.flush(project);
     expect(await updateResult).toEqual(project);
+  });
+
+  it('relocates a project', async () => {
+    const relocationResult = firstValueFrom(
+      client.relocateProject(projectId, { repositoryPath: 'D:/Dev/Repo/renamed' }),
+    );
+    const relocationRequest = http.expectOne(`/api/projects/${projectId}/repository`);
+    expect(relocationRequest.request.method).toBe('PUT');
+    expect(relocationRequest.request.body).toEqual({ repositoryPath: 'D:/Dev/Repo/renamed' });
+    relocationRequest.flush({ ...project, repositoryPath: 'D:/Dev/Repo/renamed' });
+    expect(await relocationResult).toMatchObject({
+      id: projectId,
+      repositoryPath: 'D:/Dev/Repo/renamed',
+    });
   });
 
   it('launches an analysis and gets its status', async () => {

@@ -31,12 +31,15 @@
     @if (!currentProject.isRepositoryAccessible) {
       <aside class="repository-notice" role="note">
         <strong>Le dépôt est actuellement inaccessible.</strong>
-        La politique reste modifiable à partir du dernier snapshot enregistré.
+        La politique reste modifiable à partir du dernier snapshot enregistré. Relocalisez-le
+        ci-dessous pour reprendre les analyses sans perdre cet historique.
       </aside>
     }
 
+    <app-repository-relocation [project]="currentProject" (relocated)="applyRelocation($event)" />
+
     <div class="settings-workbench">
-      <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <form class="policy-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
         <section aria-labelledby="thresholds-title">
           <div class="section-heading">
             <div>

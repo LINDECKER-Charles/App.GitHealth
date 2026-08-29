@@ -22,4 +22,13 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
+
+  it('should expose the local database backup', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const link = fixture.nativeElement.querySelector('.backup-action') as HTMLAnchorElement;
+
+    expect(link.getAttribute('href')).toBe('/api/exports/database');
+    expect(link.hasAttribute('download')).toBe(true);
+  });
 });
