@@ -23,12 +23,15 @@ services:
         source: githealth-data
         target: /data
       - type: bind
-        source: ${GITHEALTH_REPOSITORIES_ROOT:-.}
+        source: ${GITHEALTH_REPOSITORIES_ROOT:?explicit-host-path-required}
         target: /repositories
         read_only: true
         bind:
           create_host_path: false
     read_only: true
+    cap_drop:
+      - ALL
+    pids_limit: 128
     tmpfs:
       - /tmp:size=64m,mode=1777
     security_opt:

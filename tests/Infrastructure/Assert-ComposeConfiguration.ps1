@@ -23,9 +23,11 @@ $dockerConfigPath = Join-Path (
 ) "githealth-docker-config-$([Guid]::NewGuid().ToString('N'))"
 $previousDockerConfig = $env:DOCKER_CONFIG
 $previousHttpPort = $env:GITHEALTH_HTTP_PORT
+$previousRepositoryRoot = $env:GITHEALTH_REPOSITORIES_ROOT
 [System.IO.Directory]::CreateDirectory($dockerConfigPath) | Out-Null
 $env:DOCKER_CONFIG = $dockerConfigPath
 $env:GITHEALTH_HTTP_PORT = "8080"
+$env:GITHEALTH_REPOSITORIES_ROOT = $repositoryRoot
 
 Push-Location $repositoryRoot
 try {
@@ -41,6 +43,10 @@ try {
     Assert-True (
         $service.read_only
     ) "Le système de fichiers du conteneur doit être en lecture seule."
+    Assert-Equal 128 $service.pids_limit "Le nombre de processus doit être plafonné."
+    Assert-True (
+        @($service.cap_drop) -contains "ALL"
+    ) "Toutes les capabilities Linux doivent être retirées."
 
     $ports = @($service.ports)
     Assert-Equal 1 $ports.Count "Un seul port doit être publié."
@@ -84,6 +90,7 @@ try {
 finally {
     $env:DOCKER_CONFIG = $previousDockerConfig
     $env:GITHEALTH_HTTP_PORT = $previousHttpPort
+    $env:GITHEALTH_REPOSITORIES_ROOT = $previousRepositoryRoot
     Pop-Location
     $resolvedDockerConfig = [System.IO.Path]::GetFullPath($dockerConfigPath)
     $temporaryRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
