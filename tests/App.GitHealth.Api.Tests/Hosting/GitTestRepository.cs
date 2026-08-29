@@ -73,6 +73,14 @@ public sealed class GitTestRepository : IDisposable
         Run("branch", branchName, MainBranch);
     }
 
+    public void AddMainCommit()
+    {
+        CommitFile(
+            "source-identity.txt",
+            "source repository identity",
+            "add source identity");
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(RootPath))

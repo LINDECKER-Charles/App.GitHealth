@@ -31,10 +31,12 @@ internal sealed class SqliteDatabaseBackupService(SqliteConnectionFactory connec
 
     private async Task CreateBackupAsync(string path, CancellationToken cancellationToken)
     {
+        PrivateFilePermissions.CreateFile(path);
         await using var source = connectionFactory.CreateConnection();
         await using var target = new SqliteConnection(BuildBackupConnectionString(path));
         await source.OpenAsync(cancellationToken);
         await target.OpenAsync(cancellationToken);
+        PrivateFilePermissions.EnsureFile(path);
         cancellationToken.ThrowIfCancellationRequested();
         source.BackupDatabase(target);
         await NormalizeJournalAsync(target, cancellationToken);
@@ -67,9 +69,9 @@ internal sealed class SqliteDatabaseBackupService(SqliteConnectionFactory connec
 
     private static string CreateTemporaryPath()
     {
-        var directory = Path.Combine(Path.GetTempPath(), "GitHealth", "backups");
-        Directory.CreateDirectory(directory);
-        return Path.Combine(directory, $"{Guid.NewGuid():N}.db");
+        var directory = PrivateFilePermissions.CreateTemporaryDirectory(
+            "githealth-backup-");
+        return Path.Combine(directory, "backup.db");
     }
 
     private static string BuildBackupConnectionString(string path)
@@ -77,7 +79,7 @@ internal sealed class SqliteDatabaseBackupService(SqliteConnectionFactory connec
         return new SqliteConnectionStringBuilder
         {
             DataSource = path,
-            Mode = SqliteOpenMode.ReadWriteCreate,
+            Mode = SqliteOpenMode.ReadWrite,
             ForeignKeys = true,
             Pooling = false,
         }.ToString();
@@ -88,5 +90,10 @@ internal sealed class SqliteDatabaseBackupService(SqliteConnectionFactory connec
         File.Delete(path);
         File.Delete(path + "-wal");
         File.Delete(path + "-shm");
+        var directory = Path.GetDirectoryName(path);
+        if (directory is not null)
+        {
+            Directory.Delete(directory);
+        }
     }
 }

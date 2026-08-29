@@ -15,6 +15,16 @@ public sealed class RepositoryContractsTests
     }
 
     [Fact]
+    public void ScanRequestRejectsAnExcessivelyLongBranchPattern()
+    {
+        var reference = new GitRef("refs/heads/main");
+        var pattern = "refs/heads/" + new string('a', 512);
+
+        Assert.Throws<ArgumentException>(() =>
+            new RepositoryScanRequest("repo", reference, pattern));
+    }
+
+    [Fact]
     public void ScanMetadataRequiresUtcAndGitVersion()
     {
         var localTime = new DateTimeOffset(2026, 8, 28, 12, 0, 0, TimeSpan.FromHours(2));

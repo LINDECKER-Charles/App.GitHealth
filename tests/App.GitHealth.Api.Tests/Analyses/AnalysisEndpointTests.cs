@@ -43,6 +43,58 @@ public sealed class AnalysisEndpointTests
         await ApiTestWorkflow.WaitForStatusAsync(client, first.Id, "Completed");
     }
 
+    [Fact]
+    public async Task AnalysisStopsAtTheConfiguredGlobalTimeout()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 0);
+        var scanner = CreateControlledScanner(repository.RepositoryPath);
+        using var factory = new ApiApplicationFactory
+        {
+            RepositoriesRoot = repository.RootPath,
+            AnalysisTimeoutSeconds = 1,
+            TestServices = services => ReplaceScanner(services, scanner),
+        };
+        using var client = factory.CreateClient();
+        var projectId = await ApiTestWorkflow.CreateProjectAsync(
+            client,
+            repository.RepositoryPath);
+
+        var launch = await ApiTestWorkflow.LaunchAsync(client, projectId);
+        using var response = launch.Response;
+        var status = await ApiTestWorkflow.WaitForStatusAsync(client, launch.Id, "Failed");
+
+        Assert.Equal("analysis.timed_out", status.GetProperty("failureCode").GetString());
+        scanner.Release();
+    }
+
+    [Fact]
+    public async Task AnalysisRevalidatesGitMetadataBeforeScanning()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 0);
+        using var outside = GitTestRepository.Create(aheadBranchCount: 0);
+        var scanner = new RelocatedMetadataScanner(
+            repository.RepositoryPath,
+            outside.RepositoryPath);
+        using var factory = new ApiApplicationFactory
+        {
+            RepositoriesRoot = repository.RootPath,
+            TestServices = services => ReplaceScanner(services, scanner),
+        };
+        using var client = factory.CreateClient();
+        var projectId = await ApiTestWorkflow.CreateProjectAsync(
+            client,
+            repository.RepositoryPath);
+
+        var launch = await ApiTestWorkflow.LaunchAsync(client, projectId);
+        using var response = launch.Response;
+        var status = await ApiTestWorkflow.WaitForStatusAsync(client, launch.Id, "Failed");
+
+        Assert.Equal(
+            "repository.path_not_allowed",
+            status.GetProperty("failureCode").GetString());
+        Assert.False(scanner.WasScanned);
+    }
+
     private static ApiApplicationFactory CreateFactory(
         string repositoriesRoot,
         ControlledRepositoryScanner scanner) => new()
@@ -87,5 +139,47 @@ public sealed class AnalysisEndpointTests
         var status = await client.GetFromJsonAsync<JsonElement>(
             $"/api/analyses/{analysisId}");
         Assert.Equal(expectedPhase, status.GetProperty("phase").GetString());
+    }
+
+    private sealed class RelocatedMetadataScanner(
+        string repositoryPath,
+        string outsidePath) : IRepositoryScanner
+    {
+        private int _inspectionCount;
+
+        public bool WasScanned { get; private set; }
+
+        public Task<RepositoryResult<RepositoryDescriptor>> InspectAsync(
+            string path,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var gitDirectory = Interlocked.Increment(ref _inspectionCount) == 1
+                ? Path.Combine(repositoryPath, ".git")
+                : Path.Combine(outsidePath, ".git");
+            var reference = new GitRef("refs/heads/main");
+            var location = new RepositoryLocation(repositoryPath, gitDirectory, repositoryPath);
+            var descriptor = new RepositoryDescriptor(location, reference, [reference]);
+            return Task.FromResult(RepositoryResults.Success(descriptor));
+        }
+
+        public Task<RepositoryResult<bool>> ContainsCommitAsync(
+            string path,
+            CommitId commit,
+            CancellationToken cancellationToken)
+        {
+            _ = path;
+            _ = commit;
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(RepositoryResults.Success(true));
+        }
+
+        public Task<RepositoryResult<RepositoryScan>> ScanAsync(
+            RepositoryScanRequest request,
+            CancellationToken cancellationToken)
+        {
+            WasScanned = true;
+            throw new InvalidOperationException("Le scan ne doit pas être lancé.");
+        }
     }
 }

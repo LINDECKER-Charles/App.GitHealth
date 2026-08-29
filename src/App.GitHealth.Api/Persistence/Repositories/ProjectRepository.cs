@@ -42,6 +42,23 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<string?> GetLastSuccessfulReferenceCommitAsync(
+        Guid projectId,
+        CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var analysisId = await context.Projects.AsNoTracking()
+            .Where(project => project.Id == projectId)
+            .Select(project => project.LastSuccessfulAnalysisId)
+            .SingleOrDefaultAsync(cancellationToken);
+        return analysisId is null
+            ? null
+            : await context.AnalysisRuns.AsNoTracking()
+                .Where(analysis => analysis.Id == analysisId.Value)
+                .Select(analysis => analysis.ReferenceCommit)
+                .SingleOrDefaultAsync(cancellationToken);
+    }
+
     public Task RelocateAsync(
         ProjectRelocation relocation,
         CancellationToken cancellationToken)

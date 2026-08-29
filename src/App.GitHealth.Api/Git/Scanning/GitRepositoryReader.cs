@@ -1,5 +1,6 @@
 using App.GitHealth.Api.Git.Models;
 using App.GitHealth.Api.Git.Parsing;
+using App.GitHealth.Api.Git.Paths;
 using App.GitHealth.Api.Git.Process;
 using App.GitHealth.Core.Analysis;
 
@@ -13,20 +14,36 @@ internal static class GitRepositoryReader
 
     public static async Task<CapturedRepository> CaptureAsync(
         IGitProcessRunner runner,
-        string repositoryPath,
+        GitRepositoryCaptureRequest request,
         CancellationToken cancellationToken)
     {
-        if (!Directory.Exists(repositoryPath))
+        if (!Directory.Exists(request.RepositoryPath))
         {
             throw new GitProcessException(
                 RepositoryErrorCode.PathNotFound,
                 "Le chemin du dépôt n’existe pas.");
         }
 
-        var context = await LocateAsync(runner, repositoryPath, cancellationToken);
+        EnsureInputAllowed(request.RepositoriesRoot, request.RepositoryPath);
+        var context = await LocateAsync(runner, request.RepositoryPath, cancellationToken);
+        RepositoryPathGuard.EnsureAllowed(request.RepositoriesRoot, context);
+        await GitObjectDatabaseGuard.EnsureAllowedAsync(
+            request.RepositoriesRoot,
+            context.ObjectDirectory,
+            cancellationToken);
         var version = await ReadVersionAsync(runner, cancellationToken);
         var references = await ReadReferencesAsync(runner, context, cancellationToken);
         return new CapturedRepository(context, version, references);
+    }
+
+    private static void EnsureInputAllowed(string? repositoriesRoot, string repositoryPath)
+    {
+        if (!RepositoryPathGuard.IsAllowed(repositoriesRoot, repositoryPath))
+        {
+            throw new GitProcessException(
+                RepositoryErrorCode.PathNotAllowed,
+                "Le dépôt se trouve hors de la racine autorisée.");
+        }
     }
 
     private static async Task<GitRepositoryContext> LocateAsync(
@@ -37,7 +54,7 @@ internal static class GitRepositoryReader
         var fullPath = Path.GetFullPath(repositoryPath);
         var result = await RunAsync(
             runner,
-            ["-C", fullPath, "rev-parse", "--absolute-git-dir", "--is-bare-repository"],
+            CreateLocationArguments(fullPath),
             cancellationToken);
         if (result.ExitCode != 0)
         {
@@ -46,27 +63,42 @@ internal static class GitRepositoryReader
                 "Le chemin ne correspond pas à un dépôt Git lisible.");
         }
 
-        var (gitDirectory, isBare) = ParseLocation(result.StandardOutput);
+        var (metadataPaths, isBare) = ParseLocation(result.StandardOutput);
         if (isBare)
         {
-            return new GitRepositoryContext(fullPath, gitDirectory, null);
+            return new GitRepositoryContext(fullPath, null, metadataPaths);
         }
 
         var worktree = await ReadWorkingTreeAsync(runner, fullPath, cancellationToken);
-        return new GitRepositoryContext(fullPath, gitDirectory, worktree);
+        return new GitRepositoryContext(fullPath, worktree, metadataPaths);
     }
 
-    private static (string GitDirectory, bool IsBare) ParseLocation(string output)
+    private static string[] CreateLocationArguments(string fullPath) =>
+    [
+        "-C",
+        fullPath,
+        "rev-parse",
+        "--path-format=absolute",
+        "--absolute-git-dir",
+        "--git-common-dir",
+        "--git-path",
+        "objects",
+        "--is-bare-repository",
+    ];
+
+    private static (GitRepositoryMetadataPaths MetadataPaths, bool IsBare) ParseLocation(
+        string output)
     {
         var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
-        if (lines.Length != 2 || !bool.TryParse(lines[1], out var isBare))
+        if (lines.Length != 4 || !bool.TryParse(lines[3], out var isBare))
         {
             throw new GitProcessException(
                 RepositoryErrorCode.MalformedOutput,
                 "Git a retourné une localisation de dépôt invalide.");
         }
 
-        return (Path.GetFullPath(lines[0]), isBare);
+        var metadataPaths = new GitRepositoryMetadataPaths(lines[0], lines[1], lines[2]);
+        return (metadataPaths, isBare);
     }
 
     private static async Task<string> ReadWorkingTreeAsync(

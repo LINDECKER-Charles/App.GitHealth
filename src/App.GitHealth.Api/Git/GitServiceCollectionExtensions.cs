@@ -1,6 +1,7 @@
 using App.GitHealth.Api.Git.Process;
 using App.GitHealth.Core.Analysis;
 using App.GitHealth.Core.Common;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace App.GitHealth.Api.Git;
 
@@ -12,10 +13,13 @@ public static class GitServiceCollectionExtensions
     {
         services.AddOptions<GitScannerOptions>()
             .Bind(configuration.GetSection("GitHealth:Git"))
-            .Validate(options => options.CommandTimeout > TimeSpan.Zero, "Délai Git invalide.")
-            .Validate(options => options.MaximumOutputCharacters > 0, "Limite Git invalide.")
-            .Validate(options => options.MaximumParallelCommands > 0, "Concurrence Git invalide.")
+            .PostConfigure(options =>
+                options.RepositoriesRoot = configuration["GitHealth:RepositoriesRoot"])
             .ValidateOnStart();
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<
+                Microsoft.Extensions.Options.IValidateOptions<GitScannerOptions>,
+                GitScannerOptionsValidator>());
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IGitProcessRunner, GitProcessRunner>();
         services.AddSingleton<IRepositoryScanner, GitRepositoryScanner>();

@@ -25,4 +25,12 @@ public sealed class GitRefTests
     {
         Assert.Throws<ArgumentException>(() => new GitRef(value));
     }
+
+    [Fact]
+    public void ConstructorRejectsAnExcessivelyLongReference()
+    {
+        var value = "refs/heads/" + new string('a', GitRef.MaximumLength);
+
+        Assert.Throws<ArgumentException>(() => new GitRef(value));
+    }
 }

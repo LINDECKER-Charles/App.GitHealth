@@ -4,7 +4,7 @@ using DiagnosticsProcess = System.Diagnostics.Process;
 
 namespace App.GitHealth.Git.IntegrationTests.Fixtures;
 
-internal sealed class GitTestRepository : IDisposable
+internal sealed partial class GitTestRepository : IDisposable
 {
     private readonly string _containerPath;
     private int _commitSequence;
@@ -57,6 +57,14 @@ internal sealed class GitTestRepository : IDisposable
         var path = Path.Combine(_containerPath, "linked-worktree");
         RunGit("worktree", "add", path, "feature/ahead");
         return path;
+    }
+
+    public void MoveMetadataOutsideRepository()
+    {
+        var metadata = Path.Combine(RepositoryPath, ".git");
+        var externalMetadata = Path.Combine(_containerPath, "external-metadata");
+        Directory.Move(metadata, externalMetadata);
+        File.WriteAllText(metadata, $"gitdir: {externalMetadata}\n");
     }
 
     public string CreateRepositoryLink()

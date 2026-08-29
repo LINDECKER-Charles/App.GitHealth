@@ -2,11 +2,15 @@ namespace App.GitHealth.Core.Branches;
 
 public sealed record GitRef
 {
+    public const int MaximumLength = 1024;
+
     public GitRef(string fullName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(fullName);
 
-        if (!TryGetKind(fullName, out var kind) || HasInvalidCharacters(fullName))
+        if (fullName.Length > MaximumLength
+            || !TryGetKind(fullName, out var kind)
+            || HasInvalidCharacters(fullName))
         {
             throw new ArgumentException(
                 "La référence doit être une branche locale ou distante Git valide.",

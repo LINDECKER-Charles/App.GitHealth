@@ -18,7 +18,8 @@ public sealed class GitTopologyReaderTests
         var reference = Capture("refs/heads/main", "aaaaaa");
         var branch = Capture("refs/heads/feature", "bbbbbb");
         var path = Environment.CurrentDirectory;
-        var context = new GitRepositoryContext(path, path, path);
+        var metadata = new GitRepositoryMetadataPaths(path, path, path);
+        var context = new GitRepositoryContext(path, path, metadata);
         var repository = new CapturedRepository(
             context,
             "git version 2.53.0",

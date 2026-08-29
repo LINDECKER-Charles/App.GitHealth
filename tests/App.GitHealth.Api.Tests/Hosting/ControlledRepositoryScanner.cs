@@ -30,6 +30,17 @@ public sealed class ControlledRepositoryScanner(
             descriptor ?? CreateDescriptor(repositoryPath)));
     }
 
+    public Task<RepositoryResult<bool>> ContainsCommitAsync(
+        string repositoryPath,
+        CommitId commit,
+        CancellationToken cancellationToken)
+    {
+        _ = repositoryPath;
+        _ = commit;
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(RepositoryResults.Success(true));
+    }
+
     public Task<RepositoryResult<RepositoryScan>> ScanAsync(
         RepositoryScanRequest request,
         CancellationToken cancellationToken) =>

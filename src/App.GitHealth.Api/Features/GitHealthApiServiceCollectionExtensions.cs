@@ -19,6 +19,7 @@ internal static class GitHealthApiServiceCollectionExtensions
         services.AddOptions<AnalysisQueueOptions>()
             .Bind(configuration.GetSection(AnalysisQueueOptions.SectionName))
             .Validate(IsQueueCapacityValid, "Capacité de file d’analyses invalide.")
+            .Validate(IsAnalysisTimeoutValid, "Délai global d’analyse invalide.")
             .ValidateOnStart();
         services.AddSingleton<RepositoryValidator>();
         services.AddScoped<ProjectService>();
@@ -34,6 +35,10 @@ internal static class GitHealthApiServiceCollectionExtensions
 
     private static bool IsQueueCapacityValid(AnalysisQueueOptions options) =>
         options.Capacity is > 0 and <= AnalysisQueueOptions.MaximumCapacity;
+
+    private static bool IsAnalysisTimeoutValid(AnalysisQueueOptions options) =>
+        options.TimeoutSeconds is >= AnalysisQueueOptions.MinimumTimeoutSeconds
+            and <= AnalysisQueueOptions.MaximumTimeoutSeconds;
 
     private static void ConfigureProblemDetails(ProblemDetailsOptions options)
     {

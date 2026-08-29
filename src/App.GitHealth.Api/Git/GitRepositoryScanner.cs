@@ -33,10 +33,7 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
     {
         try
         {
-            var repository = await GitRepositoryReader.CaptureAsync(
-                _runner,
-                repositoryPath,
-                cancellationToken);
+            var repository = await CaptureAsync(repositoryPath, cancellationToken);
             return RepositoryResults.Success(ToDescriptor(repository));
         }
         catch (GitProcessException exception)
@@ -49,6 +46,34 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
         {
             return RepositoryResults.Failure<RepositoryDescriptor>(
                 new RepositoryError(RepositoryErrorCode.PathNotFound, exception.Message));
+        }
+    }
+
+    public async Task<RepositoryResult<bool>> ContainsCommitAsync(
+        string repositoryPath,
+        CommitId commit,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(commit);
+        try
+        {
+            var repository = await CaptureAsync(repositoryPath, cancellationToken);
+            var isPresent = await ContainsCapturedCommitAsync(
+                repository,
+                commit,
+                cancellationToken);
+            return RepositoryResults.Success(isPresent);
+        }
+        catch (GitProcessException exception)
+        {
+            return RepositoryResults.Failure<bool>(
+                new RepositoryError(exception.Code, exception.Message));
+        }
+        catch (Exception exception) when (exception is ArgumentException
+            or IOException or UnauthorizedAccessException)
+        {
+            return RepositoryResults.Failure<bool>(
+                new RepositoryError(RepositoryErrorCode.MalformedOutput, exception.Message));
         }
     }
 
@@ -68,10 +93,7 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
 
         try
         {
-            var repository = await GitRepositoryReader.CaptureAsync(
-                _runner,
-                request.RepositoryPath,
-                cancellationToken);
+            var repository = await CaptureAsync(request.RepositoryPath, cancellationToken);
             var execution = new RepositoryScanExecution(request, progress);
             var scan = await ScanCapturedAsync(repository, execution, cancellationToken);
             return RepositoryResults.Success(scan);
@@ -87,6 +109,31 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
             return RepositoryResults.Failure<RepositoryScan>(
                 new RepositoryError(RepositoryErrorCode.MalformedOutput, exception.Message));
         }
+    }
+
+    private Task<CapturedRepository> CaptureAsync(
+        string repositoryPath,
+        CancellationToken cancellationToken)
+    {
+        var request = new GitRepositoryCaptureRequest(
+            repositoryPath,
+            _options.RepositoriesRoot);
+        return GitRepositoryReader.CaptureAsync(_runner, request, cancellationToken);
+    }
+
+    private async Task<bool> ContainsCapturedCommitAsync(
+        CapturedRepository repository,
+        CommitId commit,
+        CancellationToken cancellationToken)
+    {
+        var expression = $"{commit.Value}^{{commit}}";
+        var arguments = new[]
+        {
+            "-C", repository.Context.InvocationPath, "cat-file", "-e", "--", expression,
+        };
+        var command = GitCommand.Create(Environment.CurrentDirectory, arguments);
+        var result = await _runner.RunAsync(command, cancellationToken);
+        return result.ExitCode == 0;
     }
 
     private async Task<RepositoryScan> ScanCapturedAsync(

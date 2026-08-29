@@ -12,10 +12,16 @@ public sealed record RepositoryScanRequest
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryPath);
         ArgumentNullException.ThrowIfNull(reference);
         ArgumentException.ThrowIfNullOrWhiteSpace(branchPattern);
+        if (branchPattern.Length > Projects.ProjectSettings.MaximumBranchNamespaceLength)
+        {
+            throw new ArgumentException(
+                "Le périmètre de branches est trop long.",
+                nameof(branchPattern));
+        }
 
         RepositoryPath = repositoryPath;
         Reference = reference;
-        BranchPattern = branchPattern;
+        BranchPattern = branchPattern.Trim();
     }
 
     public string RepositoryPath { get; }

@@ -29,4 +29,15 @@ public sealed class BranchPolicyValidationTests
 
         Assert.False(result.IsProtected);
     }
+
+    [Fact]
+    public void CreateRejectsTooManyOrExcessivelyLongPatterns()
+    {
+        var tooMany = Enumerable.Range(0, BranchPolicy.MaximumPatternCount + 1)
+            .Select(index => $"refs/heads/feature-{index}/*");
+        var tooLong = "refs/heads/" + new string('a', BranchPolicy.MaximumPatternLength);
+
+        Assert.Throws<ArgumentException>(() => BranchPolicy.Create(tooMany, []));
+        Assert.Throws<ArgumentException>(() => BranchPolicy.Create([], [tooLong]));
+    }
 }

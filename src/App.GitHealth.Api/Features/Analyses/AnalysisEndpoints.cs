@@ -21,8 +21,8 @@ internal static class AnalysisEndpoints
         CancellationToken cancellationToken)
     {
         var result = await queue.EnqueueAsync(projectId, cancellationToken);
-        if (result.Kind is AnalysisEnqueueKind.ProjectNotFound
-            or AnalysisEnqueueKind.QueueFull)
+        if (result.Kind is not (
+            AnalysisEnqueueKind.Accepted or AnalysisEnqueueKind.Duplicate))
         {
             return Failure(result.Kind);
         }
@@ -37,6 +37,13 @@ internal static class AnalysisEndpoints
             return ApiProblems.Result(ApiProblems.NotFound(
                 ApiErrorCodes.ProjectNotFound,
                 "Le projet demandé n’existe pas."));
+        }
+
+        if (kind == AnalysisEnqueueKind.ProjectBusy)
+        {
+            return ApiProblems.Result(ApiProblems.Conflict(
+                ApiErrorCodes.ProjectBusy,
+                "Le projet est réservé par une relocalisation en cours."));
         }
 
         return ApiProblems.Result(ApiProblems.Unavailable(

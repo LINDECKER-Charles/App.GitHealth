@@ -20,11 +20,7 @@ internal sealed class DatabaseInstanceLease(
             EnsureLockDirectory();
             try
             {
-                _lockStream = new FileStream(
-                    LockPath,
-                    FileMode.OpenOrCreate,
-                    FileAccess.ReadWrite,
-                    FileShare.None);
+                _lockStream = PrivateFilePermissions.OpenOrCreateExclusive(LockPath);
             }
             catch (IOException exception) when (IsSharingViolation(exception))
             {
@@ -48,7 +44,7 @@ internal sealed class DatabaseInstanceLease(
     {
         var directory = Path.GetDirectoryName(LockPath)
             ?? throw new InvalidOperationException("Le dossier SQLite est introuvable.");
-        Directory.CreateDirectory(directory);
+        PrivateFilePermissions.EnsureDirectory(directory);
     }
 
     private static bool IsSharingViolation(IOException exception)

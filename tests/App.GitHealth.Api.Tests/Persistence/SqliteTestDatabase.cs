@@ -1,6 +1,7 @@
 using System.Globalization;
 using App.GitHealth.Api.Persistence;
 using App.GitHealth.Api.Persistence.Services;
+using App.GitHealth.Core.Common;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,8 +80,14 @@ internal sealed class SqliteTestDatabase : IAsyncDisposable
             .Build();
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddSingleton<IClock, PersistenceTestClock>();
         services.AddSingleton<IHostEnvironment>(new TestHostEnvironment(rootPath));
         services.AddPersistence(configuration);
         return services.BuildServiceProvider(true);
+    }
+
+    private sealed class PersistenceTestClock : IClock
+    {
+        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
     }
 }

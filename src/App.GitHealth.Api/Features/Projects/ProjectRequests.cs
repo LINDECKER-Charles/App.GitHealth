@@ -11,6 +11,11 @@ internal sealed record CreateProjectRequest
     public ProjectSettingsRequest? Settings { get; init; }
 }
 
+internal sealed record RelocateProjectRequest
+{
+    public string? RepositoryPath { get; init; }
+}
+
 internal sealed record ProjectSettingsRequest
 {
     public string? ReferenceName { get; init; }

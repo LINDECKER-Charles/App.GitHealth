@@ -2,6 +2,7 @@ using App.GitHealth.Core.Branches;
 
 namespace App.GitHealth.Core.Tests.Branches;
 
+// Shared fixture builder for branch classification scenarios.
 internal static class BranchFactsBuilder
 {
     public static BranchFacts Create(

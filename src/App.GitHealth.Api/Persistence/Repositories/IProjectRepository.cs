@@ -13,6 +13,10 @@ internal interface IProjectRepository
 
     Task<ProjectEntity?> GetAsync(Guid projectId, CancellationToken cancellationToken);
 
+    Task<string?> GetLastSuccessfulReferenceCommitAsync(
+        Guid projectId,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<ProjectEntity>> ListAsync(CancellationToken cancellationToken);
 
     Task RelocateAsync(ProjectRelocation relocation, CancellationToken cancellationToken);

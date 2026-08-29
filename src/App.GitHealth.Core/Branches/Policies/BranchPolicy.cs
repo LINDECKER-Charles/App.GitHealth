@@ -2,6 +2,9 @@ namespace App.GitHealth.Core.Branches;
 
 public sealed record BranchPolicy
 {
+    public const int MaximumPatternCount = 64;
+    public const int MaximumPatternLength = 512;
+
     private BranchPolicy(
         IReadOnlyList<string> excludedPatterns,
         IReadOnlyList<string> protectedPatterns)
@@ -30,18 +33,38 @@ public sealed record BranchPolicy
         string parameterName)
     {
         ArgumentNullException.ThrowIfNull(patterns, parameterName);
-        var copy = patterns.Select(pattern =>
+        var copy = patterns.Take(MaximumPatternCount + 1).ToArray();
+        if (copy.Length > MaximumPatternCount)
         {
-            if (string.IsNullOrWhiteSpace(pattern))
-            {
-                throw new ArgumentException(
-                    "Un motif de branche ne peut pas être vide.",
-                    parameterName);
-            }
+            throw new ArgumentException(
+                $"Une politique accepte au plus {MaximumPatternCount} motifs.",
+                parameterName);
+        }
 
-            return pattern.Trim();
-        }).Distinct(StringComparer.Ordinal).ToArray();
+        var normalized = copy
+            .Select(pattern => NormalizePattern(pattern, parameterName))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
 
-        return Array.AsReadOnly(copy);
+        return Array.AsReadOnly(normalized);
+    }
+
+    private static string NormalizePattern(string pattern, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            throw new ArgumentException(
+                "Un motif de branche ne peut pas être vide.",
+                parameterName);
+        }
+
+        if (pattern.Length > MaximumPatternLength)
+        {
+            throw new ArgumentException(
+                $"Un motif ne peut pas dépasser {MaximumPatternLength} caractères.",
+                parameterName);
+        }
+
+        return pattern.Trim();
     }
 }

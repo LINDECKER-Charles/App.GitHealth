@@ -17,6 +17,7 @@ internal enum AnalysisEnqueueKind
     Duplicate,
     QueueFull,
     ProjectNotFound,
+    ProjectBusy,
 }
 
 internal sealed record AnalysisWorkItem(Guid AnalysisId, Guid ProjectId);
@@ -25,6 +26,21 @@ internal sealed record AnalysisEnqueueResult(
     AnalysisEnqueueKind Kind,
     Guid? AnalysisId,
     bool IsDuplicate);
+
+internal sealed class ProjectOperationReservation(
+    AnalysisQueue queue,
+    Guid projectId) : IAsyncDisposable
+{
+    private int _isDisposed;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref _isDisposed, 1) == 0)
+        {
+            await queue.ReleaseReservationAsync(projectId);
+        }
+    }
+}
 
 internal sealed record AnalysisProgressSnapshot
 {

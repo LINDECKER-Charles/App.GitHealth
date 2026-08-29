@@ -30,6 +30,37 @@ public sealed class DatabaseBackupTests
         Assert.Equal("ok", await ReadTextAsync(backup, "PRAGMA integrity_check;"));
     }
 
+    [Fact]
+    public void TemporaryBackupFilesAreOwnerOnlyOnUnix()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var directory = Path.Combine(
+            Path.GetTempPath(),
+            "GitHealth-permissions-tests",
+            Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "backup.db");
+        try
+        {
+            PrivateFilePermissions.EnsureDirectory(directory);
+            PrivateFilePermissions.CreateFile(path);
+
+            Assert.Equal(
+                UnixFileMode.UserRead | UnixFileMode.UserWrite,
+                File.GetUnixFileMode(path));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
     private static async Task AddProjectAsync(SqliteTestDatabase database)
     {
         await using var scope = database.CreateScope();

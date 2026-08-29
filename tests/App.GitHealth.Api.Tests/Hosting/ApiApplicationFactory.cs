@@ -1,4 +1,5 @@
 using System.Globalization;
+using App.GitHealth.Api.Tests.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -13,6 +14,7 @@ namespace App.GitHealth.Api.Tests.Hosting;
 public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
 {
     private const int DefaultQueueCapacity = 32;
+    private const int DefaultAnalysisTimeoutSeconds = 300;
     private readonly string _directory = Path.Combine(
         Path.GetTempPath(),
         "GitHealth-api-tests",
@@ -27,10 +29,17 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
 
     public int QueueCapacity { get; init; } = DefaultQueueCapacity;
 
+    public int AnalysisTimeoutSeconds { get; init; } = DefaultAnalysisTimeoutSeconds;
+
     public Action<IServiceCollection>? TestServices { get; init; }
 
     public Task StopHostAsync(CancellationToken cancellationToken) =>
         _host?.StopAsync(cancellationToken) ?? Task.CompletedTask;
+
+    public new HttpClient CreateClient() =>
+        CreateDefaultClient(new LocalSessionHandler());
+
+    public HttpClient CreateRawClient() => base.CreateClient();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -43,6 +52,8 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
                 ["GitHealth:InitialRepositoryPath"] = InitialRepositoryPath,
                 ["GitHealth:RepositoriesRoot"] = RepositoriesRoot,
                 ["AnalysisQueue:Capacity"] = QueueCapacity.ToString(
+                    CultureInfo.InvariantCulture),
+                ["AnalysisQueue:TimeoutSeconds"] = AnalysisTimeoutSeconds.ToString(
                     CultureInfo.InvariantCulture),
             });
         });

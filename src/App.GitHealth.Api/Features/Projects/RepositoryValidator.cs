@@ -1,5 +1,7 @@
 using App.GitHealth.Api.Features.Common;
+using App.GitHealth.Api.Git.Paths;
 using App.GitHealth.Core.Analysis;
+using App.GitHealth.Core.Branches;
 using Microsoft.Extensions.Options;
 
 namespace App.GitHealth.Api.Features.Projects;
@@ -8,15 +10,18 @@ internal sealed class RepositoryValidator(
     IRepositoryScanner scanner,
     IOptions<RepositoryAccessOptions> options)
 {
+    internal const int MaximumPathLength = 32768;
+
     public async Task<ApiOutcome<RepositoryDescriptor>> ValidateAsync(
         string? repositoryPath,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(repositoryPath))
+        if (string.IsNullOrWhiteSpace(repositoryPath)
+            || repositoryPath.Length > MaximumPathLength)
         {
             return ApiOutcome<RepositoryDescriptor>.Failed(ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidPath,
-                "Le chemin du dépôt est obligatoire."));
+                "Le chemin du dépôt est absent ou trop long."));
         }
 
         var accessFailure = CheckAccess(repositoryPath);
@@ -32,10 +37,30 @@ internal sealed class RepositoryValidator(
                 ApiProblems.FromRepository(inspected.Error!));
         }
 
-        accessFailure = CheckAccess(descriptor.Location.CanonicalPath);
+        accessFailure = CheckDescriptorAccess(descriptor);
         return accessFailure is null
             ? ApiOutcome<RepositoryDescriptor>.Success(descriptor)
             : ApiOutcome<RepositoryDescriptor>.Failed(accessFailure);
+    }
+
+    public async Task<ApiOutcome<bool>> ContainsCommitAsync(
+        string repositoryPath,
+        CommitId commit,
+        CancellationToken cancellationToken)
+    {
+        var accessFailure = CheckAccess(repositoryPath);
+        if (accessFailure is not null)
+        {
+            return ApiOutcome<bool>.Failed(accessFailure);
+        }
+
+        var result = await scanner.ContainsCommitAsync(
+            repositoryPath,
+            commit,
+            cancellationToken);
+        return result.TryGetValue(out var isPresent)
+            ? ApiOutcome<bool>.Success(isPresent)
+            : ApiOutcome<bool>.Failed(ApiProblems.FromRepository(result.Error!));
     }
 
     private ApiFailure? CheckAccess(string path)
@@ -55,66 +80,31 @@ internal sealed class RepositoryValidator(
 
     private bool IsAllowed(string canonicalRepositoryPath)
     {
-        var configuredRoot = options.Value.RepositoriesRoot;
-        if (string.IsNullOrWhiteSpace(configuredRoot))
-        {
-            return true;
-        }
-
-        var root = Path.GetFullPath(configuredRoot);
-        var repository = Path.GetFullPath(canonicalRepositoryPath);
-        var physicalRoot = ResolveLink(root);
-        var relative = RelativeToKnownRoot(root, physicalRoot, repository);
-        if (relative is null)
-        {
-            return false;
-        }
-
-        var physicalRepository = ResolveFromRoot(physicalRoot, relative);
-        return !LeavesRoot(Path.GetRelativePath(physicalRoot, physicalRepository));
+        return RepositoryPathGuard.IsAllowed(
+            options.Value.RepositoriesRoot,
+            canonicalRepositoryPath);
     }
 
-    private static string? RelativeToKnownRoot(
-        string lexicalRoot,
-        string physicalRoot,
-        string repository)
+    private ApiFailure? CheckDescriptorAccess(RepositoryDescriptor descriptor)
     {
-        var lexicalRelative = Path.GetRelativePath(lexicalRoot, repository);
-        if (!LeavesRoot(lexicalRelative))
+        var paths = new[]
         {
-            return lexicalRelative;
+            descriptor.Location.CanonicalPath,
+            descriptor.Location.GitDirectory,
+            descriptor.Location.WorkingTreePath,
+        };
+        foreach (var path in paths.Where(path => path is not null))
+        {
+            var failure = CheckAccess(path!);
+            if (failure is not null)
+            {
+                return failure with
+                {
+                    Detail = "Le dépôt ou ses métadonnées Git sortent de la racine autorisée.",
+                };
+            }
         }
 
-        var physicalRelative = Path.GetRelativePath(physicalRoot, repository);
-        return LeavesRoot(physicalRelative) ? null : physicalRelative;
+        return null;
     }
-
-    private static string ResolveFromRoot(string physicalRoot, string relativePath)
-    {
-        var current = physicalRoot;
-        foreach (var segment in relativePath.Split(
-            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
-            StringSplitOptions.RemoveEmptyEntries))
-        {
-            current = ResolveLink(Path.Combine(current, segment));
-        }
-
-        return current;
-    }
-
-    private static string ResolveLink(string path)
-    {
-        var directory = new DirectoryInfo(path);
-        if (!directory.Exists)
-        {
-            return directory.FullName;
-        }
-
-        return directory.ResolveLinkTarget(returnFinalTarget: true)?.FullName
-            ?? directory.FullName;
-    }
-
-    private static bool LeavesRoot(string relativePath) => relativePath == ".."
-        || relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-        || Path.IsPathRooted(relativePath);
 }

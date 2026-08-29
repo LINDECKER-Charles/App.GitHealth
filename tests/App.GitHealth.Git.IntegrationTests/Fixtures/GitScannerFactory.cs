@@ -9,12 +9,15 @@ internal static class GitScannerFactory
     private static readonly DateTimeOffset ScanTime =
         new(2026, 8, 28, 12, 0, 0, TimeSpan.Zero);
 
-    public static GitRepositoryScanner Create(bool useAheadBehind = true)
+    public static GitRepositoryScanner Create(
+        bool useAheadBehind = true,
+        string? repositoriesRoot = null)
     {
         var settings = Options.Create(new GitScannerOptions
         {
             UseAheadBehind = useAheadBehind,
         });
+        settings.Value.RepositoriesRoot = repositoriesRoot;
         var runner = new GitProcessRunner(settings);
         return new GitRepositoryScanner(runner, settings, new FixedClock(ScanTime));
     }

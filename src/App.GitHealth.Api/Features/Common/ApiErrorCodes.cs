@@ -9,6 +9,9 @@ internal static class ApiErrorCodes
     public const string DirectoryInaccessible = "runtime.directory_inaccessible";
     public const string DirectoryNotFound = "runtime.directory_not_found";
     public const string EndpointNotFound = "endpoint.not_found";
+    public const string CrossSiteRequest = "security.cross_site_request";
+    public const string InvalidAntiforgeryToken = "security.invalid_antiforgery_token";
+    public const string InvalidHost = "security.invalid_host";
     public const string InvalidDirectory = "runtime.invalid_directory";
     public const string InvalidCursor = "pagination.invalid_cursor";
     public const string InvalidPage = "pagination.invalid_page";
@@ -18,6 +21,8 @@ internal static class ApiErrorCodes
     public const string InvalidRequest = "validation.invalid_request";
     public const string PathNotAllowed = "repository.path_not_allowed";
     public const string ProjectAlreadyExists = "project.already_exists";
+    public const string ProjectBusy = "project.busy";
+    public const string RepositoryIdentityMismatch = "repository.identity_mismatch";
     public const string ProjectNotFound = "project.not_found";
     public const string QueueFull = "analysis.queue_full";
     public const string ScannerUnavailable = "git.unavailable";

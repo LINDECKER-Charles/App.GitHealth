@@ -14,7 +14,9 @@ internal sealed class AnalysisQueue : IDisposable
     private readonly IClock _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly ConcurrentDictionary<Guid, AnalysisProgressSnapshot> _progress = new();
+    private readonly HashSet<Guid> _reservedProjects = [];
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly TimeSpan _timeout;
 
     public AnalysisQueue(
         IServiceScopeFactory scopeFactory,
@@ -23,6 +25,7 @@ internal sealed class AnalysisQueue : IDisposable
     {
         _scopeFactory = scopeFactory;
         _clock = clock;
+        _timeout = TimeSpan.FromSeconds(options.Value.TimeoutSeconds);
         _channel = Channel.CreateBounded<AnalysisWorkItem>(new BoundedChannelOptions(
             options.Value.Capacity)
         {
@@ -33,6 +36,8 @@ internal sealed class AnalysisQueue : IDisposable
     }
 
     public DateTimeOffset UtcNow => _clock.UtcNow;
+
+    public TimeSpan Timeout => _timeout;
 
     public async Task<AnalysisEnqueueResult> EnqueueAsync(
         Guid projectId,
@@ -49,6 +54,14 @@ internal sealed class AnalysisQueue : IDisposable
                     IsDuplicate: true);
             }
 
+            if (_reservedProjects.Contains(projectId))
+            {
+                return new AnalysisEnqueueResult(
+                    AnalysisEnqueueKind.ProjectBusy,
+                    AnalysisId: null,
+                    IsDuplicate: false);
+            }
+
             return await EnqueueLockedAsync(projectId, cancellationToken);
         }
         finally
@@ -59,6 +72,26 @@ internal sealed class AnalysisQueue : IDisposable
 
     public IAsyncEnumerable<AnalysisWorkItem> ReadAllAsync(
         CancellationToken cancellationToken) => _channel.Reader.ReadAllAsync(cancellationToken);
+
+    public async Task<ProjectOperationReservation?> TryReserveProjectAsync(
+        Guid projectId,
+        CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (_activeByProject.ContainsKey(projectId) || !_reservedProjects.Add(projectId))
+            {
+                return null;
+            }
+
+            return new ProjectOperationReservation(this, projectId);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
 
     public bool TryRead(out AnalysisWorkItem? item) => _channel.Reader.TryRead(out item);
 
@@ -94,6 +127,19 @@ internal sealed class AnalysisQueue : IDisposable
     public void Forget(Guid analysisId) => _progress.TryRemove(analysisId, out _);
 
     public void Dispose() => _gate.Dispose();
+
+    internal async ValueTask ReleaseReservationAsync(Guid projectId)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            _reservedProjects.Remove(projectId);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
 
     private async Task<AnalysisEnqueueResult> EnqueueLockedAsync(
         Guid projectId,

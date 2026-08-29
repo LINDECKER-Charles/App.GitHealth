@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using App.GitHealth.Api.Features.Analyses;
 using App.GitHealth.Api.Persistence;
 using App.GitHealth.Api.Persistence.Models;
 using App.GitHealth.Api.Tests.Hosting;
@@ -69,6 +70,32 @@ public sealed class AnalysisQueueEndpointTests
         factory.Dispose();
     }
 
+    [Fact]
+    public async Task LaunchDuringProjectReservationReturnsConflictWithoutStartingRun()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 0);
+        var scanner = CreateScanner();
+        using var factory = CreateFactory(repository.RootPath, scanner, capacity: 1);
+        using var client = factory.CreateClient();
+        var projectId = await ApiTestWorkflow.CreateProjectAsync(
+            client,
+            repository.RepositoryPath);
+        var queue = factory.Services.GetRequiredService<AnalysisQueue>();
+        var reservation = await queue.TryReserveProjectAsync(
+            projectId,
+            CancellationToken.None);
+        Assert.NotNull(reservation);
+        await using var heldReservation = reservation;
+
+        using var response = await client.PostAsync(
+            $"/api/projects/{projectId}/analyses",
+            content: null);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("project.busy", await ApiTestWorkflow.ReadProblemCodeAsync(response));
+        await AssertProjectRunCountAsync(factory, projectId, expected: 0);
+    }
+
     private static ApiApplicationFactory CreateFactory(
         string repositoriesRoot,
         ControlledRepositoryScanner scanner,
@@ -119,6 +146,18 @@ public sealed class AnalysisQueueEndpointTests
             .Select(analysis => analysis.Status)
             .SingleAsync();
         Assert.Equal(expected, status);
+    }
+
+    private static async Task AssertProjectRunCountAsync(
+        ApiApplicationFactory factory,
+        Guid projectId,
+        int expected)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<GitHealthDbContext>();
+        var count = await context.AnalysisRuns.CountAsync(
+            analysis => analysis.ProjectId == projectId);
+        Assert.Equal(expected, count);
     }
 
     private static async Task ChangeWaitingProjectSettingsAsync(

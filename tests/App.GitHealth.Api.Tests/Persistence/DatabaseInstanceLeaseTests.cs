@@ -21,6 +21,7 @@ public sealed class DatabaseInstanceLeaseTests
         try
         {
             AssertLockIsHeld(lease.LockPath);
+            AssertPrivateLock(lease.LockPath);
         }
         finally
         {
@@ -127,6 +128,15 @@ public sealed class DatabaseInstanceLeaseTests
         FileMode.OpenOrCreate,
         FileAccess.ReadWrite,
         FileShare.None);
+
+    private static void AssertPrivateLock(string path)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            var expected = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+            Assert.Equal(expected, File.GetUnixFileMode(path));
+        }
+    }
 
     private sealed class LockObservingMigrationService(string lockPath)
         : IDatabaseMigrationService

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using App.GitHealth.Api.Features.Projects;
 using App.GitHealth.Api.Tests.Hosting;
 
 namespace App.GitHealth.Api.Tests.Projects;
@@ -23,6 +24,29 @@ public sealed class ProjectEndpointTests
             "repository.invalid_path");
         await AssertProblemAsync(client, nonGitPath, "repository.invalid");
         await AssertProblemAsync(client, outside.RepositoryPath, "repository.path_not_allowed");
+    }
+
+    [Fact]
+    public async Task ProjectInputsHaveExplicitSizeLimits()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 0);
+        using var factory = CreateFactory(repository.RootPath);
+        using var client = factory.CreateClient();
+
+        await AssertProblemAsync(
+            client,
+            new string('a', RepositoryValidator.MaximumPathLength + 1),
+            "repository.invalid_path");
+        using var response = await client.PostAsJsonAsync("/api/projects", new
+        {
+            displayName = new string('a', ProjectService.MaximumDisplayNameLength + 1),
+            repositoryPath = repository.RepositoryPath,
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(
+            "validation.invalid_request",
+            await ApiTestWorkflow.ReadProblemCodeAsync(response));
     }
 
     [Fact]

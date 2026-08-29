@@ -54,6 +54,31 @@ public sealed class GitRepositoryScannerTests
         Assert.Equal(before, repository.TakeSnapshot());
     }
 
+    [Fact]
+    public async Task ContainsCommitDistinguishesPresentAndAbsentObjects()
+    {
+        using var repository = GitTestRepository.Create();
+        var before = repository.TakeSnapshot();
+        var scanner = GitScannerFactory.Create(repositoriesRoot: repository.RepositoryPath);
+        var presentCommit = new CommitId(repository.ResolveCommit("refs/heads/main"));
+        var absentCommit = new CommitId(new string('0', presentCommit.Value.Length));
+
+        var present = await scanner.ContainsCommitAsync(
+            repository.RepositoryPath,
+            presentCommit,
+            default);
+        var absent = await scanner.ContainsCommitAsync(
+            repository.RepositoryPath,
+            absentCommit,
+            default);
+
+        Assert.True(present.TryGetValue(out var isPresent));
+        Assert.True(isPresent);
+        Assert.True(absent.TryGetValue(out var isAbsent));
+        Assert.False(isAbsent);
+        Assert.Equal(before, repository.TakeSnapshot());
+    }
+
     private static void AssertExpectedTopologies(RepositoryScan scan)
     {
         AssertBranch(
@@ -116,6 +141,57 @@ public sealed class GitRepositoryScannerTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(RepositoryErrorCode.PathNotFound, result.Error?.Code);
+    }
+
+    [Fact]
+    public async Task InspectRejectsGitMetadataOutsideTheAllowedRoot()
+    {
+        using var repository = GitTestRepository.Create();
+        repository.MoveMetadataOutsideRepository();
+        var scanner = GitScannerFactory.Create(repositoriesRoot: repository.RepositoryPath);
+
+        var result = await scanner.InspectAsync(repository.RepositoryPath, default);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RepositoryErrorCode.PathNotAllowed, result.Error?.Code);
+    }
+
+    [Fact]
+    public async Task InspectRejectsCommonDirectoryOutsideTheAllowedRoot()
+    {
+        using var repository = GitTestRepository.Create();
+        var scenario = repository.CreateExternalCommonDirectoryScenario();
+        var scanner = GitScannerFactory.Create(repositoriesRoot: scenario.RootPath);
+
+        var result = await scanner.InspectAsync(scenario.WorktreePath, default);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RepositoryErrorCode.PathNotAllowed, result.Error?.Code);
+    }
+
+    [Fact]
+    public async Task InspectRejectsNestedAlternateOutsideTheAllowedRoot()
+    {
+        using var repository = GitTestRepository.Create();
+        repository.ConfigureNestedExternalAlternate();
+        var scanner = GitScannerFactory.Create(repositoriesRoot: repository.RepositoryPath);
+
+        var result = await scanner.InspectAsync(repository.RepositoryPath, default);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RepositoryErrorCode.PathNotAllowed, result.Error?.Code);
+    }
+
+    [Fact]
+    public async Task InspectAcceptsNestedAlternatesInsideTheAllowedRoot()
+    {
+        using var repository = GitTestRepository.Create();
+        repository.ConfigureNestedAllowedAlternates();
+        var scanner = GitScannerFactory.Create(repositoriesRoot: repository.RepositoryPath);
+
+        var result = await scanner.InspectAsync(repository.RepositoryPath, default);
+
+        Assert.True(result.IsSuccess);
     }
 
     [Fact]
