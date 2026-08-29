@@ -12,15 +12,14 @@ Les échantillons bruts sont conservés dans `windows-initial.json`.
 | Processeur | Intel64 Family 6 Model 186 Stepping 3, GenuineIntel |
 | Processeurs logiques visibles | 12 |
 | Git | 2.55.0.windows.5 |
-| Commit de départ | `2a9575fe77adf8254a7e913414e0c9695de92ab8` |
+| Commit mesuré | `177eede7d88311c7fee8ac1df1203c76987d499b` |
+| État du worktree | propre (`sourceWorkingTreeDirty: false`) |
 | Chauffe | 1 itération par phase |
 | Mesure | 3 itérations conservées par phase |
 
-Le worktree était volontairement sale : il contenait l'implémentation non commitée
-de l'étape 9 et les autres chantiers de durcissement exécutés en parallèle. Le commit
-indiqué identifie donc la base de travail, tandis que le prochain commit de l'étape 9
-figera le code exact du runner. Aucun autre programme intensif n'a été lancé par le
-runner et les caches système n'ont pas été purgés.
+Le runner a mesuré un worktree propre au commit indiqué. La configuration Git de
+l'hôte a été neutralisée pour rendre la fixture déterministe. Aucun autre programme
+intensif n'a été lancé par le runner et les caches système n'ont pas été purgés.
 
 ## Commande
 
@@ -28,29 +27,30 @@ runner et les caches système n'ont pas été purgés.
 dotnet run --project benchmarks/App.GitHealth.Benchmarks/App.GitHealth.Benchmarks.csproj `
   --configuration Release -- `
   --sizes 100,500,1000 --warmup 1 --iterations 3 `
+  --enforce-budgets `
   --output docs/benchmarks/windows-initial.json
 ```
 
 ## Résultats
 
 Les durées sont en millisecondes. Avec trois mesures, le P95 correspond au maximum
-observé. Le budget a été défini après cette baseline et n'apparaît donc pas comme
-chargé dans le JSON brut.
+observé. Les budgets ont été chargés et appliqués pendant cette exécution ; aucune
+régression n'a été détectée.
 
 | Branches | Phase | Médiane | P95 | Budget P95 |
 |---:|---|---:|---:|---:|
-| 100 | topologie | 161,818 | 171,515 | 300 |
-| 100 | enrichissement | 9 226,789 | 9 772,377 | 15 000 |
-| 100 | persistance | 105,441 | 110,714 | 200 |
-| 100 | API | 17,398 | 21,527 | 50 |
-| 500 | topologie | 334,706 | 350,410 | 550 |
-| 500 | enrichissement | 47 319,656 | 49 585,567 | 75 000 |
-| 500 | persistance | 367,854 | 459,746 | 750 |
-| 500 | API | 43,664 | 55,180 | 100 |
-| 1 000 | topologie | 506,596 | 548,262 | 850 |
-| 1 000 | enrichissement | 94 344,122 | 98 289,182 | 150 000 |
-| 1 000 | persistance | 290,797 | 328,163 | 750 |
-| 1 000 | API | 53,210 | 64,459 | 125 |
+| 100 | topologie | 123,976 | 124,632 | 300 |
+| 100 | enrichissement | 7 531,697 | 7 629,140 | 15 000 |
+| 100 | persistance | 80,450 | 103,648 | 200 |
+| 100 | API | 6,781 | 9,622 | 50 |
+| 500 | topologie | 234,446 | 262,796 | 550 |
+| 500 | enrichissement | 37 836,940 | 38 569,893 | 75 000 |
+| 500 | persistance | 208,476 | 324,947 | 750 |
+| 500 | API | 17,019 | 18,490 | 100 |
+| 1 000 | topologie | 539,290 | 562,748 | 850 |
+| 1 000 | enrichissement | 76 420,966 | 79 111,705 | 150 000 |
+| 1 000 | persistance | 126,663 | 143,766 | 750 |
+| 1 000 | API | 38,164 | 39,476 | 125 |
 
 Les fingerprints des fixtures sont :
 
@@ -63,15 +63,15 @@ Les fingerprints des fixtures sont :
 ## Interprétation
 
 L'enrichissement domine : il représente plus de 98 % du temps à 1 000 branches et
-évolue presque linéairement, autour de 94 ms par branche sur cet environnement. Cela
+évolue presque linéairement, autour de 76 ms par branche sur cet environnement. Cela
 correspond au comportement actuel, un processus `git log` distinct pour chaque
 commit de branche. Une future optimisation devra conserver l'exactitude mailmap et
 la borne de sortie avant de réduire ce nombre de processus.
 
-La topologie reste sous 550 ms à 1 000 branches grâce au chemin rapide
+La topologie reste sous 563 ms à 1 000 branches grâce au chemin rapide
 `for-each-ref ahead-behind`. La persistance présente davantage de variance à 500
 branches, d'où des budgets monotones et arrondis. La phase API, qui recharge toute
-l'analyse puis sérialise une page de 200 éléments, reste sous 65 ms dans cette série.
+l'analyse puis sérialise une page de 200 éléments, reste sous 40 ms dans cette série.
 
 Les budgets ajoutent au moins 50 % au P95 observé. Ils ne constituent pas une cible
 produit universelle : ils servent de garde-fou sur un environnement Windows
