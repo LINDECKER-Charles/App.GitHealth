@@ -1,6 +1,6 @@
 # Plan d'implémentation de GitHealth
 
-> Statut : exécution en cours — étapes 1 à 8 terminées le 29 août 2026
+> Statut : étapes 1 à 8 terminées ; étape 9 implémentée et qualifiée localement
 > Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Objectif du MVP
@@ -289,6 +289,8 @@ et contrats d'API.
 
 ## Étape 9 — Durcir, mesurer et préparer la première version
 
+> Statut : implémentée et qualifiée localement le 29 août 2026 ; validation finale au tag RC
+
 ### Résultat attendu
 
 Le MVP est reproductible, documenté et suffisamment robuste pour être testé sur
@@ -317,6 +319,16 @@ de vrais dépôts d'entreprise.
 - Erreurs Git fréquentes compréhensibles sans consulter les logs techniques.
 - Résultats d'un benchmark de 1 000 branches publiés dans le dépôt.
 
+### Résultats de validation
+
+- baseline Windows publiée pour 100, 500 et 1 000 branches avec budgets P95 ;
+- 195 tests .NET, 43 tests Angular et le parcours Playwright réussis ;
+- audits NuGet/npm sans vulnérabilité publiée et audit applicatif versionné ;
+- deux dépôts réels anonymisés validés avec métriques Git, exports et redémarrage ;
+- références, reflogs, index et diff des worktrees identiques avant et après la recette ;
+- publication Windows validée localement ; critères macOS et Docker encore à confirmer par
+  la matrice du tag avant de déclarer l'étape terminée.
+
 ## Scénario de recette principal
 
 1. Lancer GitHealth avec le point d'entrée de la plateforme.
@@ -329,7 +341,7 @@ de vrais dépôts d'entreprise.
 8. Protéger un motif, modifier un seuil et vérifier la nouvelle interprétation.
 9. Exporter CSV et SQLite.
 10. Redémarrer l'application et retrouver le dernier résultat.
-11. Comparer refs, index et worktree avec leur état avant la recette.
+11. Comparer refs, reflogs, index et diff du worktree avec leur état avant la recette.
 
 ## Risques à suivre
 
@@ -337,9 +349,9 @@ de vrais dépôts d'entreprise.
 |---|---|
 | Références distantes obsolètes | Afficher que l'analyse ne fait pas de fetch et dater le scan |
 | Git ancien sur macOS | Détection de capacités et chemin de repli |
-| Milliers de branches | Calcul groupé, enrichissement différé, cache et virtualisation |
+| Milliers de branches | Calcul groupé, cache, pagination et budgets versionnés |
 | Branche fusionnée sans attribution fiable | Afficher indéterminé et garder l'historique |
-| Chemins Docker différents du poste | Racine explicite, canonicalisation et relocalisation |
+| Chemins Docker différents du poste | Racine contrôlée et relocalisation guidée |
 | Copie SQLite incohérente | Endpoint utilisant l'API de sauvegarde |
 | Commande hostile issue d'un nom de branche | Aucun shell, arguments séparés et tests dédiés |
 | Blocage macOS d'un binaire non signé | Documenter puis signer avant diffusion large |

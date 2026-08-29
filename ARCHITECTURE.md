@@ -1,8 +1,5 @@
 # Architecture technique de GitHealth
-
-> Statut : architecture cible, avant implémentation  
-> Dernière mise à jour : 28 août 2026
-
+> Statut : MVP implémenté, release candidate `0.1.0-rc.1` — mise à jour : 29 août 2026
 ## Vue d'ensemble
 
 GitHealth est une application web locale d'aide au diagnostic des branches Git.
@@ -51,11 +48,11 @@ le navigateur ne communique donc qu'avec un seul processus et une seule origine.
 | Interface | Application web locale Angular | Technologie maîtrisée et interface portable |
 | Hôte | ASP.NET Core sert l'API et les fichiers Angular | Un processus, un port et une origine |
 | Exécution principale | Exécutable .NET autonome | Accès direct aux dépôts du poste |
-| Exécution alternative | Docker Compose | Racine des dépôts montée explicitement en lecture seule |
-| Analyse Git | Client Git en ligne de commande | Sémantique identique à Git et aucun checkout nécessaire |
-| Persistance | SQLite via Entity Framework Core | Fichier local, migrations et sauvegarde portable |
+| Alternative | Docker Compose | Dépôts montés explicitement en lecture seule |
+| Analyse Git | Client Git en ligne de commande | Sémantique Git sans checkout |
+| Persistance | SQLite avec EF Core | Base locale, migrable et sauvegardable |
 | État du front | Services Angular et Signals | Pas de store global externe pour le MVP |
-| Traitements longs | File interne et service d'arrière-plan | API non bloquante et progression observable |
+| Tâches longues | File et service d'arrière-plan | API non bloquante et progression visible |
 | Nettoyage | Recommandations seulement | GitHealth ne supprime jamais une branche |
 
 ## Sémantique Git
@@ -80,9 +77,9 @@ mailmap, une même personne utilisant plusieurs adresses peut apparaître plusie
 fois.
 
 Après la fusion complète d'une branche, `R..B` est vide. Git ne permet alors plus
-d'attribuer avec certitude les commits à leur branche d'origine. GitHealth affiche
-ce résultat comme indéterminé et peut présenter la dernière attribution conservée
-par une analyse antérieure.
+d'attribuer avec certitude les commits à leur branche d'origine. GitHealth signale
+l'attribution comme indisponible. Un snapshot antérieur reste consultable dans
+l'historique, mais n'est jamais substitué aux faits de la nouvelle analyse.
 
 Les données reflètent les références visibles localement au moment de l'analyse.
 Sans `fetch`, elles peuvent différer de l'état actuel du serveur distant.
@@ -149,33 +146,18 @@ des données déterministes.
 
 ```text
 src/
-├── App.GitHealth.Core/
-│   ├── Analysis/
-│   ├── Branches/
-│   ├── Projects/
-│   └── Shared/
+├── App.GitHealth.Core/{Analysis,Branches,Common,Projects,Shared}/
 ├── App.GitHealth.Api/
-│   ├── Features/
-│   │   ├── Projects/
-│   │   ├── Analyses/
-│   │   ├── Branches/
-│   │   └── Exports/
-│   ├── Git/
-│   ├── Persistence/
-│   ├── BackgroundJobs/
-│   └── Hosting/
-└── App.GitHealth.Web/
-    └── src/app/
-        ├── core/
-        ├── shared/
-        └── features/
-            ├── projects/
-            ├── dashboard/
-            └── branch-details/
+│   ├── Features/{Projects,Analyses,Policies,Snapshots,Exports,Runtime,Security}/
+│   └── {Git,Persistence,Hosting}/
+└── App.GitHealth.Web/src/app/
+    ├── core/
+    └── features/{home,dashboard,branch-details,project-settings,analysis-history}/
 tests/
 ├── App.GitHealth.Core.Tests/
 ├── App.GitHealth.Api.Tests/
-└── App.GitHealth.Git.IntegrationTests/
+├── App.GitHealth.Git.IntegrationTests/
+└── App.GitHealth.E2E/
 ```
 
 ### `App.GitHealth.Core`
@@ -202,16 +184,16 @@ statiques publiés par l'API. Les fonctionnalités sont chargées par route.
 **Project**
 
 - identifiant, nom d'affichage et chemin canonique ;
-- type de source et état d'accessibilité ;
+- état d'accessibilité du chemin ;
 - référence sélectionnée et espace de branches analysé ;
 - seuils d'activité, exclusions et motifs protégés ;
-- dates de création et de dernière analyse réussie.
+- dates de création et de dernière modification, identifiant de la dernière analyse réussie.
 
 **AnalysisRun**
 
 - projet, référence et SHA de référence observés ;
 - dates de début et de fin, état et progression ;
-- version de GitHealth et version de Git ;
+- version de Git observée pendant l'analyse ;
 - message d'erreur synthétique en cas d'échec.
 
 **BranchSnapshot**
@@ -241,7 +223,10 @@ l'historique par la discontinuité de son SHA.
 - export réalisé par l'API de sauvegarde SQLite, pas par copie du fichier ouvert.
 
 La base est portable, mais les chemins de dépôts ne le sont pas. Après import sur
-une autre machine, l'utilisateur peut relier un projet à son nouveau chemin.
+une autre machine, les anciens snapshots restent consultables. L'utilisateur peut
+relocaliser le projet vers le même dépôt : son identifiant et son historique sont
+conservés après validation du nouveau chemin, de la référence configurée et du dernier
+commit de référence connu. Une réservation par projet exclut toute analyse concurrente.
 
 ## Flux de données
 
@@ -253,6 +238,13 @@ une autre machine, l'utilisateur peut relier un projet à son nouveau chemin.
 4. Les références sont listées sans checkout.
 5. L'utilisateur confirme la référence et les filtres de branches.
 6. La configuration est persistée.
+
+### Relocalisation d'un projet
+
+1. L'utilisateur indique le nouveau chemin depuis les paramètres du projet.
+2. L'API applique les mêmes contrôles de chemin et inspecte le dépôt en lecture seule.
+3. La référence configurée doit encore exister et le chemin ne doit pas être déjà rattaché.
+4. Seul le chemin du projet est remplacé ; ses analyses et son dernier snapshot restent liés.
 
 ### Analyse
 
@@ -286,9 +278,11 @@ Les routes sont groupées sous `/api` et renvoient des DTO dédiés.
 
 | Méthode et route | Responsabilité |
 |---|---|
+| `GET /api/session` | Initialiser session locale et jeton anti-forgery |
 | `GET /api/projects` | Lister les projets et leur dernier état |
 | `POST /api/projects/validate` | Valider un chemin sans le persister |
 | `POST /api/projects` | Enregistrer un projet |
+| `PUT /api/projects/{id}/repository` | Relocaliser un dépôt en conservant l'historique |
 | `PUT /api/projects/{id}/settings` | Modifier référence, seuils et exclusions |
 | `POST /api/projects/{id}/analyses` | Démarrer une analyse |
 | `GET /api/analyses/{id}` | Lire état et progression |
@@ -370,8 +364,8 @@ locale et son export est une action explicite de l'utilisateur.
 - Les enrichissements sont mis en cache lorsque les SHA n'ont pas changé.
 - Le tableau est paginé ou virtualisé pour ne pas rendre toutes les lignes à la fois.
 - Un dépôt synthétique d'au moins 1 000 branches sert de benchmark reproductible.
-- Les budgets de durée sont fixés après la première mesure sur Windows, macOS et
-  Docker, puis surveillés pour éviter les régressions.
+- Les budgets de durée sont fixés d'après la première baseline Windows et surveillés
+  séparément des mesures informatives exécutées sur d'autres plateformes.
 
 ## Stratégie de tests
 
@@ -394,7 +388,6 @@ locale et son export est une action explicite de l'utilisateur.
 - Signature/notarisation et installeurs graphiques pour les distributions publiques.
 
 ## Références techniques
-
 - [Politique de support .NET](https://dotnet.microsoft.com/en-us/platform/support/policy)
 - [Versions et support Angular](https://angular.dev/reference/releases)
 - [Fournisseurs de base de données EF Core](https://learn.microsoft.com/en-us/ef/core/providers/)

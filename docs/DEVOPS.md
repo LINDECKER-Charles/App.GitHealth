@@ -158,6 +158,10 @@ Git est détecté par le diagnostic `/health`. Chaque commande est lancée sans 
 avec un délai, une sortie bornée et l'annulation de tout l'arbre de processus. Le
 scanner fixe `GIT_OPTIONAL_LOCKS=0`, `GIT_NO_LAZY_FETCH=1` et
 `GIT_TERMINAL_PROMPT=0` : il ne fait ni checkout, ni fetch, ni écriture de ref.
+Les variables hôtes `GIT_TRACE*`, les redirections de configuration globale et les
+redirections de chemins Git sont retirées avant chaque processus. Le `commondir`, la
+base d'objets principale et chaque alternate imbriqué sont résolus physiquement et
+doivent rester dans la racine autorisée en mode Docker.
 
 Le calcul groupé utilise l'atome `ahead-behind` lorsqu'il est disponible. Une
 installation Git plus ancienne passe automatiquement par `rev-list` avec une
@@ -171,6 +175,11 @@ dans le répertoire système décrit plus haut. Compose fixe explicitement
 `Persistence__DatabasePath=/data/githealth.db` afin que le fichier reste dans le
 volume `githealth-data`.
 
+Sur Unix, un répertoire de données créé par GitHealth est limité à l'utilisateur courant ;
+la base, son verrou et les éventuels fichiers `-wal` et `-shm` sont limités en
+lecture-écriture à ce même utilisateur. Un dossier parent préexistant conserve ses
+permissions.
+
 Les options disponibles sont :
 
 | Configuration | Défaut | Effet |
@@ -183,7 +192,9 @@ La rétention est désactivée lorsque sa valeur est vide. Lorsqu'elle est activ
 elle ne supprime jamais le dernier snapshot réussi d'un projet. Les clés étrangères
 sont actives, le journal utilise WAL et chaque analyse terminée est persistée avec
 ses branches et contributeurs dans une transaction unique. Une analyse interrompue
-ou échouée ne remplace donc pas le dernier résultat réussi.
+ou échouée ne remplace donc pas le dernier résultat réussi. Au démarrage, toute analyse
+restée `Running` après un arrêt brutal devient `Cancelled` avec le code
+`analysis.interrupted`.
 
 L'export utilise l'API de sauvegarde SQLite pendant que l'application reste active,
 puis normalise la copie en journal `DELETE`. Le fichier exporté est autonome : il
@@ -200,9 +211,32 @@ la file d'analyses, leur progression, les snapshots paginés et leur détail. Un
 route API inconnue renvoie toujours un Problem Details JSON ; elle n'est jamais
 absorbée par le fallback de l'application Angular.
 
+`GET /api/session` initialise la session locale et le jeton anti-forgery. Angular appelle
+ce bootstrap avant ses autres requêtes ; toutes les mutations API exigent ensuite
+`X-XSRF-TOKEN`. Les requêtes dont le `Host`, l'origine ou le contexte de navigation ne
+sont pas loopback/même origine sont refusées. `/health` reste public sur loopback.
+
 `AnalysisQueue__Capacity` limite le nombre d'analyses en attente (32 par défaut,
-1 024 maximum). Un projet ne peut avoir qu'une analyse active et un lancement
-accepté renvoie `202 Accepted` avec l'URL de suivi dans l'en-tête `Location`.
+1 024 maximum). `AnalysisQueue__TimeoutSeconds` borne une analyse complète à 300
+secondes par défaut et accepte une valeur entre 1 et 3 600 secondes. Un projet ne peut
+avoir qu'une analyse active et un lancement accepté renvoie `202 Accepted` avec l'URL
+de suivi dans l'en-tête `Location`.
+
+Les limites des processus Git sont validées au démarrage :
+
+| Configuration | Défaut | Bornes | Effet |
+|---|---:|---:|---|
+| `GitHealth__Git__CommandTimeout` | `00:00:30` | 1 à 120 s | durée d'une commande |
+| `GitHealth__Git__MaximumOutputBytes` | 4 Mio | 1 Kio à 16 Mio | stdout et stderr cumulés |
+| `GitHealth__Git__MaximumParallelCommands` | 4 | 1 à 8 | processus Git simultanés |
+
+Une valeur hors bornes empêche le démarrage avec un diagnostic explicite. Le timeout
+global de l'analyse reste indépendant du timeout appliqué à chaque commande Git.
+
+Les contrats HTTP refusent aussi les entrées démesurées : chemin de dépôt limité à
+32 768 caractères, nom affiché à 200, référence Git à 1 024, périmètre et motif à 512.
+Chaque liste de motifs accepte au maximum 64 éléments. Ces refus sont des Problem
+Details contrôlés et interviennent avant le lancement de Git.
 
 ## Parcours web et mode d'exécution
 
@@ -247,9 +281,15 @@ restaure et compile .NET, exécute les tests .NET et Angular, publie l’applica
 intégrée, contrôle la présence du bundle dans `wwwroot`, valide Compose et analyse
 le Dockerfile avec BuildKit.
 
-Le workflow `.github/workflows/release.yml` s'exécute manuellement ou pour un tag
-`v*`. Sa matrice publie et teste `win-x64` sur `windows-latest`, `osx-x64` sur
+Le workflow `.github/workflows/release.yml` s'exécute manuellement ou pour le tag
+`v0.1.0-rc.1`. Sa matrice publie et teste `win-x64` sur `windows-latest`, `osx-x64` sur
 `macos-15-intel` et `osx-arm64` sur `macos-15`. Les archives sont chargées comme
 artefacts du workflow. Un job Ubuntu séparé construit l'image et exécute le smoke
 test Docker : interface disponible, Git installé, UID non privilégié, montage des
 dépôts non inscriptible et volume SQLite persistant après recréation.
+
+Sur un dépôt public, Dependency Review, CodeQL et les attestations GitHub sont activés
+automatiquement. Pour un dépôt privé disposant des offres GitHub correspondantes, créer
+les variables de dépôt `ENABLE_GITHUB_SECURITY_FEATURES=true` et
+`ENABLE_GITHUB_ATTESTATIONS=true`. Sans ces licences, les jobs concernés sont ignorés ;
+les audits NuGet/npm, les sommes SHA-256 et les SBOM restent exécutés.
