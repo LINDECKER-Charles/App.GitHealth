@@ -96,6 +96,10 @@ public sealed class AnalysisQueueEndpointTests
         await AssertProjectRunCountAsync(factory, projectId, expected: 0);
     }
 
+    /// <summary>
+    /// Saturation et arrêt s'observent sur une file strictement séquentielle : un seul lecteur
+    /// garantit qu'une analyse lancée reste en attente tant que la précédente n'est pas finie.
+    /// </summary>
     private static ApiApplicationFactory CreateFactory(
         string repositoriesRoot,
         ControlledRepositoryScanner scanner,
@@ -103,6 +107,7 @@ public sealed class AnalysisQueueEndpointTests
         {
             RepositoriesRoot = repositoriesRoot,
             QueueCapacity = capacity,
+            MaximumParallelAnalyses = 1,
             TestServices = services => ReplaceScanner(services, scanner),
         };
 

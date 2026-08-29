@@ -15,6 +15,7 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
 {
     private const int DefaultQueueCapacity = 32;
     private const int DefaultAnalysisTimeoutSeconds = 300;
+    private const int DefaultParallelAnalyses = 4;
     private readonly string _directory = Path.Combine(
         Path.GetTempPath(),
         "GitHealth-api-tests",
@@ -30,6 +31,8 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
     public int QueueCapacity { get; init; } = DefaultQueueCapacity;
 
     public int AnalysisTimeoutSeconds { get; init; } = DefaultAnalysisTimeoutSeconds;
+
+    public int MaximumParallelAnalyses { get; init; } = DefaultParallelAnalyses;
 
     public Action<IServiceCollection>? TestServices { get; init; }
 
@@ -54,6 +57,8 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
                 ["AnalysisQueue:Capacity"] = QueueCapacity.ToString(
                     CultureInfo.InvariantCulture),
                 ["AnalysisQueue:TimeoutSeconds"] = AnalysisTimeoutSeconds.ToString(
+                    CultureInfo.InvariantCulture),
+                ["AnalysisQueue:MaximumParallelAnalyses"] = MaximumParallelAnalyses.ToString(
                     CultureInfo.InvariantCulture),
             });
         });

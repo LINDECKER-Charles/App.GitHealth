@@ -26,11 +26,12 @@ internal sealed class AnalysisQueue : IDisposable
         _scopeFactory = scopeFactory;
         _clock = clock;
         _timeout = TimeSpan.FromSeconds(options.Value.TimeoutSeconds);
+        MaximumParallelAnalyses = options.Value.MaximumParallelAnalyses;
         _channel = Channel.CreateBounded<AnalysisWorkItem>(new BoundedChannelOptions(
             options.Value.Capacity)
         {
             FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = true,
+            SingleReader = MaximumParallelAnalyses == 1,
             SingleWriter = false,
         });
     }
@@ -38,6 +39,9 @@ internal sealed class AnalysisQueue : IDisposable
     public DateTimeOffset UtcNow => _clock.UtcNow;
 
     public TimeSpan Timeout => _timeout;
+
+    /// <summary>Nombre de lecteurs de la file, donc d'analyses menées de front.</summary>
+    public int MaximumParallelAnalyses { get; }
 
     public async Task<AnalysisEnqueueResult> EnqueueAsync(
         Guid projectId,

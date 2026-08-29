@@ -19,6 +19,26 @@ internal sealed partial class AnalysisWorker(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var loops = Enumerable
+            .Range(0, queue.MaximumParallelAnalyses)
+            .Select(_ => ConsumeAsync(stoppingToken))
+            .ToArray();
+        try
+        {
+            await Task.WhenAll(loops);
+        }
+        finally
+        {
+            await CancelPendingAsync();
+        }
+    }
+
+    /// <summary>
+    /// Une boucle de lecture par analyse menée de front : la file répartit les projets entre
+    /// elles, et un seul projet reste actif à la fois grâce à la réservation de la file.
+    /// </summary>
+    private async Task ConsumeAsync(CancellationToken stoppingToken)
+    {
         try
         {
             await foreach (var item in queue.ReadAllAsync(stoppingToken))
@@ -28,10 +48,6 @@ internal sealed partial class AnalysisWorker(
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
-        }
-        finally
-        {
-            await CancelPendingAsync();
         }
     }
 
