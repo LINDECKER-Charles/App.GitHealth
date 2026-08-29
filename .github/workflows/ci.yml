@@ -2,6 +2,9 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -15,7 +18,7 @@ jobs:
   verify:
     name: Vérifier le socle
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
 
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -35,13 +38,30 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: src/App.GitHealth.Web/package-lock.json
+          cache-dependency-path: |
+            src/App.GitHealth.Web/package-lock.json
+            tests/App.GitHealth.E2E/package-lock.json
 
       - name: Restaurer .NET
         run: dotnet restore App.GitHealth.sln
 
       - name: Installer Angular
         run: npm ci --prefix src/App.GitHealth.Web
+
+      - name: Installer les tests bout en bout
+        run: npm ci --prefix tests/App.GitHealth.E2E
+
+      - name: Vérifier le format .NET
+        run: dotnet format App.GitHealth.sln --verify-no-changes --no-restore
+
+      - name: Vérifier le format Angular
+        run: npm run format:check --prefix src/App.GitHealth.Web
+
+      - name: Vérifier les types Playwright
+        run: npm run typecheck --prefix tests/App.GitHealth.E2E
+
+      - name: Vérifier le format Playwright
+        run: npm run format:check --prefix tests/App.GitHealth.E2E
 
       - name: Compiler .NET
         run: dotnet build App.GitHealth.sln --configuration Release --no-restore
@@ -66,6 +86,26 @@ jobs:
 
       - name: Vérifier le bundle publié
         run: test -f artifacts/publish/wwwroot/index.html
+
+      - name: Installer Chromium
+        working-directory: tests/App.GitHealth.E2E
+        run: npx playwright install --with-deps chromium
+
+      - name: Tester le parcours bout en bout
+        working-directory: tests/App.GitHealth.E2E
+        env:
+          GITHEALTH_E2E_PUBLISH: ${{ github.workspace }}/artifacts/publish
+        run: npm run test:ci
+
+      - name: Conserver les traces Playwright en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: traces-playwright
+          path: |
+            tests/App.GitHealth.E2E/playwright-report
+            tests/App.GitHealth.E2E/test-results
+          if-no-files-found: ignore
 
       - name: Vérifier Docker Compose
         shell: pwsh

@@ -1,0 +1,128 @@
+name: Sécurité
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-review:
+    name: Examiner les dépendances
+    if: >-
+      github.event_name == 'pull_request' &&
+      (github.event.repository.visibility == 'public' ||
+      vars.ENABLE_GITHUB_SECURITY_FEATURES == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v7
+
+      - name: Refuser les vulnérabilités introduites
+        uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: moderate
+
+  codeql:
+    name: CodeQL · ${{ matrix.language }}
+    if: >-
+      github.event.repository.visibility == 'public' ||
+      vars.ENABLE_GITHUB_SECURITY_FEATURES == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: csharp
+            build-mode: manual
+          - language: javascript-typescript
+            build-mode: none
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v7
+
+      - name: Initialiser CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Installer .NET
+        if: matrix.build-mode == 'manual'
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Compiler le code C#
+        if: matrix.build-mode == 'manual'
+        run: dotnet build App.GitHealth.sln --configuration Release
+
+      - name: Analyser avec CodeQL
+        uses: github/codeql-action/analyze@v4
+
+  vulnerability-audit:
+    name: Auditer les dépendances
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v7
+
+      - name: Installer .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Restaurer .NET
+        run: dotnet restore App.GitHealth.sln
+
+      - name: Auditer NuGet
+        run: |
+          dotnet package list \
+            --project App.GitHealth.sln \
+            --vulnerable \
+            --include-transitive \
+            --format json \
+            --output-version 1 > nuget-audit.json
+          cat nuget-audit.json
+          jq -e '[.. | objects | select(has("vulnerabilities"))] | length == 0' \
+            nuget-audit.json > /dev/null
+
+      - name: Auditer Angular
+        working-directory: src/App.GitHealth.Web
+        run: |
+          npm ci
+          npm audit --audit-level=high
+
+      - name: Auditer Playwright
+        working-directory: tests/App.GitHealth.E2E
+        run: |
+          npm ci
+          npm audit --audit-level=high
