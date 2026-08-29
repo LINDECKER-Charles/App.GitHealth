@@ -1,0 +1,68 @@
+{
+    "version":  "0.1.0-rc.1",
+    "executedAtUtc":  "2026-08-29T02:54:37.2220242+00:00",
+    "platform":  "Microsoft Windows 10.0.26200 ",
+    "restartPreservedProjects":  true,
+    "restartPreservedSnapshots":  true,
+    "csvAndDatabaseExports":  true,
+    "repositories":  [
+                         {
+                             "label":  "real-repository-1",
+                             "headCommit":  "359a54a47de124f544a8c8621b97b3fd6bed784e",
+                             "commitCount":  1476,
+                             "trackedFileCount":  1273,
+                             "referenceCount":  15,
+                             "analyzedBranchCount":  10,
+                             "metricsCompared":  5,
+                             "durationMilliseconds":  1199,
+                             "topologies":  [
+                                                {
+                                                    "name":  "Merged",
+                                                    "count":  9
+                                                },
+                                                {
+                                                    "name":  "Synchronized",
+                                                    "count":  1
+                                                }
+                                            ],
+                             "activities":  [
+                                                {
+                                                    "name":  "Inactive",
+                                                    "count":  10
+                                                }
+                                            ],
+                             "repositoryUnchanged":  true
+                         },
+                         {
+                             "label":  "real-repository-2",
+                             "headCommit":  "6ca827d3c163f368e857e51619a3c890371b8b3f",
+                             "commitCount":  812,
+                             "trackedFileCount":  1730,
+                             "referenceCount":  10,
+                             "analyzedBranchCount":  5,
+                             "metricsCompared":  5,
+                             "durationMilliseconds":  1339,
+                             "topologies":  [
+                                                {
+                                                    "name":  "Diverged",
+                                                    "count":  2
+                                                },
+                                                {
+                                                    "name":  "Merged",
+                                                    "count":  2
+                                                },
+                                                {
+                                                    "name":  "Synchronized",
+                                                    "count":  1
+                                                }
+                                            ],
+                             "activities":  [
+                                                {
+                                                    "name":  "Aging",
+                                                    "count":  5
+                                                }
+                                            ],
+                             "repositoryUnchanged":  true
+                         }
+                     ]
+}
