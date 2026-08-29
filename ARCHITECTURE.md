@@ -177,6 +177,15 @@ justifient.
 Contient l'application Angular. Son build de production est intégré aux fichiers
 statiques publiés par l'API. Les fonctionnalités sont chargées par route.
 
+L'interface applique le design system Établi, dont les jetons et les classes `.etb-*`
+vivent dans `src/styles/ds/`. Ses primitives sont réimplémentées en composants Angular
+autonomes sous `src/app/ui/`, ses polices et ses glyphes sont servis localement depuis
+`public/ds/`. L'application ne charge donc aucune ressource distante.
+
+L'inlining du CSS critique est désactivé en production : la politique de sécurité de
+contenu interdit les scripts en ligne, et le gestionnaire `onload` qu'il génère ne
+s'exécuterait pas.
+
 ## Modèle de données
 
 ### Agrégats persistés
