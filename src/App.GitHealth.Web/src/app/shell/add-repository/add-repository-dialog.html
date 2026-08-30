@@ -34,13 +34,7 @@
             [(value)]="path"
           />
           @if (store.runtime()?.canBrowseDirectories) {
-            <button
-              dsButton
-              size="md"
-              variant="secondary"
-              iconLeft="folder"
-              (click)="isBrowsing.set(true)"
-            >
+            <button dsButton size="md" variant="secondary" iconLeft="folder" (click)="browse()">
               Parcourir
             </button>
           }

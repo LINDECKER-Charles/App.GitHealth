@@ -47,13 +47,7 @@
             (submit)="discover()"
           />
           @if (projects.runtime()?.canBrowseDirectories) {
-            <button
-              dsButton
-              size="md"
-              variant="secondary"
-              iconLeft="folder"
-              (click)="isBrowsing.set(true)"
-            >
+            <button dsButton size="md" variant="secondary" iconLeft="folder" (click)="browse()">
               Parcourir
             </button>
           }

@@ -13,6 +13,7 @@ import { apiErrorMessage } from '../../core/api/api-error';
 import { GitHealthApiClient } from '../../core/api/git-health-api-client';
 import { DiscoveredRepository, RepositoryDiscoveryResponse } from '../../core/api/api.models';
 import { displayReference } from '../../core/branches/branch-labels';
+import { DesktopBridge } from '../../core/desktop/desktop-bridge';
 import { scanJobDetail, scanStateTones } from '../../core/scan/folder-scan-labels';
 import { FolderScanStore } from '../../core/scan/folder-scan-store';
 import { FolderScanTarget } from '../../core/scan/folder-scan.models';
@@ -56,6 +57,7 @@ const depthOptions: readonly SelectOption[] = [
 })
 export class ScanFolderDialog {
   private readonly api = inject(GitHealthApiClient);
+  private readonly desktop = inject(DesktopBridge);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly projects = inject(ProjectsStore);
@@ -135,6 +137,20 @@ export class ScanFolderDialog {
         error: (error: unknown) =>
           this.error.set(apiErrorMessage(error, 'Ce dossier ne peut pas être exploré.')),
       });
+  }
+
+  /** Dialogue système quand la coque de bureau l'offre, navigateur de dossiers sinon. */
+  protected browse(): void {
+    if (!this.desktop.isAvailable) {
+      this.isBrowsing.set(true);
+      return;
+    }
+
+    void this.desktop.pickFolder().then((path) => {
+      if (path !== null) {
+        this.useDirectory(path);
+      }
+    });
   }
 
   protected useDirectory(path: string): void {

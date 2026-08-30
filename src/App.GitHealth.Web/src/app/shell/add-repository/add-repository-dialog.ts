@@ -22,6 +22,7 @@ import {
 import { apiErrorMessage } from '../../core/api/api-error';
 import { GitHealthApiClient } from '../../core/api/git-health-api-client';
 import { RepositoryValidation } from '../../core/api/api.models';
+import { DesktopBridge } from '../../core/desktop/desktop-bridge';
 import {
   branchNamespaceFor,
   defaultActiveUntilDays,
@@ -70,6 +71,7 @@ type Validation =
 })
 export class AddRepositoryDialog {
   private readonly api = inject(GitHealthApiClient);
+  private readonly desktop = inject(DesktopBridge);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
@@ -130,6 +132,20 @@ export class AddRepositoryDialog {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((result) => this.applyValidation(result));
+  }
+
+  /** Dialogue système quand la coque de bureau l'offre, navigateur de dossiers sinon. */
+  protected browse(): void {
+    if (!this.desktop.isAvailable) {
+      this.isBrowsing.set(true);
+      return;
+    }
+
+    void this.desktop.pickFolder().then((path) => {
+      if (path !== null) {
+        this.useDirectory(path);
+      }
+    });
   }
 
   protected useDirectory(path: string): void {

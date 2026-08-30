@@ -63,9 +63,12 @@ internal static class DesktopWindow
             .SetContextMenuEnabled(false)
             .SetDevToolsEnabled(false);
         var iconPath = ResolveWindowsIconPath();
-        return iconPath is null
-            ? window.Load(address)
-            : window.SetIconFile(iconPath).Load(address);
+        if (iconPath is not null)
+        {
+            window = window.SetIconFile(iconPath);
+        }
+
+        return DesktopFolderBridge.Register(window).Load(address);
     }
 
     /// <summary>
