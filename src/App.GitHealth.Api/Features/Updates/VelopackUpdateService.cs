@@ -13,10 +13,10 @@ internal sealed class VelopackUpdateService : IUpdateService
     private const string RepositoryUrl = "https://github.com/LINDECKER-Charles/App.GitHealth";
 
     /// <summary>
-    /// Le produit ne publie encore que des versions candidates : les ignorer reviendrait
-    /// à ne jamais proposer de mise à jour.
+    /// Les pré-releases restent hors du flux : une version publiée pour validation ne doit
+    /// pas atteindre les installations qui suivent les versions publiées.
     /// </summary>
-    private const bool IncludePrereleases = true;
+    private const bool IncludePrereleases = false;
 
     private static readonly Action<ILogger, string, Exception?> LogCheckFailed =
         LoggerMessage.Define<string>(
