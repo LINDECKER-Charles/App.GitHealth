@@ -56,7 +56,7 @@ describe('UpdateStore', () => {
     expect(store.isAvailable()).toBe(false);
   });
 
-  it('déclenche la mise à jour et signale qu’elle est en cours', () => {
+  it('déclenche la mise à jour et reste en cours jusqu’au redémarrage', () => {
     store.load();
     http.expectOne('/api/updates').flush(available);
 
@@ -65,7 +65,29 @@ describe('UpdateStore', () => {
     const request = http.expectOne('/api/updates/apply');
     expect(request.request.method).toBe('POST');
     expect(store.isApplying()).toBe(true);
+
+    // 202 sans corps : l'hôte relance l'application, cette page ne survit pas.
     request.flush(null, { status: 202, statusText: 'Accepted' });
+
+    expect(store.isApplying()).toBe(true);
+    expect(store.error()).toBeNull();
+  });
+
+  it('libère le bouton quand rien n’a pu être téléchargé', () => {
+    store.load();
+    http.expectOne('/api/updates').flush(available);
+    store.apply();
+
+    // 200 porteur d'un statut : l'hôte n'a rien appliqué et dit pourquoi.
+    http.expectOne('/api/updates/apply').flush({
+      availability: 'Unknown',
+      currentVersion: '0.1.0-rc.1',
+      availableVersion: null,
+    } satisfies UpdateStatus);
+
+    expect(store.isApplying()).toBe(false);
+    expect(store.isAvailable()).toBe(false);
+    expect(store.error()).not.toBeNull();
   });
 
   it('n’applique rien sans mise à jour disponible', () => {
@@ -75,7 +97,7 @@ describe('UpdateStore', () => {
     expect(store.isApplying()).toBe(false);
   });
 
-  it('redevient disponible quand l’application échoue', () => {
+  it('redevient disponible et explique l’échec de l’application', () => {
     store.load();
     http.expectOne('/api/updates').flush(available);
     store.apply();
@@ -83,5 +105,7 @@ describe('UpdateStore', () => {
     http.expectOne('/api/updates/apply').error(new ProgressEvent('error'), { status: 500 });
 
     expect(store.isApplying()).toBe(false);
+    expect(store.isAvailable()).toBe(true);
+    expect(store.error()).not.toBeNull();
   });
 });

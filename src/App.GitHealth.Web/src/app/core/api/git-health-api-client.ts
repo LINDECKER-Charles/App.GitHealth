@@ -39,9 +39,12 @@ export class GitHealthApiClient {
     return this.request(this.http.get<UpdateStatus>(`${apiRoot}/updates`));
   }
 
-  /** Déclenche la mise à jour ; l'application se relance ensuite d'elle-même. */
-  applyUpdate(): Observable<void> {
-    return this.request(this.http.post<void>(`${apiRoot}/updates/apply`, null));
+  /**
+   * Déclenche la mise à jour. Une réponse vide signifie que l'hôte relance
+   * l'application ; un statut signifie que rien n'était applicable.
+   */
+  applyUpdate(): Observable<UpdateStatus | null> {
+    return this.request(this.http.post<UpdateStatus | null>(`${apiRoot}/updates/apply`, null));
   }
 
   browseDirectories(path: string | null): Observable<DirectoryListing> {

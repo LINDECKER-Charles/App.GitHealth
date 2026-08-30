@@ -62,9 +62,9 @@
     </a>
   </header>
 
-  @if (gitFailure(); as diagnostic) {
-    <ds-callout class="workspace-alert" tone="danger" title="Git est indisponible">
-      {{ diagnostic }}
+  @if (alert(); as workspaceAlert) {
+    <ds-callout class="workspace-alert" [tone]="workspaceAlert.tone" [title]="workspaceAlert.title">
+      {{ workspaceAlert.message }}
     </ds-callout>
   }
 

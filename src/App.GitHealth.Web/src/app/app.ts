@@ -19,11 +19,17 @@ import { DsIcon } from './ui/core/ds-icon';
 import { DsIconButton } from './ui/core/ds-icon-button';
 import { DsKbd } from './ui/core/ds-kbd';
 import { DsStatusDot } from './ui/core/ds-status-dot';
-import { DsCallout } from './ui/surfaces/ds-callout';
+import { CalloutTone, DsCallout } from './ui/surfaces/ds-callout';
 import { IconName } from './ui/icon-name';
 
 const introStorageKey = 'githealth.intro';
 const introSkippedValue = 'skipped';
+
+interface WorkspaceAlert {
+  readonly tone: CalloutTone;
+  readonly title: string;
+  readonly message: string;
+}
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,10 +69,24 @@ export class App {
   protected readonly isIntroVisible = signal(false);
   protected readonly themeIcon = computed<IconName>(() => (this.theme.isDark() ? 'sun' : 'moon'));
 
-  /** Sans Git, aucune analyse n'aboutit : la cause est annoncée avant le premier scan. */
-  protected readonly gitFailure = computed(() => {
+  /**
+   * Une seule alerte à la fois, la plus bloquante d'abord : sans Git aucune analyse
+   * n'aboutit, alors qu'une mise à jour ratée laisse l'application utilisable.
+   */
+  protected readonly alert = computed<WorkspaceAlert | null>(() => {
     const runtime = this.store.runtime();
-    return runtime !== null && !runtime.isGitAvailable ? runtime.gitDiagnostic : null;
+    if (runtime !== null && !runtime.isGitAvailable) {
+      return {
+        tone: 'danger',
+        title: 'Git est indisponible',
+        message: runtime.gitDiagnostic,
+      };
+    }
+
+    const failure = this.updates.error();
+    return failure === null
+      ? null
+      : { tone: 'warning', title: 'Mise à jour impossible', message: failure };
   });
 
   constructor() {
