@@ -11,15 +11,16 @@
 
 ## Publication native
 
-Le script de publication produit trois distributions autonomes :
+Le script de publication produit quatre distributions autonomes :
 
 | Système | Architecture | RID | Point d'entrée |
 |---|---|---|---|
 | Windows | x64 | `win-x64` | `githealth.exe` |
 | macOS | Intel | `osx-x64` | `githealth` |
 | macOS | Apple Silicon | `osx-arm64` | `githealth` |
+| Linux | x64 | `linux-x64` | `githealth` |
 
-Depuis la racine du dépôt, PowerShell publie les trois cibles :
+Depuis la racine du dépôt, PowerShell publie les quatre cibles :
 
 ```powershell
 ./eng/Publish-Native.ps1
@@ -38,7 +39,14 @@ Le script vérifie l'exécutable et `wwwroot/index.html`, puis crée :
 
 - `artifacts/publish/githealth-win-x64.zip` ;
 - `artifacts/publish/githealth-osx-x64.tar.gz` ;
-- `artifacts/publish/githealth-osx-arm64.tar.gz`.
+- `artifacts/publish/githealth-osx-arm64.tar.gz` ;
+- `artifacts/publish/githealth-linux-x64.tar.gz`.
+
+Ces archives portables restent publiées en plus des installeurs Velopack : elles
+servent Scoop et les postes où l'on ne veut rien installer. `eng/New-VelopackRelease.ps1`
+produit l'installeur d'une cible depuis son dossier de publication, et
+`eng/New-ScoopManifest.ps1` comme `eng/New-WingetManifest.ps1` en dérivent les
+manifestes de distribution.
 
 Les archives ne sont pas des exécutables monofichiers : les extraire entièrement
 et conserver leurs fichiers ensemble. Le lanceur fixe sa racine de contenu au
@@ -69,12 +77,20 @@ courant. Employer des chemins absolus évite donc toute ambiguïté.
 | `--repo <chemin>` | vide | préremplit le dépôt proposé sur l'accueil |
 | `--port <1-65535>` | port disponible | impose un port précis sur l'interface loopback |
 | `--data-dir <chemin>` | répertoire système | déplace la base et son verrou d'instance |
-| `--no-browser` | navigateur ouvert | n'ouvre pas le navigateur au démarrage |
+| `--git-path <chemin>` | résolution automatique | impose l'exécutable Git à utiliser |
+| `--no-window` | fenêtre de bureau | ouvre l'interface dans le navigateur système |
+| `--no-browser` | interface ouverte | n'ouvre aucune interface au démarrage |
 | `--help`, `-h` | — | affiche l'aide puis quitte |
 
-Les formes `--repo=...`, `--port=...` et `--data-dir=...` sont également
-acceptées. Sans `--port`, le système attribue un port disponible. Dans tous les
-cas, le lanceur natif écoute exclusivement sur `127.0.0.1`.
+Les formes `--repo=...`, `--port=...`, `--data-dir=...` et `--git-path=...` sont
+également acceptées. Sans `--port`, le système attribue un port disponible. Dans tous
+les cas, le lanceur natif écoute exclusivement sur `127.0.0.1`.
+
+En mode natif, l'interface par défaut est une fenêtre de bureau adossée au moteur de
+rendu du système. `--no-window` lui préfère le navigateur, et `--no-browser` vaut
+« aucune interface » — il implique donc `--no-window`, et c'est la forme employée par
+le smoke test natif et les tests bout en bout. En mode conteneur, aucune interface
+n'est ouverte et ces deux options n'ont pas d'objet.
 
 ### Répertoires de données
 
@@ -230,6 +246,12 @@ Les limites des processus Git sont validées au démarrage :
 | `GitHealth__Git__CommandTimeout` | `00:00:30` | 1 à 120 s | durée d'une commande |
 | `GitHealth__Git__MaximumOutputBytes` | 4 Mio | 1 Kio à 16 Mio | stdout et stderr cumulés |
 | `GitHealth__Git__MaximumParallelCommands` | 4 | 1 à 8 | processus Git simultanés |
+| `GitHealth__Git__ExecutablePath` | résolution automatique | — | chemin de l'exécutable Git |
+
+`GitHealth__Git__ExecutablePath`, comme `--git-path`, prime sur la résolution
+automatique : le `PATH`, puis les emplacements d'installation standards de la
+plateforme. Le premier chemin qui existe l'emporte ; `GET /api/runtime` publie celui
+qui a été retenu et, à défaut, la liste des emplacements testés.
 
 Une valeur hors bornes empêche le démarrage avec un diagnostic explicite. Le timeout
 global de l'analyse reste indépendant du timeout appliqué à chaque commande Git.
@@ -285,7 +307,9 @@ le Dockerfile avec BuildKit.
 
 Le workflow `.github/workflows/release.yml` s'exécute manuellement ou pour le tag
 `v0.1.0-rc.1`. Sa matrice publie et teste `win-x64` sur `windows-latest`, `osx-x64` sur
-`macos-15-intel` et `osx-arm64` sur `macos-15`. Les archives sont chargées comme
+`macos-15-intel`, `osx-arm64` sur `macos-15` et `linux-x64` sur `ubuntu-latest`. Sur un
+tag, chaque cible sauf Linux produit aussi son installeur Velopack, et la cible Windows
+les manifestes Scoop et winget. Les archives et ces artefacts sont chargés comme
 artefacts du workflow. Un job Ubuntu séparé construit l'image et exécute le smoke
 test Docker : interface disponible, Git installé, UID non privilégié, montage des
 dépôts non inscriptible et volume SQLite persistant après recréation.
