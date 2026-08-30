@@ -69,6 +69,17 @@
   color: var(--text-muted);
 }
 
+.project-capture {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-capture-select {
+  width: 268px;
+  flex: none;
+}
+
 .project-progress {
   margin: 12px 20px 0;
   padding: 10px 12px;

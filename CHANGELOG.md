@@ -7,6 +7,25 @@ Changelog and semantic versioning.
 
 ### Added
 
+- **"Visualisation" tab**: three readings of the same capture, each with its own URL. The
+  _topology map_ draws every branch around the reference, its shape carrying how far ahead
+  and behind it is; hovering reads a branch, clicking pins its card. The _activity register_
+  puts time on the axis and the policy in bands, so two sliders re-read every verdict without
+  writing anything — the Policies tab keeps sole ownership of saving. The _drift between
+  captures_ compares two analyses of the repository as a journal of what moved, grouped by
+  what it demands: degraded, resolved, new, removed, unchanged. Both sides of that comparison
+  are read back with the policy and the clock frozen at their own capture, so no verdict
+  change is ever fabricated;
+- **capture selector on the repository**: the repository header carries which capture is being
+  read, and every tab obeys it — Diagnostic, topology map, activity register, CSV export and
+  the command palette. It defaults to the most recent capture and names it as such in the list;
+  picking an older one is announced, because a past capture is re-read with the policy and the
+  clock of its own day while the most recent one follows today's — the facts are the same, the
+  verdicts are not, so its patterns cannot be edited from that view. The choice travels in the
+  URL (`?capture=`), which makes it shareable and survives a reload; the history's "Open this
+  snapshot" now points there, replacing the separate `analyses/:analysisId` route. Launching an
+  analysis returns to the most recent capture. Drift keeps its own two-capture range, since it
+  compares rather than reads;
 - **choosing a branch instead of typing it**: in the Policies tab, "Choose…" opens a picker
   listing the repository's references, searchable and navigable with the keyboard, that marks
   the ones an existing pattern already covers. A picked branch is added as an exact pattern;

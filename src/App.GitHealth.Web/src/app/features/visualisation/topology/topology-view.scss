@@ -1,0 +1,217 @@
+:host {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.topology-layout {
+  display: flex;
+  min-height: 100%;
+}
+
+/* Calé en haut : le cadre du tracé doit coïncider avec le SVG, que l'overlay repère en %. */
+.topology-plot {
+  position: relative;
+  align-self: flex-start;
+  flex: 1;
+  min-width: 620px;
+}
+
+/* Le viewBox grandit avec le dépôt : la carte s'allonge, le corps de la carte défile. */
+.topology-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.topology-trunk {
+  stroke: var(--border-strong);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.topology-halo {
+  fill: none;
+  stroke: var(--status-info-solid);
+  stroke-width: 2;
+  animation: gh-pulse 2.2s var(--ease-standard) infinite;
+}
+
+.topology-head {
+  fill: var(--surface);
+  stroke: var(--status-brand-solid);
+  stroke-width: 2.5;
+}
+
+.topology-head-name {
+  fill: var(--text-primary);
+  font: var(--weight-semibold) var(--text-xs) var(--font-mono);
+}
+
+.topology-head-note {
+  fill: var(--text-muted);
+  font: var(--weight-regular) var(--text-2xs) var(--font-sans);
+}
+
+.topology-branch {
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.topology-branch:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.topology-path {
+  fill: none;
+  stroke: var(--status-neutral-solid);
+  stroke-linecap: round;
+}
+
+.topology-junction {
+  fill: var(--canvas);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+.topology-tip {
+  fill: var(--surface);
+  stroke: var(--status-neutral-solid);
+  stroke-width: 2;
+}
+
+.topology-branch[data-tone='info'] .topology-path,
+.topology-branch[data-tone='info'] .topology-tip {
+  stroke: var(--status-info-solid);
+}
+
+.topology-branch[data-tone='warning'] .topology-path,
+.topology-branch[data-tone='warning'] .topology-tip {
+  stroke: var(--status-warning-solid);
+}
+
+.topology-branch[data-tone='success'] .topology-path,
+.topology-branch[data-tone='success'] .topology-tip {
+  stroke: var(--status-success-solid);
+}
+
+.topology-branch[data-tone='danger'] .topology-path,
+.topology-branch[data-tone='danger'] .topology-tip {
+  stroke: var(--status-danger-solid);
+}
+
+/* Les noms restent en HTML à taille fixe : ils ne rétrécissent pas avec le viewBox. */
+.topology-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.topology-name {
+  position: absolute;
+  transform: translate(0, -78%);
+  font: var(--weight-regular) var(--text-2xs) var(--font-mono);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.topology-name.is-focused {
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.topology-gap {
+  position: absolute;
+  transform: translate(0, -78%);
+  font: var(--weight-regular) var(--text-2xs) var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+/* Trop près du bord droit, l'étiquette déborderait sur la fiche : elle bascule à gauche. */
+.topology-name.is-trailing,
+.topology-gap.is-trailing {
+  transform: translate(-100%, -78%);
+}
+
+/* Elle se resserre avec la fenêtre plutôt que de passer sous un défilement horizontal. */
+.topology-fiche {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: none;
+  width: clamp(240px, 26%, 312px);
+  padding: 14px 16px;
+  border-left: 1px solid var(--divider);
+}
+
+.topology-fiche-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: gh-fade var(--dur-fast) var(--ease-out);
+}
+
+.topology-fiche-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.topology-fiche-name {
+  flex: 1;
+  min-width: 0;
+  font: var(--weight-semibold) var(--text-sm) / var(--lh-sm) var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topology-pin {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-selected);
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  color: var(--primary-soft-fg);
+}
+
+.topology-fiche-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.topology-why {
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.topology-why-body {
+  margin: 4px 0 0;
+  font: var(--weight-regular) var(--text-sm) / var(--lh-sm) var(--font-sans);
+  color: var(--text-secondary);
+}
+
+.topology-lead {
+  margin: 0;
+  font: var(--weight-regular) var(--text-sm) / var(--lh-sm) var(--font-sans);
+  color: var(--text-secondary);
+}
+
+.topology-hint {
+  margin: 0;
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  color: var(--text-muted);
+}

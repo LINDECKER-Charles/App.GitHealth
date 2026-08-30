@@ -279,11 +279,10 @@
     }
   </div>
 } @else if (isLoading()) {
-  <p class="dashboard-state" role="status">Lecture du dernier snapshot…</p>
-} @else if (error(); as message) {
-  <div class="dashboard-notice">
-    <ds-callout tone="danger" title="Snapshot illisible">{{ message }}</ds-callout>
-  </div>
+  <p class="dashboard-state" role="status">Lecture de la capture…</p>
+} @else if (captures.error()) {
+  <!-- Le cadre du dépôt porte déjà le message : le répéter ne dirait rien de plus. -->
+  <p class="dashboard-state" role="status">Aucune branche à afficher pour cette capture.</p>
 } @else {
   <div class="dashboard-first-scan">
     <ds-empty-state

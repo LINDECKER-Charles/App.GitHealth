@@ -99,7 +99,7 @@ export class ProjectSettings {
     };
   });
 
-  protected readonly branches = computed(() => this.context.snapshot()?.branches ?? []);
+  protected readonly branches = computed(() => this.context.latestSnapshot()?.branches ?? []);
   protected readonly stats = computed<readonly PolicyStat[]>(() =>
     projectStats(this.branches(), this.draft()),
   );

@@ -59,8 +59,8 @@ describe('Dashboard', () => {
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
     context = TestBed.inject(ProjectContext);
-    context.snapshot.set(snapshot);
-    context.isLoadingSnapshot.set(false);
+    context.latestSnapshot.set(snapshot);
+    context.isLoadingLatest.set(false);
   });
 
   async function render() {
@@ -103,7 +103,7 @@ describe('Dashboard', () => {
   });
 
   it('propose la première analyse quand aucun snapshot n’existe', async () => {
-    context.snapshot.set(null);
+    context.latestSnapshot.set(null);
     const compiled = (await render()).nativeElement as HTMLElement;
     expect(compiled.querySelector('.dashboard-first-scan')).not.toBeNull();
     expect(compiled.textContent).toContain("Ce dépôt n'a pas encore été mesuré");
