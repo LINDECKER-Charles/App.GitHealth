@@ -92,6 +92,16 @@ jobs:
             Set-Content -LiteralPath $checksumPath -Encoding utf8NoBOM
           "archive=$($archive.FullName)" >> $env:GITHUB_OUTPUT
 
+      - name: Produire le manifeste Scoop
+        if: >-
+          matrix.runtime == 'win-x64' && github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: >-
+          ./eng/New-ScoopManifest.ps1
+          -ArchivePath '${{ steps.release-files.outputs.archive }}'
+          -Version '${{ github.ref_name }}'
+
       - name: Attester la provenance
         if: >-
           github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') &&
@@ -116,7 +126,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: githealth-${{ matrix.runtime }}
-          path: artifacts/publish/githealth-${{ matrix.runtime }}.*
+          path: |
+            artifacts/publish/githealth-${{ matrix.runtime }}.*
+            artifacts/publish/githealth.json
           if-no-files-found: error
 
   docker:

@@ -1,0 +1,32 @@
+{
+  "version": "__VERSION__",
+  "description": "Diagnostic local des branches Git : ce qui est fusionné, ce qui diverge, ce qui dort.",
+  "homepage": "https://github.com/LINDECKER-Charles/App.GitHealth",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/LINDECKER-Charles/App.GitHealth/releases/download/v__VERSION__/githealth-win-x64.zip",
+      "hash": "__HASH__"
+    }
+  },
+  "bin": "githealth.exe",
+  "shortcuts": [["githealth.exe", "GitHealth"]],
+  "checkver": {
+    "url": "https://github.com/LINDECKER-Charles/App.GitHealth/releases",
+    "regex": "releases/tag/v([\\d.]+(?:-[\\w.]+)?)"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/LINDECKER-Charles/App.GitHealth/releases/download/v$version/githealth-win-x64.zip"
+      }
+    },
+    "hash": {
+      "url": "$url.sha256"
+    }
+  },
+  "notes": [
+    "Les données vivent dans %LOCALAPPDATA%\\GitHealth : elles survivent aux mises à jour et à la désinstallation.",
+    "GitHealth a besoin de Git. Hors du PATH, indiquez son chemin avec --git-path <chemin>."
+  ]
+}
