@@ -135,12 +135,16 @@ jobs:
     concurrency:
       group: promote-test
 
+    # Le job ne fait pas de checkout : gh ne peut pas déduire le dépôt d'un répertoire
+    # sans .git, GH_REPO le lui désigne explicitement.
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+
     steps:
       # force=false exige un fast-forward strict : l'API refuse d'avancer test si le
       # commit validé n'est pas un descendant direct de la référence.
       - name: Avancer test sur le commit validé
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: >-
           gh api --method PATCH
           repos/${{ github.repository }}/git/refs/heads/test
@@ -150,6 +154,4 @@ jobs:
       # Une poussée faite avec le GITHUB_TOKEN ne déclenche aucun workflow : la matrice
       # multiplateforme doit donc être appelée explicitement sur le commit promu.
       - name: Déclencher la matrice multiplateforme
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: gh workflow run release.yml --ref test
