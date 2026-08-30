@@ -45,9 +45,22 @@ aucune fonderie et aucun service distant pour les charger.
 | SQLitePCLRaw | Apache-2.0 |
 | Moteur SQLite | domaine public |
 | `Microsoft.AspNetCore.OpenApi`, `Microsoft.OpenApi` | MIT |
+| Photino.NET, Photino.Native | Apache-2.0 |
+| Velopack | MIT |
 
-Les distributions natives Windows et macOS embarquent le runtime .NET : les mentions de
-copyright Microsoft les accompagnent dans l'archive publiée.
+Les distributions natives Windows, macOS et Linux embarquent le runtime .NET : les
+mentions de copyright Microsoft les accompagnent dans l'archive publiée.
+
+Photino fournit la coque de bureau. Sa bibliothèque native — `Photino.Native.dll` sous
+Windows, `.dylib` sous macOS, `.so` sous Linux — est redistribuée à côté de
+l'exécutable ; l'Apache-2.0 impose que son texte de licence et son avis de copyright
+suivent toute copie ou redistribution. Photino n'embarque aucun moteur de rendu : il
+appelle celui du système — WebView2, WKWebView ou WebKitGTK — installé et mis à jour
+par la plateforme, hors du périmètre de distribution du projet.
+
+Velopack produit les installeurs et applique les mises à jour. Sa bibliothèque et ses
+utilitaires `Setup` et `Update` sont redistribués dans les installeurs publiés, pas dans
+les archives portables.
 
 ## Nécessaire à l'exécution, non redistribué
 
