@@ -52,14 +52,33 @@ jobs:
           cache: npm
           cache-dependency-path: src/App.GitHealth.Web/package-lock.json
 
-      # --blame-hang nomme le test qui se fige au lieu de laisser le job courir
-      # jusqu'au timeout : un runner bloqué ne remonte pas ses journaux, et la
-      # trace est alors définitivement perdue.
+      # Chaque phase porte son propre délai. Un dépassement au niveau du job annule
+      # tout sans que le runner remonte ses journaux — la trace est alors perdue —
+      # alors qu'un dépassement d'étape échoue proprement et laisse tourner la
+      # collecte qui suit. Les phases sont séparées pour situer un blocage :
+      # --blame-hang ne s'arme qu'une fois l'hôte de test démarré, et reste donc
+      # muet si le figeage se produit pendant la restauration ou la compilation.
+      - name: Restaurer les tests d'intégration Git
+        timeout-minutes: 6
+        run: >-
+          dotnet restore
+          tests/App.GitHealth.Git.IntegrationTests/App.GitHealth.Git.IntegrationTests.csproj
+
+      - name: Compiler les tests d'intégration Git
+        timeout-minutes: 8
+        run: >-
+          dotnet build
+          tests/App.GitHealth.Git.IntegrationTests/App.GitHealth.Git.IntegrationTests.csproj
+          --configuration Release
+          --no-restore
+
       - name: Tester les fixtures Git sur la plateforme
+        timeout-minutes: 10
         run: >-
           dotnet test
           tests/App.GitHealth.Git.IntegrationTests/App.GitHealth.Git.IntegrationTests.csproj
           --configuration Release
+          --no-build
           --blame-hang
           --blame-hang-timeout 3m
           --blame-hang-dump-type none
