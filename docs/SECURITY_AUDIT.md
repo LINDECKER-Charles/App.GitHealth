@@ -1,145 +1,143 @@
-# Audit de sécurité — GitHealth `0.1.0-rc.1`
+# Security audit — GitHealth `0.1.0-rc.1`
 
-Date : 29 août 2026
-Périmètre : API ASP.NET Core, scanner Git, Angular, SQLite, lanceurs, Docker Compose
-et chaîne GitHub Actions de la branche `feat/livraison-mvp`.
+Date: 29 August 2026
+Scope: the ASP.NET Core API, the Git scanner, Angular, SQLite, the launchers, Docker
+Compose and the GitHub Actions pipeline of the `feat/livraison-mvp` branch.
 
-## Synthèse
+## Summary
 
-Aucune vulnérabilité critique ou haute n'a été identifiée dans le périmètre audité.
-Le produit respecte son modèle local mono-utilisateur : écoute loopback, requêtes de
-modification liées à une session anti-forgery, exécution Git sans shell, chemins Docker
-confinés et absence de communication applicative sortante.
+No critical or high vulnerability was identified within the audited scope. The product
+honours its local single-user model: loopback listening, mutating requests tied to an
+anti-forgery session, shell-free Git execution, confined Docker paths and no outbound
+application communication.
 
-La release candidate peut être testée localement. Les risques principaux avant une
-diffusion large concernent la signature des binaires, l'immuabilité des dépendances de
-build et la confidentialité d'une base SQLite non chiffrée.
+The release candidate can be tested locally. The main risks before wide distribution
+concern binary signing, the immutability of build dependencies and the confidentiality of
+an unencrypted SQLite database.
 
-## Méthode et preuves
+## Method and evidence
 
-- revue manuelle des frontières HTTP, processus, chemins, persistance et exports ;
-- recherche de secrets privés et de clients réseau sortants dans les sources ;
-- audit NuGet transitif des sept projets : aucune vulnérabilité publiée ;
-- `npm audit` des verrous Angular et Playwright : aucune vulnérabilité publiée ;
-- 195 tests .NET, dont 14 scénarios de sécurité HTTP, réussis ;
-- 43 tests Angular et build de production réussis ;
-- scénario Playwright complet réussi sans hôte externe et sans mutation Git ;
-- recette sur deux dépôts réels : métriques comparées à Git, exports, redémarrage,
-  snapshots restaurés et fingerprints Git identiques ;
-- configuration Compose statiquement validée ; smoke Docker dynamique non rejoué
-  localement, car le moteur Docker Desktop était indisponible.
+- manual review of the HTTP, process, path, persistence and export boundaries;
+- search for private secrets and outbound network clients in the sources;
+- transitive NuGet audit of the seven projects: no published vulnerability;
+- `npm audit` of the Angular and Playwright lockfiles: no published vulnerability;
+- 195 .NET tests passing, including 14 HTTP security scenarios;
+- 43 Angular tests and a successful production build;
+- full Playwright scenario passing with no external host and no Git mutation;
+- acceptance testing on two real repositories: metrics compared against Git, exports,
+  restart, restored snapshots and identical Git fingerprints;
+- Compose configuration validated statically; the dynamic Docker smoke test was not
+  replayed locally, because the Docker Desktop engine was unavailable.
 
-## Couverture OWASP
+## OWASP coverage
 
-| Domaine | Contrôles observés | État |
+| Area | Observed controls | State |
 |---|---|---|
-| A01 Contrôle d'accès | loopback, `Host`, origine et Fetch Metadata | maîtrisé localement |
-| A02 Cryptographie | jetons aléatoires ; SQLite non chiffrée | risque résiduel faible |
-| A03 Injection | aucun shell, arguments séparés, EF Core, Angular, CSV neutralisé | maîtrisé |
-| A04 Conception | frontières locales documentées, timeouts et files bornés | maîtrisé |
-| A05 Configuration | CSP, headers, OpenAPI dev-only, Docker non privilégié | maîtrisé |
-| A06 Composants | audits NuGet/npm, Dependabot, SBOM | maîtrisé à surveiller |
-| A07 Authentification | session anti-forgery ; aucun compte | conforme au modèle local |
-| A08 Intégrité | SHA-256, SBOM et provenance ; actions non épinglées par SHA | à renforcer |
-| A09 Journalisation | erreurs Problem Details sans sortie Git brute | acceptable en local |
-| A10 Requêtes serveur | aucun client HTTP sortant, protocoles Git distants bloqués | maîtrisé |
+| A01 Access control | loopback, `Host`, origin and Fetch Metadata | controlled locally |
+| A02 Cryptography | random tokens; unencrypted SQLite | low residual risk |
+| A03 Injection | no shell, separate arguments, EF Core, Angular, neutralised CSV | controlled |
+| A04 Design | documented local boundaries, bounded timeouts and queues | controlled |
+| A05 Configuration | CSP, headers, dev-only OpenAPI, unprivileged Docker | controlled |
+| A06 Components | NuGet/npm audits, Dependabot, SBOM | controlled, to monitor |
+| A07 Authentication | anti-forgery session; no accounts | consistent with the local model |
+| A08 Integrity | SHA-256, SBOM and provenance; actions not pinned by SHA | to reinforce |
+| A09 Logging | Problem Details errors with no raw Git output | acceptable locally |
+| A10 Server-side requests | no outbound HTTP client, remote Git protocols blocked | controlled |
 
-## Vulnérabilités critiques
+## Critical vulnerabilities
 
-Aucune vulnérabilité critique confirmée.
+No confirmed critical vulnerability.
 
-Les tests hostiles couvrent les arguments commençant par un tiret, la traversée de
-chemins, les liens symboliques, les worktrees, les `gitdir`/`commondir` externes, les
-alternates imbriqués, les environnements Git injectés, les dépassements de sortie, les
-timeouts et l'annulation de l'arbre de processus.
+The hostile tests cover arguments starting with a dash, path traversal, symbolic links,
+worktrees, external `gitdir`/`commondir`, nested alternates, injected Git environments,
+output overruns, timeouts and process-tree cancellation.
 
-## Vulnérabilités potentielles
+## Potential vulnerabilities
 
-### P1 — Course TOCTOU sur un chemin local — faible
+### P1 — TOCTOU race on a local path — low
 
-Un processus exécuté par le même utilisateur peut remplacer un composant du chemin entre
-sa validation physique et l'ouverture par Git. La revalidation juste avant l'analyse
-réduit la fenêtre, mais ne l'élimine pas sans handles natifs ou sandbox par dépôt.
+A process running as the same user can replace a path component between its physical
+validation and the moment Git opens it. Re-validating just before the analysis narrows
+the window, but does not eliminate it without native handles or a per-repository sandbox.
 
-Impact : GitHealth pourrait lire un autre dépôt accessible au même compte. L'attaquant
-possède déjà les droits de lecture correspondants ; aucune élévation de privilège n'a été
-démontrée.
+Impact: GitHealth could read another repository reachable by the same account. The
+attacker already holds the corresponding read rights; no privilege escalation was
+demonstrated.
 
-Action : conserver le test de revalidation et étudier des handles de répertoire natifs ou
-une sandbox pour une version destinée à des dépôts réellement hostiles.
+Action: keep the re-validation test, and investigate native directory handles or a sandbox
+for a version intended for genuinely hostile repositories.
 
-### P2 — Base SQLite non chiffrée — faible
+### P2 — Unencrypted SQLite database — low
 
-La base contient noms et adresses d'auteur. Les permissions privées Unix et le répertoire
-utilisateur limitent l'accès, mais le fichier et ses exports ne sont pas chiffrés au repos.
+The database contains author names and addresses. Private Unix permissions and the user
+directory limit access, but neither the file nor its exports are encrypted at rest.
 
-Impact : un autre processus disposant des droits du compte ou une sauvegarde mal protégée
-peut lire ces données professionnelles.
+Impact: another process holding the account's rights, or a poorly protected backup, can
+read that business data.
 
-Action : documenter la classification des exports, évaluer le chiffrement par le système
-d'exploitation et prévoir une politique de purge adaptée aux organisations.
+Action: document the classification of exports, evaluate operating-system encryption and
+plan a purge policy suited to organisations.
 
-### P3 — Service local sans authentification utilisateur — faible dans le modèle
+### P3 — Local service without user authentication — low within the model
 
-Tout processus local pouvant joindre loopback peut lire l'API avec un client non navigateur.
-Les navigateurs étrangers sont bloqués par l'origine et Fetch Metadata ; les mutations
-exigent en plus la session et le jeton anti-forgery.
+Any local process able to reach loopback can read the API with a non-browser client.
+Foreign browsers are blocked by origin and Fetch Metadata; mutations additionally require
+the session and the anti-forgery token.
 
-Impact : le risque devient élevé si l'application est exposée sur un réseau ou placée
-derrière un proxy. Cette configuration est explicitement hors périmètre du MVP.
+Impact: the risk becomes high if the application is exposed on a network or placed behind
+a proxy. That configuration is explicitly outside the MVP scope.
 
-Action : maintenir le refus des endpoints Kestrel configurés en mode natif et concevoir
-une authentification complète avant toute exposition non loopback.
+Action: keep rejecting Kestrel endpoints configured in native mode, and design full
+authentication before any non-loopback exposure.
 
-## Mauvaises pratiques
+## Bad practices
 
-### M1 — Actions GitHub référencées par tag majeur — modérée
+### M1 — GitHub actions referenced by major tag — moderate
 
-Plusieurs étapes utilisent `actions/*@vN` ou `github/codeql-action/*@v4`. Les tags majeurs
-facilitent les correctifs, mais restent mutables et agrandissent le risque de chaîne
-logicielle au sens OWASP A08.
+Several steps use `actions/*@vN` or `github/codeql-action/*@v4`. Major tags make patching
+easier, but they stay mutable and widen the supply-chain risk in the sense of OWASP A08.
 
-Action : épingler les actions tierces sur un SHA vérifié et automatiser leurs mises à jour
-avec Dependabot.
+Action: pin third-party actions to a verified SHA and automate their updates with
+Dependabot.
 
-### M2 — Images Docker référencées par version, sans digest — faible
+### M2 — Docker images referenced by version, without a digest — low
 
-Les versions Node, SDK et runtime sont explicites, mais les tags de base ne sont pas liés
-à un digest immuable.
+The Node, SDK and runtime versions are explicit, but the base tags are not bound to an
+immutable digest.
 
-Action : enregistrer les digests multi-architecture lors de la stabilisation, tout en
-conservant un processus automatisé de mise à jour de sécurité.
+Action: record the multi-architecture digests when stabilising, while keeping an automated
+security update process.
 
-### M3 — Binaires macOS non signés et non notariés — modérée
+### M3 — Unsigned and unnotarised macOS binaries — moderate
 
-La limitation est documentée et n'altère pas le code exécuté en développement, mais elle
-empêche l'utilisateur de vérifier l'identité du diffuseur avec les mécanismes natifs.
+The limitation is documented and does not alter the code executed in development, but it
+prevents the user from verifying the publisher's identity with native mechanisms.
 
-Action : signer les exécutables et notarier les archives avant une diffusion publique.
+Action: sign the executables and notarise the archives before any public distribution.
 
-## Recommandations
+## Recommendations
 
-### Avant la version stable
+### Before the stable version
 
-1. Signer Windows et macOS, puis notarier les artefacts macOS.
-2. Épingler les actions et images de build par SHA ou digest contrôlé.
-3. Exécuter les workflows CodeQL, dependency review, SBOM et provenance sur le tag RC.
-4. Rejouer le smoke Docker sur un moteur actif et archiver la preuve CI.
-5. Définir la rétention des données d'auteur et la protection attendue des exports.
+1. Sign on Windows and macOS, then notarise the macOS artefacts.
+2. Pin build actions and images by SHA or a controlled digest.
+3. Run the CodeQL, dependency review, SBOM and provenance workflows on the RC tag.
+4. Replay the Docker smoke test on a running engine and archive the CI evidence.
+5. Define the retention of author data and the expected protection of exports.
 
-### Défense continue
+### Continuous defence
 
-1. Traiter les alertes Dependabot et les audits de dépendances avant publication.
-2. Conserver les tests d'origine, anti-forgery, chemins hostiles et non-mutation.
-3. Examiner chaque nouvelle commande Git pour éviter réseau, hooks et écriture implicite.
-4. Refuser toute écoute réseau future sans nouveau modèle de menace et authentification.
-5. Refaire cet audit après une intégration de forge, un clone géré ou une mise à jour
-   automatique, car ces fonctions changeraient fortement la frontière de confiance.
+1. Handle Dependabot alerts and dependency audits before releasing.
+2. Keep the origin, anti-forgery, hostile-path and non-mutation tests.
+3. Review every new Git command to rule out network access, hooks and implicit writes.
+4. Refuse any future network listener without a new threat model and authentication.
+5. Redo this audit after a forge integration, a managed clone or an automatic update, as
+   these features would substantially change the trust boundary.
 
 ## Conclusion
 
-Le niveau de sécurité est adapté à une release candidate locale et mono-utilisateur. Les
-contrôles empêchent les classes d'attaque les plus pertinentes pour le MVP : CSRF web,
-DNS rebinding simple, injection d'arguments Git, fuite réseau accidentelle, déni de
-service non borné et sortie de racine Docker. La diffusion publique reste conditionnée
-aux recommandations de chaîne de livraison et de signature ci-dessus.
+The security level is appropriate for a local, single-user release candidate. The controls
+prevent the attack classes most relevant to the MVP: web CSRF, simple DNS rebinding, Git
+argument injection, accidental network leakage, unbounded denial of service and Docker
+root escape. Public distribution remains conditional on the supply-chain and signing
+recommendations above.

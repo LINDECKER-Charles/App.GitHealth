@@ -1,31 +1,30 @@
 # App.GitHealth.Web
 
-Interface Angular de GitHealth. Le front fonctionne en serveur de développement
-avec un proxy vers l’API, puis son build de production est publié dans `wwwroot`
-par le projet ASP.NET Core.
+GitHealth's Angular interface. The front end runs on a development server with a proxy to
+the API, and its production build is published into `wwwroot` by the ASP.NET Core project.
 
-## Prérequis
+## Prerequisites
 
-- Node.js `24.20.0` (version du fichier `.nvmrc` à la racine) ;
+- Node.js `24.20.0` (the version in the root `.nvmrc` file);
 - npm `11.19.0`.
 
-## Développement
+## Development
 
-Depuis ce dossier :
+From this folder:
 
 ```shell
 npm ci
 npm start
 ```
 
-Le serveur Angular écoute sur `http://localhost:4200` et transmet `/api`,
-`/health` et `/openapi` à l’API locale sur `http://localhost:5115`.
+The Angular server listens on `http://localhost:4200` and forwards `/api`, `/health` and
+`/openapi` to the local API on `http://localhost:5115`.
 
-## Vérifications
+## Checks
 
 ```shell
 npm run test:ci
 npm run build
 ```
 
-Le build est produit dans `dist/app-git-health-web/browser`.
+The build is produced in `dist/app-git-health-web/browser`.

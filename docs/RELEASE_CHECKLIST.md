@@ -1,67 +1,71 @@
-# Checklist de release candidate
+# Release candidate checklist
 
-Version préparée : `0.1.0-rc.1`.
+Version being prepared: `0.1.0-rc.1`.
 
-## Vérifications automatiques
+## Automated checks
 
 - [x] `dotnet format App.GitHealth.sln --verify-no-changes`
 - [x] `dotnet build App.GitHealth.sln --configuration Release`
 - [x] `dotnet test App.GitHealth.sln --configuration Release --no-build`
 - [x] `npm run format:check --prefix src/App.GitHealth.Web`
 - [x] `npm run test:ci --prefix src/App.GitHealth.Web`
-- [x] benchmark de 100, 500 et 1 000 branches conforme aux budgets versionnés
-- [x] parcours Playwright ajout → analyse → détail → export → redémarrage
-- [x] relocalisation : historique, identité du dépôt et exclusion d'un scan concurrent
-- [x] reprise au démarrage des analyses interrompues avec un statut terminal
-- [x] audit NuGet et npm sans vulnérabilité haute ou critique
-- [ ] analyse CodeQL sans alerte bloquante, au push sur dépôt public ou sous licence
+- [x] 100, 500 and 1,000 branch benchmark within the versioned budgets
+- [x] Playwright journey: add → analyse → detail → export → restart
+- [x] relocation: history, repository identity and exclusion of a concurrent scan
+- [x] interrupted analyses resumed at startup with a terminal status
+- [x] NuGet and npm audits with no high or critical vulnerability
+- [ ] CodeQL analysis with no blocking alert, on push to a public or licensed repository
 
-## Matrice de distribution
+## Distribution matrix
 
-- [x] Windows x64 : publication et smoke test natif
-- [ ] macOS Intel : publication et smoke test natif
-- [ ] macOS Apple Silicon : publication et smoke test natif
-- [ ] Docker : démarrage, utilisateur non privilégié et persistance après recréation
-- [x] Docker Compose : configuration statique et confinement validés
-- [ ] sommes SHA-256 publiées pour toutes les archives
-- [ ] SBOM CycloneDX/SPDX et attestation de provenance associés aux artefacts
+- [x] Windows x64: publication and native smoke test
+- [ ] macOS Intel: publication and native smoke test
+- [ ] macOS Apple Silicon: publication and native smoke test
+- [ ] Docker: startup, unprivileged user and persistence after recreation
+- [x] Docker Compose: static configuration and confinement validated
+- [ ] SHA-256 checksums published for every archive
+- [ ] CycloneDX/SPDX SBOM and provenance attestation attached to the artefacts
 
-## Recette sur dépôts réels
+## Acceptance testing on real repositories
 
-Pour chacun des deux dépôts retenus, consigner le commit du dépôt testé sans publier son
-contenu, son nombre de branches et la durée totale :
+For each of the two selected repositories, record the commit of the repository under test
+without publishing its content, its branch count and the total duration:
 
-- [x] comparer un échantillon à `git rev-list --left-right --count` ;
-- [x] comparer `git for-each-ref` avant et après ;
-- [x] comparer l'index, le diff du worktree et les reflogs avant et après ;
-- [x] vérifier une branche fusionnée, une divergente et une inactive ;
-- [x] exporter CSV et SQLite ;
-- [x] redémarrer et retrouver le dernier snapshot réussi.
+- [x] compare a sample against `git rev-list --left-right --count`;
+- [x] compare `git for-each-ref` before and after;
+- [x] compare the index, the worktree diff and the reflogs before and after;
+- [x] check a merged branch, a diverged one and an inactive one;
+- [x] export CSV and SQLite;
+- [x] restart and find the last successful snapshot again.
 
-Les dépôts d'entreprise ne sont jamais copiés dans le dépôt GitHealth. Le rapport de
-recette ne doit contenir ni nom d'auteur, ni adresse, ni chemin local sensible.
+Company repositories are never copied into the GitHealth repository. The acceptance report
+must contain no author name, no address and no sensitive local path.
 
-Commande reproductible, après avoir remplacé les deux chemins par les dépôts retenus :
+Reproducible command, once both paths have been replaced with the selected repositories:
 
 ```powershell
 dotnet publish src/App.GitHealth.Api/App.GitHealth.Api.csproj `
   --configuration Release --output artifacts/acceptance-app
 
 ./tests/Infrastructure/Invoke-RealRepositoryAcceptance.ps1 `
-  -RepositoryPath @("D:\Repos\volumineux-1", "D:\Repos\volumineux-2") `
+  -RepositoryPath @("D:\Repos\large-1", "D:\Repos\large-2") `
   -PublishDirectory artifacts/acceptance-app `
   -ReportPath docs/release/acceptance-0.1.0-rc.1.json
 ```
 
-Le script compare jusqu'à cinq branches de chaque dépôt avec `git rev-list`, exige des cas
-fusionnés, divergents et inactifs, parcourt toute la pagination, exporte CSV et SQLite,
-redémarre l'application et vérifie le snapshot restauré. Il compare enfin références,
-reflogs, index et diff du worktree, puis anonymise les dépôts dans le rapport versionné.
+The script compares up to five branches of each repository with `git rev-list`, requires
+merged, diverged and inactive cases, walks the whole pagination, exports CSV and SQLite,
+restarts the application and checks the restored snapshot. It finally compares references,
+reflogs, index and worktree diff, then anonymises the repositories in the versioned
+report.
 
-## Décision de publication
+## Release decision
 
-- [x] limites connues relues dans `docs/KNOWN_LIMITATIONS.md`
-- [x] audit de sécurité relu dans `SECURITY_AUDIT.md`
-- [x] notes de version relues
-- [ ] tag annoté `v0.1.0-rc.1` créé depuis un commit vert
-- [ ] artefacts téléchargés depuis GitHub Actions et empreintes vérifiées
+- [x] known limitations reviewed in `docs/KNOWN_LIMITATIONS.md`
+- [x] security audit reviewed in `SECURITY_AUDIT.md`
+- [x] release notes reviewed
+- [ ] annotated tag `v0.1.0-rc.1` created from a green commit and pushed
+- [ ] GitHub release drafted on that tag, "pre-release" box ticked
+- [ ] release published — publishing triggers `release.yml`, which attaches the archives,
+      checksums, SBOMs, installers and manifests once the matrix is green
+- [ ] artefacts downloaded from the release and their checksums verified

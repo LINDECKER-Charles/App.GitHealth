@@ -1,35 +1,37 @@
-# Limites connues de `0.1.0-rc.1`
+# Known limitations of `0.1.0-rc.1`
 
-- GitHealth analyse seulement les dépôts déjà présents ; il ne clone pas et ne gère pas
-  les identifiants des forges.
-- Aucun `fetch`, `pull` ou `remote prune` n'est lancé. Les références distantes peuvent
-  être anciennes jusqu'à leur mise à jour volontaire par l'utilisateur.
-- Le produit est local et mono-utilisateur. Il n'est pas conçu pour être exposé sur un
-  LAN, Internet ou derrière un reverse proxy.
-- Les archives macOS et l'installeur `.pkg` ne sont ni signés ni notariés. Gatekeeper
-  peut demander une autorisation explicite au premier lancement.
-- L'installeur Windows n'est pas signé. SmartScreen peut avertir au premier lancement,
-  tant qu'un certificat de signature de code n'est pas en place.
-- La mise à jour depuis l'application n'existe que sur Windows et macOS. Sur Linux,
-  seules les archives portables sont publiées et la mise à jour reste manuelle.
-- Sous Windows, la fenêtre a besoin du runtime WebView2. S'il est absent, l'application
-  tente de le télécharger et peut s'arrêter sans message si ce téléchargement échoue.
-- GitHealth n'embarque pas Git : un Git installé sur le poste reste nécessaire.
-  `--git-path` désigne un exécutable situé hors du `PATH` et des emplacements standards.
-- Les dépôts de plusieurs milliers de branches peuvent nécessiter plusieurs minutes. Le
-  rendu reste paginé, mais il n'utilise pas encore de virtualisation de lignes.
-- L'activité d'une branche est approchée par la date de son commit de tête. Git ne stocke
-  pas son intention de création ni l'historique partagé de tous les checkouts.
-- Après une fusion, l'attribution des commits à leur branche d'origine peut devenir
-  impossible. L'interface l'indique explicitement.
-- `.mailmap` normalise les identités connues du dépôt. Sans ce fichier, une même personne
-  utilisant plusieurs adresses peut apparaître plusieurs fois.
-- GitHealth ne détecte pas les pull requests ouvertes et ne remplace pas les politiques
-  de conservation de GitHub, GitLab ou Azure DevOps.
-- Aucune opération de suppression, fusion, checkout ou push n'est proposée. Les
-  recommandations doivent être vérifiées avant toute action réalisée hors de GitHealth.
-- La protection locale limite les requêtes à la session et à l'origine générées au
-  démarrage. Elle ne protège pas contre un logiciel malveillant exécuté avec les mêmes
-  droits que l'utilisateur.
-- Docker ne voit que les dépôts placés sous le montage `/repositories`. Les chemins du
-  poste et ceux du conteneur ne sont pas interchangeables.
+- GitHealth only analyses repositories that are already present; it does not clone and
+  does not handle forge credentials.
+- No `fetch`, `pull` or `remote prune` is ever run. Remote references may be stale until
+  the user updates them deliberately.
+- The product is local and single-user. It is not designed to be exposed on a LAN, on the
+  Internet, or behind a reverse proxy.
+- The macOS archives and the `.pkg` installer are neither signed nor notarised. Gatekeeper
+  may ask for explicit approval on first launch.
+- The Windows installer is not signed. SmartScreen may warn on first launch until a code
+  signing certificate is in place.
+- In-app updates exist only on Windows and macOS. On Linux, only portable archives are
+  published and updating stays manual.
+- On Windows, the window needs the WebView2 runtime. When it is missing, the application
+  tries to download it and may stop without a message if that download fails.
+- GitHealth does not bundle Git: a Git installed on the machine is still required.
+  `--git-path` points to an executable located outside the `PATH` and the standard
+  locations.
+- Repositories with several thousand branches can take several minutes. Rendering stays
+  paginated, but does not use row virtualisation yet.
+- A branch's activity is approximated by the date of its tip commit. Git stores neither
+  the intent behind its creation nor the shared history of every checkout.
+- After a merge, attributing commits to their branch of origin can become impossible. The
+  interface says so explicitly.
+- `.mailmap` normalises the identities known to the repository. Without that file, one
+  person using several addresses can appear several times.
+- GitHealth does not detect open pull requests and does not replace the retention
+  policies of GitHub, GitLab or Azure DevOps.
+- No delete, merge, checkout or push operation is offered. Recommendations must be
+  verified before any action taken outside GitHealth.
+- The local protection restricts requests to the session and the origin generated at
+  startup. It does not protect against malware running with the same rights as the user.
+- Docker only sees the repositories placed under the `/repositories` mount. Host paths
+  and container paths are not interchangeable.
+- The application interface is available in French only. The documentation is in English,
+  so the labels it quotes are translations of what is shown on screen.

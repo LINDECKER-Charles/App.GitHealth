@@ -1,106 +1,99 @@
 # App.GitHealth
 
-Projet .NET / C#. Conventions B-Hive posées par `/b-hive-init` ; les conventions
-transverses (format des commits, nommage des branches) vivent dans le
-`AGENTS.md` global et sont posées par `/b-hive-dev-convention`.
+A .NET / C# project. B-Hive conventions installed by `/b-hive-init`; the cross-cutting
+conventions (commit format, branch naming) live in the global `AGENTS.md` and are
+installed by `/b-hive-dev-convention`.
 
 ## commit
 
-Convention de commits (maintenue par /commit, initialisée par /b-hive-init).
-- Style : Conventional Commits — langue : fr
-- Scopes (chemin → scope) :
+Commit convention (maintained by /commit, initialised by /b-hive-init).
+- Style: Conventional Commits — language: fr
+- Scopes (path → scope):
   - `src/App.GitHealth.Api/**` → `api`
   - `src/App.GitHealth.Core/**` → `core`
   - `src/App.GitHealth.Web/**` → `front`
   - `.github/**` → `ci`
   - `docs/**` → `docs`
   - `docker*`, `compose*`, `deploy*`, `k8s*`, `.gitlab-ci*` → `infra`
-  - config transverse à la racine (`*.sln`, `Directory.*.props`, `.editorconfig`,
-    `global.json`) → `chore` (sans scope)
+  - cross-cutting configuration at the root (`*.sln`, `Directory.*.props`, `.editorconfig`,
+    `global.json`) → `chore` (no scope)
 
-Cette carte est prospective : le dépôt ne contient encore aucun code. Complète-la
-au fil de l'apparition des projets — un projet `src/App.GitHealth.<Zone>` donne
-le scope `<zone>` en minuscules.
+Extend this map as new projects appear — a `src/App.GitHealth.<Zone>` project gives the
+scope `<zone>` in lowercase.
 
-Règles transverses : les tests (`tests/**`, `*Tests.cs`, `*.Tests/**`) voyagent
-avec le code testé ; les entrées de changelog sont jointes au commit feature/fix
-qu'elles documentent.
+Cross-cutting rules: tests (`tests/**`, `*Tests.cs`, `*.Tests/**`) travel with the code
+they test; changelog entries are attached to the feature/fix commit they document.
 
-## Conventions de code
+## Code conventions
 
-Ces conventions s'appliquent à tout le code du projet. Les **limites chiffrées**
-sont des plafonds à respecter ; les **principes** sont des défauts à suivre, sauf
-raison explicite et justifiée de s'en écarter.
+These conventions apply to all the project's code. The **numeric limits** are ceilings to
+respect; the **principles** are defaults to follow, unless there is an explicit, justified
+reason to depart from them.
 
-### Principes directeurs
+### Guiding principles
 
-- **DRY (Don't Repeat Yourself)** — Pas de duplication de logique ni de
-  connaissance métier : une règle vit à un seul endroit. (Nuance : n'abstrais pas
-  avant la 3ᵉ répétition — une duplication ponctuelle vaut mieux qu'une mauvaise
-  abstraction.)
-- **KISS (Keep It Simple)** — Choisis la solution la plus simple qui résout
-  réellement le problème. Pas de complexité ni de « cleverness » gratuites.
-- **SOLID** :
-  - **S — Responsabilité unique** : une classe ou un module n'a qu'une seule
-    raison de changer.
-  - **O — Ouvert/fermé** : ouvert à l'extension, fermé à la modification.
-  - **L — Substitution de Liskov** : un sous-type doit pouvoir remplacer son type
-    parent sans casser le comportement attendu.
-  - **I — Ségrégation des interfaces** : préfère plusieurs interfaces ciblées à
-    une interface fourre-tout.
-  - **D — Inversion des dépendances** : dépends d'abstractions, pas
-    d'implémentations concrètes.
+- **DRY (Don't Repeat Yourself)** — No duplication of logic or of domain knowledge: a rule
+  lives in a single place. (Nuance: do not abstract before the 3rd repetition — a one-off
+  duplication beats a bad abstraction.)
+- **KISS (Keep It Simple)** — Choose the simplest solution that actually solves the
+  problem. No gratuitous complexity or cleverness.
+- **SOLID**:
+  - **S — Single responsibility**: a class or a module has only one reason to change.
+  - **O — Open/closed**: open to extension, closed to modification.
+  - **L — Liskov substitution**: a subtype must be able to replace its parent type without
+    breaking the expected behaviour.
+  - **I — Interface segregation**: prefer several focused interfaces to one catch-all
+    interface.
+  - **D — Dependency inversion**: depend on abstractions, not on concrete implementations.
 
-### Limites de taille et de complexité (vérifiables)
+### Size and complexity limits (verifiable)
 
-| Règle | Limite |
+| Rule | Limit |
 |---|---|
-| Taille d'un fichier | ≤ 300 lignes (alerte), 400 maximum |
-| Fichiers par dossier | ≤ 10 (au-delà, découpe en sous-dossiers par domaine) |
-| Taille d'une fonction / méthode | ≤ 30 lignes |
-| Nombre de paramètres | ≤ 3 (au-delà, regroupe dans un objet / une struct) |
-| Profondeur d'imbrication | ≤ 3 niveaux |
-| Complexité cyclomatique | ≤ 10 par fonction |
-| Longueur de ligne | ≤ 100 caractères |
+| File size | ≤ 300 lines (warning), 400 maximum |
+| Files per folder | ≤ 10 (beyond that, split into subfolders by domain) |
+| Function / method size | ≤ 30 lines |
+| Number of parameters | ≤ 3 (beyond that, group them into an object / a struct) |
+| Nesting depth | ≤ 3 levels |
+| Cyclomatic complexity | ≤ 10 per function |
+| Line length | ≤ 100 characters |
 
-- **Un seul élément public par fichier** (une classe, un composant ou un module
-  par fichier), nommé comme le fichier.
-- **Pas de nombres ni de chaînes magiques** — extrais-les dans des constantes
-  nommées qui expliquent leur intention.
+- **A single public element per file** (one class, component or module per file), named
+  after the file.
+- **No magic numbers or strings** — extract them into named constants that explain their
+  intent.
 
-### Nommage
+### Naming
 
-- **Noms explicites qui révèlent l'intention** — le nom dit *quoi* et *pourquoi*,
-  pas *comment*. Un nom long et clair vaut mieux qu'un nom court et obscur.
-- **Conventions cohérentes** sur tout le projet — casse idiomatique C#, sans
-  jamais la mélanger : `PascalCase` pour les types, méthodes, propriétés et
-  constantes ; `camelCase` pour les variables locales et les paramètres ;
-  interfaces préfixées `I` (`IRepositoryScanner`) ; champs privés en `_camelCase`.
-- **Pas d'abréviations cryptiques** — `userCount`, pas `usrCnt`. Seules les
-  abréviations universelles sont tolérées (`id`, `url`, `http`).
-- **Booléens préfixés** par `Is`, `Has`, `Should`, `Can`… (ex. `IsActive`,
-  `HasAccess`, `ShouldRetry`).
+- **Explicit names that reveal intent** — the name says *what* and *why*, not *how*. A long
+  clear name beats a short obscure one.
+- **Consistent conventions** across the whole project — idiomatic C# casing, never mixed:
+  `PascalCase` for types, methods, properties and constants; `camelCase` for local
+  variables and parameters; interfaces prefixed with `I` (`IRepositoryScanner`); private
+  fields in `_camelCase`.
+- **No cryptic abbreviations** — `userCount`, not `usrCnt`. Only universal abbreviations
+  are tolerated (`id`, `url`, `http`).
+- **Booleans prefixed** with `Is`, `Has`, `Should`, `Can`… (e.g. `IsActive`, `HasAccess`,
+  `ShouldRetry`).
 
-### Fonctions
+### Functions
 
-- **Une fonction = une seule chose** — si tu dois écrire « et » pour décrire ce
-  qu'elle fait, découpe-la.
-- **Privilégie les fonctions pures** — évite les effets de bord quand c'est
-  possible, et rends-les explicites quand ils sont nécessaires.
-- **Guard clauses / return early** — traite et sors tôt sur les cas limites au
-  lieu d'imbriquer des `if/else`.
-- **Évite les flag parameters** — un booléen qui change le comportement cache
-  deux fonctions déguisées en une seule ; sépare-les.
-- **CQS (Command Query Separation)** — une fonction *modifie* l'état OU
-  *retourne* une valeur, jamais les deux.
+- **One function = one thing** — if you have to write "and" to describe what it does, split
+  it.
+- **Favour pure functions** — avoid side effects where possible, and make them explicit
+  when they are necessary.
+- **Guard clauses / return early** — handle edge cases and return early instead of nesting
+  `if/else`.
+- **Avoid flag parameters** — a boolean that changes behaviour hides two functions
+  disguised as one; split them.
+- **CQS (Command Query Separation)** — a function either *changes* state OR *returns* a
+  value, never both.
 
 ## Tests
 
-- **Toute feature s'accompagne de tests**, livrés avec elle (même branche, même
-  PR).
-- **Uniquement le nécessaire pour tester la feature** : le comportement nominal
-  et les cas limites qu'elle introduit. Pas de course au pourcentage de
-  couverture, pas de tests redondants ; on ne teste ni le framework ni les
-  bibliothèques tierces.
-- Un bon test échoue quand le **comportement** de la feature casse — pas quand
-  son implémentation change.
+- **Every feature ships with tests**, delivered alongside it (same branch, same PR).
+- **Only what is needed to test the feature**: the nominal behaviour and the edge cases it
+  introduces. No chasing a coverage percentage, no redundant tests; we test neither the
+  framework nor third-party libraries.
+- A good test fails when the feature's **behaviour** breaks — not when its implementation
+  changes.

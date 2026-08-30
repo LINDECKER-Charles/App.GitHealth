@@ -1,479 +1,478 @@
-# Guide utilisateur GitHealth
+# GitHealth user guide
 
-Ce guide couvre la release candidate `0.1.0-rc.1`. GitHealth s'exécute sur le poste,
-lit des dépôts déjà présents et conserve ses résultats dans une base SQLite locale.
+This guide covers the `0.1.0-rc.1` release candidate. GitHealth runs on your machine,
+reads repositories that are already there, and keeps its results in a local SQLite
+database.
 
-## Sommaire
+> [!NOTE]
+> The application interface currently ships in French only. The labels quoted in this
+> guide are translated to English; look for the equivalent French wording on screen.
+> Translating the interface is planned, and tracked in the known limitations.
 
-- [Ce que GitHealth fait, et ne fait jamais](#ce-que-githealth-fait-et-ne-fait-jamais)
-- [Installer et démarrer](#installer-et-démarrer)
-- [Options du lanceur](#options-du-lanceur)
-- [Se repérer dans l'espace de travail](#se-repérer-dans-lespace-de-travail)
-- [Raccourcis clavier](#raccourcis-clavier)
-- [Ajouter un dépôt](#ajouter-un-dépôt)
-- [Scanner un dossier entier](#scanner-un-dossier-entier)
-- [Lire une analyse](#lire-une-analyse)
-- [Comprendre les recommandations](#comprendre-les-recommandations)
-- [Expliquer une branche](#expliquer-une-branche)
-- [Configurer les politiques](#configurer-les-politiques)
-- [Relocaliser un dépôt déplacé](#relocaliser-un-dépôt-déplacé)
-- [Historique et exports](#historique-et-exports)
-- [Arrêter et reprendre](#arrêter-et-reprendre)
-- [Questions fréquentes](#questions-fréquentes)
-- [Aller plus loin](#aller-plus-loin)
+## Contents
 
-## Ce que GitHealth fait, et ne fait jamais
+- [What GitHealth does, and never does](#what-githealth-does-and-never-does)
+- [Install and start](#install-and-start)
+- [Launcher options](#launcher-options)
+- [Finding your way around the workspace](#finding-your-way-around-the-workspace)
+- [Keyboard shortcuts](#keyboard-shortcuts)
+- [Adding a repository](#adding-a-repository)
+- [Scanning a whole folder](#scanning-a-whole-folder)
+- [Reading an analysis](#reading-an-analysis)
+- [Understanding the recommendations](#understanding-the-recommendations)
+- [Explaining a branch](#explaining-a-branch)
+- [Configuring policies](#configuring-policies)
+- [Relocating a repository that moved](#relocating-a-repository-that-moved)
+- [History and exports](#history-and-exports)
+- [Stopping and resuming](#stopping-and-resuming)
+- [Frequently asked questions](#frequently-asked-questions)
+- [Going further](#going-further)
 
-GitHealth **observe**. Il lit l'historique d'un dépôt déjà présent sur la machine, en
-tire des mesures, et propose une lecture de l'état de ses branches. Il ne décide rien à
-votre place et n'exécute aucune action de nettoyage.
+## What GitHealth does, and never does
 
-| GitHealth fait | GitHealth ne fait jamais |
+GitHealth **observes**. It reads the history of a repository already present on the
+machine, derives measurements from it, and offers a reading of the state of its
+branches. It decides nothing on your behalf and performs no cleanup action.
+
+| GitHealth does | GitHealth never does |
 | --- | --- |
-| Lire les branches locales et de suivi distant | Supprimer, fusionner ou pousser une branche |
-| Comparer chaque branche à une référence choisie | Faire un checkout ou modifier le worktree |
-| Mesurer avance, retard, fusion et activité | Lancer `git fetch` ou `git remote prune` |
-| Identifier les contributeurs d'une branche | Cloner un dépôt ou gérer un identifiant |
-| Proposer une recommandation et l'expliquer | Transmettre vos données à l'extérieur |
-| Conserver l'historique des analyses en local | Écrire quoi que ce soit dans le dépôt |
-| Copier pour vous la commande de suppression | Exécuter cette commande |
+| Read local and remote-tracking branches | Delete, merge or push a branch |
+| Compare each branch to a chosen baseline | Check out anything or modify the worktree |
+| Measure ahead, behind, merge state and activity | Run `git fetch` or `git remote prune` |
+| Identify the contributors of a branch | Clone a repository or handle credentials |
+| Offer a recommendation and explain it | Send your data anywhere |
+| Keep the analysis history locally | Write anything into the repository |
+| Copy the deletion command for you | Run that command |
 
-Aucune analyse n'écrit dans le dépôt : les références, l'index, le worktree et les
-reflogs restent intacts. Le détail de ces garanties est décrit dans le
-[modèle de sécurité](SECURITY_MODEL.md).
+No analysis writes to the repository: references, index, worktree and reflogs stay
+untouched. These guarantees are detailed in the
+[security model](SECURITY_MODEL.md).
 
-## Installer et démarrer
+## Install and start
 
-GitHealth s'installe comme une application de bureau : il ouvre sa propre fenêtre,
-adossée au moteur de rendu du système. Les archives portables restent publiées pour qui
-préfère se passer d'installeur, et le mode Docker sert l'auto-hébergement.
+GitHealth installs like a desktop application: it opens its own window, backed by the
+system rendering engine. Portable archives are still published for anyone who prefers to
+skip the installer, and Docker mode covers self-hosting.
 
 ### Windows
 
-1. Télécharger `App.GitHealth-win-x64-Setup.exe` depuis la page des releases.
-2. Le lancer : GitHealth s'installe pour l'utilisateur courant dans
-   `%LOCALAPPDATA%\App.GitHealth`, sans invite UAC, avec un raccourci sur le Bureau et
-   dans le menu Démarrer.
-3. Ouvrir GitHealth : la fenêtre s'affiche maximisée.
+1. Download `App.GitHealth-win-x64-Setup.exe` from the releases page.
+2. Run it: GitHealth installs for the current user under
+   `%LOCALAPPDATA%\App.GitHealth`, without a UAC prompt, with a Desktop and a Start menu
+   shortcut.
+3. Open GitHealth: the window appears maximised.
 
-L'installeur n'est pas signé. Si Windows demande une confirmation supplémentaire au
-premier lancement, vérifier l'origine du fichier avant de poursuivre.
+The installer is not signed. If Windows asks for an extra confirmation on first launch,
+check where the file came from before continuing.
 
-**Scoop** installe l'archive portable plutôt que l'installeur : chaque release Windows
-publie un manifeste `githealth.json` à côté des archives, et `scoop install` accepte son
-URL directement. Les données vivant dans `%LOCALAPPDATA%\GitHealth`, elles survivent à
+**Scoop** installs the portable archive rather than the installer: every Windows release
+publishes a `githealth.json` manifest next to the archives, and `scoop install` accepts
+its URL directly. Because data lives in `%LOCALAPPDATA%\GitHealth`, it survives
 `scoop uninstall`.
 
-Sans installeur, extraire entièrement `githealth-win-x64.zip` puis lancer
-`githealth.exe`. Un dépôt peut être prérempli dès le lancement :
+Without an installer, extract `githealth-win-x64.zip` completely, then run
+`githealth.exe`. A repository can be pre-filled at launch:
 
 ```powershell
-githealth.exe --repo D:\Dev\MonDepot
+githealth.exe --repo D:\Dev\MyRepository
 ```
 
 ### macOS
 
-Télécharger `App.GitHealth-osx-arm64-Setup.pkg`, ou la variante `osx-x64` sur un Mac
-Intel, puis ouvrir le paquet et suivre l'installation.
+Download `App.GitHealth-osx-arm64-Setup.pkg`, or the `osx-x64` variant on an Intel Mac,
+then open the package and follow the installation.
 
-Ni l'installeur ni les archives ne sont signés ni notariés. Si Gatekeeper bloque le
-premier lancement, vérifier l'origine du fichier avant d'autoriser explicitement
-l'application dans les réglages de confidentialité de macOS.
+Neither the installer nor the archives are signed or notarised. If Gatekeeper blocks the
+first launch, check where the file came from before explicitly allowing the application
+in the macOS privacy settings.
 
-Sans installeur, extraire l'archive correspondant au processeur, puis lancer
-`githealth` :
+Without an installer, extract the archive matching your processor, then run `githealth`:
 
 ```shell
-./githealth --repo "$HOME/Dev/MonDepot"
+./githealth --repo "$HOME/Dev/MyRepository"
 ```
 
 ### Linux
 
-Extraire `githealth-linux-x64.tar.gz`, puis lancer `githealth`. La fenêtre y dépend de
-WebKitGTK : sans cette bibliothèque, GitHealth écrit un avertissement et ouvre
-l'interface dans le navigateur système. Il n'y a pas d'installeur ni de mise à jour
-depuis l'application ; une nouvelle version se récupère comme la première.
+Extract `githealth-linux-x64.tar.gz`, then run `githealth`. The window depends on
+WebKitGTK there: without that library, GitHealth prints a warning and opens the interface
+in the system browser. There is no installer and no in-app update; a new version is
+obtained the same way as the first one.
 
-### Auto-hébergement avec Docker
+### Self-hosting with Docker
 
-Le mode conteneur n'ouvre aucune fenêtre : il sert l'interface en HTTP, à ouvrir dans un
-navigateur.
+Container mode opens no window: it serves the interface over HTTP, to be opened in a
+browser.
 
-Copier `.env.example` vers `.env`, indiquer dans `GITHEALTH_REPOSITORIES_ROOT` le
-dossier parent des dépôts, puis lancer :
+Copy `.env.example` to `.env`, point `GITHEALTH_REPOSITORIES_ROOT` at the parent folder
+of your repositories, then run:
 
 ```shell
 docker compose up --build
 ```
 
-Ouvrir ensuite `http://127.0.0.1:8080`. Le bouton **Parcourir** affiche les dossiers
-montés sous `/repositories` et permet de choisir le dépôt sans saisir son chemin de
-conteneur.
+Then open `http://127.0.0.1:8080`. The **Browse** button lists the folders mounted under
+`/repositories` and lets you pick the repository without typing its container path.
 
-### Mettre à jour
+### Updating
 
-Installé par `Setup.exe` ou par le paquet macOS, GitHealth vérifie si une version plus
-récente est publiée. Le cas échéant, un bouton **Mettre à jour** apparaît dans la barre
-supérieure : il télécharge la version, l'installe et relance l'application. Hors d'une
-installation gérée — archive portable, Scoop, Docker, Linux — le bouton n'apparaît pas.
+When installed through `Setup.exe` or the macOS package, GitHealth checks whether a newer
+version has been published. If so, an **Update** button appears in the top bar: it
+downloads the version, installs it and restarts the application. Outside a managed
+installation — portable archive, Scoop, Docker, Linux — the button never appears.
 
-Si la source des releases est injoignable, rien ne s'affiche et rien n'échoue :
-l'application reste utilisable hors ligne. La base vit dans un dossier disjoint de
-l'installation : elle survit aux mises à jour comme à la désinstallation.
+If the release source is unreachable, nothing is displayed and nothing fails: the
+application stays usable offline. The database lives in a folder separate from the
+installation: it survives both updates and uninstallation.
 
-### Prérequis
+### Prerequisites
 
-Git 2.38 ou plus récent est recommandé. GitHealth embarque le runtime .NET, mais **pas
-Git** : il doit déjà être installé sur le poste. Il le cherche seul, et le premier trouvé
-gagne : le chemin donné par `--git-path`, puis `git` via le `PATH`, puis les emplacements
-d'installation standards — `%ProgramFiles%\Git\cmd`, `%ProgramFiles(x86)%\Git\cmd` et
-`%LOCALAPPDATA%\Programs\Git\cmd` sur Windows, `/opt/homebrew/bin`, `/usr/local/bin` et
-`/usr/bin` sur macOS, `/usr/bin` et `/usr/local/bin` sur Linux.
+Git 2.38 or newer is recommended. GitHealth bundles the .NET runtime, but **not Git**: it
+must already be installed on the machine. It looks for it on its own, and the first hit
+wins: the path given by `--git-path`, then `git` on the `PATH`, then the standard
+installation locations — `%ProgramFiles%\Git\cmd`, `%ProgramFiles(x86)%\Git\cmd` and
+`%LOCALAPPDATA%\Programs\Git\cmd` on Windows, `/opt/homebrew/bin`, `/usr/local/bin` and
+`/usr/bin` on macOS, `/usr/bin` and `/usr/local/bin` on Linux.
 
-Si aucun ne convient, l'interface affiche un bandeau nommant les emplacements testés au
-lieu d'échouer au premier scan. `--git-path <chemin>`, ou la configuration
-`GitHealth:Git:ExecutablePath`, désigne alors l'exécutable à utiliser.
+If none of them fits, the interface shows a banner naming the locations it tried, instead
+of failing on the first scan. `--git-path <path>`, or the
+`GitHealth:Git:ExecutablePath` setting, then points at the executable to use.
 
-Les archives ne sont pas des exécutables monofichiers — les extraire entièrement et
-garder leurs fichiers ensemble.
+The archives are not single-file executables — extract them completely and keep their
+files together.
 
-## Options du lanceur
+## Launcher options
 
-| Option | Défaut | Effet |
+| Option | Default | Effect |
 | --- | --- | --- |
-| `--repo <chemin>` | vide | préremplit le dépôt proposé sur l'accueil |
-| `--port <1-65535>` | port disponible | impose un port précis sur l'interface loopback |
-| `--data-dir <chemin>` | répertoire système | déplace la base et son verrou d'instance |
-| `--git-path <chemin>` | résolution automatique | impose l'exécutable Git à utiliser |
-| `--no-window` | fenêtre de bureau | ouvre l'interface dans le navigateur système |
-| `--no-browser` | interface ouverte | n'ouvre aucune interface au démarrage |
-| `--help`, `-h` | — | affiche l'aide puis quitte |
+| `--repo <path>` | empty | pre-fills the repository offered on the home screen |
+| `--port <1-65535>` | free port | forces a specific port on the loopback interface |
+| `--data-dir <path>` | system directory | moves the database and its instance lock |
+| `--git-path <path>` | automatic resolution | forces the Git executable to use |
+| `--no-window` | desktop window | opens the interface in the system browser |
+| `--no-browser` | interface opened | opens no interface at startup |
+| `--help`, `-h` | — | prints the help and exits |
 
-Les formes `--repo=…`, `--port=…`, `--data-dir=…` et `--git-path=…` sont également
-acceptées. `--no-browser` implique `--no-window` : ni fenêtre ni navigateur, l'interface
-reste joignable à l'adresse annoncée sur la console. En mode conteneur, aucune interface
-n'est ouverte et ces deux options n'ont pas d'objet.
+The `--repo=…`, `--port=…`, `--data-dir=…` and `--git-path=…` forms are also accepted.
+`--no-browser` implies `--no-window`: neither window nor browser, and the interface stays
+reachable at the address printed on the console. In container mode no interface is
+opened, and both options are moot.
 
-Sans `--port`, le système attribue un port disponible ; GitHealth n'écoute que sur
-`127.0.0.1` et refuse de démarrer plutôt que de basculer silencieusement sur une
-interface réseau.
+Without `--port`, the system assigns a free port; GitHealth listens only on `127.0.0.1`
+and refuses to start rather than silently falling back to a network interface.
 
-Les emplacements de données par défaut et les variables d'environnement équivalentes
-sont détaillés dans [DEVOPS.md](DEVOPS.md).
+The default data locations and the equivalent environment variables are detailed in
+[DEVOPS.md](DEVOPS.md).
 
-## Se repérer dans l'espace de travail
+## Finding your way around the workspace
 
-Une séquence d'ouverture décrit ce que GitHealth lit au démarrage. **Passer
-l'introduction** ou la touche `Échap` la coupent ; elle ne rejoue plus pendant la
-session. Un mouvement réduit demandé par le système la supprime entièrement.
+An opening sequence describes what GitHealth reads at startup. **Skip the intro** or the
+`Esc` key cuts it short; it does not replay again during the session. A reduced-motion
+setting from the system removes it entirely.
 
-La fenêtre s'ouvre maximisée : l'espace de travail réclame au moins 1180 pixels CSS de
-large, et une taille fixe ne les garantit pas sur un écran mis à l'échelle. La restaurer
-la ramène à 1360 × 860 pixels, sans jamais descendre sous 960 × 600.
+The window opens maximised: the workspace needs at least 1180 CSS pixels of width, and a
+fixed size does not guarantee them on a scaled display. Restoring it brings it back to
+1360 × 860 pixels, never below 960 × 600.
 
-L'écran tient en trois zones :
+The screen has three zones:
 
-- la **barre supérieure** porte la recherche globale, le thème clair ou sombre, la
-  sauvegarde des données et le guide — ainsi que **Mettre à jour** quand une version plus
-  récente est publiée ;
-- le **rail** liste les dépôts observés, leur accessibilité et leur chemin, rangés en
-  sections repliables ;
-- la **zone centrale** présente le dépôt courant sous trois onglets : **Diagnostic**,
-  **Historique** et **Politiques**.
+- the **top bar** carries the global search, the light or dark theme, the data backup and
+  the guide — plus **Update** when a newer version has been published;
+- the **rail** lists the observed repositories, their reachability and their path,
+  arranged in collapsible sections;
+- the **central area** presents the current repository under three tabs: **Diagnostic**,
+  **History** and **Policies**.
 
-## Raccourcis clavier
+## Keyboard shortcuts
 
-| Raccourci | Effet |
+| Shortcut | Effect |
 | --- | --- |
-| `⌘K` / `Ctrl+K` | ouvrir la palette de commandes |
-| `↑` `↓` | parcourir les résultats de la palette |
-| `Entrée` | valider le résultat surligné |
-| `Échap` | fermer la palette, un panneau, ou couper la séquence d'ouverture |
+| `⌘K` / `Ctrl+K` | open the command palette |
+| `↑` `↓` | move through the palette results |
+| `Enter` | confirm the highlighted result |
+| `Esc` | close the palette or a panel, or cut the opening sequence |
 
-La palette atteint une branche, un dépôt ou une action sans quitter le clavier. Sur un
-dépôt de plusieurs centaines de branches, c'est le chemin le plus court entre une idée
-et la fiche correspondante.
+The palette reaches a branch, a repository or an action without leaving the keyboard. On
+a repository with several hundred branches, it is the shortest path between an idea and
+the matching detail panel.
 
-## Ranger le rail : favoris et groupes
+## Organising the rail: favourites and groups
 
-Passer la souris sur un dépôt du rail fait apparaître deux actions.
+Hovering over a repository in the rail reveals two actions.
 
-- L'**étoile** l'épingle dans la section **Favoris**, tout en haut du rail. L'étoile reste
-  pleine et visible une fois le dépôt en favori. Un favori ne paraît que là : il quitte la
-  section de son groupe, et le rail ne montre jamais deux fois le même dépôt.
-- Le **dossier ouvert** ouvre **Ranger dans un groupe** : choisir un groupe existant,
-  **Sans groupe**, ou saisir un nom et sélectionner **Créer**. Un groupe naît de son premier
-  dépôt et disparaît quand le dernier le quitte. Les deux mêmes actions sont dans la palette
-  `⌘K` pour le dépôt ouvert.
+- The **star** pins it in the **Favourites** section, at the very top of the rail. The
+  star stays filled and visible once the repository is a favourite. A favourite appears
+  there only: it leaves its group's section, and the rail never shows the same repository
+  twice.
+- The **open folder** opens **Move to a group**: pick an existing group, **Ungrouped**,
+  or type a name and select **Create**. A group is born from its first repository and
+  disappears when the last one leaves. Both actions are also available in the `⌘K`
+  palette for the repository currently open.
 
-Chaque en-tête de section replie ou déplie son contenu, et le compteur à droite dit combien
-de dépôts s'y trouvent. Les groupes sont classés par ordre alphabétique, les dépôts aussi à
-l'intérieur d'une section ; **Sans groupe** ferme la marche. Tant qu'aucun favori ni groupe
-n'existe, le rail reste une liste plate, sans en-tête.
+Every section header collapses or expands its content, and the counter on the right says
+how many repositories it holds. Groups are sorted alphabetically, and so are the
+repositories inside a section; **Ungrouped** comes last. As long as no favourite and no
+group exist, the rail stays a flat list, with no headers.
 
-Favoris et groupes sont enregistrés dans la base locale : ils suivent la sauvegarde des
-données. Les sections repliées, elles, restent dans le navigateur de ce poste.
+Favourites and groups are stored in the local database: they follow the data backup.
+Collapsed sections, on the other hand, stay in this machine's browser.
 
-## Ajouter un dépôt
+## Adding a repository
 
-1. Sélectionner **Ajouter un dépôt**.
-2. Saisir son chemin absolu, ou utiliser **Parcourir**. Le chemin est vérifié pendant
-   la saisie : GitHealth annonce les références candidates dès qu'il reconnaît le dépôt.
-3. Choisir le nom affiché, la référence de comparaison et le périmètre des branches.
-4. Sélectionner **Ajouter le dépôt**.
+1. Select **Add a repository**.
+2. Type its absolute path, or use **Browse**. The path is checked as you type: GitHealth
+   announces the candidate baselines as soon as it recognises the repository.
+3. Choose the display name, the baseline to compare against and the branch scope.
+4. Select **Add repository**.
 
-En fenêtre, **Parcourir** ouvre le dialogue de dossier du système : le chemin choisi
-revient dans le champ. Dans un navigateur et en Docker, il affiche le navigateur de
-dossiers servi par l'application.
+In window mode, **Browse** opens the system folder dialog: the chosen path comes back
+into the field. In a browser and under Docker, it shows the folder browser served by the
+application.
 
-GitHealth accepte les dépôts standards, bare et les worktrees liés. Il ne clone pas de
-dépôt et n'utilise aucun identifiant distant.
+GitHealth accepts standard repositories, bare repositories and linked worktrees. It does
+not clone repositories and uses no remote credentials.
 
-## Scanner un dossier entier
+## Scanning a whole folder
 
-Pour prendre en charge plusieurs dépôts d'un coup, sélectionner **Scanner un dossier**.
+To take on several repositories at once, select **Scan a folder**.
 
-1. Saisir le dossier à explorer, ou utiliser **Parcourir**.
-2. Choisir la **profondeur** : le nombre de niveaux inspectés sous ce dossier. Un dépôt
-   trouvé n'est pas ouvert plus loin, et les dossiers cachés ou de build sont ignorés.
-3. Sélectionner **Détecter les dépôts**. La liste distingue les dépôts déjà suivis, les
-   bare repositories et ceux dont aucune référence n'est lisible — ces derniers ne sont
-   pas sélectionnables.
-4. Décocher ce qui ne doit pas être mesuré, puis sélectionner **Analyser N dépôts**.
+1. Type the folder to explore, or use **Browse**.
+2. Choose the **depth**: how many levels are inspected below that folder. A repository
+   that is found is not opened any deeper, and hidden or build folders are skipped.
+3. Select **Detect repositories**. The list distinguishes repositories that are already
+   tracked, bare repositories, and those whose references cannot be read — the latter
+   cannot be selected.
+4. Uncheck whatever should not be measured, then select **Analyse N repositories**.
 
-Les dépôts inconnus sont d'abord enregistrés avec la référence proposée et les seuils
-initiaux ; ceux déjà suivis gardent leur configuration. Chaque dépôt part en analyse dès
-son enregistrement, sans attendre les suivants.
+Unknown repositories are first registered with the proposed baseline and the initial
+thresholds; those already tracked keep their configuration. Each repository starts its
+analysis as soon as it is registered, without waiting for the others.
 
-Les analyses avancent **en parallèle** dans la limite fixée par l'hôte, et en file pour
-le reste : un dépôt refusé par une file pleine repart automatiquement dès qu'une place se
-libère. Le suivi reste lisible dans le rail. Fermer l'onglet du navigateur n'interrompt
-rien ; fermer la fenêtre de bureau arrête GitHealth, et les analyses en cours avec lui.
+Analyses progress **in parallel** up to the limit set by the host, and queue up beyond
+that: a repository rejected by a full queue is automatically retried as soon as a slot
+frees up. Progress stays readable in the rail. Closing the browser tab interrupts
+nothing; closing the desktop window stops GitHealth, and the analyses in flight with it.
 
-## Lire une analyse
+## Reading an analysis
 
-Sélectionner **Lancer une analyse** depuis le tableau de bord. Les phases visibles
-distinguent la lecture de la topologie, l'enrichissement et la persistance.
+Select **Run an analysis** from the dashboard. The visible phases distinguish reading the
+topology, enrichment and persistence.
 
-Pour une référence `R` et une branche `B` :
+For a baseline `R` and a branch `B`:
 
-- l'avance compte les commits accessibles depuis `B`, mais pas depuis `R` ;
-- le retard compte les commits accessibles depuis `R`, mais pas depuis `B` ;
-- l'activité correspond à la date du commit pointé par la branche ;
-- les contributeurs viennent des commits propres à `B`, hors commits de fusion.
+- ahead counts the commits reachable from `B` but not from `R`;
+- behind counts the commits reachable from `R` but not from `B`;
+- activity is the date of the commit the branch points at;
+- contributors come from the commits specific to `B`, merge commits excluded.
 
-La capture affiche les SHA réellement comparés. Les références peuvent évoluer ensuite
-sans modifier ce snapshot. GitHealth ne lance jamais automatiquement `fetch` : une
-branche distante affichée reflète donc l'état local de `refs/remotes`.
+The capture shows the SHAs that were actually compared. References may move afterwards
+without changing that snapshot. GitHealth never runs `fetch` automatically: a remote
+branch shown here therefore reflects the local state of `refs/remotes`.
 
-Le snapshot est chargé une fois, puis filtré, trié et compté sans nouvel appel. Les
-tuiles donnent la répartition des recommandations et servent de filtre. Les jetons
-**Filtres actifs** rappellent ce qui restreint la vue et se retirent un par un.
+The snapshot is loaded once, then filtered, sorted and counted without another call. The
+tiles give the breakdown of recommendations and act as filters. The **Active filters**
+chips recall what is narrowing the view and can be removed one by one.
 
-Cocher des lignes ouvre les actions groupées : protéger, exclure, copier les commandes
-`git` correspondantes ou exporter la sélection.
+Ticking rows opens the bulk actions: protect, exclude, copy the matching `git` commands,
+or export the selection.
 
-## Comprendre les recommandations
+## Understanding the recommendations
 
-Chaque branche reçoit trois qualifications indépendantes : sa **topologie** vis-à-vis de
-la référence, son **activité**, et la **recommandation** qui en découle.
+Each branch receives three independent qualifications: its **topology** relative to the
+baseline, its **activity**, and the **recommendation** that follows from them.
 
-### Topologie
+### Topology
 
-| Étiquette | Signification |
+| Label | Meaning |
 | --- | --- |
-| **Synchronisée** | la branche et la référence pointent le même commit |
-| **En avance** | elle porte des commits que la référence n'a pas, sans retard |
-| **Fusionnée** | son sommet est un ancêtre de la référence : tout son travail y est déjà |
-| **Divergente** | chacune porte des commits que l'autre n'a pas |
-| **Sans base** | aucun ancêtre commun avec la référence |
+| **In sync** | the branch and the baseline point at the same commit |
+| **Ahead** | it carries commits the baseline does not have, and is not behind |
+| **Merged** | its tip is an ancestor of the baseline: all its work is already there |
+| **Diverged** | each side carries commits the other does not have |
+| **No merge base** | no common ancestor with the baseline |
 
-### Activité
+### Activity
 
-L'activité mesure l'âge du commit pointé par la branche, pas le temps passé dessus :
-Git ne conserve ni l'intention de création ni les checkouts.
+Activity measures the age of the commit the branch points at, not the time spent on it:
+Git keeps neither the intent behind its creation nor the checkouts.
 
-| Étiquette | Signification |
+| Label | Meaning |
 | --- | --- |
-| **Active** | plus récente que le seuil d'activité |
-| **Vieillissante** | entre les deux seuils |
-| **Inactive** | plus ancienne que le seuil d'inactivité |
-| **Inconnue** | aucune date de sommet exploitable |
+| **Active** | more recent than the activity threshold |
+| **Ageing** | between the two thresholds |
+| **Inactive** | older than the inactivity threshold |
+| **Unknown** | no usable tip date |
 
-### Recommandation
+### Recommendation
 
-| Recommandation | Quand elle apparaît |
+| Recommendation | When it appears |
 | --- | --- |
-| **Conserver** | commits propres, activité dans les seuils, topologie sans alerte |
-| **À examiner** | branche inactive, divergente ou sans base ; ou fusionnée hors délai |
-| **Nettoyage possible** | aucun commit propre et plus aucune activité depuis longtemps |
-| **Terminée** | aucun commit propre, mais le délai court encore — ou date de sommet illisible |
-| **Exclue** | un motif protégé ou exclu capture la référence, avant toute autre règle |
+| **Keep** | own commits, activity within the thresholds, topology without warning |
+| **Review** | inactive, diverged or unrelated branch; or merged past the deadline |
+| **Cleanup possible** | no own commits and no activity for a long time |
+| **Done** | no own commits, but the deadline is still running — or the tip date is unreadable |
+| **Excluded** | a protected or excluded pattern captures the reference, before any other rule |
 
-Un motif **protégé** ou **exclu** l'emporte sur tout le reste : la branche sort du
-classement et la fiche indique lequel des deux motifs l'a capturée.
+A **protected** or **excluded** pattern wins over everything else: the branch leaves the
+classification, and the detail panel says which of the two patterns captured it.
 
-« Terminée » n'est pas « Conserver ». Une branche fusionnée ne détient plus rien
-d'unique — la référence contient déjà tout son historique — et le vert de « Conserver »
-laisserait croire qu'il faut la préserver. Le vert reste réservé aux branches qui
-portent des commits que la référence n'a pas.
+"Done" is not "Keep". A merged branch no longer holds anything unique — the baseline
+already contains its whole history — and the green of "Keep" would suggest it must be
+preserved. Green stays reserved for branches carrying commits the baseline does not have.
 
-La fiche de branche indique toujours la règle appliquée en clair, ainsi que l'échelle de
-seuils utilisée.
+The branch detail panel always states the rule that was applied in plain words, together
+with the threshold scale that was used.
 
-## Expliquer une branche
+## Explaining a branch
 
-Ouvrir une ligne du tableau : la fiche s'ouvre à droite et la branche est inscrite dans
-l'URL, donc partageable entre deux onglets de la même session locale. La fiche donne :
+Open a row in the table: the detail panel opens on the right and the branch is written
+into the URL, so it can be shared between two tabs of the same local session. The panel
+gives:
 
-- la recommandation et la trace des règles qui y mènent ;
-- sa topologie et ses compteurs d'avance et de retard ;
-- les SHA et l'heure de capture ;
-- les contributeurs normalisés par `.mailmap`, lorsqu'il existe ;
-- la commande de suppression manuelle, à copier. GitHealth ne l'exécute jamais.
+- the recommendation and the trace of the rules leading to it;
+- its topology and its ahead/behind counters;
+- the SHAs and the capture time;
+- the contributors normalised by `.mailmap`, when one exists;
+- the manual deletion command, ready to copy. GitHealth never runs it.
 
-**Protéger** et **Exclure** ajoutent la référence aux motifs du dépôt et enregistrent la
-politique aussitôt. **Suivante** parcourt la vue courante sans quitter la fiche.
+**Protect** and **Exclude** add the reference to the repository's patterns and save the
+policy immediately. **Next** walks through the current view without leaving the panel.
 
-Après certaines fusions, Git ne permet plus d'attribuer avec certitude les commits à
-leur branche d'origine. GitHealth signale alors l'attribution comme indisponible au lieu
-d'inventer une identité.
+After certain merges, Git no longer allows commits to be attributed to their branch of
+origin with certainty. GitHealth then reports the attribution as unavailable instead of
+inventing an identity.
 
-## Configurer les politiques
+## Configuring policies
 
-La page **Politiques** permet de définir :
+The **Policies** page lets you define:
 
-- le nombre de jours pendant lequel une branche est active — **30 jours** par défaut ;
-- le seuil à partir duquel elle devient inactive — **90 jours** par défaut ;
-- des motifs protégés ou exclus, avec `*` et `?` comme jokers.
+- how many days a branch counts as active — **30 days** by default;
+- the threshold beyond which it becomes inactive — **90 days** by default;
+- protected or excluded patterns, with `*` and `?` as wildcards.
 
-Les motifs s'appliquent au nom complet de la référence, `refs/heads/…` ou
-`refs/remotes/…`, et respectent la casse. Le seuil d'inactivité doit rester strictement
-supérieur au seuil d'activité.
+Patterns apply to the full reference name, `refs/heads/…` or `refs/remotes/…`, and are
+case-sensitive. The inactivity threshold must stay strictly greater than the activity
+threshold.
 
-Ces deux seuils valent pour les branches qui portent des commits propres. Une branche
-**fusionnée dans la référence**, ou pointant sur le même commit qu'elle, ne détient plus
-rien d'unique : la référence contient déjà tout son historique, et la supprimer ne perd
-aucun commit. Elle suit donc une échelle réduite, et ne passe jamais par « Conserver » :
+Both thresholds apply to branches that carry their own commits. A branch **merged into
+the baseline**, or pointing at the same commit as the baseline, no longer holds anything
+unique: the baseline already contains its whole history, and deleting it loses no commit.
+It therefore follows a shortened scale, and never goes through "Keep":
 
-| âge du sommet | recommandation |
+| tip age | recommendation |
 | --- | --- |
-| jusqu'à 7 jours | **Terminée**, en violet |
-| de 7 à 30 jours | **À examiner** |
-| au-delà de 30 jours | **Nettoyage possible** |
+| up to 7 days | **Done**, in purple |
+| 7 to 30 days | **Review** |
+| beyond 30 days | **Cleanup possible** |
 
-« Terminée » n'est pas « Conserver » : il n'y a rien à préserver, seulement rien à faire
-dans l'immédiat. Le vert de « Conserver » reste réservé aux branches qui portent des
-commits que la référence n'a pas. La fiche de branche indique l'échelle appliquée et
-pourquoi. Si les seuils du projet sont déjà plus courts, ce sont eux qui s'appliquent :
-l'échelle réduite ne rallonge jamais rien.
+"Done" is not "Keep": there is nothing to preserve, only nothing to do right now. The
+green of "Keep" stays reserved for branches carrying commits the baseline does not have.
+The branch detail panel states which scale was applied, and why. If the project's own
+thresholds are already shorter, those apply instead: the shortened scale never lengthens
+anything.
 
-Le panneau **Effet sur le dernier snapshot** projette la politique en cours d'édition
-sur les faits déjà capturés, sans relancer Git : il compare chaque recommandation à la
-politique enregistrée et liste les branches touchées par les motifs. L'enregistrement
-recalcule l'interprétation courante, mais ne modifie ni les SHA ni les compteurs déjà
-capturés.
+The **Effect on the last snapshot** panel projects the policy being edited onto the facts
+already captured, without re-running Git: it compares each recommendation to the saved
+policy and lists the branches touched by the patterns. Saving recomputes the current
+interpretation, but changes neither the SHAs nor the counters already captured.
 
-## Relocaliser un dépôt déplacé
+## Relocating a repository that moved
 
-Si le chemin d'un dépôt change, ouvrir **Politiques**, saisir son nouveau chemin absolu
-dans **Relocaliser le dépôt**, puis confirmer. GitHealth vérifie la référence configurée
-et, s'il existe un snapshot réussi, la présence de son commit de référence avant de
-remplacer le chemin. Le projet garde le même identifiant, ses politiques, toutes ses
-analyses et son dernier snapshot réussi. La relocalisation est refusée pendant une
-analyse ; attendre sa fin puis réessayer.
+If a repository's path changes, open **Policies**, type its new absolute path in
+**Relocate repository**, then confirm. GitHealth checks the configured baseline and, if a
+successful snapshot exists, the presence of its baseline commit before replacing the
+path. The project keeps the same identifier, its policies, all its analyses and its last
+successful snapshot. Relocation is refused during an analysis; wait for it to finish,
+then try again.
 
-En Docker, le nouveau chemin doit se trouver sous `/repositories`. Si le dossier parent
-monté sur l'hôte change, recréer d'abord le conteneur avec la nouvelle valeur de
-`GITHEALTH_REPOSITORIES_ROOT`, puis utiliser le chemin vu depuis le conteneur.
+Under Docker, the new path must live under `/repositories`. If the mounted parent folder
+on the host changes, recreate the container with the new `GITHEALTH_REPOSITORIES_ROOT`
+value first, then use the path as seen from inside the container.
 
-## Historique et exports
+## History and exports
 
-**Historique** conserve chaque exécution et la politique utilisée. Une analyse échouée
-ne remplace jamais le dernier snapshot réussi.
+**History** keeps every run and the policy that was used. A failed analysis never
+replaces the last successful snapshot.
 
-Chaque passage indique sa référence, ses seuils, le nombre de branches lues et l'écart
-avec le passage précédent. **Politique** déplie les motifs capturés à ce moment-là ;
-**Ouvrir ce snapshot** relit l'analyse avec la politique de l'époque.
+Each run states its baseline, its thresholds, the number of branches read and the
+difference from the previous run. **Policy** expands the patterns captured at that
+moment; **Open this snapshot** replays the analysis with the policy of the time.
 
-Trois exports répondent à des besoins différents :
+Three exports serve different needs:
 
-- **Exporter en CSV** reprend l'ensemble du snapshot courant ;
-- **Exporter la sélection** ne reprend que les lignes cochées ;
-- **Sauvegarder les données** télécharge une copie cohérente de toute la base SQLite.
+- **Export as CSV** takes the whole current snapshot;
+- **Export the selection** takes only the ticked rows;
+- **Back up the data** downloads a consistent copy of the entire SQLite database.
 
-Le CSV est encodé en UTF-8 et neutralise les cellules qu'un tableur pourrait interpréter
-comme des formules. Il contient des noms de branches et des identités d'auteur :
-traitez-le comme une donnée interne.
+The CSV is UTF-8 encoded and neutralises cells a spreadsheet could interpret as formulas.
+It contains branch names and author identities: treat it as internal data.
 
-Pour restaurer une sauvegarde SQLite, arrêter GitHealth, conserver une copie de la base
-courante, remplacer `githealth.db`, puis redémarrer l'application.
+To restore a SQLite backup, stop GitHealth, keep a copy of the current database, replace
+`githealth.db`, then restart the application.
 
-## Arrêter et reprendre
+## Stopping and resuming
 
-Fermer la fenêtre de bureau, ou le processus `githealth`, arrête l'application. En mode
-navigateur, fermer l'onglet laisse le processus en place : c'est lui qu'il faut arrêter.
-Au prochain démarrage avec le même répertoire de données, les projets, politiques et
-snapshots sont restaurés. Les options du lanceur et les emplacements de données sont
-détaillés dans [DEVOPS.md](DEVOPS.md).
-Une analyse interrompue par un arrêt brutal est classée **Annulée** au redémarrage ; le
-dernier snapshot réussi reste disponible.
+Closing the desktop window, or the `githealth` process, stops the application. In browser
+mode, closing the tab leaves the process running: that is what you need to stop. On the
+next start with the same data directory, projects, policies and snapshots are restored.
+The launcher options and the data locations are detailed in [DEVOPS.md](DEVOPS.md).
+An analysis interrupted by an abrupt shutdown is marked **Cancelled** on restart; the
+last successful snapshot stays available.
 
-Une seule instance peut écrire dans un même répertoire de données. Pour en lancer deux en
-parallèle, donner à la seconde un `--data-dir` distinct.
+Only one instance can write to a given data directory. To run two in parallel, give the
+second one its own `--data-dir`.
 
-## Questions fréquentes
+## Frequently asked questions
 
-**Une branche distante affiche un état que je sais périmé.**
-GitHealth ne lance jamais `fetch`. Il lit `refs/remotes` tel qu'il est sur le poste.
-Faire un `git fetch --prune` dans le dépôt, puis relancer l'analyse.
+**A remote branch shows a state I know is stale.**
+GitHealth never runs `fetch`. It reads `refs/remotes` as it stands on the machine. Run a
+`git fetch --prune` in the repository, then run the analysis again.
 
-**Un même contributeur apparaît deux fois.**
-Il a utilisé plusieurs adresses. Ajouter un fichier `.mailmap` au dépôt pour les
-regrouper : GitHealth le respecte quand il existe.
+**The same contributor appears twice.**
+They used several addresses. Add a `.mailmap` file to the repository to group them:
+GitHealth honours it when it exists.
 
-**Les contributeurs d'une branche fusionnée sont indisponibles.**
-Après une fusion complète, `R..B` est vide et Git ne permet plus d'attribuer les commits
-à leur branche d'origine. GitHealth le signale plutôt que d'inventer une réponse.
+**The contributors of a merged branch are unavailable.**
+After a complete merge, `R..B` is empty and Git no longer allows commits to be attributed
+to their branch of origin. GitHealth says so rather than inventing an answer.
 
-**Puis-je faire supprimer les branches par GitHealth ?**
-Non, et ce n'est pas prévu. La commande de suppression est copiable depuis la fiche de
-branche ou depuis les actions groupées ; c'est à vous de l'exécuter, après relecture.
+**Can GitHealth delete the branches for me?**
+No, and that is not planned. The deletion command can be copied from the branch detail
+panel or from the bulk actions; running it is up to you, after review.
 
-**Où sont stockées mes données ?**
-Dans un fichier `githealth.db` local, dont l'emplacement dépend du système et de
-`--data-dir`. Rien n'est envoyé à l'extérieur. Sur Windows, il vit dans
-`%LOCALAPPDATA%\GitHealth`, un dossier disjoint de l'installation : mise à jour,
-désinstallation et `scoop uninstall` le laissent intact.
+**Where is my data stored?**
+In a local `githealth.db` file, whose location depends on the operating system and on
+`--data-dir`. Nothing is sent anywhere. On Windows it lives in `%LOCALAPPDATA%\GitHealth`,
+a folder separate from the installation: updating, uninstalling and `scoop uninstall`
+leave it intact.
 
-**Le bouton « Mettre à jour » n'apparaît jamais.**
-Il ne concerne que les installations gérées, sur Windows et macOS. Depuis une archive
-portable, Scoop, Docker ou Linux, la mise à jour passe par le canal d'origine. Sinon,
-c'est qu'aucune version plus récente n'est publiée, ou que la source des releases est
-injoignable.
+**The "Update" button never appears.**
+It only concerns managed installations, on Windows and macOS. From a portable archive,
+Scoop, Docker or Linux, updates go through the original channel. Otherwise, either no
+newer version has been published, or the release source is unreachable.
 
-**GitHealth ne trouve pas Git alors qu'il est installé.**
-Il cherche dans le `PATH`, puis aux emplacements d'installation standards. Une
-installation ailleurs se déclare avec `--git-path <chemin>` ; le bandeau d'alerte liste
-les emplacements déjà testés.
+**GitHealth cannot find Git, although it is installed.**
+It looks on the `PATH`, then in the standard installation locations. An installation
+elsewhere is declared with `--git-path <path>`; the warning banner lists the locations
+already tried.
 
-**Puis-je exposer GitHealth à mon équipe sur le réseau ?**
-Non. Le produit est mono-utilisateur, écoute sur `127.0.0.1` et n'a ni authentification
-ni cloisonnement. Une exposition réseau sort de son modèle de menace.
+**Can I expose GitHealth to my team over the network?**
+No. The product is single-user, listens on `127.0.0.1` and has neither authentication nor
+isolation. Network exposure is outside its threat model.
 
-**L'analyse est lente sur un très gros dépôt.**
-Les mesures et les budgets de performance sont publiés dans
-[BENCHMARKING.md](BENCHMARKING.md). Réduire le périmètre des branches — locales
-seulement — raccourcit nettement la lecture.
+**The analysis is slow on a very large repository.**
+The measurements and performance budgets are published in
+[BENCHMARKING.md](BENCHMARKING.md). Narrowing the branch scope — local branches only —
+shortens the read noticeably.
 
-## Aller plus loin
+## Going further
 
-- [Dépannage](TROUBLESHOOTING.md) — l'application ne démarre pas, le port est pris,
-  Git est introuvable, un dépôt est refusé.
-- [Limites connues](KNOWN_LIMITATIONS.md) — les comportements surprenants qui sont des
-  conséquences assumées de la sémantique Git.
-- [Modèle de sécurité](SECURITY_MODEL.md) — ce que l'application lit, écrit, et
-  n'envoie jamais.
-- [Architecture](ARCHITECTURE.md) — comment les mesures sont calculées.
-- [Obtenir de l'aide](../.github/SUPPORT.md) — choisir le bon canal et rédiger une demande
-  traitable, sans exposer de données réelles.
+- [Troubleshooting](TROUBLESHOOTING.md) — the application does not start, the port is
+  taken, Git cannot be found, a repository is rejected.
+- [Known limitations](KNOWN_LIMITATIONS.md) — the surprising behaviours that are accepted
+  consequences of Git semantics.
+- [Security model](SECURITY_MODEL.md) — what the application reads, writes, and never
+  sends.
+- [Architecture](ARCHITECTURE.md) — how the measurements are computed.
+- [Getting help](../.github/SUPPORT.md) — pick the right channel and write a request that
+  can be acted on, without exposing real data.

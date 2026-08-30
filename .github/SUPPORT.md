@@ -1,94 +1,91 @@
-# Obtenir de l'aide
+# Getting help
 
-GitHealth est un projet libre maintenu sur du temps limité. Il n'existe ni support
-commercial, ni engagement de délai. Ce document indique où chercher une réponse et
-comment poser une question pour qu'elle puisse être traitée.
+GitHealth is a free software project maintained on limited time. There is no commercial
+support and no response-time commitment. This document says where to look for an answer and
+how to ask a question so that it can be acted on.
 
-## Commencer par la documentation
+## Start with the documentation
 
-La majorité des questions ont déjà une réponse écrite :
+Most questions already have a written answer:
 
 | Question | Document |
 | --- | --- |
-| Comment installer, lancer et utiliser GitHealth | [Guide utilisateur](../docs/USER_GUIDE.md) |
-| Ça ne démarre pas, le port est pris, Git manque | [Dépannage](../docs/TROUBLESHOOTING.md) |
-| Pourquoi ce résultat est-il surprenant | [Limites connues](../docs/KNOWN_LIMITATIONS.md) |
-| Comment les mesures sont-elles calculées | [Architecture](../docs/ARCHITECTURE.md) |
-| Ce que l'application lit, écrit et n'envoie pas | [Sécurité](../docs/SECURITY_MODEL.md) |
-| Publication native, Docker, exploitation | [DEVOPS](../docs/DEVOPS.md) |
-| Ce qui a changé d'une version à l'autre | [Changelog](../CHANGELOG.md) |
+| How to install, launch and use GitHealth | [User guide](../docs/USER_GUIDE.md) |
+| It does not start, the port is taken, Git is missing | [Troubleshooting](../docs/TROUBLESHOOTING.md) |
+| Why is this result surprising | [Known limitations](../docs/KNOWN_LIMITATIONS.md) |
+| How the measurements are computed | [Architecture](../docs/ARCHITECTURE.md) |
+| What the application reads, writes and never sends | [Security](../docs/SECURITY_MODEL.md) |
+| Native publishing, Docker, operations | [DevOps](../docs/DEVOPS.md) |
+| What changed from one version to the next | [Changelog](../CHANGELOG.md) |
 
-Beaucoup de comportements déroutants ne sont pas des bugs mais des conséquences de la
-sémantique de Git : une branche fusionnée dont l'attribution des commits devient
-impossible, une branche distante figée parce que GitHealth ne lance jamais `fetch`, un
-contributeur qui apparaît deux fois faute de `.mailmap`. Les limites connues expliquent
-chacun de ces cas.
+Many puzzling behaviours are not bugs but consequences of Git semantics: a merged branch
+whose commit attribution becomes impossible, a remote branch frozen because GitHealth never
+runs `fetch`, a contributor appearing twice for lack of a `.mailmap`. The known limitations
+explain each of those cases.
 
-## Choisir le bon canal
+## Pick the right channel
 
-| Vous avez | Canal |
+| You have | Channel |
 | --- | --- |
-| Une question d'usage | **GitHub Discussions**, ou une issue si les discussions sont fermées |
-| Un bug reproductible | Issue **Rapport de bug** |
-| Une idée de fonctionnalité | Issue **Proposition de fonctionnalité** |
-| Une documentation fausse ou incomplète | Issue **Documentation** |
-| Une faille de sécurité | **Jamais une issue publique** — [SECURITY.md](SECURITY.md) |
-| Une envie de contribuer | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| A usage question | **GitHub Discussions**, or an issue if discussions are closed |
+| A reproducible bug | **Bug report** issue |
+| A feature idea | **Feature request** issue |
+| Wrong or incomplete documentation | **Documentation** issue |
+| A security vulnerability | **Never a public issue** — [SECURITY.md](SECURITY.md) |
+| The wish to contribute | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
-Une faille de sécurité se signale en privé, par les **Security advisories** du dépôt.
-Cela couvre notamment toute écriture Git non voulue, toute sortie de la racine montée en
-Docker, toute lecture inter-origine et toute transmission de données vers l'extérieur.
+A security vulnerability is reported privately, through the repository's **Security
+advisories**. That covers in particular any unintended Git write, any escape from the root
+mounted under Docker, any cross-origin read and any transmission of data to the outside.
 
-## Ce qui rend une demande traitable
+## What makes a request actionable
 
-Sans ces éléments, une question reste le plus souvent sans réponse utile :
+Without these elements, a question usually stays without a useful answer:
 
-- la **version** de GitHealth — nom de l'archive téléchargée, tag de la release, ou
-  balise de l'image Docker utilisée ;
-- le **mode d'exécution** : exécutable natif Windows, natif macOS, ou Docker Compose ;
-- le **système** et sa version, ainsi que la sortie de `git --version` ;
-- ce que vous **attendiez**, ce que vous avez **obtenu**, et les étapes minimales pour le
-  reproduire ;
-- les messages d'erreur de la console, **anonymisés**.
+- the **version** of GitHealth — the name of the downloaded archive, the release tag, or
+  the tag of the Docker image used;
+- the **execution mode**: native Windows executable, native macOS, or Docker Compose;
+- the **operating system** and its version, plus the output of `git --version`;
+- what you **expected**, what you **got**, and the minimal steps to reproduce it;
+- the console error messages, **anonymised**.
 
-La forme du dépôt compte souvent plus que sa taille : dépôt standard, *bare*, worktree
-lié, nombre approximatif de branches, présence d'un `.mailmap`.
+The shape of the repository often matters more than its size: standard repository, *bare*,
+linked worktree, approximate number of branches, presence of a `.mailmap`.
 
-## Ce qu'il ne faut jamais publier
+## What must never be published
 
-GitHealth manipule des données qui identifient des personnes et des projets. Dans une
-issue publique, ne joignez jamais :
+GitHealth handles data that identifies people and projects. In a public issue, never attach:
 
-- un chemin de dépôt d'entreprise ou de client ;
-- des noms de branches internes ;
-- des noms ou adresses d'auteurs issus de l'historique ;
-- un export CSV ou une sauvegarde SQLite non expurgés.
+- a company or client repository path;
+- internal branch names;
+- author names or addresses taken from the history;
+- an unredacted CSV export or SQLite backup.
 
-Anonymisez avant de publier : `D:\Dev\ClientX\facturation` devient `D:\Dev\depot`,
-`feature/JIRA-4210-refonte-paiement` devient `feature/exemple`. Si le problème n'est
-reproductible qu'avec des données réelles, dites-le dans l'issue plutôt que de les
-joindre — un échange privé sera proposé.
+Anonymise before publishing: `D:\Dev\ClientX\billing` becomes `D:\Dev\repository`,
+`feature/JIRA-4210-payment-rework` becomes `feature/example`. If the problem is only
+reproducible with real data, say so in the issue rather than attaching it — a private
+exchange will be offered.
 
-Un dépôt de reproduction minimal, fabriqué à partir de commits vides, vaut mieux que
-n'importe quel extrait de dépôt réel.
+A minimal reproduction repository, built from empty commits, is worth more than any extract
+of a real repository.
 
-## Délais
+## Response times
 
-Il n'y a pas de délai garanti. Les priorités, dans l'ordre :
+There is no guaranteed response time. Priorities, in order:
 
-1. les failles de sécurité, en particulier celles qui touchent à l'intégrité d'un dépôt
-   ou à la confidentialité des identités d'auteur ;
-2. les régressions par rapport à la version publiée précédente ;
-3. les bugs de calcul — une recommandation ou une mesure fausse ;
-4. le reste.
+1. security vulnerabilities, in particular those affecting the integrity of a repository or
+   the confidentiality of author identities;
+2. regressions compared to the previously published version;
+3. computation bugs — a wrong recommendation or a wrong measurement;
+4. everything else.
 
-Une issue sans réponse n'est pas une issue refusée. Une relance après quelques semaines
-est légitime.
+An issue without an answer is not a rejected issue. Following up after a few weeks is
+legitimate.
 
-## Hors périmètre
+## Out of scope
 
-Certaines demandes seront closes sans être traitées, non par manque d'intérêt mais parce
-qu'elles sortent du produit : supprimer ou fusionner des branches, lancer `fetch`
-automatiquement, cloner un dépôt distant, s'intégrer aux API de GitHub, GitLab ou Azure
-DevOps, ou exposer une instance partagée sur un réseau. Les raisons de ces frontières
-sont documentées dans [ARCHITECTURE.md](../docs/ARCHITECTURE.md).
+Some requests will be closed without being handled, not for lack of interest but because
+they fall outside the product: deleting or merging branches, running `fetch`
+automatically, cloning a remote repository, integrating with the GitHub, GitLab or Azure
+DevOps APIs, or exposing a shared instance on a network. The reasons behind those
+boundaries are documented in [ARCHITECTURE.md](../docs/ARCHITECTURE.md).

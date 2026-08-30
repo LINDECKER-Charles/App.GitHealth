@@ -1,98 +1,98 @@
-# Mentions relatives aux composants tiers
+# Third-party notices
 
-GitHealth est publié sous [licence MIT](LICENSE). Il s'appuie sur des composants tiers
-qui restent soumis à leur propre licence et à leur propre copyright. Ce document recense
-ceux qui sont **redistribués** avec l'application, puis ceux qui ne servent qu'à la
-construire ou à la tester.
+GitHealth is published under the [MIT license](LICENSE). It relies on third-party
+components that remain subject to their own license and their own copyright. This document
+lists the ones that are **redistributed** with the application, then the ones that are only
+used to build or test it.
 
-Cette page est une synthèse lisible. Les inventaires générés font foi :
+This page is a readable summary. The generated inventories are authoritative:
 
-- `artifacts/publish/wwwroot/3rdpartylicenses.txt` — textes complets des licences des
-  paquets npm inclus dans le bundle Angular, produit par la configuration `production` ;
-- `dotnet list App.GitHealth.sln package --include-transitive` — arbre exact des
-  dépendances NuGet, versions transitives comprises ;
-- `npm ls --prefix src/App.GitHealth.Web` — arbre exact des dépendances npm.
+- `artifacts/publish/wwwroot/3rdpartylicenses.txt` — full license texts of the npm packages
+  included in the Angular bundle, produced by the `production` configuration;
+- `dotnet list App.GitHealth.sln package --include-transitive` — the exact NuGet dependency
+  tree, transitive versions included;
+- `npm ls --prefix src/App.GitHealth.Web` — the exact npm dependency tree.
 
-## Redistribué avec l'application
+## Redistributed with the application
 
-### Ressources embarquées dans l'interface
+### Assets embedded in the interface
 
-| Composant | Licence | Emplacement |
+| Component | License | Location |
 | --- | --- | --- |
 | IBM Plex Sans, IBM Plex Mono | SIL OFL 1.1 | `src/App.GitHealth.Web/public/ds/fonts/` |
 | Lucide Icons | ISC | `src/App.GitHealth.Web/public/ds/icons/` |
 
-- IBM Plex — © 2017 IBM Corp., nom de police réservé « Plex ».
+- IBM Plex — © 2017 IBM Corp., reserved font name "Plex".
 - Lucide Icons — © Lucide Icons and Contributors.
 
-Les textes de licence accompagnent les fichiers concernés — `fonts/NOTICE.txt` et
-`icons/LICENSE-lucide.txt` — et sont servis avec l'application. Ces deux fichiers doivent
-suivre les polices et les glyphes dans toute copie ou redistribution : c'est une
-obligation de la SIL OFL 1.1 comme de la licence ISC.
+The license texts sit next to the files concerned — `fonts/NOTICE.txt` and
+`icons/LICENSE-lucide.txt` — and are served with the application. Both files must follow
+the fonts and the glyphs in any copy or redistribution: this is a requirement of both the
+SIL OFL 1.1 and the ISC license.
 
-Les polices et les icônes sont servies **localement**. GitHealth ne contacte aucun CDN,
-aucune fonderie et aucun service distant pour les charger.
+Fonts and icons are served **locally**. GitHealth contacts no CDN, no foundry and no remote
+service to load them.
 
-### Bibliothèques d'exécution
+### Runtime libraries
 
-| Composant | Licence |
+| Component | License |
 | --- | --- |
 | Angular (`@angular/*`) | MIT |
 | RxJS | Apache-2.0 |
 | tslib | 0BSD |
-| ASP.NET Core et le runtime .NET | MIT |
+| ASP.NET Core and the .NET runtime | MIT |
 | Entity Framework Core, `Microsoft.Data.Sqlite` | MIT |
 | SQLitePCLRaw | Apache-2.0 |
-| Moteur SQLite | domaine public |
+| SQLite engine | public domain |
 | `Microsoft.AspNetCore.OpenApi`, `Microsoft.OpenApi` | MIT |
 | Photino.NET, Photino.Native | Apache-2.0 |
 | Velopack | MIT |
 
-Les distributions natives Windows, macOS et Linux embarquent le runtime .NET : les
-mentions de copyright Microsoft les accompagnent dans l'archive publiée.
+The native Windows, macOS and Linux distributions embed the .NET runtime: the Microsoft
+copyright notices ship with them in the published archive.
 
-Photino fournit la coque de bureau. Sa bibliothèque native — `Photino.Native.dll` sous
-Windows, `.dylib` sous macOS, `.so` sous Linux — est redistribuée à côté de
-l'exécutable ; l'Apache-2.0 impose que son texte de licence et son avis de copyright
-suivent toute copie ou redistribution. Photino n'embarque aucun moteur de rendu : il
-appelle celui du système — WebView2, WKWebView ou WebKitGTK — installé et mis à jour
-par la plateforme, hors du périmètre de distribution du projet.
+Photino provides the desktop shell. Its native library — `Photino.Native.dll` on Windows,
+`.dylib` on macOS, `.so` on Linux — is redistributed next to the executable; Apache-2.0
+requires its license text and its copyright notice to follow any copy or redistribution.
+Photino embeds no rendering engine: it calls the system's own — WebView2, WKWebView or
+WebKitGTK — installed and updated by the platform, outside the project's distribution
+scope.
 
-Velopack produit les installeurs et applique les mises à jour. Sa bibliothèque et ses
-utilitaires `Setup` et `Update` sont redistribués dans les installeurs publiés, pas dans
-les archives portables.
+Velopack produces the installers and applies the updates. Its library and its `Setup` and
+`Update` utilities are redistributed inside the published installers, not in the portable
+archives.
 
-## Nécessaire à l'exécution, non redistribué
+## Required at runtime, not redistributed
 
-| Composant | Licence | Rôle |
+| Component | License | Role |
 | --- | --- | --- |
-| Git | GPL-2.0 | invoqué comme processus externe |
+| Git | GPL-2.0 | invoked as an external process |
 
-GitHealth **n'embarque pas Git** et n'en dérive pas : il exécute le binaire `git` déjà
-installé sur la machine, sans shell, et lit sa sortie. Aucune archive publiée ne contient
-de code Git, ce qui laisse la GPL-2.0 hors du périmètre de distribution du projet. Git
-doit être installé séparément — version 2.38 ou plus récente recommandée.
+GitHealth **does not bundle Git** and does not derive from it: it runs the `git` binary
+already installed on the machine, without a shell, and reads its output. No published
+archive contains any Git code, which leaves GPL-2.0 outside the project's distribution
+scope. Git must be installed separately — version 2.38 or newer recommended.
 
-## Images de conteneur
+## Container images
 
-L'image Docker est construite à partir d'images de base publiées par leurs éditeurs
-respectifs et soumises à leurs propres conditions :
+The Docker image is built from base images published by their respective vendors and
+subject to their own terms:
 
-| Image | Rôle |
+| Image | Role |
 | --- | --- |
-| `node:24.20.0-alpine3.24` | construction du bundle Angular |
-| `mcr.microsoft.com/dotnet/sdk:10.0.400-noble` | compilation .NET |
-| `mcr.microsoft.com/dotnet/aspnet:10.0.11-noble` | exécution |
+| `node:24.20.0-alpine3.24` | building the Angular bundle |
+| `mcr.microsoft.com/dotnet/sdk:10.0.400-noble` | .NET compilation |
+| `mcr.microsoft.com/dotnet/aspnet:10.0.11-noble` | runtime |
 
-L'image d'exécution installe `ca-certificates`, `curl` et `git` depuis les dépôts Ubuntu ;
-ces paquets restent couverts par leurs licences d'origine.
+The runtime image installs `ca-certificates`, `curl` and `git` from the Ubuntu
+repositories; those packages remain covered by their original licenses.
 
-## Outillage de construction et de test
+## Build and test tooling
 
-Ces composants ne sont pas redistribués avec l'application ; ils servent à la construire,
-la vérifier et la mesurer.
+These components are not redistributed with the application; they serve to build, verify
+and measure it.
 
-| Composant | Licence |
+| Component | License |
 | --- | --- |
 | TypeScript | Apache-2.0 |
 | Angular CLI, `@angular/build` | MIT |
@@ -104,23 +104,23 @@ la vérifier et la mesurer.
 | `Microsoft.NET.Test.Sdk` | MIT |
 | Coverlet | MIT |
 | `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.EntityFrameworkCore.Design` | MIT |
-| Actions GitHub utilisées par les workflows | MIT |
+| GitHub actions used by the workflows | MIT |
 
-## Ajouter une dépendance
+## Adding a dependency
 
-Toute nouvelle dépendance ou ressource tierce doit :
+Every new dependency or third-party asset must:
 
-1. porter une licence compatible avec MIT — permissive, sans copyleft étendu ;
-2. être ajoutée au tableau correspondant de ce document ;
-3. si elle est redistribuée, voir son texte de licence copié auprès des fichiers
-   concernés, comme pour IBM Plex et Lucide.
+1. carry a license compatible with MIT — permissive, without extended copyleft;
+2. be added to the matching table in this document;
+3. if it is redistributed, have its license text copied next to the files concerned, as for
+   IBM Plex and Lucide.
 
-Une dépendance sous licence inconnue, sous copyleft fort (GPL, AGPL) ou dont l'origine
-n'est pas vérifiable ne peut pas être intégrée. Les modalités sont rappelées dans
+A dependency under an unknown license, under strong copyleft (GPL, AGPL), or whose origin
+cannot be verified, cannot be integrated. The terms are restated in
 [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
-## Signaler une erreur d'attribution
+## Reporting an attribution error
 
-Une attribution manquante ou inexacte se signale par une issue publique ordinaire — ce
-n'est pas une faille de sécurité. Indiquez le composant, sa licence réelle et sa source
-amont ; la correction est traitée en priorité.
+A missing or inaccurate attribution is reported through an ordinary public issue — it is
+not a security vulnerability. State the component, its actual license and its upstream
+source; the fix is handled as a priority.

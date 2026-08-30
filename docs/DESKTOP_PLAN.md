@@ -1,344 +1,332 @@
-# Plan — Passage en application de bureau
+# Plan — Moving to a desktop application
 
-> Document de passation. Statut : **implémenté** — lots 0 à 4 livrés.
-> Conservé comme trace des décisions et de leurs raisons.
+> Handover document. Status: **implemented** — batches 0 to 4 delivered.
+> Kept as a record of the decisions and the reasons behind them.
 >
-> Trois écarts assumés, découverts à l'exécution et documentés là où ils comptent :
-> le point d'entrée est devenu explicite et `[STAThread]` (en apartment MTA, WebView2
-> s'initialise sans jamais rendre la page) ; le repli du lot 1 attrape
-> `ApplicationException`, dans laquelle Photino réemballe toute panne native, et non
-> `DllNotFoundException` ; le statut de mise à jour compte une quatrième valeur,
-> `Unknown`, pour une source de releases injoignable — sans elle, `/api/updates`
-> répondait 500 hors ligne.
+> Three accepted deviations, discovered at implementation time and documented where they
+> matter: the entry point became explicit and `[STAThread]` (in an MTA apartment, WebView2
+> initialises without ever rendering the page); the batch 1 fallback catches
+> `ApplicationException`, in which Photino re-wraps every native failure, rather than
+> `DllNotFoundException`; and the update status has a fourth value, `Unknown`, for an
+> unreachable release source — without it, `/api/updates` returned 500 when offline.
 
-## 1. Objectif
+## 1. Goal
 
-Transformer GitHealth en **application de bureau installable et lançable au
-double-clic** sur Windows, macOS et Linux, sans réécrire le front Angular et
-sans casser le mode Docker existant.
+Turn GitHealth into a **desktop application that can be installed and launched by
+double-click** on Windows, macOS and Linux, without rewriting the Angular front end and
+without breaking the existing Docker mode.
 
-Objectif secondaire, non bloquant : un bouton « Mise à jour disponible » dans
-l'application, et une distribution via des gestionnaires de paquets gratuits.
+Secondary, non-blocking goal: an "Update available" button inside the application, and
+distribution through free package managers.
 
-## 2. Décisions arrêtées
+## 2. Settled decisions
 
-Ces choix ont été débattus et tranchés. **Ne pas les rouvrir** sans élément
-technique nouveau.
+These choices were debated and settled. **Do not reopen them** without new technical
+evidence.
 
-| Sujet | Décision | Raison |
+| Topic | Decision | Reason |
 |---|---|---|
-| Coque | **Photino.NET** | Kestrel et la fenêtre vivent dans le même processus : aucune supervision de processus enfant, aucun handshake de port, aucun zombie. Electron imposerait ~150 lignes de plomberie de cycle de vie. |
-| Découpage | **Un seul exécutable**, pas de projet `Desktop` séparé | `Publish-Native.ps1`, les smoke tests et `release.yml` continuent de fonctionner sans modification. Le poids des natives Photino inutilisées en mode Docker est négligeable (1-2 Mo, jamais chargées). |
-| Installeur / MAJ | **Velopack** sur Windows et macOS | Gratuit, flux GitHub Releases déjà produit par `release.yml`, MAJ delta, installation per-user sans UAC. |
-| MAJ sur Linux | **Aucune MAJ in-app** | Le support Linux de Velopack (AppImage seul) est son maillon faible, et un utilisateur Linux attend son gestionnaire de paquets, pas un bouton. |
-| Priorité plateformes | **Windows et macOS d'abord**, Linux ensuite | Linux est explicitement secondaire. |
+| Shell | **Photino.NET** | Kestrel and the window live in the same process: no child-process supervision, no port handshake, no zombies. Electron would impose ~150 lines of lifecycle plumbing. |
+| Slicing | **A single executable**, no separate `Desktop` project | `Publish-Native.ps1`, the smoke tests and `release.yml` keep working unchanged. The weight of the unused Photino natives in Docker mode is negligible (1-2 MB, never loaded). |
+| Installer / updates | **Velopack** on Windows and macOS | Free, GitHub Releases feed already produced by `release.yml`, delta updates, per-user installation without UAC. |
+| Updates on Linux | **No in-app update** | Velopack's Linux support (AppImage only) is its weak link, and a Linux user expects their package manager, not a button. |
+| Platform priority | **Windows and macOS first**, Linux next | Linux is explicitly secondary. |
 
-**Porte de sortie assumée** : le front est servi en HTTP sur loopback, donc la
-coque est un composant isolé et remplaçable. Si WebKitGTK ou WebView2 posent un
-problème rédhibitoire, on bascule sur Electron sans rien jeter d'autre.
+**Accepted escape hatch**: the front end is served over loopback HTTP, so the shell is an
+isolated, replaceable component. If WebKitGTK or WebView2 turn out to be a deal-breaker,
+we switch to Electron without throwing anything else away.
 
-## 3. Non-objectifs
+## 3. Non-goals
 
-- Ne pas réécrire le front Angular. Les modifications côté `App.GitHealth.Web`
-  doivent rester **additives**.
-- Ne pas supprimer le mode Docker ni `compose.yaml`. Le `.env` et son bind mount
-  ne concernent que ce mode et restent valides.
-- Ne pas traiter la signature de code ni la notarisation macOS dans ce plan
-  (sujet de coût, à trancher avant la 1.0 publique).
-- Ne pas embarquer MinGit pour l'instant : le lot 0 se limite à rendre le chemin
-  de Git configurable et l'erreur actionnable.
+- Do not rewrite the Angular front end. Changes on the `App.GitHealth.Web` side must stay
+  **additive**.
+- Do not remove Docker mode or `compose.yaml`. The `.env` file and its bind mount concern
+  that mode only and stay valid.
+- Do not handle code signing or macOS notarisation in this plan (a cost question, to be
+  settled before the public 1.0).
+- Do not bundle MinGit for now: batch 0 is limited to making the Git path configurable and
+  the error actionable.
 
-## 4. État actuel du dépôt
+## 4. Current state of the repository
 
-À lire avant de coder — une grande partie du chemin est déjà faite.
+Read before writing code — a large part of the road has already been travelled.
 
 - `src/App.GitHealth.Api/Program.cs:51` — `useNativeLauncher = isDirectLaunch && !IsContainer()`,
-  détection du mode conteneur via `DOTNET_RUNNING_IN_CONTAINER`.
-- `src/App.GitHealth.Api/Program.cs:182` — `RunNativeAsync` : démarre Kestrel sur
-  loopback, résout le port bindé, ouvre le navigateur système.
-- `src/App.GitHealth.Api/Hosting/SystemBrowserLauncher.cs` — ouverture du navigateur.
-- `src/App.GitHealth.Api/Hosting/DataDirectoryResolver.cs` — données dans
+  container mode detected through `DOTNET_RUNNING_IN_CONTAINER`.
+- `src/App.GitHealth.Api/Program.cs:182` — `RunNativeAsync`: starts Kestrel on loopback,
+  resolves the bound port, opens the system browser.
+- `src/App.GitHealth.Api/Hosting/SystemBrowserLauncher.cs` — opening the browser.
+- `src/App.GitHealth.Api/Hosting/DataDirectoryResolver.cs` — data in
   `%LOCALAPPDATA%\GitHealth`, `~/Library/Application Support/GitHealth`, XDG.
-- `src/App.GitHealth.Api/Hosting/LauncherOptionsParser.cs` — flags existants :
+- `src/App.GitHealth.Api/Hosting/LauncherOptionsParser.cs` — existing flags:
   `--repo`, `--port`, `--data-dir`, `--no-browser`, `--help` / `-h`.
-- `src/App.GitHealth.Api/Git/Paths/RepositoryPathGuard.cs:9` — `IsAllowed` renvoie
-  `true` quand `RepositoriesRoot` est null : **en mode natif il n'y a aucune
-  racine à configurer**, l'utilisateur pointe n'importe quel dossier.
+- `src/App.GitHealth.Api/Git/Paths/RepositoryPathGuard.cs:9` — `IsAllowed` returns `true`
+  when `RepositoriesRoot` is null: **in native mode there is no root to configure**, the
+  user points at any folder.
 - `src/App.GitHealth.Api/Features/Runtime/RuntimeEndpoints.cs` — `/api/runtime`
-  (expose déjà `Mode` = `native` / `docker`) et `/api/runtime/directories`
-  (navigateur de dossiers HTML).
-- `eng/Publish-Native.ps1` — publish self-contained, `ValidateSet` limité à
-  `win-x64`, `osx-x64`, `osx-arm64`.
-- `.github/workflows/release.yml` — matrice 3 RID, smoke test natif, SBOM,
-  attestation, GitHub Release.
-- `tests/Infrastructure/Invoke-NativeSmokeTest.ps1:172` — lance le binaire avec
-  `--no-browser --port --data-dir --repo` et vérifie la création de la base.
+  (already exposes `Mode` = `native` / `docker`) and `/api/runtime/directories`
+  (HTML folder browser).
+- `eng/Publish-Native.ps1` — self-contained publish, `ValidateSet` limited to `win-x64`,
+  `osx-x64`, `osx-arm64`.
+- `.github/workflows/release.yml` — 3-RID matrix, native smoke test, SBOM, attestation,
+  GitHub Release.
+- `tests/Infrastructure/Invoke-NativeSmokeTest.ps1:172` — runs the binary with
+  `--no-browser --port --data-dir --repo` and checks that the database is created.
 
 ---
 
-## Lot 0 — Découpler Git du PATH
+## Batch 0 — Decouple Git from the PATH
 
-**Prérequis dur à toute distribution.** Une application installable qui échoue au
-premier scan sur un poste Windows sans Git, c'est le cas par défaut.
+**A hard prerequisite for any distribution.** An installable application that fails on the
+first scan on a Windows machine without Git is the default case.
 
-**Pourquoi** — `src/App.GitHealth.Api/Git/Process/GitProcessRunner.cs:120` fait
-`new ProcessStartInfo("git")` : la résolution dépend entièrement du `PATH`.
+**Why** — `src/App.GitHealth.Api/Git/Process/GitProcessRunner.cs:120` does
+`new ProcessStartInfo("git")`: resolution depends entirely on the `PATH`.
 
-**Fichiers**
+**Files**
 
-- `src/App.GitHealth.Api/Git/GitScannerOptions.cs` — ajouter
-  `public string? ExecutablePath { get; init; }` (lié à la section
-  `GitHealth:Git`, déjà bindée dans `GitServiceCollectionExtensions.cs:14`).
-- `src/App.GitHealth.Api/Git/Process/GitProcessRunner.cs` — consommer le chemin
-  résolu au lieu du littéral `"git"`.
-- Nouveau : un résolveur dédié sous `src/App.GitHealth.Api/Git/Process/`.
-- `src/App.GitHealth.Api/Git/GitRuntimeDiagnostic.cs` — exposer le chemin retenu.
-- `src/App.GitHealth.Api/Hosting/LauncherOptionsParser.cs` et
-  `StartupFailureReporter.HelpText` — ajouter `--git-path <chemin>` sur le modèle
-  de `--data-dir`.
+- `src/App.GitHealth.Api/Git/GitScannerOptions.cs` — add
+  `public string? ExecutablePath { get; init; }` (bound to the `GitHealth:Git` section,
+  already bound in `GitServiceCollectionExtensions.cs:14`).
+- `src/App.GitHealth.Api/Git/Process/GitProcessRunner.cs` — consume the resolved path
+  instead of the `"git"` literal.
+- New: a dedicated resolver under `src/App.GitHealth.Api/Git/Process/`.
+- `src/App.GitHealth.Api/Git/GitRuntimeDiagnostic.cs` — expose the selected path.
+- `src/App.GitHealth.Api/Hosting/LauncherOptionsParser.cs` and
+  `StartupFailureReporter.HelpText` — add `--git-path <path>`, modelled on `--data-dir`.
 
-**Travail**
+**Work**
 
-Ordre de résolution, premier trouvé gagne :
+Resolution order, first hit wins:
 
 1. `--git-path` / `GitHealth:Git:ExecutablePath`
-2. `git` via le `PATH`
-3. Emplacements standards par plateforme :
-   - Windows : `%ProgramFiles%\Git\cmd\git.exe`,
+2. `git` on the `PATH`
+3. Standard locations per platform:
+   - Windows: `%ProgramFiles%\Git\cmd\git.exe`,
      `%ProgramFiles(x86)%\Git\cmd\git.exe`,
      `%LOCALAPPDATA%\Programs\Git\cmd\git.exe`
-   - macOS : `/opt/homebrew/bin/git`, `/usr/local/bin/git`, `/usr/bin/git`
-   - Linux : `/usr/bin/git`, `/usr/local/bin/git`
+   - macOS: `/opt/homebrew/bin/git`, `/usr/local/bin/git`, `/usr/bin/git`
+   - Linux: `/usr/bin/git`, `/usr/local/bin/git`
 
-`GitStartupProbe` (déjà un `IHostedService`) reste le point de sonde. Enrichir le
-message d'indisponibilité pour qu'il soit **actionnable** : indiquer où l'on a
-cherché et proposer `--git-path`.
+`GitStartupProbe` (already an `IHostedService`) stays the probe point. Enrich the
+unavailability message so that it becomes **actionable**: say where we looked and suggest
+`--git-path`.
 
-Ajouter la disponibilité de Git et le chemin résolu à `RuntimeInfoResponse` pour
-que le front puisse afficher un bandeau bloquant au lieu d'échouer au premier scan.
+Add Git availability and the resolved path to `RuntimeInfoResponse` so that the front end
+can display a blocking banner instead of failing on the first scan.
 
-**Critères d'acceptation**
+**Acceptance criteria**
 
-- Sur un poste sans Git dans le `PATH` mais avec Git installé à un emplacement
-  standard, l'analyse fonctionne.
-- Sans Git du tout, `/api/runtime` le signale et le message nomme `--git-path`.
-- Le mode Docker n'est pas affecté (Git est dans l'image, résolution par `PATH`).
+- On a machine without Git on the `PATH` but with Git installed in a standard location,
+  the analysis works.
+- With no Git at all, `/api/runtime` reports it and the message names `--git-path`.
+- Docker mode is unaffected (Git is in the image, resolved through the `PATH`).
 
-**Tests** — `tests/App.GitHealth.Api.Tests` : unitaires sur le résolveur
-(configuration prioritaire, repli PATH, repli emplacements standards, cas
-introuvable). Ne pas tester l'exécution réelle de Git, déjà couverte par
+**Tests** — `tests/App.GitHealth.Api.Tests`: unit tests on the resolver (configuration
+takes precedence, PATH fallback, standard-locations fallback, not-found case). Do not test
+actually running Git, which is already covered by
 `tests/App.GitHealth.Git.IntegrationTests`.
 
 ---
 
-## Lot 1 — Coque Photino
+## Batch 1 — Photino shell
 
-**Fichiers**
+**Files**
 
-- `src/App.GitHealth.Api/App.GitHealth.Api.csproj` — `PackageReference` Photino.NET,
-  version épinglée.
-- Nouveau dossier `src/App.GitHealth.Api/Hosting/Desktop/`.
-  ⚠️ `Hosting/` contient déjà 9 fichiers et la convention projet plafonne à 10
-  par dossier : créer le sous-dossier, ne pas empiler.
+- `src/App.GitHealth.Api/App.GitHealth.Api.csproj` — Photino.NET `PackageReference`,
+  pinned version.
+- New folder `src/App.GitHealth.Api/Hosting/Desktop/`.
+  ⚠️ `Hosting/` already contains 9 files and the project convention caps folders at 10:
+  create the subfolder, do not pile up.
 - `src/App.GitHealth.Api/Program.cs:182` — `RunNativeAsync`.
-- `src/App.GitHealth.Api/Hosting/LauncherOptions.cs` et `LauncherOptionsParser.cs`.
+- `src/App.GitHealth.Api/Hosting/LauncherOptions.cs` and `LauncherOptionsParser.cs`.
 
-**Travail**
+**Work**
 
-Remplacer l'ouverture du navigateur par une fenêtre, en gardant le repli. La
-structure de `RunNativeAsync` reste la même : démarrer l'hôte, résoudre l'adresse
-loopback via `BoundPort`, ouvrir l'interface, attendre la fermeture.
+Replace opening the browser with a window, keeping the fallback. The structure of
+`RunNativeAsync` stays the same: start the host, resolve the loopback address through
+`BoundPort`, open the interface, wait for it to close.
 
-**Sémantique des flags — à respecter à la lettre, la CI en dépend :**
+**Flag semantics — to be honoured to the letter, CI depends on it:**
 
-| Invocation | Comportement |
+| Invocation | Behaviour |
 |---|---|
-| (défaut, mode natif) | Fenêtre Photino |
-| `--no-window` | Pas de fenêtre, navigateur système (comportement actuel) |
-| `--no-browser` | **Aucune interface**, implique `--no-window` |
-| mode conteneur | Inchangé, `app.RunAsync()` |
+| (default, native mode) | Photino window |
+| `--no-window` | No window, system browser (current behaviour) |
+| `--no-browser` | **No interface at all**, implies `--no-window` |
+| container mode | Unchanged, `app.RunAsync()` |
 
-`--no-browser` doit valoir « aucune UI » et non « pas de navigateur mais une
-fenêtre » : `tests/Infrastructure/Invoke-NativeSmokeTest.ps1:172` passe ce flag,
-et une fenêtre s'ouvrirait sur les runners CI où elle resterait bloquée sur
-l'attente de fermeture.
+`--no-browser` must mean "no UI", not "no browser but a window":
+`tests/Infrastructure/Invoke-NativeSmokeTest.ps1:172` passes that flag, and a window would
+open on CI runners where it would hang waiting to be closed.
 
-**Repli obligatoire** — si la création de la fenêtre échoue (moteur système
-absent, typiquement WebKitGTK sur Linux), attraper `DllNotFoundException` et
-`TypeInitializationException`, écrire un avertissement sur `stderr` et basculer
-sur `SystemBrowserLauncher`. L'application ne doit jamais mourir faute de webview.
+**Mandatory fallback** — if creating the window fails (system engine missing, typically
+WebKitGTK on Linux), catch `DllNotFoundException` and `TypeInitializationException`, write
+a warning on `stderr` and fall back to `SystemBrowserLauncher`. The application must never
+die for lack of a webview.
 
-Garder `Program.cs` sous 300 lignes : extraire la logique de fenêtre dans
-`Hosting/Desktop/`, pas dans les top-level statements.
+Keep `Program.cs` under 300 lines: extract the window logic into `Hosting/Desktop/`, not
+into the top-level statements.
 
-**Critères d'acceptation**
+**Acceptance criteria**
 
-- Double-clic sur `githealth.exe` : fenêtre GitHealth, aucun navigateur ouvert.
-- `--no-window` : comportement actuel inchangé.
-- `--no-browser` : aucune UI, le smoke test natif passe **sans modification**.
-- Sur une machine sans moteur webview, l'app démarre et ouvre le navigateur.
+- Double-click on `githealth.exe`: a GitHealth window, no browser opened.
+- `--no-window`: current behaviour unchanged.
+- `--no-browser`: no UI, and the native smoke test passes **without modification**.
+- On a machine without a webview engine, the app starts and opens the browser.
 
-**Tests** — unitaires sur la résolution du mode d'affichage à partir des
-`LauncherOptions` (matrice des 4 lignes ci-dessus). La création de fenêtre
-elle-même n'est pas testable en CI, ne pas essayer.
+**Tests** — unit tests on resolving the display mode from `LauncherOptions` (the matrix of
+the 4 rows above). Creating the window itself is not testable in CI; do not try.
 
-**Point de vigilance à lever dès ce lot** : valider le rendu du front Angular 22
-sous WKWebView (macOS) et WebView2 (Windows). C'est le seul risque du plan qui ne
-se découvre pas en le lisant. Le faire avant d'entamer le lot 2.
+**Point to clear as early as this batch**: validate the rendering of the Angular 22 front
+end under WKWebView (macOS) and WebView2 (Windows). It is the only risk in the plan that
+cannot be discovered by reading it. Do it before starting batch 2.
 
 ---
 
-## Lot 2 — Dialogue de dossier natif
+## Batch 2 — Native folder dialog
 
-**Pourquoi** — c'est le vrai gain UX face au navigateur de dossiers HTML actuel,
-et la réponse directe au problème de départ (« pointer un dossier »).
+**Why** — this is the real UX gain over the current HTML folder browser, and the direct
+answer to the original problem ("point at a folder").
 
-**Fichiers**
+**Files**
 
-- `src/App.GitHealth.Api/Hosting/Desktop/` — pont de messages côté hôte.
-- `src/App.GitHealth.Web/src/app/core/workspace/` — nouveau service de pont.
+- `src/App.GitHealth.Api/Hosting/Desktop/` — host-side message bridge.
+- `src/App.GitHealth.Web/src/app/core/workspace/` — new bridge service.
 - `src/App.GitHealth.Web/src/app/shell/scan-folder/scan-folder-dialog.ts`
 - `src/App.GitHealth.Web/src/app/shell/add-repository/`
 
-**Travail**
+**Work**
 
-Photino expose un pont `postMessage` bidirectionnel entre l'hôte et la page.
-Côté hôte : enregistrer un handler de messages web, ouvrir le dialogue de dossier
-natif, renvoyer le chemin choisi. **Vérifier les signatures exactes contre la
-version de Photino épinglée au lot 1** plutôt que de se fier à ce document.
+Photino exposes a bidirectional `postMessage` bridge between the host and the page. On the
+host side: register a web message handler, open the native folder dialog, return the
+chosen path. **Check the exact signatures against the Photino version pinned in batch 1**
+rather than trusting this document.
 
-Côté Angular, **strictement additif** : un service qui détecte la présence du
-pont et l'utilise s'il existe, sinon retombe sur `/api/runtime/directories` via
-`src/App.GitHealth.Web/src/app/core/api/git-health-api-client.ts:40`. Les deux
-modes restent vivants — Docker et le mode navigateur continuent d'utiliser le
-navigateur HTML.
+On the Angular side, **strictly additive**: a service that detects the presence of the
+bridge and uses it if it exists, otherwise falls back to `/api/runtime/directories`
+through `src/App.GitHealth.Web/src/app/core/api/git-health-api-client.ts:40`. Both modes
+stay alive — Docker and browser mode keep using the HTML browser.
 
-Le pont étant asynchrone, corréler requête et réponse par un identifiant. Une
-seule requête en vol suffit : un dialogue modal à la fois.
+Since the bridge is asynchronous, correlate request and response with an identifier. A
+single in-flight request is enough: one modal dialog at a time.
 
-**Critères d'acceptation**
+**Acceptance criteria**
 
-- En fenêtre : le bouton de sélection ouvre le dialogue système.
-- En navigateur ou en Docker : le navigateur de dossiers HTML actuel, inchangé.
-- Aucune régression sur le parcours d'ajout de dépôt et de scan de dossier.
+- In window mode: the selection button opens the system dialog.
+- In a browser or under Docker: the current HTML folder browser, unchanged.
+- No regression on the add-repository and scan-folder journeys.
 
-**Tests** — front : le service de pont testé sur ses deux branches (pont présent,
-pont absent) avec Vitest.
+**Tests** — front end: the bridge service tested on both of its branches (bridge present,
+bridge absent) with Vitest.
 
 ---
 
-## Lot 3 — Velopack : installeur et bouton de mise à jour
+## Batch 3 — Velopack: installer and update button
 
-**Fichiers**
+**Files**
 
-- `src/App.GitHealth.Api/App.GitHealth.Api.csproj` — `PackageReference` Velopack.
-- `src/App.GitHealth.Api/Program.cs` — **première ligne du programme**.
-- Nouveau `src/App.GitHealth.Api/Features/Updates/`.
-- `eng/` — script de packaging `vpk`.
+- `src/App.GitHealth.Api/App.GitHealth.Api.csproj` — Velopack `PackageReference`.
+- `src/App.GitHealth.Api/Program.cs` — **the program's first line**.
+- New `src/App.GitHealth.Api/Features/Updates/`.
+- `eng/` — `vpk` packaging script.
 - `.github/workflows/release.yml`.
 
-**Deux pièges à ne pas manquer**
+**Two traps not to miss**
 
-1. **`VelopackApp.Build().Run()` doit être la toute première instruction**, avant
-   `LauncherOptionsParser.Parse(args)` (`Program.cs:15`). Velopack y intercepte
-   les hooks d'installation et de mise à jour ; placé plus bas, il ne fonctionne
-   pas.
-2. **Collision de chemins.** Velopack installe par défaut dans
-   `%LocalAppData%\<packId>`, et `DataDirectoryResolver.cs:5` place déjà la base
-   dans `%LOCALAPPDATA%\GitHealth`. Utiliser **`--packId App.GitHealth`** au
-   `vpk pack` : l'installation va dans `%LocalAppData%\App.GitHealth`, les données
-   restent dans `%LOCALAPPDATA%\GitHealth`, et une mise à jour ne peut pas écraser
-   la base. **Aucune modification de `DataDirectoryResolver`.**
+1. **`VelopackApp.Build().Run()` must be the very first statement**, before
+   `LauncherOptionsParser.Parse(args)` (`Program.cs:15`). Velopack intercepts the install
+   and update hooks there; placed any lower, it does not work.
+2. **Path collision.** Velopack installs by default into `%LocalAppData%\<packId>`, and
+   `DataDirectoryResolver.cs:5` already places the database in `%LOCALAPPDATA%\GitHealth`.
+   Use **`--packId App.GitHealth`** when running `vpk pack`: the installation goes to
+   `%LocalAppData%\App.GitHealth`, the data stays in `%LOCALAPPDATA%\GitHealth`, and an
+   update cannot overwrite the database. **No change to `DataDirectoryResolver`.**
 
-**Travail**
+**Work**
 
-Abstraction, conforme au D de SOLID des conventions projet :
+An abstraction, in line with the D of SOLID in the project conventions:
 
-- `IUpdateService` dans `Features/Updates/`, avec un statut du type
-  « non supporté » / « à jour » / « mise à jour disponible ».
-- `NullUpdateService` — implémentation par défaut, renvoie « non supporté ».
-  C'est elle qui sert en Docker, en mode navigateur et sur Linux.
-- `VelopackUpdateService` — enregistrée **uniquement** quand `useNativeLauncher`
-  est vrai et que la plateforme est Windows ou macOS. Source : `GithubSource` sur
+- `IUpdateService` in `Features/Updates/`, with a status such as
+  "unsupported" / "up to date" / "update available".
+- `NullUpdateService` — the default implementation, returning "unsupported". This is the
+  one used under Docker, in browser mode and on Linux.
+- `VelopackUpdateService` — registered **only** when `useNativeLauncher` is true and the
+  platform is Windows or macOS. Source: `GithubSource` on
   `https://github.com/LINDECKER-Charles/App.GitHealth`.
-- Endpoints `GET /api/updates` et `POST /api/updates/apply`, montés à côté de
+- `GET /api/updates` and `POST /api/updates/apply` endpoints, mounted next to
   `MapRuntimeEndpoints`.
-- Front : un bouton discret dans le shell, affiché seulement si le statut le
-  justifie. Additif, aucune refonte de la navigation.
+- Front end: a discreet button in the shell, shown only when the status justifies it.
+  Additive, with no navigation redesign.
 
-Packaging : un script `eng/` sur le modèle de `Publish-Native.ps1`, qui prend le
-dossier de publish et produit `Setup.exe` (Windows) ou `.pkg` (macOS) plus les
-paquets delta. Le brancher dans `release.yml` après l'étape de smoke test natif,
-et publier ces artefacts **en plus** des archives actuelles, pas à leur place :
-les archives portables servent Scoop et les utilisateurs qui ne veulent pas
-d'installeur.
+Packaging: an `eng/` script modelled on `Publish-Native.ps1`, taking the publish folder and
+producing `Setup.exe` (Windows) or `.pkg` (macOS) plus the delta packages. Wire it into
+`release.yml` after the native smoke test step, and publish those artefacts **in addition
+to** the current archives, not instead of them: the portable archives serve Scoop and the
+users who do not want an installer.
 
-**Critères d'acceptation**
+**Acceptance criteria**
 
-- `Setup.exe` installe sans invite UAC et crée un raccourci.
-- Lancement post-installation : fenêtre GitHealth, base intacte entre deux
-  versions.
-- En Docker et sur Linux, `/api/updates` renvoie « non supporté » et le bouton
-  n'apparaît pas.
-- Les archives `.zip` et `.tar.gz` actuelles restent publiées.
+- `Setup.exe` installs without a UAC prompt and creates a shortcut.
+- Post-installation launch: a GitHealth window, database intact between two versions.
+- Under Docker and on Linux, `/api/updates` returns "unsupported" and the button does not
+  appear.
+- The current `.zip` and `.tar.gz` archives are still published.
 
-**Tests** — unitaires sur la sélection de l'implémentation d'`IUpdateService`
-selon le mode et la plateforme. Ne pas tester Velopack lui-même.
+**Tests** — unit tests on selecting the `IUpdateService` implementation by mode and
+platform. Do not test Velopack itself.
 
 ---
 
-## Lot 4 — Canaux de distribution
+## Batch 4 — Distribution channels
 
-Par ordre de rapport effort / bénéfice.
+In order of effort-to-benefit ratio.
 
-1. **Scoop** (Windows, gratuit) — gain immédiat : un manifeste JSON d'une
-   quinzaine de lignes pointant sur le `githealth-win-x64.zip` **déjà publié**.
-   Ne demande ni installeur ni signature. Faisable avant même le lot 3.
-2. **winget** (Windows, gratuit) — PR sur `winget-pkgs`. Exige une installation
-   silencieuse, que le `Setup.exe` Velopack fournit.
-3. **Homebrew Cask** (macOS) — techniquement gratuit, mais Gatekeeper met en
-   quarantaine tout `.app` non notarisé. Suppose de trancher d'abord la question
-   du compte développeur Apple (99 $/an). **Bloqué, hors périmètre.**
-4. **Linux** — ajouter `linux-x64` au `ValidateSet` de `eng/Publish-Native.ps1`
-   et un runner Linux à la matrice de `release.yml`. Le `.tar.gz` fonctionne déjà
-   en mode navigateur, donc Linux est livrable **avant** que la question de la
-   fenêtre y soit réglée. Cible idéale ensuite : **Flathub**, dont le runtime
-   fournit WebKitGTK et supprime le problème de dépendance système.
+1. **Scoop** (Windows, free) — an immediate win: a JSON manifest of about fifteen lines
+   pointing at the `githealth-win-x64.zip` that is **already published**. Requires neither
+   an installer nor signing. Doable even before batch 3.
+2. **winget** (Windows, free) — a PR against `winget-pkgs`. Requires a silent install,
+   which the Velopack `Setup.exe` provides.
+3. **Homebrew Cask** (macOS) — technically free, but Gatekeeper quarantines any
+   unnotarised `.app`. It presupposes settling the Apple developer account question first
+   ($99/year). **Blocked, out of scope.**
+4. **Linux** — add `linux-x64` to the `ValidateSet` of `eng/Publish-Native.ps1` and a Linux
+   runner to the `release.yml` matrix. The `.tar.gz` already works in browser mode, so
+   Linux is shippable **before** the window question is settled there. Ideal target next:
+   **Flathub**, whose runtime provides WebKitGTK and removes the system dependency problem.
 
 ---
 
-## 5. Conventions du dépôt à respecter
+## 5. Repository conventions to honour
 
-Voir `AGENTS.md`. Les points qui vont mordre sur ce chantier :
+See `AGENTS.md`. The points that will bite on this work:
 
-- **Commits** : Conventional Commits en français, sujet ≤ 72 caractères, un
-  commit = un changement cohérent. Scopes : `src/App.GitHealth.Api/**` → `api`,
+- **Commits**: Conventional Commits in French, subject ≤ 72 characters, one commit = one
+  coherent change. Scopes: `src/App.GitHealth.Api/**` → `api`,
   `src/App.GitHealth.Web/**` → `front`, `.github/**` → `ci`, `docs/**` → `docs`.
-  `eng/**` n'est pas cartographié : le rattacher à `infra`.
-- **Branches** : `type/description-courte` en kebab-case, une branche par sujet.
-  Un lot = une branche.
-- **Tests livrés avec la feature**, même branche. Le nécessaire, pas la course à
-  la couverture ; on ne teste ni le framework ni les bibliothèques tierces.
-- **Limites** : fichier ≤ 300 lignes (400 max), 10 fichiers par dossier, méthode
-  ≤ 30 lignes, ≤ 3 paramètres, imbrication ≤ 3, ligne ≤ 100 caractères.
-- **Un seul élément public par fichier**, nommé comme le fichier.
-- `TreatWarningsAsErrors` est actif (`Directory.Build.props`) : aucun warning ne
-  passe.
+  `eng/**` is not mapped: attach it to `infra`.
+- **Branches**: `type/short-description` in kebab-case, one branch per topic.
+  One batch = one branch.
+- **Tests shipped with the feature**, same branch. Only what is needed, no race for
+  coverage; we test neither the framework nor third-party libraries.
+- **Limits**: file ≤ 300 lines (400 max), 10 files per folder, method ≤ 30 lines,
+  ≤ 3 parameters, nesting ≤ 3, line ≤ 100 characters.
+- **A single public element per file**, named after the file.
+- `TreatWarningsAsErrors` is enabled (`Directory.Build.props`): no warning gets through.
 
-## 6. Documentation à mettre à jour en fin de chantier
+## 6. Documentation to update at the end of the work
 
-- `docs/KNOWN_LIMITATIONS.md:11` — « Il n'existe pas encore d'installeur, de mise
-  à jour automatique ou de désinstallation ».
-- `docs/IMPLEMENTATION_PLAN.md:367` — « Installeurs signés et mise à jour
-  automatique ».
-- `README.md` et `docs/USER_GUIDE.md` — le chemin d'installation par défaut
-  devient l'application de bureau, Docker passe en mode auto-hébergement.
-- `ARCHITECTURE.md` — la coque et le pont de messages.
+- `docs/KNOWN_LIMITATIONS.md:11` — "There is no installer, automatic update or
+  uninstaller yet".
+- `docs/IMPLEMENTATION_PLAN.md:367` — "Signed installers and automatic updates".
+- `README.md` and `docs/USER_GUIDE.md` — the default installation path becomes the desktop
+  application, and Docker becomes the self-hosting mode.
+- `ARCHITECTURE.md` — the shell and the message bridge.
 
-## 7. Ordre d'exécution
+## 7. Execution order
 
-Lot 0 → lot 1 (et validation du rendu webview) → lot 4.1 (Scoop) → lot 2 →
-lot 3 → lot 4.2 puis 4.4.
+Batch 0 → batch 1 (and webview rendering validation) → batch 4.1 (Scoop) → batch 2 →
+batch 3 → batch 4.2 then 4.4.
 
-Les lots 0 et 1 sont les seuls réellement bloquants. Chacun est livrable et
-testable indépendamment.
+Batches 0 and 1 are the only genuinely blocking ones. Each is deliverable and testable
+independently.

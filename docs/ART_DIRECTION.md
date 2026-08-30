@@ -1,146 +1,147 @@
-# Direction éditoriale et visuelle
+# Editorial and visual direction
 
-Ce document fixe la manière dont GitHealth se présente dans le README, la documentation,
-les captures de release et les futurs supports publics. Il prolonge le design system
-**Établi** de l'application ; il n'introduit pas une seconde marque.
+This document sets out how GitHealth presents itself in the README, the documentation,
+the release screenshots and any future public material. It extends the application's
+**Établi** design system; it does not introduce a second brand.
 
-## Positionnement
+## Positioning
 
-**Phrase maîtresse**
+**Leading sentence**
 
-> Les faits Git avant la décision.
+> The Git facts before the decision.
 
-**Promesse courte**
+**Short promise**
 
-> Voyez quelles branches comptent encore — sans toucher au dépôt.
+> See which branches still matter — without touching the repository.
 
-**Signature**
+**Sign-off**
 
-> GitHealth observe. Vous gardez la décision.
+> GitHealth observes. You keep the decision.
 
-GitHealth n'est pas vendu comme un score magique, un robot de nettoyage ou une forge
-supplémentaire. C'est un poste de diagnostic local qui rend une situation Git lisible,
-explique son interprétation et laisse l'action finale à l'utilisateur.
+GitHealth is not sold as a magic score, a cleanup robot, or yet another forge. It is a
+local diagnostic bench that makes a Git situation readable, explains its interpretation
+and leaves the final action to the user.
 
-## Concept : le dossier de diagnostic
+## Concept: the diagnostic file
 
-La documentation suit la même chaîne que le produit :
+The documentation follows the same chain as the product:
 
 ```text
-fait observé  →  interprétation  →  politique  →  verdict  →  action humaine
+observed fact  →  interpretation  →  policy  →  verdict  →  human action
 ```
 
-Chaque promesse importante doit pouvoir remonter à sa preuve. Un visuel de verdict montre
-donc au minimum le signal, la règle appliquée, la recommandation et la part d'incertitude.
-Le vocabulaire d'enquête sert la traçabilité, sans dramatisation judiciaire ni certitude
-médicale excessive.
+Every important promise must be traceable to its evidence. A verdict visual therefore
+shows, at a minimum, the signal, the rule applied, the recommendation and the share of
+uncertainty. The vocabulary of investigation serves traceability, without judicial drama
+or excessive medical certainty.
 
-Le concept se décline en trois familles :
+The concept comes in three families:
 
-1. **Dossier** — numéros, références, horodatages et informations reproductibles.
-2. **Anatomie** — lignes fines reliant les faits au verdict, jamais un score isolé.
-3. **Registre des refus** — les frontières du produit rendues visibles et vérifiables.
+1. **File** — numbers, references, timestamps and reproducible information.
+2. **Anatomy** — thin lines connecting the facts to the verdict, never an isolated score.
+3. **Register of refusals** — the product's boundaries made visible and verifiable.
 
-## Grammaire visuelle
+## Visual grammar
 
 ### Palette
 
-| Rôle | Couleur | Usage |
+| Role | Colour | Usage |
 |---|---|---|
-| Graphite | `#1a1815` / `#fcfbf9` | Châssis, texte, surfaces calmes |
-| Laiton | `#a87b27` / `#d9b25f` | Marque, topologie, points de conclusion |
-| Cobalt | `#2e45c9` / `#6b82e8` | Interaction, preuve active, impulsion |
-| Vert | `#157f4b` / `#93cfae` | État sûr, lecture locale, succès |
-| Ambre | `#b45b09` / `#f3c37c` | Attention et examen nécessaire |
-| Rouge | `#c0322b` / `#f0b0a9` | Danger avéré, jamais simple décoration |
+| Graphite | `#1a1815` / `#fcfbf9` | Chassis, text, calm surfaces |
+| Brass | `#a87b27` / `#d9b25f` | Brand, topology, conclusion points |
+| Cobalt | `#2e45c9` / `#6b82e8` | Interaction, active evidence, momentum |
+| Green | `#157f4b` / `#93cfae` | Safe state, local read, success |
+| Amber | `#b45b09` / `#f3c37c` | Attention and review needed |
+| Red | `#c0322b` / `#f0b0a9` | Proven danger, never mere decoration |
 
-Les valeurs complètes restent définies dans
-[`_colors.scss`](../src/App.GitHealth.Web/src/styles/ds/tokens/_colors.scss). Les supports
-ne créent pas une nouvelle nuance si un jeton existant exprime déjà l'intention.
+The full values stay defined in
+[`_colors.scss`](../src/App.GitHealth.Web/src/styles/ds/tokens/_colors.scss). Supporting
+material does not create a new shade when an existing token already expresses the intent.
 
-### Typographie
+### Typography
 
-- **IBM Plex Sans** porte les titres, les explications et la voix éditoriale.
-- **IBM Plex Mono** porte les références, métriques, commandes, versions et preuves.
-- Les grands titres sont courts, fermes et légèrement serrés.
-- Le mono n'est jamais utilisé sur un paragraphe entier : il marque la donnée, pas la voix.
+- **IBM Plex Sans** carries the headings, the explanations and the editorial voice.
+- **IBM Plex Mono** carries references, metrics, commands, versions and evidence.
+- Large headings are short, firm and slightly tightened.
+- Mono is never used for a whole paragraph: it marks the data, not the voice.
 
-Une image SVG doit garder une pile de repli système, car GitHub ne charge pas les polices
-locales de l'application dans tous les contextes.
+An SVG image must keep a system fallback stack, because GitHub does not load the
+application's local fonts in every context.
 
-### Formes et composition
+### Shapes and composition
 
-- grands aplats calmes, grille technique discrète et densité maîtrisée ;
-- lignes de topologie arrondies, points creux et impulsion cobalt au point d'analyse ;
-- cartes peu élevées, rayon mesuré, bordures plus présentes que les ombres ;
-- numérotation `01`, `02`, `03` pour construire un dossier, pas pour décorer ;
-- beaucoup d'espace autour d'un verdict, peu autour des données qui le prouvent ;
-- variantes claire et sombre obligatoires pour toute hero ou capture principale.
+- large calm areas, a discreet technical grid and controlled density;
+- rounded topology lines, hollow points and a cobalt pulse at the analysis point;
+- low-elevation cards, measured radius, borders more present than shadows;
+- `01`, `02`, `03` numbering to build a file, not to decorate;
+- plenty of space around a verdict, little around the data that proves it;
+- light and dark variants mandatory for every hero or main screenshot.
 
-## Architecture du README
+## README architecture
 
-Le README suit un entonnoir de décision :
+The README follows a decision funnel:
 
-1. **Promesse** — comprendre la valeur en moins de dix secondes.
-2. **Preuve visuelle** — voir le vrai produit sur un vrai diagnostic.
-3. **Capacités** — vérifier que le besoin fonctionnel est couvert.
-4. **Frontière** — comprendre pourquoi le local et le read-only sont crédibles.
-5. **Activation** — lancer GitHealth sans parcourir toute la documentation.
-6. **Profondeur** — rejoindre architecture, sécurité, benchmarks ou contribution.
+1. **Promise** — understand the value in under ten seconds.
+2. **Visual evidence** — see the real product on a real diagnosis.
+3. **Capabilities** — check that the functional need is covered.
+4. **Boundary** — understand why local and read-only are credible.
+5. **Activation** — start GitHealth without reading the whole documentation.
+6. **Depth** — reach architecture, security, benchmarks or contribution.
 
-Les badges ne remplacent jamais une phrase de positionnement. Les tableaux servent les
-comparaisons exactes ; les listes servent les capacités ; les alertes GitHub sont réservées
-aux limites qui modifient réellement une décision d'installation.
+Badges never replace a positioning sentence. Tables serve exact comparisons; lists serve
+capabilities; GitHub alerts are reserved for limitations that genuinely change an
+installation decision.
 
-## Voix
+## Voice
 
-La voix de GitHealth est calme, précise et adulte.
+GitHealth's voice is calm, precise and adult.
 
-| Faire | Éviter |
+| Do | Avoid |
 |---|---|
-| « GitHealth explique pourquoi cette branche demande une revue. » | « Une IA révolutionnaire nettoie vos branches. » |
-| « Aucune écriture Git n'est exécutée. » | « 100 % safe. » |
-| « Les références peuvent être anciennes sans fetch volontaire. » | Cacher une limite dans une note de bas de page. |
-| « Candidate au nettoyage manuel. » | « Branche morte » ou « supprimer maintenant ». |
+| "GitHealth explains why this branch needs a review." | "A revolutionary AI cleans up your branches." |
+| "No Git write is ever performed." | "100 % safe." |
+| "References can be stale without a deliberate fetch." | Hiding a limitation in a footnote. |
+| "Candidate for manual cleanup." | "Dead branch" or "delete now". |
 
-Les verbes préférés sont **lire**, **observer**, **comparer**, **expliquer**, **proposer**
-et **vérifier**. Les verbes **guérir**, **juger** et **nettoyer automatiquement** sont
-écartés : ils dépassent le comportement réel.
+The preferred verbs are **read**, **observe**, **compare**, **explain**, **suggest** and
+**verify**. The verbs **heal**, **judge** and **clean up automatically** are ruled out:
+they overstate the actual behaviour.
 
-## Captures et démonstrations
+## Screenshots and demonstrations
 
-- utiliser un scénario déterministe ou le dépôt GitHealth lui-même ;
-- ne montrer aucune information qui ne serait pas publiable dans le dépôt ;
-- conserver le même viewport pour les variantes claire et sombre ;
-- laisser visibles référence, métriques, topologie et recommandation ;
-- légender la capture par le scénario, pas par « screenshot de l'application » ;
-- régénérer les captures quand le parcours ou la sémantique change.
+- use a deterministic scenario, or the GitHealth repository itself;
+- show no information that could not be published in the repository;
+- keep the same viewport for the light and dark variants;
+- keep the baseline, the metrics, the topology and the recommendation visible;
+- caption the screenshot with the scenario, not with "screenshot of the application";
+- regenerate the screenshots whenever the journey or the semantics change.
 
-Le duo actuel vit dans [`docs/assets/readme`](assets/readme). Le README sélectionne la
-bonne variante avec `<picture>` et `prefers-color-scheme`.
+The current pair lives in [`docs/assets/readme`](assets/readme). The README picks the
+right variant with `<picture>` and `prefers-color-scheme`.
 
-## Pièges écartés
+## Directions ruled out
 
-- **Cabinet médical** : immédiat mais trop cliché et trop certain pour des heuristiques.
-- **Métaphores biologiques savantes** : originales, mais plus longues à expliquer que Git.
-- **README entièrement navigué par la topologie** : spectaculaire, instable et peu scannable.
-- **Refus en promesse principale** : crédible, mais vend les limites avant la valeur.
-- **Grammaire de sceaux partout** : la traçabilité devient vite une surcharge visuelle.
+- **Medical practice**: immediate, but too clichéd and too certain for heuristics.
+- **Scholarly biological metaphors**: original, but longer to explain than Git itself.
+- **A README navigated entirely by topology**: spectacular, unstable and hard to scan.
+- **Refusal as the main promise**: credible, but it sells the limits before the value.
+- **A grammar of seals everywhere**: traceability quickly becomes visual overload.
 
-Le choix final combine le dossier probatoire, l'anatomie du verdict et le registre des
-refus. La piste plus expérimentale — plusieurs supports générés depuis un même scénario
-de dépôt exécutable — reste une évolution possible si les captures deviennent automatisées.
+The final choice combines the evidentiary file, the anatomy of the verdict and the
+register of refusals. The more experimental direction — several assets generated from one
+executable repository scenario — remains a possible evolution if screenshots become
+automated.
 
 ## Maintenance
 
-Lorsqu'une capacité publique change :
+Whenever a public capability changes:
 
-1. mettre à jour la phrase de valeur ou la limite concernée ;
-2. vérifier le lien vers la preuve technique ;
-3. régénérer la capture si le parcours visible change ;
-4. contrôler les deux thèmes ;
-5. relire le README à largeur mobile et desktop ;
-6. joindre la documentation au même changement que le code.
+1. update the value sentence or the limitation concerned;
+2. check the link to the technical evidence;
+3. regenerate the screenshot if the visible journey changes;
+4. check both themes;
+5. re-read the README at mobile and desktop widths;
+6. ship the documentation in the same change as the code.
 
-Une direction artistique réussie ne masque pas la réalité du produit : elle rend sa
-rigueur immédiatement perceptible.
+Successful art direction does not hide the reality of the product: it makes its rigour
+immediately perceptible.

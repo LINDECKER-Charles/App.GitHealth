@@ -1,158 +1,156 @@
-# Architecture technique de GitHealth
-> Statut : MVP implémenté, release candidate `0.1.0-rc.1` — mise à jour : 29 août 2026
-## Vue d'ensemble
+# GitHealth technical architecture
+> Status: MVP implemented, release candidate `0.1.0-rc.1` — updated: 29 August 2026
+## Overview
 
-GitHealth est une application web locale d'aide au diagnostic des branches Git.
-L'utilisateur sélectionne un dépôt et une branche de référence, généralement
-`main`, puis obtient une vue comparative de ses branches locales ou distantes.
+GitHealth is a local web application that helps diagnose Git branches. The user selects a
+repository and a baseline branch, usually `main`, then gets a comparative view of its
+local or remote branches.
 
-L'application doit :
+The application must:
 
-- fonctionner hors ligne, sans service externe obligatoire ;
-- démarrer depuis un point d'entrée unique ;
-- être distribuable sur Windows et macOS ;
-- analyser les dépôts sans checkout et sans modifier leurs références ;
-- conserver les configurations et les analyses dans une base SQLite exportable ;
-- rester utilisable sur des dépôts comportant plusieurs centaines de branches.
+- work offline, with no mandatory external service;
+- start from a single entry point;
+- be distributable on Windows and macOS;
+- analyse repositories without a checkout and without modifying their references;
+- keep configurations and analyses in an exportable SQLite database;
+- stay usable on repositories with several hundred branches.
 
-Le produit est mono-utilisateur. L'interface Angular est servie par ASP.NET Core :
-le navigateur ne communique donc qu'avec un seul processus et une seule origine.
+The product is single-user. The Angular interface is served by ASP.NET Core: the browser
+therefore talks to a single process and a single origin.
 
-## Périmètre fonctionnel
+## Functional scope
 
 ### MVP
 
-- Enregistrer un dépôt déjà présent sur la machine.
-- Détecter les dépôts d'un dossier et en analyser plusieurs en une fois.
-- Détecter ses branches locales et ses branches de suivi distant.
-- Choisir une référence et le jeu de branches à comparer.
-- Calculer l'avance, le retard, la fusion et la dernière activité observable.
-- Identifier les contributeurs des commits propres à une branche.
-- Classer, filtrer et consulter le détail des branches.
-- Configurer les seuils d'inactivité et les motifs de branches protégées.
-- Conserver plusieurs analyses et exporter la base de données de façon cohérente.
-- Fournir un exécutable natif et un lancement Docker Compose.
+- Register a repository already present on the machine.
+- Detect the repositories in a folder and analyse several of them at once.
+- Detect its local branches and its remote-tracking branches.
+- Choose a baseline and the set of branches to compare.
+- Compute ahead, behind, merge state and the last observable activity.
+- Identify the contributors of the commits specific to a branch.
+- Sort, filter and inspect the detail of branches.
+- Configure inactivity thresholds and protected branch patterns.
+- Keep several analyses and export the database consistently.
+- Provide a native executable and a Docker Compose launch.
 
-### Hors périmètre du MVP
+### Outside the MVP scope
 
-- Supprimer, fusionner, checkout ou pousser une branche.
-- Exécuter automatiquement `git fetch` ou `git remote prune`.
-- Cloner un dépôt distant et gérer ses identifiants.
-- Héberger une instance multi-utilisateur sur un réseau.
-- Reconstituer avec certitude la création d'une branche ou ses checkouts passés.
-- Remplacer les politiques de rétention propres à GitHub, GitLab ou Azure DevOps.
+- Delete, merge, check out or push a branch.
+- Automatically run `git fetch` or `git remote prune`.
+- Clone a remote repository and manage its credentials.
+- Host a multi-user instance on a network.
+- Reconstruct with certainty the creation of a branch or its past checkouts.
+- Replace the retention policies specific to GitHub, GitLab or Azure DevOps.
 
-## Décisions structurantes
+## Structural decisions
 
-| Sujet | Décision | Conséquence |
+| Topic | Decision | Consequence |
 |---|---|---|
-| Interface | Application web locale Angular | Technologie maîtrisée et interface portable |
-| Hôte | ASP.NET Core sert l'API et les fichiers Angular | Un processus, un port et une origine |
-| Exécution principale | Exécutable .NET autonome | Accès direct aux dépôts du poste |
-| Alternative | Docker Compose | Dépôts montés explicitement en lecture seule |
-| Coque de bureau | Photino dans le processus de l'hôte | Pas de processus enfant à superviser |
-| Distribution | Velopack, installation par utilisateur | Sans UAC, données hors de l'installation |
-| Analyse Git | Client Git en ligne de commande | Sémantique Git sans checkout |
-| Persistance | SQLite avec EF Core | Base locale, migrable et sauvegardable |
-| État du front | Services Angular et Signals | Pas de store global externe pour le MVP |
-| Tâches longues | File et service d'arrière-plan | API non bloquante et progression visible |
-| Nettoyage | Recommandations seulement | GitHealth ne supprime jamais une branche |
+| Interface | Local Angular web application | Familiar technology and a portable interface |
+| Host | ASP.NET Core serves the API and the Angular files | One process, one port and one origin |
+| Main execution | Self-contained .NET executable | Direct access to the machine's repositories |
+| Alternative | Docker Compose | Repositories mounted read-only and explicitly |
+| Desktop shell | Photino inside the host process | No child process to supervise |
+| Distribution | Velopack, per-user installation | No UAC, data outside the installation |
+| Git analysis | Git command-line client | Git semantics without a checkout |
+| Persistence | SQLite with EF Core | A local database, migratable and backupable |
+| Front-end state | Angular services and Signals | No external global store for the MVP |
+| Long-running tasks | Queue and background service | Non-blocking API and visible progress |
+| Cleanup | Recommendations only | GitHealth never deletes a branch |
 
-## Sémantique Git
+## Git semantics
 
-Une branche Git est une référence vers un commit. Git ne mémorise ni l'intention de
-création de la branche, ni les checkouts effectués par les autres développeurs. Les
-indicateurs d'usage sont donc des observations de l'historique, pas une mesure du
-temps réellement passé sur la branche.
+A Git branch is a reference to a commit. Git remembers neither the intent behind the
+branch's creation nor the checkouts performed by other developers. Usage indicators are
+therefore observations of the history, not a measure of the time actually spent on the
+branch.
 
-Pour une référence `R` et une branche `B` :
+For a baseline `R` and a branch `B`:
 
-- **avance** : commits accessibles depuis `B` mais pas depuis `R` ;
-- **retard** : commits accessibles depuis `R` mais pas depuis `B` ;
-- **fusionnée** : le commit pointé par `B` est un ancêtre de `R` ;
-- **activité** : date de commit du sommet de `B`, exprimée en UTC ;
-- **contributeurs** : auteurs des commits de `R..B`, hors commits de fusion ;
-- **nombre de commits propres** : identique à l'avance, sans compter tout
-  l'historique hérité de la référence.
+- **ahead**: commits reachable from `B` but not from `R`;
+- **behind**: commits reachable from `R` but not from `B`;
+- **merged**: the commit `B` points at is an ancestor of `R`;
+- **activity**: commit date of the tip of `B`, expressed in UTC;
+- **contributors**: authors of the commits in `R..B`, merge commits excluded;
+- **own commit count**: identical to ahead, without counting all the history inherited
+  from the baseline.
 
-Les noms et adresses des auteurs respectent `.mailmap` lorsqu'il est présent. Sans
-mailmap, une même personne utilisant plusieurs adresses peut apparaître plusieurs
-fois.
+Author names and addresses honour `.mailmap` when it is present. Without a mailmap, one
+person using several addresses can appear several times.
 
-Après la fusion complète d'une branche, `R..B` est vide. Git ne permet alors plus
-d'attribuer avec certitude les commits à leur branche d'origine. GitHealth signale
-l'attribution comme indisponible. Un snapshot antérieur reste consultable dans
-l'historique, mais n'est jamais substitué aux faits de la nouvelle analyse.
+After a branch has been fully merged, `R..B` is empty. Git then no longer allows commits
+to be attributed to their branch of origin with certainty. GitHealth reports the
+attribution as unavailable. An earlier snapshot stays visible in the history, but is
+never substituted for the facts of the new analysis.
 
-Les données reflètent les références visibles localement au moment de l'analyse.
-Sans `fetch`, elles peuvent différer de l'état actuel du serveur distant.
+The data reflects the references visible locally at the time of the analysis. Without a
+`fetch`, it may differ from the current state of the remote server.
 
-### États présentés
+### States presented
 
-Les faits et leur interprétation restent séparés pour éviter un score opaque.
+Facts and their interpretation stay separate, to avoid an opaque score.
 
-| Axe | Valeurs principales |
+| Axis | Main values |
 |---|---|
-| Topologie | synchronisée, en avance, fusionnée/en retard, divergente, sans ancêtre commun |
-| Activité | active, vieillissante, inactive, inconnue |
-| Recommandation | conserver, examiner, candidate au nettoyage, exclue |
+| Topology | in sync, ahead, merged/behind, diverged, no common ancestor |
+| Activity | active, ageing, inactive, unknown |
+| Recommendation | keep, review, cleanup candidate, excluded |
 
-Valeurs initiales proposées, modifiables par projet :
+Initial values, adjustable per project:
 
-- active jusqu'à 30 jours sans activité ;
-- vieillissante de 31 à 90 jours ;
-- inactive au-delà de 90 jours ;
-- candidate au nettoyage uniquement si elle est fusionnée, inactive et non protégée ;
-- à examiner si elle est inactive mais possède encore des commits propres.
+- active up to 30 days without activity;
+- ageing from 31 to 90 days;
+- inactive beyond 90 days;
+- cleanup candidate only if merged, inactive and not protected;
+- review if inactive but still carrying its own commits.
 
-Aucune recommandation ne déclenche une action Git.
+No recommendation ever triggers a Git action.
 
-## Stack technique
+## Technical stack
 
-| Composant | Choix cible |
+| Component | Target choice |
 |---|---|
-| Runtime et API | .NET 10 LTS, ASP.NET Core |
-| Interface | Angular 22, TypeScript strict, composants standalone |
-| Accès aux données | Entity Framework Core 10 |
-| Base | SQLite |
-| Analyse | Exécutable `git`, détection de capacités au démarrage |
-| Contrat HTTP | JSON, Problem Details et OpenAPI |
-| Conteneur | Image Linux multi-stage et Docker Compose |
-| Coque de bureau | Photino.NET 4.0.16 |
-| Installeur et mises à jour | Velopack 1.2.0 |
-| Tests | Tests .NET, tests Angular et scénarios Git d'intégration |
+| Runtime and API | .NET 10 LTS, ASP.NET Core |
+| Interface | Angular 22, strict TypeScript, standalone components |
+| Data access | Entity Framework Core 10 |
+| Database | SQLite |
+| Analysis | The `git` executable, capability detection at startup |
+| HTTP contract | JSON, Problem Details and OpenAPI |
+| Container | Multi-stage Linux image and Docker Compose |
+| Desktop shell | Photino.NET 4.0.16 |
+| Installer and updates | Velopack 1.2.0 |
+| Tests | .NET tests, Angular tests and Git integration scenarios |
 
-Photino embarque le moteur de rendu du système dans le processus de l'hôte : la fenêtre
-et Kestrel partagent un cycle de vie, sans supervision de processus enfant ni handshake
-de port. Velopack produit un installeur par utilisateur et des paquets delta à partir du
-flux de releases GitHub que la CI publie déjà.
+Photino embeds the system rendering engine inside the host process: the window and
+Kestrel share a lifecycle, with no child-process supervision and no port handshake.
+Velopack produces a per-user installer and delta packages from the GitHub release feed
+that CI already publishes.
 
-Les versions correctives sont verrouillées dans le dépôt et maintenues dans leur
-branche majeure. Node.js utilise une version supportée par Angular 22, fixée par le
-projet lors de son initialisation.
+Patch versions are pinned in the repository and maintained within their major branch.
+Node.js uses a version supported by Angular 22, fixed by the project at initialisation.
 
-## Architecture globale
+## Global architecture
 
 ```mermaid
 flowchart LR
-    User[Utilisateur] --> Browser[Navigateur Angular]
-    Browser -->|HTTP même origine| Host[Hôte ASP.NET Core]
-    Host --> Api[Endpoints par fonctionnalité]
-    Api --> Queue[File d'analyses]
-    Queue --> Engine[Moteur d'analyse]
-    Engine --> Git[Adaptateur Git CLI]
-    Git --> Repo[(Dépôt local en lecture seule)]
-    Engine --> Store[Persistance]
+    User[User] --> Browser[Angular browser]
+    Browser -->|same-origin HTTP| Host[ASP.NET Core host]
+    Host --> Api[Endpoints per feature]
+    Api --> Queue[Analysis queue]
+    Queue --> Engine[Analysis engine]
+    Engine --> Git[Git CLI adapter]
+    Git --> Repo[(Local repository, read-only)]
+    Engine --> Store[Persistence]
     Api --> Store
     Store --> Db[(SQLite)]
-    Host -->|fichiers statiques| Browser
+    Host -->|static files| Browser
 ```
 
-Le cœur métier ne dépend ni d'ASP.NET Core, ni d'Entity Framework Core, ni du
-processus Git. Les interfaces d'entrée/sortie permettent de tester les règles avec
-des données déterministes.
+The domain core depends neither on ASP.NET Core, nor on Entity Framework Core, nor on the
+Git process. The input/output interfaces make it possible to test the rules with
+deterministic data.
 
-## Organisation des modules
+## Module layout
 
 ```text
 src/
@@ -172,351 +170,346 @@ tests/
 
 ### `App.GitHealth.Core`
 
-Contient les types métier, les règles de qualification, les contrats du scanner et
-les cas d'usage. Il ne lance aucun processus et n'accède pas au disque.
+Holds the domain types, the qualification rules, the scanner contracts and the use cases.
+It starts no process and does not touch the disk.
 
 ### `App.GitHealth.Api`
 
-Contient l'hôte, les endpoints, l'orchestration des analyses et les adaptateurs :
-Git, SQLite, horloge et système de fichiers. Une séparation en projet
-`Infrastructure` ne sera introduite que si la taille ou les dépendances le
-justifient.
+Holds the host, the endpoints, the orchestration of analyses and the adapters: Git,
+SQLite, clock and file system. A separate `Infrastructure` project will only be
+introduced if size or dependencies justify it.
 
-`Hosting/Desktop/` porte la coque de bureau : fenêtre, résolution du mode d'affichage et
-pont de messages. `Features/Updates/` porte l'état des mises à jour et son application.
+`Hosting/Desktop/` carries the desktop shell: window, display mode resolution and the
+message bridge. `Features/Updates/` carries the update state and its application.
 
 ### `App.GitHealth.Web`
 
-Contient l'application Angular. Son build de production est intégré aux fichiers
-statiques publiés par l'API. Les fonctionnalités sont chargées par route.
+Holds the Angular application. Its production build is bundled into the static files
+published by the API. Features are loaded per route.
 
-L'interface applique le design system Établi, dont les jetons et les classes `.etb-*`
-vivent dans `src/styles/ds/`. Ses primitives sont réimplémentées en composants Angular
-autonomes sous `src/app/ui/`, ses polices et ses glyphes sont servis localement depuis
-`public/ds/`. L'application ne charge donc aucune ressource distante.
+The interface applies the Établi design system, whose tokens and `.etb-*` classes live in
+`src/styles/ds/`. Its primitives are reimplemented as standalone Angular components under
+`src/app/ui/`, and its fonts and glyphs are served locally from `public/ds/`. The
+application therefore loads no remote resource.
 
-L'inlining du CSS critique est désactivé en production : la politique de sécurité de
-contenu interdit les scripts en ligne, et le gestionnaire `onload` qu'il génère ne
-s'exécuterait pas.
+Critical CSS inlining is disabled in production: the content security policy forbids
+inline scripts, and the `onload` handler it generates would not run.
 
-## Modèle de données
+## Data model
 
-### Agrégats persistés
+### Persisted aggregates
 
 **Project**
 
-- identifiant, nom d'affichage et chemin canonique ;
-- état d'accessibilité du chemin ;
-- référence sélectionnée et espace de branches analysé ;
-- seuils d'activité, exclusions et motifs protégés ;
-- dates de création et de dernière modification, identifiant de la dernière analyse réussie.
+- identifier, display name and canonical path;
+- reachability state of the path;
+- selected baseline and analysed branch space;
+- activity thresholds, exclusions and protected patterns;
+- creation and last modification dates, identifier of the last successful analysis.
 
 **AnalysisRun**
 
-- projet, référence et SHA de référence observés ;
-- dates de début et de fin, état et progression ;
-- version de Git observée pendant l'analyse ;
-- message d'erreur synthétique en cas d'échec.
+- project, baseline and baseline SHA observed;
+- start and end dates, state and progress;
+- Git version observed during the analysis;
+- summary error message on failure.
 
 **BranchSnapshot**
 
-- nom complet de référence, nom affiché et SHA ;
-- avance, retard, état de fusion et état d'activité ;
-- date du sommet, auteur du sommet et recommandation calculée ;
-- indicateur d'exclusion et motifs de l'interprétation.
+- full reference name, display name and SHA;
+- ahead, behind, merge state and activity state;
+- tip date, tip author and computed recommendation;
+- exclusion flag and the reasons behind the interpretation.
 
 **ContributorSnapshot**
 
-- snapshot de branche ;
-- nom et adresse canonisés par mailmap ;
-- nombre de commits propres hors fusions ;
-- rang dans la branche.
+- branch snapshot;
+- name and address canonicalised by mailmap;
+- number of own commits excluding merges;
+- rank within the branch.
 
-Les snapshots sont immuables. Une analyse échouée ne remplace jamais la dernière
-analyse réussie. Une branche recréée sous le même nom est distinguée dans
-l'historique par la discontinuité de son SHA.
+Snapshots are immutable. A failed analysis never replaces the last successful analysis. A
+branch recreated under the same name is distinguished in the history by the discontinuity
+of its SHA.
 
 ### SQLite
 
-- clés étrangères activées ;
-- mode WAL et délai d'attente configuré pour les écritures concurrentes ;
-- migrations versionnées et appliquées au démarrage ;
-- transactions courtes pendant la persistance d'un lot ;
-- export réalisé par l'API de sauvegarde SQLite, pas par copie du fichier ouvert.
+- foreign keys enabled;
+- WAL mode and a configured timeout for concurrent writes;
+- versioned migrations applied at startup;
+- short transactions while persisting a batch;
+- export performed through the SQLite backup API, not by copying an open file.
 
-La base est portable, mais les chemins de dépôts ne le sont pas. Après import sur
-une autre machine, les anciens snapshots restent consultables. L'utilisateur peut
-relocaliser le projet vers le même dépôt : son identifiant et son historique sont
-conservés après validation du nouveau chemin, de la référence configurée et du dernier
-commit de référence connu. Une réservation par projet exclut toute analyse concurrente.
+The database is portable, but repository paths are not. After importing on another
+machine, the old snapshots stay readable. The user can relocate the project onto the same
+repository: its identifier and its history are preserved once the new path, the configured
+baseline and the last known baseline commit have been validated. A per-project
+reservation rules out any concurrent analysis.
 
-## Flux de données
+## Data flows
 
-### Enregistrement d'un projet
+### Registering a project
 
-1. L'utilisateur saisit ou sélectionne un chemin.
-2. L'API résout son chemin canonique et applique les racines autorisées.
-3. L'adaptateur Git vérifie le dépôt, son répertoire Git et la version disponible.
-4. Les références sont listées sans checkout.
-5. L'utilisateur confirme la référence et les filtres de branches.
-6. La configuration est persistée.
+1. The user types or selects a path.
+2. The API resolves its canonical path and applies the allowed roots.
+3. The Git adapter checks the repository, its Git directory and the available version.
+4. References are listed without a checkout.
+5. The user confirms the baseline and the branch filters.
+6. The configuration is persisted.
 
-### Découverte des dépôts d'un dossier
+### Discovering the repositories in a folder
 
-1. L'utilisateur indique un dossier et une profondeur d'exploration.
-2. L'API applique les racines autorisées, puis parcourt l'arborescence en largeur.
-3. Un dossier reconnu comme dépôt — `.git`, fichier `.git` d'un worktree, ou disposition
-   bare — arrête la descente : ses sous-modules ne sont pas proposés séparément.
-4. Les dossiers cachés et les dossiers de build sont écartés ; le nombre de résultats est
-   borné et la troncature est signalée.
-5. Chaque candidat est confirmé par une lecture Git en lecture seule, avec un parallélisme
-   borné ; un dossier illisible est écarté du résultat.
-6. Les dépôts déjà rattachés à un projet sont renvoyés avec son identifiant.
+1. The user provides a folder and an exploration depth.
+2. The API applies the allowed roots, then walks the tree breadth-first.
+3. A folder recognised as a repository — `.git`, a worktree `.git` file, or a bare
+   layout — stops the descent: its submodules are not offered separately.
+4. Hidden folders and build folders are skipped; the number of results is bounded and
+   truncation is reported.
+5. Each candidate is confirmed by a read-only Git call, with bounded parallelism; an
+   unreadable folder is dropped from the result.
+6. Repositories already attached to a project are returned with its identifier.
 
-Le front enregistre les dépôts retenus qui ne le sont pas encore, puis lance une analyse
-par dépôt. La file d'analyses reste seule maîtresse du rythme : un dépôt refusé pour file
-pleine est relancé dès qu'une place se libère.
+The front end registers the retained repositories that are not yet known, then starts one
+analysis per repository. The analysis queue remains the sole master of the pace: a
+repository rejected because the queue was full is retried as soon as a slot frees up.
 
-### Relocalisation d'un projet
+### Relocating a project
 
-1. L'utilisateur indique le nouveau chemin depuis les paramètres du projet.
-2. L'API applique les mêmes contrôles de chemin et inspecte le dépôt en lecture seule.
-3. La référence configurée doit encore exister et le chemin ne doit pas être déjà rattaché.
-4. Seul le chemin du projet est remplacé ; ses analyses et son dernier snapshot restent liés.
+1. The user provides the new path from the project settings.
+2. The API applies the same path controls and inspects the repository read-only.
+3. The configured baseline must still exist and the path must not already be attached.
+4. Only the project's path is replaced; its analyses and its last snapshot stay attached.
 
-### Analyse
+### Analysis
 
-1. `POST /api/projects/{id}/analyses` crée une exécution et renvoie `202 Accepted`.
-2. La file refuse une seconde analyse simultanée du même projet.
-3. Le scanner capture les SHA de départ pour obtenir un snapshot cohérent.
-4. La topologie de toutes les branches est calculée et rendue disponible rapidement.
-5. Les contributeurs sont enrichis en arrière-plan avec un parallélisme borné.
-6. Les résultats sont persistés puis l'exécution passe à `Completed`.
-7. Le front interroge l'état et recharge les données à chaque changement d'étape.
+1. `POST /api/projects/{id}/analyses` creates a run and returns `202 Accepted`.
+2. The queue refuses a second simultaneous analysis of the same project.
+3. The scanner captures the starting SHAs to obtain a consistent snapshot.
+4. The topology of every branch is computed and made available quickly.
+5. Contributors are enriched in the background with bounded parallelism.
+6. The results are persisted, then the run moves to `Completed`.
+7. The front end polls the state and reloads the data at every phase change.
 
-Si une référence change pendant le scan, l'analyse conserve les SHA capturés. Un
-scan suivant reflétera le nouvel état.
+If a reference changes during the scan, the analysis keeps the captured SHAs. A later
+scan will reflect the new state.
 
-### Stratégie de commandes Git
+### Git command strategy
 
-- Exécutable résolu une fois au démarrage, premier trouvé gagne : chemin configuré
-  (`--git-path` ou `GitHealth:Git:ExecutablePath`), puis le `PATH`, puis les emplacements
-  d'installation standards de la plateforme.
-- Aucun shell : arguments fournis avec `ProcessStartInfo.ArgumentList`.
-- Aucun checkout, index, commit, fetch, prune ou écriture de référence.
-- `GIT_OPTIONAL_LOCKS=0`, délai maximal et annulation sur chaque processus.
-- Sorties structurées avec séparateurs NUL lorsque Git le permet.
-- Chemin rapide : `git for-each-ref` et l'atome `ahead-behind` calculent la
-  topologie de plusieurs références en un processus.
-- Repli pour les versions plus anciennes : `git rev-list --left-right --count`
-  avec un parallélisme strictement borné.
-- Enrichissement : `git shortlog`/`git log` sur `reference..branche`, mis en cache
-  par couple de SHA et effectué à la demande ou en tâche de fond.
+- Executable resolved once at startup, first hit wins: configured path (`--git-path` or
+  `GitHealth:Git:ExecutablePath`), then the `PATH`, then the platform's standard
+  installation locations.
+- No shell: arguments passed through `ProcessStartInfo.ArgumentList`.
+- No checkout, index, commit, fetch, prune or reference write.
+- `GIT_OPTIONAL_LOCKS=0`, a maximum duration and cancellation on every process.
+- Structured output with NUL separators wherever Git allows it.
+- Fast path: `git for-each-ref` and the `ahead-behind` atom compute the topology of many
+  references in a single process.
+- Fallback for older versions: `git rev-list --left-right --count` with strictly bounded
+  parallelism.
+- Enrichment: `git shortlog`/`git log` on `baseline..branch`, cached per SHA pair and
+  performed on demand or in the background.
 
-## API HTTP
+## HTTP API
 
-Les routes sont groupées sous `/api` et renvoient des DTO dédiés.
+Routes are grouped under `/api` and return dedicated DTOs.
 
-| Méthode et route | Responsabilité |
+| Method and route | Responsibility |
 |---|---|
-| `GET /api/session` | Initialiser session locale et jeton anti-forgery |
-| `GET /api/projects` | Lister les projets et leur dernier état |
-| `POST /api/projects/validate` | Valider un chemin sans le persister |
-| `POST /api/repositories/discover` | Détecter les dépôts contenus dans un dossier |
-| `POST /api/projects` | Enregistrer un projet |
-| `PUT /api/projects/{id}/repository` | Relocaliser un dépôt en conservant l'historique |
-| `PUT /api/projects/{id}/settings` | Modifier référence, seuils et exclusions |
-| `PUT /api/projects/{id}/organization` | Mettre en favori et ranger dans un groupe |
-| `POST /api/projects/{id}/analyses` | Démarrer une analyse |
-| `GET /api/analyses/{id}` | Lire état et progression |
-| `GET /api/projects/{id}/analyses/latest/branches` | Lister les snapshots |
-| `GET /api/branch-snapshots/{id}` | Lire détail et contributeurs |
-| `GET /api/exports/database` | Télécharger une sauvegarde SQLite cohérente |
-| `GET /api/updates` | Lire l'état des mises à jour de l'application |
-| `POST /api/updates/apply` | Télécharger puis appliquer la mise à jour disponible |
+| `GET /api/session` | Initialise the local session and the anti-forgery token |
+| `GET /api/projects` | List the projects and their latest state |
+| `POST /api/projects/validate` | Validate a path without persisting it |
+| `POST /api/repositories/discover` | Detect the repositories contained in a folder |
+| `POST /api/projects` | Register a project |
+| `PUT /api/projects/{id}/repository` | Relocate a repository while keeping its history |
+| `PUT /api/projects/{id}/settings` | Change the baseline, thresholds and exclusions |
+| `PUT /api/projects/{id}/organization` | Mark as favourite and move into a group |
+| `POST /api/projects/{id}/analyses` | Start an analysis |
+| `GET /api/analyses/{id}` | Read state and progress |
+| `GET /api/projects/{id}/analyses/latest/branches` | List the snapshots |
+| `GET /api/branch-snapshots/{id}` | Read the detail and its contributors |
+| `GET /api/exports/database` | Download a consistent SQLite backup |
+| `GET /api/updates` | Read the application update state |
+| `POST /api/updates/apply` | Download then apply the available update |
 
-`GET /api/runtime` décrit le mode d'exécution. Il expose aussi la disponibilité de Git,
-le chemin d'exécutable retenu et un diagnostic actionnable : sans Git, l'interface
-affiche un bandeau nommant les emplacements testés et `--git-path` au lieu d'échouer au
-premier scan.
+`GET /api/runtime` describes the execution mode. It also exposes Git availability, the
+executable path that was selected and an actionable diagnostic: without Git, the
+interface shows a banner naming the locations tried and `--git-path`, instead of failing
+on the first scan.
 
-L'état des mises à jour vaut `Unsupported`, `UpToDate`, `Unknown` ou `Available`. Il vaut
-`Unsupported` hors installation gérée — Docker, archive portable, exécution depuis le
-dossier de publication — et sur Linux, où l'utilisateur attend son gestionnaire de
-paquets. Il vaut `Unknown` quand la source des releases est injoignable : hors ligne,
-quota atteint ou dépôt indisponible, sans erreur ni perte d'usage. Le bouton de mise à
-jour n'apparaît dans la barre supérieure que sur `Available`.
+The update state is `Unsupported`, `UpToDate`, `Unknown` or `Available`. It is
+`Unsupported` outside a managed installation — Docker, portable archive, running from the
+publish folder — and on Linux, where the user expects their package manager. It is
+`Unknown` when the release source is unreachable: offline, rate-limited or repository
+unavailable, with neither an error nor a loss of function. The update button appears in
+the top bar only when the state is `Available`.
 
-Les erreurs utilisent Problem Details avec un code stable, un message utilisateur
-et un identifiant de corrélation. Aucune sortie brute de processus n'est envoyée au
-navigateur.
+Errors use Problem Details with a stable code, a user-facing message and a correlation
+identifier. No raw process output is ever sent to the browser.
 
-## Gestion de l'état et de la concurrence
+## State and concurrency management
 
-- SQLite est la source de vérité des configurations et analyses terminées.
-- La file et la progression des analyses sont détenues en mémoire par l'hôte.
-- Un seul scan peut être actif par projet ; la concurrence globale est bornée.
-- `AnalysisQueue:MaximumParallelAnalyses` fixe le nombre de lecteurs de la file, donc
-  d'analyses menées de front. À `1`, la file redevient strictement séquentielle.
-- Le front utilise des services Angular et Signals par fonctionnalité.
-- Les paramètres de filtre dans l'URL permettent de partager et restaurer une vue.
-- Aucun NgRx n'est introduit tant qu'un besoin de coordination globale ne l'exige.
-- Le front utilise un polling léger ; SignalR n'est pas requis pour le MVP.
+- SQLite is the source of truth for configurations and completed analyses.
+- The analysis queue and progress are held in memory by the host.
+- Only one scan can be active per project; global concurrency is bounded.
+- `AnalysisQueue:MaximumParallelAnalyses` sets the number of queue readers, and therefore
+  the number of analyses running at once. At `1`, the queue becomes strictly sequential
+  again.
+- The front end uses Angular services and Signals, per feature.
+- Filter parameters in the URL make a view shareable and restorable.
+- No NgRx is introduced until a global coordination need requires it.
+- The front end uses light polling; SignalR is not required for the MVP.
 
-## Déploiement et point d'entrée
+## Deployment and entry point
 
-### Exécutable natif, mode recommandé
+### Native executable, the recommended mode
 
-La publication produit `githealth.exe` pour Windows et `githealth` pour macOS et
-Linux. Le même processus :
+Publishing produces `githealth.exe` on Windows and `githealth` on macOS and Linux. The
+same process:
 
-1. vérifie Git et la base ;
-2. écoute uniquement sur `127.0.0.1` ;
-3. choisit un port disponible ou celui demandé ;
-4. ouvre une fenêtre de bureau embarquant le moteur de rendu du système ;
-5. sert Angular et l'API jusqu'à la fermeture de la fenêtre.
+1. checks Git and the database;
+2. listens on `127.0.0.1` only;
+3. picks an available port, or the requested one;
+4. opens a desktop window embedding the system rendering engine;
+5. serves Angular and the API until the window is closed.
 
-La coque est fournie par Photino : WebView2 sur Windows, WKWebView sur macOS et
-WebKitGTK sur Linux. Le front n'est pas embarqué, il reste chargé en HTTP depuis
-l'adresse loopback — la coque est donc un composant isolé et remplaçable.
+The shell is provided by Photino: WebView2 on Windows, WKWebView on macOS and WebKitGTK
+on Linux. The front end is not embedded, it stays loaded over HTTP from the loopback
+address — the shell is therefore an isolated and replaceable component.
 
-| Invocation | Interface ouverte |
+| Invocation | Interface opened |
 |---|---|
-| défaut, mode natif | Fenêtre de bureau |
-| `--no-window` | Aucune fenêtre, navigateur système |
-| `--no-browser` | Aucune interface ; implique `--no-window` |
-| mode conteneur | Inchangé, l'hôte tourne seul |
+| default, native mode | Desktop window |
+| `--no-window` | No window, system browser |
+| `--no-browser` | No interface; implies `--no-window` |
+| container mode | Unchanged, the host runs on its own |
 
-La fenêtre s'ouvre maximisée. Photino dimensionne en pixels physiques : sur un écran mis
-à l'échelle à 150 %, les 1360 pixels de la taille de restauration ne font que 907 pixels
-CSS, sous la largeur minimale de 1180 px de l'espace de travail. Une taille fixe ne
-garantit donc pas cette largeur. La taille de restauration est 1360×860, la taille
-minimale 960×600.
+The window opens maximised. Photino sizes in physical pixels: on a display scaled to
+150 %, the 1360 pixels of the restore size are only 907 CSS pixels, below the workspace's
+minimum width of 1180 px. A fixed size therefore does not guarantee that width. The
+restore size is 1360×860, the minimum size 960×600.
 
-La fenêtre s'ouvre depuis le thread principal du processus, marqué `[STAThread]` : les
-instructions de haut niveau le laisseraient en apartment MTA, où WebView2 s'initialise
-sans jamais rendre la page. macOS impose le même thread pour sa boucle d'évènements.
+The window opens from the process's main thread, marked `[STAThread]`: top-level
+statements would leave it in an MTA apartment, where WebView2 initialises without ever
+rendering the page. macOS requires the same thread for its event loop.
 
-L'exécutable est un programme de sous-système fenêtré : au double-clic, il n'ouvre pas
-de console à côté de sa fenêtre, dont la fermeture arrêterait l'application. Windows ne
-lui en attache alors aucune non plus quand il est lancé depuis un terminal, ce qui
-rendrait l'aide et les diagnostics muets : le démarrage se rattache donc à la console du
-processus appelant, sauf quand la sortie standard est déjà héritée — une redirection,
-comme celle du smoke test, ne doit jamais être remplacée. L'icône de l'application est
-embarquée dans l'exécutable, d'où la reprennent l'explorateur, le menu Démarrer et les
-raccourcis posés par l'installeur.
+The executable is a windowed-subsystem program: on double-click it does not open a console
+next to its window, whose closing would stop the application. Windows then attaches no
+console either when it is launched from a terminal, which would make the help and the
+diagnostics silent: startup therefore attaches to the calling process's console, except
+when standard output is already inherited — a redirection, like the smoke test's, must
+never be replaced. The application icon is embedded in the executable, from where the
+file explorer, the Start menu and the shortcuts created by the installer pick it up.
 
-Si le moteur de rendu du système est inutilisable, l'hôte écrit un avertissement sur
-`stderr` et bascule sur le navigateur système : l'application ne s'arrête jamais faute de
-webview.
+If the system rendering engine is unusable, the host writes a warning on `stderr` and
+falls back to the system browser: the application never stops for lack of a webview.
 
-Options : `--repo`, `--port`, `--data-dir`, `--git-path`, `--no-window` et
+Options: `--repo`, `--port`, `--data-dir`, `--git-path`, `--no-window` and
 `--no-browser`.
 
-Emplacements par défaut :
+Default locations:
 
-- Windows : `%LOCALAPPDATA%\GitHealth` ;
-- macOS : `~/Library/Application Support/GitHealth` ;
-- Linux : `$XDG_DATA_HOME/GitHealth`, à défaut `~/.local/share/GitHealth`.
+- Windows: `%LOCALAPPDATA%\GitHealth`;
+- macOS: `~/Library/Application Support/GitHealth`;
+- Linux: `$XDG_DATA_HOME/GitHealth`, falling back to `~/.local/share/GitHealth`.
 
-Des publications autonomes sont générées pour les architectures retenues.
+Self-contained publications are generated for the selected architectures.
 
-### Pont de messages avec la coque
+### Message bridge with the shell
 
-En fenêtre, le bouton de sélection de dossier ouvre le dialogue du système. La page et
-l'hôte échangent par le pont `postMessage` de Photino : `window.external.sendMessage`
-pour émettre, `window.external.receiveMessage` pour recevoir.
+In window mode, the folder selection button opens the system dialog. The page and the
+host exchange messages over Photino's `postMessage` bridge:
+`window.external.sendMessage` to emit, `window.external.receiveMessage` to receive.
 
-- Charges utiles JSON : `{ id, kind }` en demande, `{ id, kind, path }` en réponse,
-  `path` valant `null` quand l'utilisateur annule.
-- `kind` vaut `pickFolder` ; tout autre message est ignoré en silence des deux côtés.
-- Le pont est asynchrone : chaque réponse porte l'identifiant de sa demande, et une seule
-  requête reste en vol puisque le dialogue est modal.
-- Le handler de l'hôte s'exécute sur le thread de la fenêtre, celui qui pompe la boucle
-  d'évènements : le dialogue s'ouvre sans marshalling ni interblocage.
-- Ce qui vient de la webview est une entrée non fiable : un message illisible est écarté,
-  jamais traité comme une commande.
+- JSON payloads: `{ id, kind }` on request, `{ id, kind, path }` on response, with `path`
+  being `null` when the user cancels.
+- `kind` is `pickFolder`; any other message is silently ignored on both sides.
+- The bridge is asynchronous: every response carries its request identifier, and only one
+  request is ever in flight since the dialog is modal.
+- The host's handler runs on the window thread, the one pumping the event loop: the
+  dialog opens with neither marshalling nor deadlock.
+- Whatever comes from the webview is untrusted input: an unreadable message is discarded,
+  never treated as a command.
 
-Côté Angular l'ajout est strictement additif. Le service détecte la présence du pont et
-l'utilise s'il existe ; sinon l'application garde le navigateur de dossiers HTML servi par
-`GET /api/runtime/directories`. Les modes navigateur et Docker restent inchangés.
+On the Angular side the addition is strictly additive. The service detects the presence of
+the bridge and uses it when it exists; otherwise the application keeps the HTML folder
+browser served by `GET /api/runtime/directories`. Browser and Docker modes are unchanged.
 
-### Installation et mises à jour
+### Installation and updates
 
-Velopack produit `App.GitHealth-win-x64-Setup.exe` sur Windows et
-`App.GitHealth-<rid>-Setup.pkg` sur macOS. L'installation se fait par utilisateur dans
-`%LocalAppData%\App.GitHealth`, sans invite UAC, avec raccourcis Bureau et menu Démarrer.
-Le `packId` est volontairement disjoint du répertoire de données : la base reste dans
-`%LOCALAPPDATA%\GitHealth` et survit aux mises à jour comme à la désinstallation.
+Velopack produces `App.GitHealth-win-x64-Setup.exe` on Windows and
+`App.GitHealth-<rid>-Setup.pkg` on macOS. Installation is per user under
+`%LocalAppData%\App.GitHealth`, without a UAC prompt, with Desktop and Start menu
+shortcuts. The `packId` is deliberately disjoint from the data directory: the database
+stays in `%LOCALAPPDATA%\GitHealth` and survives both updates and uninstallation.
 
-Les archives portables `.zip` et `.tar.gz` restent publiées en plus des installeurs :
-elles servent Scoop et les postes où l'on ne veut rien installer. Ni le `Setup.exe` ni le
-`.pkg` ne sont signés à ce jour.
+The portable `.zip` and `.tar.gz` archives are still published alongside the installers:
+they serve Scoop and machines where nothing should be installed. Neither the `Setup.exe`
+nor the `.pkg` is signed to date.
 
-### Docker Compose, auto-hébergement
+### Docker Compose, self-hosting
 
-Ce mode vise l'auto-hébergement d'une instance, pas l'usage de bureau.
-`docker compose up --build` lance un service applicatif unique. L'image contient
-le runtime .NET, les fichiers Angular et Git. Compose configure :
+This mode targets self-hosting an instance, not desktop usage. `docker compose up --build`
+starts a single application service. The image contains the .NET runtime, the Angular
+files and Git. Compose configures:
 
-- `127.0.0.1:8080` comme exposition par défaut ;
-- un volume persistant monté sous `/data` ;
-- `${GITHEALTH_REPOSITORIES_ROOT}` monté sous `/repositories` en lecture seule.
+- `127.0.0.1:8080` as the default exposure;
+- a persistent volume mounted under `/data`;
+- `${GITHEALTH_REPOSITORIES_ROOT}` mounted read-only under `/repositories`.
 
-Dans ce mode, seuls les dépôts inclus dans `/repositories` sont sélectionnables.
-Changer la racine nécessite de recréer le conteneur avec une autre configuration.
+In this mode, only repositories included in `/repositories` can be selected. Changing the
+root requires recreating the container with a different configuration.
 
-## Sécurité
+## Security
 
-- Écoute loopback uniquement et aucune exposition réseau par défaut.
-- Même origine, CORS désactivé et protection anti-requête intersite sur les mutations.
-- Validation de `Host`/`Origin` et jeton de session local généré au démarrage.
-- Canonicalisation des chemins et rejet des sorties de racine en mode Docker.
-- Arguments Git transmis sans shell pour empêcher l'injection de commandes.
-- Commandes Git autorisées par liste blanche, annulables et limitées en sortie.
-- Dépôts Docker montés en lecture seule ; aucune API de suppression de branche.
-- Échappement des noms de branche et d'auteur par Angular.
-- Aucune télémétrie ni transmission d'adresses d'auteur par défaut.
+- Loopback listening only, and no network exposure by default.
+- Same origin, CORS disabled and cross-site request protection on mutations.
+- `Host`/`Origin` validation and a local session token generated at startup.
+- Path canonicalisation and rejection of root escapes in Docker mode.
+- Git arguments passed without a shell, to prevent command injection.
+- Git commands allowed by allowlist, cancellable and bounded in output.
+- Docker repositories mounted read-only; no branch deletion API.
+- Branch and author names escaped by Angular.
+- No telemetry and no transmission of author addresses by default.
 
-La base contient potentiellement des noms et adresses professionnelles. Elle reste
-locale et son export est une action explicite de l'utilisateur.
+The database potentially contains names and business addresses. It stays local, and
+exporting it is an explicit user action.
 
-## Fiabilité et performance
+## Reliability and performance
 
-- Une analyse travaille sur des SHA immuables capturés au départ.
-- Les résultats incomplets restent attachés à leur exécution et ne deviennent pas
-  le dernier snapshot réussi.
-- Les processus Git ont un timeout, une annulation et une taille de sortie bornée.
-- Les enrichissements sont mis en cache lorsque les SHA n'ont pas changé.
-- Le tableau est paginé ou virtualisé pour ne pas rendre toutes les lignes à la fois.
-- Un dépôt synthétique d'au moins 1 000 branches sert de benchmark reproductible.
-- Les budgets de durée sont fixés d'après la première baseline Windows et surveillés
-  séparément des mesures informatives exécutées sur d'autres plateformes.
+- An analysis works on immutable SHAs captured at the start.
+- Incomplete results stay attached to their run and never become the last successful
+  snapshot.
+- Git processes have a timeout, cancellation and a bounded output size.
+- Enrichments are cached when the SHAs have not changed.
+- The table is paginated or virtualised so that not every row is rendered at once.
+- A synthetic repository of at least 1,000 branches serves as a reproducible benchmark.
+- Duration budgets are set from the first Windows baseline and monitored separately from
+  the informative measurements run on other platforms.
 
-## Stratégie de tests
+## Test strategy
 
-- **Unitaires Core** : calcul des états, seuils, exclusions et cas limites.
-- **Intégration Git** : dépôts temporaires avec branches synchronisées, avancées,
-  fusionnées, divergentes, inactives et sans ancêtre commun.
-- **Intégration API/SQLite** : migrations, transactions, concurrence et export.
-- **Front** : composants, filtres, erreurs et accessibilité de base.
-- **Bout en bout** : ajout d'un dépôt, analyse, consultation et redémarrage.
-- **Non-régression lecture seule** : refs, index et worktree identiques avant/après.
-- **Matrice** : Windows, macOS et conteneur Linux dans la CI disponible.
+- **Core unit tests**: state computation, thresholds, exclusions and edge cases.
+- **Git integration**: temporary repositories with branches that are in sync, ahead,
+  merged, diverged, inactive and without a common ancestor.
+- **API/SQLite integration**: migrations, transactions, concurrency and export.
+- **Front end**: components, filters, errors and basic accessibility.
+- **End to end**: adding a repository, analysis, browsing and restart.
+- **Read-only regression**: refs, index and worktree identical before/after.
+- **Matrix**: Windows, macOS and the Linux container in the available CI.
 
-## Évolutions envisagées
+## Possible future work
 
-- Clones miroirs gérés depuis une URL et actualisation distante explicite.
-- Intégrations GitHub, GitLab et Azure DevOps pour les branches protégées et PR.
-- Regroupement manuel d'identités en complément de `.mailmap`.
-- Tendances d'activité, comparaison entre analyses et politiques par équipe.
-- Exports CSV/JSON et rapports partageables sans exposer le dépôt.
-- Signature Windows et notarisation macOS des installeurs, aujourd'hui non signés.
+- Managed mirror clones from a URL and explicit remote refresh.
+- GitHub, GitLab and Azure DevOps integrations for protected branches and PRs.
+- Manual identity grouping to complement `.mailmap`.
+- Activity trends, comparison between analyses and per-team policies.
+- CSV/JSON exports and shareable reports that do not expose the repository.
+- Windows signing and macOS notarisation of the installers, unsigned today.
 
-## Références techniques
-- [Politique de support .NET](https://dotnet.microsoft.com/en-us/platform/support/policy)
-- [Versions et support Angular](https://angular.dev/reference/releases)
-- [Fournisseurs de base de données EF Core](https://learn.microsoft.com/en-us/ef/core/providers/)
-- [Documentation `git for-each-ref`](https://git-scm.com/docs/git-for-each-ref)
-- [Documentation `git rev-list`](https://git-scm.com/docs/git-rev-list)
-- [Documentation `git log`](https://git-scm.com/docs/git-log)
+## Technical references
+- [.NET support policy](https://dotnet.microsoft.com/en-us/platform/support/policy)
+- [Angular versions and support](https://angular.dev/reference/releases)
+- [EF Core database providers](https://learn.microsoft.com/en-us/ef/core/providers/)
+- [`git for-each-ref` documentation](https://git-scm.com/docs/git-for-each-ref)
+- [`git rev-list` documentation](https://git-scm.com/docs/git-rev-list)
+- [`git log` documentation](https://git-scm.com/docs/git-log)

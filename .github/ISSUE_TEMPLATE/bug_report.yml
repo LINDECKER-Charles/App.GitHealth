@@ -1,5 +1,5 @@
-name: Rapport de bug
-description: Signaler un comportement incorrect et reproductible
+name: Bug report
+description: Report an incorrect, reproducible behaviour
 title: 'fix: '
 labels:
   - bug
@@ -7,50 +7,50 @@ body:
   - type: markdown
     attributes:
       value: |
-        Merci pour ce signalement.
+        Thank you for this report.
 
-        **Avant de continuer**, vérifiez le [dépannage][depannage] et les
-        [limites connues][limites] : plusieurs comportements surprenants sont des
-        conséquences assumées de la sémantique de Git, pas des bugs.
+        **Before going further**, check the [troubleshooting guide][troubleshooting] and the
+        [known limitations][limitations]: several surprising behaviours are accepted
+        consequences of Git semantics, not bugs.
 
-        **N'incluez jamais** de chemin de dépôt d'entreprise, de nom de branche interne
-        ni d'identité d'auteur. Anonymisez avant de publier.
+        **Never include** a company repository path, an internal branch name or an author
+        identity. Anonymise before publishing.
 
-        Une **faille de sécurité** ne se signale pas ici : utilisez un
-        [avis de sécurité privé][advisory].
+        A **security vulnerability** is not reported here: use a
+        [private security advisory][advisory].
 
-        [depannage]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/TROUBLESHOOTING.md
-        [limites]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/KNOWN_LIMITATIONS.md
+        [troubleshooting]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/TROUBLESHOOTING.md
+        [limitations]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/KNOWN_LIMITATIONS.md
         [advisory]: https://github.com/LINDECKER-Charles/App.GitHealth/security/advisories/new
 
   - type: checkboxes
-    id: verifications
+    id: checks
     attributes:
-      label: Vérifications préalables
+      label: Preliminary checks
       options:
-        - label: J'ai lu le dépannage et les limites connues.
+        - label: I have read the troubleshooting guide and the known limitations.
           required: true
-        - label: J'ai cherché une issue existante, ouverte ou fermée.
+        - label: I have searched the existing issues, open and closed.
           required: true
-        - label: Ce rapport ne contient aucune donnée réelle de dépôt ou d'auteur.
+        - label: This report contains no real repository or author data.
           required: true
 
   - type: textarea
-    id: resume
+    id: summary
     attributes:
-      label: Résumé
-      description: Le problème en une ou deux phrases.
+      label: Summary
+      description: The problem in one or two sentences.
       placeholder: >-
-        Une branche fusionnée reste classée « Conserver » alors que la politique
-        annonce l'échelle réduite.
+        A merged branch is still classified as "Keep" although the policy announces the
+        shortened scale.
     validations:
       required: true
 
   - type: textarea
     id: reproduction
     attributes:
-      label: Étapes de reproduction
-      description: Les étapes minimales, dans l'ordre.
+      label: Steps to reproduce
+      description: The minimal steps, in order.
       value: |
         1.
         2.
@@ -59,70 +59,70 @@ body:
       required: true
 
   - type: textarea
-    id: attendu
+    id: expected
     attributes:
-      label: Comportement attendu
+      label: Expected behaviour
     validations:
       required: true
 
   - type: textarea
-    id: obtenu
+    id: actual
     attributes:
-      label: Comportement obtenu
+      label: Actual behaviour
       description: >-
-        Ajoutez les messages de la console si l'application refuse de démarrer ou
-        si une analyse échoue. Anonymisez les chemins.
+        Add the console messages if the application refuses to start or if an analysis
+        fails. Anonymise the paths.
     validations:
       required: true
 
   - type: dropdown
     id: mode
     attributes:
-      label: Mode d'exécution
+      label: Execution mode
       options:
-        - Exécutable natif Windows x64
-        - Exécutable natif macOS Intel
-        - Exécutable natif macOS Apple Silicon
+        - Native Windows x64 executable
+        - Native macOS Intel executable
+        - Native macOS Apple Silicon executable
         - Docker Compose
-        - Depuis les sources (dotnet run / ng serve)
+        - From source (dotnet run / ng serve)
     validations:
       required: true
 
   - type: input
     id: version
     attributes:
-      label: Version de GitHealth
-      description: Nom de l'archive, tag de la release, ou balise de l'image Docker.
+      label: GitHealth version
+      description: Archive name, release tag, or Docker image tag.
       placeholder: 0.1.0-rc.1
     validations:
       required: true
 
   - type: input
-    id: systeme
+    id: system
     attributes:
-      label: Système et version de Git
-      description: Sortie de `git --version` et système d'exploitation.
+      label: Operating system and Git version
+      description: Output of `git --version` and the operating system.
       placeholder: Windows 11 24H2, git 2.47.1
     validations:
       required: true
 
   - type: textarea
-    id: depot
+    id: repository
     attributes:
-      label: Forme du dépôt analysé
+      label: Shape of the analysed repository
       description: >-
-        La forme compte souvent plus que la taille. Dépôt standard, *bare* ou worktree
-        lié ; nombre approximatif de branches ; présence d'un `.mailmap` ; branche de
-        référence utilisée.
+        The shape often matters more than the size. Standard repository, *bare* or linked
+        worktree; approximate number of branches; presence of a `.mailmap`; baseline branch
+        used.
       placeholder: >-
-        Dépôt standard, ~180 branches dont 120 de suivi distant, pas de .mailmap,
-        référence `main`.
+        Standard repository, ~180 branches of which 120 remote-tracking, no .mailmap,
+        `main` baseline.
 
   - type: textarea
-    id: complement
+    id: additional
     attributes:
-      label: Complément
+      label: Additional notes
       description: >-
-        Captures d'écran, contournement trouvé, ou tout élément utile. Un dépôt de
-        reproduction minimal fabriqué avec des commits vides vaut mieux qu'un extrait
-        de dépôt réel.
+        Screenshots, a workaround you found, or anything else useful. A minimal
+        reproduction repository built with empty commits is worth more than an extract of a
+        real repository.

@@ -1,32 +1,46 @@
-# Exploitation du socle GitHealth
+# Operating the GitHealth platform
 
-## Versions verrouillées
+## Pinned versions
 
-| Outil                |     Version |
+| Tool                 |     Version |
 | -------------------- | ----------: |
-| SDK .NET             |    10.0.400 |
-| Runtime ASP.NET Core |     10.0.11 |
+| .NET SDK             |    10.0.400 |
+| ASP.NET Core runtime |     10.0.11 |
 | Node.js              | 24.20.0 LTS |
 | npm                  |     11.19.0 |
 
-## Publication native
+## Native publishing
 
-Le script de publication produit quatre distributions autonomes :
+The publishing script produces four self-contained distributions:
 
-| Système | Architecture | RID | Point d'entrée |
+| System | Architecture | RID | Entry point |
 |---|---|---|---|
 | Windows | x64 | `win-x64` | `githealth.exe` |
 | macOS | Intel | `osx-x64` | `githealth` |
 | macOS | Apple Silicon | `osx-arm64` | `githealth` |
 | Linux | x64 | `linux-x64` | `githealth` |
 
-Depuis la racine du dépôt, PowerShell publie les quatre cibles :
+To build from a development machine, the entry point is `eng/build`, which offers five
+levels — from checking the toolchain up to the installer — and knows the limits of
+cross-building. Its prerequisites per operating system are detailed in
+[`eng/README.md`](../eng/README.md).
+
+```shell
+./eng/build.sh publish      # macOS, Linux
+```
+
+```powershell
+eng\build.cmd publish       # Windows
+```
+
+That entry point delegates to `eng/Publish-Native.ps1`, which CI also calls and which
+remains usable directly. From the repository root, it publishes all four targets at once:
 
 ```powershell
 ./eng/Publish-Native.ps1
 ```
 
-Une seule cible et un répertoire de sortie peuvent aussi être précisés :
+A single target and an output directory can also be specified:
 
 ```powershell
 ./eng/Publish-Native.ps1 `
@@ -34,98 +48,95 @@ Une seule cible et un répertoire de sortie peuvent aussi être précisés :
   -OutputRoot artifacts/publish
 ```
 
-Chaque publication est autonome, non élaguée et accompagnée du bundle Angular.
-Le script vérifie l'exécutable et `wwwroot/index.html`, puis crée :
+Every publication is self-contained, untrimmed and shipped with the Angular bundle. The
+script checks the executable and `wwwroot/index.html`, then creates:
 
-- `artifacts/publish/githealth-win-x64.zip` ;
-- `artifacts/publish/githealth-osx-x64.tar.gz` ;
-- `artifacts/publish/githealth-osx-arm64.tar.gz` ;
+- `artifacts/publish/githealth-win-x64.zip`;
+- `artifacts/publish/githealth-osx-x64.tar.gz`;
+- `artifacts/publish/githealth-osx-arm64.tar.gz`;
 - `artifacts/publish/githealth-linux-x64.tar.gz`.
 
-Ces archives portables restent publiées en plus des installeurs Velopack : elles
-servent Scoop et les postes où l'on ne veut rien installer. `eng/New-VelopackRelease.ps1`
-produit l'installeur d'une cible depuis son dossier de publication, et
-`eng/New-ScoopManifest.ps1` comme `eng/New-WingetManifest.ps1` en dérivent les
-manifestes de distribution.
+These portable archives are still published alongside the Velopack installers: they serve
+Scoop and machines where nothing should be installed. `eng/New-VelopackRelease.ps1`
+produces a target's installer from its publish folder, and both
+`eng/New-ScoopManifest.ps1` and `eng/New-WingetManifest.ps1` derive the distribution
+manifests from it.
 
-Les archives ne sont pas des exécutables monofichiers : les extraire entièrement
-et conserver leurs fichiers ensemble. Le lanceur fixe sa racine de contenu au
-dossier de l'exécutable ; il peut donc être appelé depuis n'importe quel répertoire
-courant. Les artefacts macOS du MVP ne sont ni signés ni notariés.
+The archives are not single-file executables: extract them completely and keep their
+files together. The launcher pins its content root to the executable's folder; it can
+therefore be called from any current directory. The macOS artefacts of the MVP are
+neither signed nor notarised.
 
-Exemples de lancement :
+Launch examples:
 
 ```powershell
 D:\Applications\GitHealth\githealth.exe `
-  --repo D:\Dev\MonDepot `
-  --data-dir D:\Donnees\GitHealth
+  --repo D:\Dev\MyRepository `
+  --data-dir D:\Data\GitHealth
 ```
 
 ```shell
 /Applications/GitHealth/githealth \
-  --repo "$HOME/Dev/MonDepot" \
+  --repo "$HOME/Dev/MyRepository" \
   --data-dir "$HOME/Library/Application Support/GitHealth"
 ```
 
-Les chemins relatifs fournis en option sont, eux, résolus depuis le répertoire
-courant. Employer des chemins absolus évite donc toute ambiguïté.
+Relative paths passed as options, on the other hand, are resolved from the current
+directory. Using absolute paths therefore removes any ambiguity.
 
-### Options du lanceur
+### Launcher options
 
-| Option | Valeur par défaut | Effet |
+| Option | Default value | Effect |
 |---|---|---|
-| `--repo <chemin>` | vide | préremplit le dépôt proposé sur l'accueil |
-| `--port <1-65535>` | port disponible | impose un port précis sur l'interface loopback |
-| `--data-dir <chemin>` | répertoire système | déplace la base et son verrou d'instance |
-| `--git-path <chemin>` | résolution automatique | impose l'exécutable Git à utiliser |
-| `--no-window` | fenêtre de bureau | ouvre l'interface dans le navigateur système |
-| `--no-browser` | interface ouverte | n'ouvre aucune interface au démarrage |
-| `--help`, `-h` | — | affiche l'aide puis quitte |
+| `--repo <path>` | empty | pre-fills the repository offered on the home screen |
+| `--port <1-65535>` | free port | forces a specific port on the loopback interface |
+| `--data-dir <path>` | system directory | moves the database and its instance lock |
+| `--git-path <path>` | automatic resolution | forces the Git executable to use |
+| `--no-window` | desktop window | opens the interface in the system browser |
+| `--no-browser` | interface opened | opens no interface at startup |
+| `--help`, `-h` | — | prints the help and exits |
 
-Les formes `--repo=...`, `--port=...`, `--data-dir=...` et `--git-path=...` sont
-également acceptées. Sans `--port`, le système attribue un port disponible. Dans tous
-les cas, le lanceur natif écoute exclusivement sur `127.0.0.1`.
+The `--repo=...`, `--port=...`, `--data-dir=...` and `--git-path=...` forms are also
+accepted. Without `--port`, the system assigns a free port. In every case, the native
+launcher listens exclusively on `127.0.0.1`.
 
-En mode natif, l'interface par défaut est une fenêtre de bureau adossée au moteur de
-rendu du système. `--no-window` lui préfère le navigateur, et `--no-browser` vaut
-« aucune interface » — il implique donc `--no-window`, et c'est la forme employée par
-le smoke test natif et les tests bout en bout. En mode conteneur, aucune interface
-n'est ouverte et ces deux options n'ont pas d'objet.
+In native mode, the default interface is a desktop window backed by the system rendering
+engine. `--no-window` uses the browser instead, and `--no-browser` means "no interface at
+all" — it therefore implies `--no-window`, and it is the form used by the native smoke
+test and the end-to-end tests. In container mode no interface is opened, and both options
+are moot.
 
-### Répertoires de données
+### Data directories
 
-Sans `--data-dir` ni configuration explicite, `githealth.db` est créé dans :
+Without `--data-dir` and without explicit configuration, `githealth.db` is created in:
 
-| Système | Répertoire par défaut |
+| System | Default directory |
 |---|---|
 | Windows | `%LOCALAPPDATA%\GitHealth` |
 | macOS | `$HOME/Library/Application Support/GitHealth` |
-| Linux | `$XDG_DATA_HOME/GitHealth` ou `$HOME/.local/share/GitHealth` |
+| Linux | `$XDG_DATA_HOME/GitHealth` or `$HOME/.local/share/GitHealth` |
 
-Sous Windows, `%USERPROFILE%\AppData\Local\GitHealth` sert de repli si le dossier
-local d'application n'est pas fourni par le système. Sous Linux, `XDG_DATA_HOME`
-n'est utilisé que s'il contient un chemin absolu.
+On Windows, `%USERPROFILE%\AppData\Local\GitHealth` is the fallback when the system does
+not provide the local application folder. On Linux, `XDG_DATA_HOME` is only used when it
+contains an absolute path.
 
-Le paramètre `--data-dir` est prioritaire sur `GitHealth__DataDirectory`. Un
-`Persistence__DatabasePath` explicite reste utilisable lorsqu'aucun répertoire de
-données n'est imposé.
+The `--data-dir` option takes precedence over `GitHealth__DataDirectory`. An explicit
+`Persistence__DatabasePath` remains usable when no data directory is imposed.
 
-### Diagnostics de démarrage
+### Startup diagnostics
 
-Le lanceur termine avec le code `1` et un message exploitable lorsqu'un argument
-est invalide, qu'un port demandé est déjà utilisé, que le répertoire de données
-est inaccessible ou que SQLite ne peut pas ouvrir la base. Un fichier
-`githealth.db.instance.lock` réserve la base pendant toute la vie du processus :
-une seconde instance visant la même base échoue clairement, sans lancer de
-migration ni écrire dans SQLite.
+The launcher exits with code `1` and an actionable message when an argument is invalid,
+when a requested port is already in use, when the data directory is unreachable, or when
+SQLite cannot open the database. A `githealth.db.instance.lock` file reserves the database
+for the whole lifetime of the process: a second instance targeting the same database fails
+clearly, without running a migration or writing to SQLite.
 
-Si Git est absent ou inutilisable, l'application reste accessible mais `/health`
-signale l'indisponibilité et en décrit la cause ; installer Git puis relancer
-rétablit les analyses.
+If Git is missing or unusable, the application stays reachable but `/health` reports the
+unavailability and describes its cause; installing Git and restarting restores analyses.
 
-Le smoke test natif exerce le point d'entrée publié, l'interface, `/health`, le
-préremplissage `--repo`, la création de la base, puis les diagnostics de conflit de
-port et de base :
+The native smoke test exercises the published entry point, the interface, `/health`, the
+`--repo` pre-fill, the creation of the database, and then the port and database conflict
+diagnostics:
 
 ```powershell
 ./tests/Infrastructure/Invoke-NativeSmokeTest.ps1 `
@@ -134,24 +145,24 @@ port et de base :
 
 ## Docker Compose
 
-Copier `.env.example` vers `.env`, puis renseigner la racine contenant les dépôts
-à rendre visibles. Ce chemin est monté dans `/repositories` en lecture seule
-(`:ro`) et le système de fichiers du conteneur est lui aussi en lecture seule.
-Sur Windows, utiliser des barres obliques : `D:/Dev/Repos`. Le port hôte reste
-`8080` par défaut ; `GITHEALTH_HTTP_PORT` permet d’en choisir un autre si ce port
-est déjà réservé, sans changer l’écoute limitée à `127.0.0.1`.
+Copy `.env.example` to `.env`, then fill in the root containing the repositories to make
+visible. That path is mounted into `/repositories` read-only (`:ro`), and the container
+filesystem is read-only too. On Windows, use forward slashes: `D:/Dev/Repos`. The host
+port stays `8080` by default; `GITHEALTH_HTTP_PORT` allows another one to be chosen if
+that port is already taken, without changing the listener, which stays restricted to
+`127.0.0.1`.
 
-La valeur `.` de l'exemple monte la racine du dépôt GitHealth lui-même. Pour une
-utilisation normale, la remplacer par le chemin absolu du dossier de dépôts.
+The `.` value in the example mounts the root of the GitHealth repository itself. For
+normal use, replace it with the absolute path of your repository folder.
 
 ```shell
 docker compose up --build
 ```
 
-L’application est disponible uniquement sur `http://127.0.0.1:8080`. Le volume
-nommé `githealth-data` conserve `/data` lors de la recréation du conteneur.
+The application is available on `http://127.0.0.1:8080` only. The named volume
+`githealth-data` preserves `/data` when the container is recreated.
 
-Pour vérifier la persistance sans supprimer le volume :
+To check persistence without deleting the volume:
 
 ```shell
 docker compose exec githealth touch /data/persistence-check
@@ -159,163 +170,294 @@ docker compose up --detach --force-recreate
 docker compose exec githealth test -f /data/persistence-check
 ```
 
-Ne pas exécuter `docker compose down --volumes` si les données doivent être
-conservées.
+Do not run `docker compose down --volumes` if the data must be preserved.
 
-## Sécurité du montage Git
+## Git mount security
 
-Le conteneur s’exécute avec l’utilisateur non privilégié de l’image ASP.NET. Chaque
-commande Git autorise comme répertoire sûr uniquement le dépôt déjà contrôlé sous
-`/repositories`. Elle n’utilise ni le joker global `safe.directory=*` ni un joker
-de descendants dépendant de la version de Git.
+The container runs as the unprivileged user of the ASP.NET image. Each Git command marks
+as a safe directory only the repository already validated under `/repositories`. It uses
+neither the global `safe.directory=*` wildcard nor a descendant wildcard whose behaviour
+depends on the Git version.
 
-## Analyse Git en lecture seule
+## Read-only Git analysis
 
-Git est détecté par le diagnostic `/health`. Chaque commande est lancée sans shell,
-avec un délai, une sortie bornée et l'annulation de tout l'arbre de processus. Le
-scanner fixe `GIT_OPTIONAL_LOCKS=0`, `GIT_NO_LAZY_FETCH=1` et
-`GIT_TERMINAL_PROMPT=0` : il ne fait ni checkout, ni fetch, ni écriture de ref.
-Les variables hôtes `GIT_TRACE*`, les redirections de configuration globale et les
-redirections de chemins Git sont retirées avant chaque processus. Le `commondir`, la
-base d'objets principale et chaque alternate imbriqué sont résolus physiquement et
-doivent rester dans la racine autorisée en mode Docker.
+Git is detected by the `/health` diagnostic. Every command runs without a shell, with a
+timeout, bounded output and cancellation of the whole process tree. The scanner sets
+`GIT_OPTIONAL_LOCKS=0`, `GIT_NO_LAZY_FETCH=1` and `GIT_TERMINAL_PROMPT=0`: it performs no
+checkout, no fetch and no reference write. The host's `GIT_TRACE*` variables, global
+configuration redirections and Git path redirections are stripped before every process.
+The `commondir`, the main object database and every nested alternate are resolved
+physically and must stay within the allowed root under Docker.
 
-Le calcul groupé utilise l'atome `ahead-behind` lorsqu'il est disponible. Une
-installation Git plus ancienne passe automatiquement par `rev-list` avec une
-concurrence bornée. Les comparaisons utilisent toujours les identifiants capturés
-au début du scan, même si une branche bouge ensuite.
+Batch computation uses the `ahead-behind` atom when it is available. An older Git
+installation automatically falls back to `rev-list` with bounded concurrency. Comparisons
+always use the identifiers captured at the start of the scan, even if a branch moves
+afterwards.
 
-## Persistance SQLite
+## SQLite persistence
 
-La migration EF Core est appliquée au démarrage. En mode natif, la base se trouve
-dans le répertoire système décrit plus haut. Compose fixe explicitement
-`Persistence__DatabasePath=/data/githealth.db` afin que le fichier reste dans le
-volume `githealth-data`.
+The EF Core migration is applied at startup. In native mode, the database sits in the
+system directory described above. Compose explicitly sets
+`Persistence__DatabasePath=/data/githealth.db` so that the file stays in the
+`githealth-data` volume.
 
-Sur Unix, un répertoire de données créé par GitHealth est limité à l'utilisateur courant ;
-la base, son verrou et les éventuels fichiers `-wal` et `-shm` sont limités en
-lecture-écriture à ce même utilisateur. Un dossier parent préexistant conserve ses
-permissions.
+On Unix, a data directory created by GitHealth is restricted to the current user; the
+database, its lock and any `-wal` and `-shm` files are readable and writable by that same
+user only. A pre-existing parent folder keeps its permissions.
 
-Les options disponibles sont :
+The available options are:
 
-| Configuration | Défaut | Effet |
+| Configuration | Default | Effect |
 |---|---:|---|
-| `Persistence__DatabasePath` | `<données>/githealth.db` | chemin du fichier SQLite |
-| `Persistence__WriteTimeoutSeconds` | `5` | attente maximale d'un verrou d'écriture |
-| `Persistence__RetentionDays` | vide | ancienneté des analyses à supprimer |
+| `Persistence__DatabasePath` | `<data>/githealth.db` | path of the SQLite file |
+| `Persistence__WriteTimeoutSeconds` | `5` | maximum wait for a write lock |
+| `Persistence__RetentionDays` | empty | age of the analyses to delete |
 
-La rétention est désactivée lorsque sa valeur est vide. Lorsqu'elle est activée,
-elle ne supprime jamais le dernier snapshot réussi d'un projet. Les clés étrangères
-sont actives, le journal utilise WAL et chaque analyse terminée est persistée avec
-ses branches et contributeurs dans une transaction unique. Une analyse interrompue
-ou échouée ne remplace donc pas le dernier résultat réussi. Au démarrage, toute analyse
-restée `Running` après un arrêt brutal devient `Cancelled` avec le code
-`analysis.interrupted`.
+Retention is disabled when its value is empty. When enabled, it never deletes a project's
+last successful snapshot. Foreign keys are enabled, the journal uses WAL, and every
+completed analysis is persisted with its branches and contributors in a single
+transaction. An interrupted or failed analysis therefore does not replace the last
+successful result. At startup, any analysis left `Running` after an abrupt shutdown
+becomes `Cancelled` with the `analysis.interrupted` code.
 
-L'export utilise l'API de sauvegarde SQLite pendant que l'application reste active,
-puis normalise la copie en journal `DELETE`. Le fichier exporté est autonome : il
-peut être archivé ou restauré sans fichier `-wal` ni `-shm`. Avant une restauration
-manuelle, arrêter GitHealth, conserver une copie de la base courante, remplacer le
-fichier configuré par l'export, puis redémarrer afin d'appliquer les migrations
-éventuelles. La sauvegarde se télécharge avec `GET /api/exports/database`. Le nom
-de fichier inclut un horodatage UTC et la réponse est une base SQLite autonome.
+The export uses the SQLite backup API while the application stays live, then normalises
+the copy to the `DELETE` journal mode. The exported file is self-contained: it can be
+archived or restored without a `-wal` or `-shm` file. Before restoring manually, stop
+GitHealth, keep a copy of the current database, replace the configured file with the
+export, then restart so that any migrations are applied. The backup is downloaded with
+`GET /api/exports/database`. The file name includes a UTC timestamp and the response is a
+self-contained SQLite database.
 
-## API locale et analyses
+## Local API and analyses
 
-Les routes sous `/api` exposent la validation et la configuration des projets,
-la file d'analyses, leur progression, les snapshots paginés et leur détail. Une
-route API inconnue renvoie toujours un Problem Details JSON ; elle n'est jamais
-absorbée par le fallback de l'application Angular.
+The routes under `/api` expose project validation and configuration, the analysis queue,
+its progress, the paginated snapshots and their detail. An unknown API route always
+returns a JSON Problem Details; it is never absorbed by the Angular application fallback.
 
-`GET /api/session` initialise la session locale et le jeton anti-forgery. Angular appelle
-ce bootstrap avant ses autres requêtes ; toutes les mutations API exigent ensuite
-`X-XSRF-TOKEN`. Les requêtes dont le `Host`, l'origine ou le contexte de navigation ne
-sont pas loopback/même origine sont refusées. `/health` reste public sur loopback.
+`GET /api/session` initialises the local session and the anti-forgery token. Angular calls
+this bootstrap before any other request; every API mutation then requires `X-XSRF-TOKEN`.
+Requests whose `Host`, origin or navigation context is not loopback/same-origin are
+rejected. `/health` stays public on loopback.
 
-`AnalysisQueue__Capacity` limite le nombre d'analyses en attente (32 par défaut,
-1 024 maximum). `AnalysisQueue__TimeoutSeconds` borne une analyse complète à 300
-secondes par défaut et accepte une valeur entre 1 et 3 600 secondes. Un projet ne peut
-avoir qu'une analyse active et un lancement accepté renvoie `202 Accepted` avec l'URL
-de suivi dans l'en-tête `Location`.
+`AnalysisQueue__Capacity` limits the number of queued analyses (32 by default, 1,024
+maximum). `AnalysisQueue__TimeoutSeconds` bounds a full analysis to 300 seconds by
+default and accepts a value between 1 and 3,600 seconds. A project can have only one
+active analysis, and an accepted start returns `202 Accepted` with the tracking URL in the
+`Location` header.
 
-Les limites des processus Git sont validées au démarrage :
+The Git process limits are validated at startup:
 
-| Configuration | Défaut | Bornes | Effet |
+| Configuration | Default | Bounds | Effect |
 |---|---:|---:|---|
-| `GitHealth__Git__CommandTimeout` | `00:00:30` | 1 à 120 s | durée d'une commande |
-| `GitHealth__Git__MaximumOutputBytes` | 4 Mio | 1 Kio à 16 Mio | stdout et stderr cumulés |
-| `GitHealth__Git__MaximumParallelCommands` | 4 | 1 à 8 | processus Git simultanés |
-| `GitHealth__Git__ExecutablePath` | résolution automatique | — | chemin de l'exécutable Git |
+| `GitHealth__Git__CommandTimeout` | `00:00:30` | 1 to 120 s | duration of a command |
+| `GitHealth__Git__MaximumOutputBytes` | 4 MiB | 1 KiB to 16 MiB | stdout and stderr combined |
+| `GitHealth__Git__MaximumParallelCommands` | 4 | 1 to 8 | simultaneous Git processes |
+| `GitHealth__Git__ExecutablePath` | automatic resolution | — | path of the Git executable |
 
-`GitHealth__Git__ExecutablePath`, comme `--git-path`, prime sur la résolution
-automatique : le `PATH`, puis les emplacements d'installation standards de la
-plateforme. Le premier chemin qui existe l'emporte ; `GET /api/runtime` publie celui
-qui a été retenu et, à défaut, la liste des emplacements testés.
+`GitHealth__Git__ExecutablePath`, like `--git-path`, takes precedence over automatic
+resolution: the `PATH`, then the platform's standard installation locations. The first
+path that exists wins; `GET /api/runtime` publishes the one that was selected and, failing
+that, the list of locations tried.
 
-Une valeur hors bornes empêche le démarrage avec un diagnostic explicite. Le timeout
-global de l'analyse reste indépendant du timeout appliqué à chaque commande Git.
+An out-of-bounds value prevents startup with an explicit diagnostic. The analysis-wide
+timeout stays independent from the timeout applied to each Git command.
 
-Les contrats HTTP refusent aussi les entrées démesurées : chemin de dépôt limité à
-32 768 caractères, nom affiché à 200, référence Git à 1 024, périmètre et motif à 512.
-Chaque liste de motifs accepte au maximum 64 éléments. Ces refus sont des Problem
-Details contrôlés et interviennent avant le lancement de Git.
+The HTTP contracts also reject oversized input: repository path limited to 32,768
+characters, display name to 200, Git reference to 1,024, scope and pattern to 512. Each
+pattern list accepts at most 64 entries. These rejections are controlled Problem Details
+and happen before Git is ever started.
 
-## Parcours web et mode d'exécution
+## Web journey and execution mode
 
-`GET /api/runtime` indique à l'interface si GitHealth s'exécute en mode natif ou
-Docker. En conteneur, la racine configurée est affichée et l'explorateur de
-dossiers démarre à cette racine. Il ne permet ni de remonter au-dessus d'elle ni
-de suivre un lien symbolique qui en sort ; seuls les chemins déjà montés sous
-cette racine sont acceptés.
+`GET /api/runtime` tells the interface whether GitHealth is running in native or Docker
+mode. In a container, the configured root is displayed and the folder browser starts at
+that root. It allows neither going above it nor following a symbolic link that leaves it;
+only paths already mounted under that root are accepted.
 
-En mode natif, `GET /api/runtime/directories` alimente l'explorateur local. Il ne
-retourne que les dossiers accessibles, triés et limités à 250 éléments par niveau ;
-il ne lit ni ne renvoie le contenu des fichiers. Les erreurs d'accès deviennent
-des Problem Details et aucune trace technique n'est exposée au navigateur.
+In native mode, `GET /api/runtime/directories` feeds the local browser. It returns only
+reachable folders, sorted and limited to 250 entries per level; it neither reads nor
+returns file contents. Access errors become Problem Details, and no technical trace is
+exposed to the browser.
 
-Le tableau de bord interroge l'état d'une analyse par polling, limite chaque page
-à 50 branches et conserve le dernier snapshot réussi pendant un nouveau scan ou
-après un échec. Recherche, relation Git, tri et ordre sont reflétés dans l'URL.
+The dashboard polls the state of an analysis, limits each page to 50 branches and keeps
+the last successful snapshot during a new scan or after a failure. Search, Git relation,
+sort and order are reflected in the URL.
 
-## Politiques, historique et export CSV
+## Policies, history and CSV export
 
-La politique d'un projet se modifie avec `PUT /api/projects/{id}/policy`. Cette
-opération ne relance pas Git et ne modifie aucun fait capturé : le dernier snapshot
-est seulement reclassé avec les seuils et motifs courants. L'aperçu
-`POST /api/projects/{id}/policy/preview` applique les mêmes règles sans les
-enregistrer et indique, branche par branche, la raison d'une exclusion ou d'une
-protection.
+A project's policy is changed with `PUT /api/projects/{id}/policy`. That operation does
+not restart Git and modifies no captured fact: the last snapshot is merely reclassified
+with the current thresholds and patterns. The `POST /api/projects/{id}/policy/preview`
+preview applies the same rules without saving them, and states, branch by branch, the
+reason for an exclusion or a protection.
 
-Les pages historiques sous `/api/analyses/{id}/branches` et le détail d'un
-snapshot conservent au contraire la politique capturée pendant l'analyse.
-`GET /api/projects/{id}/analyses` restitue ce reçu de configuration avec chaque
-exécution, y compris celles qui ont échoué.
+The history pages under `/api/analyses/{id}/branches` and a snapshot's detail, by
+contrast, keep the policy captured during the analysis.
+`GET /api/projects/{id}/analyses` returns that configuration receipt with every run,
+including the ones that failed.
 
-L'export `GET /api/projects/{id}/analyses/latest/branches.csv` applique exactement
-les filtres et l'ordre de la vue courante, sans pagination. Il est encodé en UTF-8
-et neutralise les cellules qui pourraient être interprétées comme des formules
-par un tableur. Il reste distinct de la sauvegarde SQLite, destinée à restaurer
-l'application complète.
+The `GET /api/projects/{id}/analyses/latest/branches.csv` export applies exactly the
+filters and the ordering of the current view, without pagination. It is UTF-8 encoded and
+neutralises cells a spreadsheet could interpret as formulas. It remains distinct from the
+SQLite backup, which is meant to restore the whole application.
 
-## Intégration continue
+## Branch model
 
-Le workflow `.github/workflows/ci.yml` s’exécute sur chaque pull request. Il
-restaure et compile .NET, exécute les tests .NET et Angular, publie l’application
-intégrée, contrôle la présence du bundle dans `wwwroot`, valide Compose et analyse
-le Dockerfile avec BuildKit.
+```
+feat/xxx ──PR──► dev ──push──► CI ──green──► test ──► multi-OS matrix
+                                             │
+                                             ├──► annotated tag ──► published release
+                                             │
+                                             └──► main (fast-forward)
+```
 
-Le workflow `.github/workflows/release.yml` s'exécute manuellement ou pour le tag
-`v0.1.0-rc.1`. Sa matrice publie et teste `win-x64` sur `windows-latest`, `osx-x64` sur
-`macos-15-intel`, `osx-arm64` sur `macos-15` et `linux-x64` sur `ubuntu-latest`. Sur un
-tag, chaque cible sauf Linux produit aussi son installeur Velopack, et la cible Windows
-les manifestes Scoop et winget. Les archives et ces artefacts sont chargés comme
-artefacts du workflow. Un job Ubuntu séparé construit l'image et exécute le smoke
-test Docker : interface disponible, Git installé, UID non privilégié, montage des
-dépôts non inscriptible et volume SQLite persistant après recréation.
+| Reference | What it guarantees | Who feeds it |
+|---|---|---|
+| `feat/*` | nothing | the developer |
+| `dev` | integration: the tip may be red for the duration of a run | pull request |
+| `test` | the latest `dev` commit whose CI is green | automatic promotion |
+| `main` | the published version | manual fast-forward from `test` |
 
-Sur un dépôt public, Dependency Review, CodeQL et les attestations GitHub sont activés
-automatiquement. Pour un dépôt privé disposant des offres GitHub correspondantes, créer
-les variables de dépôt `ENABLE_GITHUB_SECURITY_FEATURES=true` et
-`ENABLE_GITHUB_ATTESTATIONS=true`. Sans ces licences, les jobs concernés sont ignorés ;
-les audits NuGet/npm, les sommes SHA-256 et les SBOM restent exécutés.
+Every reference advance is a **fast-forward**. The tree validated by CI is therefore
+bit-for-bit the one that gets promoted, then the one that gets tagged: no merge commit
+introduces a state nobody has exercised. The corollary: nothing must land directly on
+`test` or on `main`, or the fast-forward becomes impossible.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and on every push to `dev` or
+`main`. It restores and builds .NET, checks the .NET, Angular and Playwright formatting,
+runs the .NET and Angular tests, publishes the integrated application, checks that the
+bundle is present in `wwwroot`, plays the end-to-end journey under Chromium, exercises the
+local build targeting rules, validates Compose and analyses the Dockerfile with BuildKit.
+
+The suite is identical on the pull request and on the push that follows the merge. This is
+deliberate: the pull request makes `dev` green by construction, and the next run
+re-validates the real merge commit before gating the promotion. Trimming the pull request
+by removing Playwright from it would save a few minutes on a two-scenario suite, at the
+price of an end-to-end regression breaking `dev` after the fact.
+
+## Automatic promotion to test
+
+When CI is green on a push to `dev`, the `promote` job advances `test` onto the exact
+commit that has just been validated — never onto the tip of `dev`, which may have moved in
+the meantime. It uses the Git references API with `force=false`: the server refuses the
+update if the commit is not a direct descendant of `test`, which makes a stale promotion
+impossible without any extra guard code.
+
+The `promote-test` concurrency group serialises promotions without cancelling the one in
+progress. The concurrency of `ci.yml`, on the other hand, cancels obsolete runs: two pushes
+close together on `dev` promote the second and skip the first, which is the intended
+behaviour.
+
+A push performed with the `GITHUB_TOKEN` triggers no other workflow — an Actions guardrail
+against loops. The job therefore explicitly calls
+`gh workflow run release.yml --ref test` to launch the cross-platform matrix on the
+promoted commit.
+
+On `test`, that matrix runs in rehearsal mode: it publishes and tests the four native
+targets and runs the Docker smoke test, without producing an installer, a manifest or an
+attestation. It acts as an **early warning** — a macOS or Docker breakage shows up on
+integration day rather than at release time. It blocks nothing, because `release.yml`
+replays the very same matrix from the tag before attaching a single artefact.
+
+## Releasing
+
+A release starts from a `test` commit that has already been through CI and the
+cross-platform matrix. Before creating the tag, measure performance with the budgets:
+
+```powershell
+gh workflow run benchmark.yml --ref test -f enforce_budgets=true
+```
+
+This is the only step where human judgement is still required. The budgets in
+`benchmarks/budgets.json` are absolute and calibrated on a reference machine, while hosted
+runners have variable capacity: the result is read and interpreted, it does not block the
+release.
+
+The tag is then placed on the validated commit, and `main` catches up:
+
+```bash
+git fetch origin
+git tag -a v0.1.0 -m "GitHealth 0.1.0" origin/test
+git push origin v0.1.0
+git push origin origin/test:refs/heads/main
+```
+
+Tagging the `test` commit rather than the result of a merge guarantees that the published
+object is exactly the one CI and the matrix exercised. The last push is refused by the
+server if it is not a fast-forward.
+
+The `.github/workflows/release.yml` workflow runs manually or when a GitHub release is
+published. Its matrix publishes and tests `win-x64` on `windows-latest`, `osx-x64` on
+`macos-15-intel`, `osx-arm64` on `macos-15` and `linux-x64` on `ubuntu-latest`. When a
+release is published, every target except Linux also produces its Velopack installer, and
+the Windows target produces the Scoop and winget manifests. A separate Ubuntu job builds
+the image and runs the Docker smoke test: interface available, Git installed, unprivileged
+UID, non-writable repository mount and SQLite volume persisting across recreation. Once the
+matrix and the Docker smoke test are green, a final job attaches all the archives,
+checksums, SBOMs, installers and manifests to the release that triggered the workflow.
+
+## Branch protection
+
+The model rests on one invariant: `test` must remain an ancestor of `dev`. Rewriting
+`dev`'s history breaks it — the `promote` job then pushes a reference that is no longer a
+direct descendant, the API answers 422, and no promotion succeeds until someone repairs it
+by hand. Forbidding force pushes on `dev` and `main` is therefore the only protection that
+matters here. Keeping `test` from ever receiving a red commit is already handled by
+`needs: verify`, with no branch protection involved.
+
+`test` must carry no rule at all: any rule would cause the `promote` job's push to be
+rejected, and `GITHUB_TOKEN` is subject to protection like anyone else.
+
+### Local guard
+
+Server-side protection is unavailable on this repository: private on the GitHub Free plan,
+both `branches/*/protection` and `rulesets` answer 403. The guard therefore lives on the
+workstation, and is set once per clone:
+
+```bash
+git config core.hooksPath eng/hooks
+```
+
+For every push to `dev` or `main`, `eng/hooks/pre-push` compares the remote reference with
+the local one: if the old commit is not an ancestor of the new one, the push is refused.
+It also rejects deleting either branch. It covers the accident, not malice — `--no-verify`
+bypasses it, and it only holds on the workstations that enabled it.
+
+### Once server-side protection becomes available
+
+Making the repository public or subscribing to GitHub Pro unlocks both APIs. The minimal
+rule, equivalent to the hook, on `dev` and on `main`:
+
+```bash
+gh api --method PUT repos/LINDECKER-Charles/App.GitHealth/branches/dev/protection \
+  --input - <<'JSON'
+{
+  "required_status_checks": null,
+  "required_pull_request_reviews": null,
+  "enforce_admins": false,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+```
+
+To go further and make `dev` green by construction, add the required checks
+`Vérifier le socle` and `Auditer les dépendances`. Those contexts are the workflow job
+names, written in French in `.github/workflows/`, and must be copied exactly. Keep
+`strict: false`: requiring an up-to-date branch before merging would be redundant, because
+CI replays on the merge commit anyway, and it is that run which gates the promotion.
+Required checks impose the pull request on their own — a commit pushed directly has no
+result yet and gets refused.
+
+Do not declare the dependency review job or CodeQL as required while the repository is
+private without an Advanced Security licence: their job condition makes them skipped, and
+a skipped check counts as green. The gate would look active while analysing nothing.
+
+On a public repository, Dependency Review, CodeQL and the GitHub attestations are enabled
+automatically. For a private repository with the corresponding GitHub plans, create the
+repository variables `ENABLE_GITHUB_SECURITY_FEATURES=true` and
+`ENABLE_GITHUB_ATTESTATIONS=true`. Without those licences, the jobs concerned are skipped;
+the NuGet/npm audits, the SHA-256 checksums and the SBOMs still run.

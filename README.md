@@ -4,7 +4,7 @@
       srcset="docs/assets/readme/hero-dark.svg">
     <source media="(prefers-color-scheme: light)"
       srcset="docs/assets/readme/hero-light.svg">
-    <img alt="GitHealth — les faits Git avant la décision"
+    <img alt="GitHealth — the Git facts before the decision"
       src="docs/assets/readme/hero-light.svg" width="100%">
   </picture>
 </p>
@@ -17,7 +17,7 @@
       src="https://github.com/LINDECKER-Charles/App.GitHealth/actions/workflows/ci.yml/badge.svg">
   </a>
   <a href="https://github.com/LINDECKER-Charles/App.GitHealth/actions/workflows/security.yml">
-    <img alt="Sécurité"
+    <img alt="Security"
       src="https://github.com/LINDECKER-Charles/App.GitHealth/actions/workflows/security.yml/badge.svg">
   </a>
   <a href="https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest">
@@ -25,22 +25,22 @@
       src="https://img.shields.io/badge/version-0.1.0--rc.1-a87b27">
   </a>
   <a href="LICENSE">
-    <img alt="Licence MIT"
-      src="https://img.shields.io/badge/licence-MIT-2434a6">
+    <img alt="MIT license"
+      src="https://img.shields.io/badge/license-MIT-2434a6">
   </a>
 </p>
 
 <p align="center">
-  <strong>Voyez quelles branches comptent encore — sans toucher au dépôt.</strong><br>
-  Local par conception · explicable par défaut · Windows, macOS, Linux et Docker
+  <strong>See which branches still matter — without touching the repository.</strong><br>
+  Local by design · explainable by default · Windows, macOS, Linux and Docker
 </p>
 
 <p align="center">
   <a href="https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest">
-    <strong>Télécharger GitHealth</strong>
+    <strong>Download GitHealth</strong>
   </a>
   &nbsp;·&nbsp;
-  <a href="docs/USER_GUIDE.md">Guide utilisateur</a>
+  <a href="docs/USER_GUIDE.md">User guide</a>
   &nbsp;·&nbsp;
   <a href="docs/README.md">Documentation</a>
   &nbsp;·&nbsp;
@@ -49,214 +49,221 @@
 
 ---
 
-GitHealth transforme un historique de branches difficile à lire en décisions argumentées.
-Il compare les références déjà présentes sur la machine, mesure leur topologie et leur
-activité, puis explique pourquoi une branche est à conserver, à examiner ou probablement
-prête à être nettoyée.
+GitHealth turns a branch history that is hard to read into decisions you can argue for.
+It compares the references already present on the machine, measures their topology and
+their activity, then explains why a branch should be kept, reviewed, or is probably
+ready to be cleaned up.
 
-Ce n'est ni un bot de suppression, ni une nouvelle forge. C'est un poste de diagnostic
-local : les faits restent visibles, les politiques restent sous votre contrôle et toute
-action Git reste entre vos mains.
+It is neither a deletion bot nor yet another forge. It is a local diagnostic bench: the
+facts stay visible, the policies stay under your control, and every Git action stays in
+your hands.
 
 > [!IMPORTANT]
-> GitHealth n'exécute aucun `clone`, `fetch`, `pull`, `checkout`, `merge`, `push` ou
-> suppression. Il ne modifie ni les références, ni l'index, ni le worktree, ni les reflogs.
+> GitHealth never runs `clone`, `fetch`, `pull`, `checkout`, `merge`, `push` or any
+> deletion. It modifies neither the references, nor the index, nor the worktree, nor the
+> reflogs.
 
-## 01 — Un dépôt. Des faits. Un verdict lisible.
+## 01 — One repository. Facts. A verdict you can read.
 
-| Observer | Comprendre | Décider | Suivre |
+| Observe | Understand | Decide | Track |
 |---|---|---|---|
-| Avance, retard, ancêtre commun et dernier commit | Topologie, activité et contributeurs normalisés | Conserver, examiner ou nettoyer — avec la raison | Snapshots, historique, CSV et sauvegarde SQLite |
+| Ahead, behind, merge base and last commit | Topology, activity and normalised contributors | Keep, review or clean up — with the reason | Snapshots, history, CSV and SQLite backup |
 
 <picture>
   <source media="(prefers-color-scheme: dark)"
     srcset="docs/assets/readme/diagnostic-dark.jpg">
   <source media="(prefers-color-scheme: light)"
     srcset="docs/assets/readme/diagnostic-light.jpg">
-  <img alt="GitHealth analysant un scénario local dans le tableau de diagnostic"
+  <img alt="GitHealth analysing a local scenario in the diagnostic dashboard"
     src="docs/assets/readme/diagnostic-light.jpg" width="100%">
 </picture>
 
-<p align="center"><sub>Scénario local construit à partir du dépôt GitHealth</sub></p>
+<p align="center"><sub>Local scenario built from the GitHealth repository itself</sub></p>
 
-Chaque ligne conserve la chaîne de raisonnement :
+Every row keeps the full chain of reasoning:
 
 ```text
-faits Git  →  topologie  →  activité  →  politique  →  recommandation + explication
+Git facts  →  topology  →  activity  →  policy  →  recommendation + explanation
 ```
 
-Une branche divergente n'est donc pas simplement « rouge ». GitHealth montre son écart,
-sa dernière activité, la règle appliquée et la raison qui justifie l'attention demandée.
-Quand les faits ne suffisent pas, l'interface le dit au lieu d'inventer une certitude.
+A diverged branch is therefore never merely "red". GitHealth shows how far apart it is,
+when it was last active, which rule was applied, and the reason that justifies the
+attention it asks for. When the facts are not enough, the interface says so instead of
+inventing certainty.
 
-## 02 — Pensé pour un dépôt comme pour tout un workspace
+## 02 — Built for a single repository and for a whole workspace
 
-- analyser les branches locales ou de suivi distant par rapport à la référence choisie ;
-- scanner un dossier, détecter les dépôts qu'il contient et lancer plusieurs analyses
-  en parallèle ;
-- distinguer branches synchronisées, en avance, fusionnées, divergentes ou sans base
-  commune ;
-- repérer l'activité récente, vieillissante ou inactive avec des seuils configurables ;
-- protéger ou exclure des branches par motifs, avec prévisualisation avant application ;
-- expliquer une branche jusque dans sa fiche : commits propres, contributeurs et raison
-  du verdict ;
-- relocaliser un dépôt déplacé sans perdre son historique d'analyses ;
-- filtrer, trier, comparer les snapshots et exporter la vue en CSV ;
-- s'installer en application de bureau, se lancer depuis une archive portable ou
-  tourner dans un conteneur durci.
+- analyse local or remote-tracking branches against the baseline of your choice;
+- scan a folder, detect the repositories it contains and run several analyses in
+  parallel;
+- tell apart branches that are in sync, ahead, merged, diverged or with no merge base;
+- spot recent, ageing or inactive branches using configurable thresholds;
+- protect or exclude branches by pattern, with a preview before applying;
+- explain a branch down to its detail panel: own commits, contributors and the reason
+  behind the verdict;
+- relocate a repository that has moved without losing its analysis history;
+- filter, sort, compare snapshots and export the current view as CSV;
+- install it as a desktop application, run it from a portable archive, or run it in a
+  hardened container.
 
-## 03 — Local n'est pas un slogan, c'est la frontière du produit
+## 03 — Local is not a slogan, it is the product boundary
 
-| GitHealth refuse | Pourquoi | Preuve documentée |
+| GitHealth refuses to | Why | Documented evidence |
 |---|---|---|
-| Cloner ou actualiser un remote | Le diagnostic porte sur l'état réellement présent sur le poste | [Isolation de Git](docs/SECURITY_MODEL.md#isolation-de-git) |
-| Écrire dans le dépôt | L'observation ne doit jamais devenir une mutation | [Analyse en lecture seule](docs/DEVOPS.md#analyse-git-en-lecture-seule) |
-| Envoyer de la télémétrie | Les identités et l'historique restent locaux | [Communications sortantes](docs/SECURITY_MODEL.md#confidentialité-et-communications-sortantes) |
-| Exposer un service réseau | GitHealth est un outil local mono-utilisateur | [Frontière de confiance](docs/SECURITY_MODEL.md#objectif-et-frontière-de-confiance) |
+| Clone or refresh a remote | The diagnosis is about the state actually present on the machine | [Git isolation](docs/SECURITY_MODEL.md#git-isolation) |
+| Write to the repository | Observation must never turn into mutation | [Read-only Git analysis](docs/DEVOPS.md#read-only-git-analysis) |
+| Send telemetry | Identities and history stay local | [Outbound communication](docs/SECURITY_MODEL.md#privacy-and-outbound-communication) |
+| Expose a network service | GitHealth is a local, single-user tool | [Trust boundary](docs/SECURITY_MODEL.md#purpose-and-trust-boundary) |
 
-Les commandes Git sont lancées sans shell, avec délai, budget de sortie, concurrence
-bornée et environnement neutralisé. L'interface et l'API partagent une origine locale ;
-la CSP, la session et les jetons anti-forgery renforcent cette frontière. La chaîne de
-publication produit sommes SHA-256 et SBOM SPDX.
+Git commands run without a shell, with a timeout, an output budget, bounded concurrency
+and a neutralised environment. The interface and the API share one local origin; the
+CSP, the session and the anti-forgery tokens reinforce that boundary. The release
+pipeline produces SHA-256 checksums and an SPDX SBOM.
 
-[Lire le modèle de sécurité](docs/SECURITY_MODEL.md) ·
-[Consulter l'audit](docs/SECURITY_AUDIT.md) ·
-[Voir les limites assumées](docs/KNOWN_LIMITATIONS.md)
+[Read the security model](docs/SECURITY_MODEL.md) ·
+[Read the audit](docs/SECURITY_AUDIT.md) ·
+[See the accepted limitations](docs/KNOWN_LIMITATIONS.md)
 
-## 04 — Démarrer en quelques minutes
+## 04 — Get started in minutes
 
-### Application de bureau — parcours recommandé
+### Desktop application — the recommended path
 
-Télécharger l'installeur depuis la
-[dernière release](https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest) :
-`App.GitHealth-win-x64-Setup.exe` sur Windows, `App.GitHealth-<rid>-Setup.pkg` sur macOS.
-L'installation se fait par utilisateur dans `%LocalAppData%\App.GitHealth`, sans invite
-UAC, avec raccourcis Bureau et menu Démarrer.
+Download the installer from the
+[latest release](https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest):
+`App.GitHealth-win-x64-Setup.exe` on Windows, `App.GitHealth-<rid>-Setup.pkg` on macOS.
+It installs per user under `%LocalAppData%\App.GitHealth`, without a UAC prompt, with
+Desktop and Start menu shortcuts.
 
-Au double-clic, GitHealth ouvre une fenêtre native : le serveur local et l'interface
-vivent dans le même processus, et le bouton « Parcourir » ouvre le dialogue de dossier du
-système. Les données restent dans `%LOCALAPPDATA%\GitHealth`, à l'écart de
-l'installation : elles survivent aux mises à jour comme à la désinstallation. Quand une
-version plus récente est publiée, un bouton « Mettre à jour » apparaît dans la barre
-supérieure.
+On double-click, GitHealth opens a native window: the local server and the interface
+live in the same process, and the "Browse" button opens the system folder dialog. Data
+stays in `%LOCALAPPDATA%\GitHealth`, away from the installation: it survives both
+updates and uninstallation. When a newer version is published, an "Update" button
+appears in the top bar.
 
-Le runtime .NET est inclus ; Git 2.38 ou plus récent est recommandé. Hors du `PATH` et
-des emplacements d'installation habituels, `--git-path <chemin>` désigne l'exécutable
-Git à utiliser.
+The .NET runtime is bundled; Git 2.38 or newer is recommended. Outside the `PATH` and
+the usual installation locations, `--git-path <path>` points to the Git executable to
+use.
 
 > [!NOTE]
-> Les installeurs ne sont ni signés ni notariés. SmartScreen et Gatekeeper peuvent
-> demander une autorisation explicite au premier lancement.
+> The installers are neither signed nor notarised. SmartScreen and Gatekeeper may ask
+> for explicit approval on first launch.
 
-### Gestionnaires de paquets
+### Package managers
 
-Un manifeste Scoop accompagne chaque release Windows et installe l'archive portable :
+A Scoop manifest ships with every Windows release and installs the portable archive:
 
 ```powershell
-# `/latest/` ignore les préversions : viser la version publiée.
+# `/latest/` skips pre-releases: target the published version explicitly.
 $version = "v0.1.0-rc.1"
 $base = "https://github.com/LINDECKER-Charles/App.GitHealth/releases/download/$version"
 scoop install "$base/githealth.json"
 ```
 
-Les manifestes winget sont produits avec la release, mais leur soumission à
-`microsoft/winget-pkgs` reste à faire : `winget install` n'est pas encore disponible.
+winget manifests are produced with each release, but submitting them to
+`microsoft/winget-pkgs` is still pending: `winget install` is not available yet.
 
-### Archives portables
+### Portable archives
 
-Pour un poste sans installation : télécharger `githealth-win-x64.zip`,
-`githealth-osx-x64.tar.gz`, `githealth-osx-arm64.tar.gz` ou
-`githealth-linux-x64.tar.gz`, puis lancer l'exécutable depuis n'importe quel répertoire :
+For a machine where nothing should be installed: download `githealth-win-x64.zip`,
+`githealth-osx-x64.tar.gz`, `githealth-osx-arm64.tar.gz` or
+`githealth-linux-x64.tar.gz`, then run the executable from any directory:
 
 ```powershell
 # Windows x64
-C:\Applications\GitHealth\githealth.exe --repo D:\Dev\MonDepot
+C:\Applications\GitHealth\githealth.exe --repo D:\Dev\MyRepository
 ```
 
 ```shell
-# macOS Intel ou Apple Silicon
-/Applications/GitHealth/githealth --repo "$HOME/Dev/MonDepot"
+# macOS Intel or Apple Silicon
+/Applications/GitHealth/githealth --repo "$HOME/Dev/MyRepository"
 ```
 
-Le lanceur choisit un port libre sur `127.0.0.1` et ouvre la même fenêtre native ;
-`--no-window` lui préfère le navigateur système. Sous Linux, la fenêtre dépend de
-WebKitGTK : à défaut, GitHealth bascule sur le navigateur. Aucune mise à jour in-app en
-dehors des installeurs Windows et macOS.
+The launcher picks a free port on `127.0.0.1` and opens the same native window;
+`--no-window` uses the system browser instead. On Linux the window depends on WebKitGTK:
+without it, GitHealth falls back to the browser. There is no in-app update outside the
+Windows and macOS installers.
 
-### Docker Compose — auto-hébergement
+### Docker Compose — self-hosting
 
-Le conteneur ne vise pas le poste de développement : il fait tourner GitHealth sur une
-machine que l'on administre. Ni fenêtre, ni mise à jour in-app, et les dépôts doivent
-être montés explicitement.
+The container does not target the developer workstation: it runs GitHealth on a machine
+you administer. No window, no in-app update, and repositories must be mounted
+explicitly.
 
 ```shell
 cp .env.example .env
-# Renseigner GITHEALTH_REPOSITORIES_HOST_PATH dans .env
+# Set GITHEALTH_REPOSITORIES_HOST_PATH in .env
 docker compose up --build
 ```
 
-GitHealth répond alors sur `http://127.0.0.1:8080`. Les dépôts sont montés en lecture
-seule ; seuls `/data` et `/tmp` restent inscriptibles dans le conteneur.
+GitHealth then answers on `http://127.0.0.1:8080`. Repositories are mounted read-only;
+only `/data` and `/tmp` remain writable inside the container.
 
-### Depuis les sources
+### From source
 
 ```shell
-dotnet restore App.GitHealth.sln
-dotnet test App.GitHealth.sln
-dotnet run --project src/App.GitHealth.Api -- --no-browser
+git clone https://github.com/LINDECKER-Charles/App.GitHealth.git
+cd App.GitHealth
+
+./eng/build.sh check      # macOS, Linux — the local toolchain
+./eng/build.sh publish    # the application, as it is distributed
+./eng/build.sh run
 ```
 
-Le développement de l'interface Angular et la boucle complète sont détaillés dans
+On Windows, `eng\build.cmd` replaces `./eng/build.sh`; everything else is identical.
+The five build levels, the prerequisites per operating system and what can or cannot be
+built for another system are detailed in [eng/README.md](eng/README.md).
+
+The day-to-day development loop and the contribution conventions live in
 [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
-## 05 — Une documentation organisée par intention
+## 05 — Documentation organised by intent
 
-| Je veux… | Point d'entrée |
+| I want to… | Entry point |
 |---|---|
-| prendre GitHealth en main | [Guide utilisateur](docs/USER_GUIDE.md) |
-| comprendre les choix techniques | [Architecture](docs/ARCHITECTURE.md) |
-| installer, publier ou exploiter | [Guide DevOps](docs/DEVOPS.md) |
-| résoudre un problème de lancement | [Dépannage](docs/TROUBLESHOOTING.md) |
-| connaître précisément la frontière de confiance | [Modèle de sécurité](docs/SECURITY_MODEL.md) |
-| mesurer ou reproduire les performances | [Benchmarks](docs/BENCHMARKING.md) |
-| contribuer proprement | [Guide de contribution](.github/CONTRIBUTING.md) |
-| parcourir toute la documentation | [Centre de documentation](docs/README.md) |
+| get started with GitHealth | [User guide](docs/USER_GUIDE.md) |
+| understand the technical choices | [Architecture](docs/ARCHITECTURE.md) |
+| install, release or operate it | [DevOps guide](docs/DEVOPS.md) |
+| fix a startup problem | [Troubleshooting](docs/TROUBLESHOOTING.md) |
+| know exactly where the trust boundary is | [Security model](docs/SECURITY_MODEL.md) |
+| measure or reproduce performance | [Benchmarks](docs/BENCHMARKING.md) |
+| contribute properly | [Contribution guide](.github/CONTRIBUTING.md) |
+| browse the whole documentation | [Documentation hub](docs/README.md) |
 
-## 06 — Un socle volontairement simple
+## 06 — A deliberately simple foundation
 
 ```text
-Angular 22  ──HTTP local──▶  ASP.NET Core 10  ──▶  domaine C# pur
-                                    │
-                                    ├──▶  processus Git bornés et read-only
-                                    └──▶  SQLite · projets, politiques, snapshots
+Angular 22  ──local HTTP──▶  ASP.NET Core 10  ──▶  pure C# domain
+                                     │
+                                     ├──▶  bounded, read-only Git processes
+                                     └──▶  SQLite · projects, policies, snapshots
 ```
 
-Le cœur métier ne dépend ni de Git, ni d'Entity Framework, ni du web. L'API orchestre
-les lectures et la persistance ; Angular présente les faits et garde les filtres
-partageables dans l'URL. Les tests couvrent le domaine, l'API, de vrais dépôts Git,
-l'infrastructure Docker et le parcours navigateur.
+The domain core depends neither on Git, nor on Entity Framework, nor on the web. The API
+orchestrates reads and persistence; Angular presents the facts and keeps filters
+shareable through the URL. Tests cover the domain, the API, real Git repositories, the
+Docker infrastructure and the browser journey.
 
-[Explorer l'architecture complète](docs/ARCHITECTURE.md) ·
-[Lire les résultats de benchmark](docs/benchmarks/windows-initial.md)
+[Explore the full architecture](docs/ARCHITECTURE.md) ·
+[Read the benchmark results](docs/benchmarks/windows-initial.md)
 
-## 07 — État du projet
+## 07 — Project status
 
-La version préparée est **`0.1.0-rc.1`**. Elle inclut l'application de bureau et ses
-installeurs Windows et macOS, les archives portables Windows, macOS et Linux, le
-manifeste Scoop, Docker Compose, la qualification CI, un audit de sécurité et une
-baseline de performance jusqu'à 1 000 branches. Le projet reste une release candidate :
-les [limites connues](docs/KNOWN_LIMITATIONS.md) font partie du contrat public — ni
-signature de code ni notarisation, pas de mise à jour in-app sur Linux, et Git reste à
-installer soi-même.
+The version being prepared is **`0.1.0-rc.1`**. It includes the desktop application with
+its Windows and macOS installers, the Windows, macOS and Linux portable archives, the
+Scoop manifest, Docker Compose, CI qualification, a security audit and a performance
+baseline up to 1,000 branches. The project is still a release candidate: the
+[known limitations](docs/KNOWN_LIMITATIONS.md) are part of the public contract — no code
+signing or notarisation, no in-app update on Linux, and Git still has to be installed
+separately.
 
-Les contributions sont bienvenues. Commencez par
-[CONTRIBUTING.md](.github/CONTRIBUTING.md), consultez le
-[code de conduite](.github/CODE_OF_CONDUCT.md) et utilisez le canal privé décrit dans
-[SECURITY.md](.github/SECURITY.md) pour toute vulnérabilité.
+Contributions are welcome. Start with
+[CONTRIBUTING.md](.github/CONTRIBUTING.md), read the
+[code of conduct](.github/CODE_OF_CONDUCT.md), and use the private channel described in
+[SECURITY.md](.github/SECURITY.md) for any vulnerability.
 
 ---
 
 <p align="center">
-  <strong>GitHealth observe. Vous gardez la décision.</strong><br>
-  <sub>Distribué sous licence <a href="LICENSE">MIT</a>.</sub>
+  <strong>GitHealth observes. You keep the decision.</strong><br>
+  <sub>Distributed under the <a href="LICENSE">MIT</a> license.</sub>
 </p>

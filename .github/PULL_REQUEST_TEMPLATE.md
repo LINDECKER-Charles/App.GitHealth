@@ -1,54 +1,54 @@
 # Pull request
 
-## Pourquoi
+## Why
 
-<!-- Le problème résolu, pas la liste des fichiers touchés. Lien vers l'issue si elle
-     existe : `Closes #123`. -->
+<!-- The problem being solved, not the list of files touched. Link to the issue if there
+     is one: `Closes #123`. -->
 
-## Ce qui change pour la personne qui utilise GitHealth
+## What changes for the person using GitHealth
 
-<!-- Ce qui devient visible, différent ou impossible. « Aucun changement observable »
-     est une réponse valable pour un refactoring. -->
+<!-- What becomes visible, different or impossible. "No observable change" is a valid
+     answer for a refactoring. -->
 
-## Comment le vérifier
+## How to verify it
 
-<!-- Le chemin exact à suivre pour constater le résultat : commande, écran, fichier
-     de test qui échoue sans le correctif. -->
+<!-- The exact path to follow to observe the result: command, screen, test file that fails
+     without the fix. -->
 
-## Type de changement
+## Type of change
 
-- [ ] `feat` — nouvelle fonctionnalité
-- [ ] `fix` — correction de bug
-- [ ] `docs` — documentation uniquement
-- [ ] `refactor` — remaniement sans changement de comportement
+- [ ] `feat` — new feature
+- [ ] `fix` — bug fix
+- [ ] `docs` — documentation only
+- [ ] `refactor` — rework with no behaviour change
 - [ ] `perf` — performance
-- [ ] `test` — tests uniquement
-- [ ] `build` / `ci` / `chore` — outillage et maintenance
-- [ ] Rupture de compatibilité (`BREAKING CHANGE:` présent dans un commit)
+- [ ] `test` — tests only
+- [ ] `build` / `ci` / `chore` — tooling and maintenance
+- [ ] Breaking change (`BREAKING CHANGE:` present in a commit)
 
-## Vérifications
+## Checks
 
-- [ ] Les commits suivent Conventional Commits en français, avec le scope du dépôt.
-- [ ] La branche suit `type/description-courte` et ne traite qu'un seul sujet.
-- [ ] La fonctionnalité ou le correctif est couvert par des tests, livrés ici.
-- [ ] `dotnet format --verify-no-changes` et `prettier --check` passent.
-- [ ] `dotnet build` en Release ne produit aucun avertissement.
-- [ ] `dotnet test` et `npm run test:ci` passent localement.
-- [ ] Le changement respecte les limites de taille, de nommage et de découpe du projet.
-- [ ] `CHANGELOG.md` est à jour sous `[Non publié]`, si le changement est observable.
-- [ ] La documentation concernée suit le code.
+- [ ] Commits follow Conventional Commits in French, with the repository scope.
+- [ ] The branch follows `type/short-description` and covers a single topic.
+- [ ] The feature or the fix is covered by tests, shipped here.
+- [ ] `dotnet format --verify-no-changes` and `prettier --check` pass.
+- [ ] `dotnet build` in Release produces no warning.
+- [ ] `dotnet test` and `npm run test:ci` pass locally.
+- [ ] The change honours the project's size, naming and slicing limits.
+- [ ] `CHANGELOG.md` is up to date under `[Unreleased]`, if the change is observable.
+- [ ] The relevant documentation follows the code.
 
-## Frontières du produit
+## Product boundaries
 
-- [ ] Aucune écriture Git : ni référence, ni index, ni worktree, ni reflog modifiés.
-- [ ] Aucun accès réseau ajouté — pas de `fetch`, pas de CDN, pas de télémétrie.
-- [ ] Aucune identité d'auteur, aucun chemin de dépôt transmis hors du processus local.
-- [ ] Aucune ressource tierce ajoutée sans licence compatible MIT et sans entrée dans
+- [ ] No Git write: no reference, index, worktree or reflog modified.
+- [ ] No network access added — no `fetch`, no CDN, no telemetry.
+- [ ] No author identity and no repository path sent outside the local process.
+- [ ] No third-party asset added without an MIT-compatible license and an entry in
       `THIRD-PARTY-NOTICES.md`.
 
-<!-- Si l'une de ces cases ne peut pas être cochée, expliquez pourquoi ci-dessous. -->
+<!-- If one of these boxes cannot be ticked, explain why below. -->
 
-## Complément
+## Additional notes
 
-<!-- Captures d'écran pour un changement visuel, mesures pour un changement de
-     performance, points d'attention pour la revue. -->
+<!-- Screenshots for a visual change, measurements for a performance change, points to
+     watch during review. -->

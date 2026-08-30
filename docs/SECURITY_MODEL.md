@@ -1,122 +1,118 @@
-# Modèle de sécurité
+# Security model
 
-## Objectif et frontière de confiance
+## Purpose and trust boundary
 
-GitHealth aide un utilisateur local à examiner des dépôts potentiellement non fiables.
-Il ne doit ni modifier ces dépôts, ni exposer leur contenu ou les identités d'auteur hors
-du poste. L'API et l'interface appartiennent au même processus et à la même origine.
+GitHealth helps a local user examine potentially untrusted repositories. It must neither
+modify those repositories nor expose their content or author identities outside the
+machine. The API and the interface belong to the same process and the same origin.
 
-Le navigateur, le processus GitHealth et les commandes Git enfant s'exécutent avec les
-droits du compte courant. Une application malveillante possédant déjà ces mêmes droits
-peut lire les fichiers accessibles au compte et n'est donc pas arrêtée par GitHealth.
+The browser, the GitHealth process and the child Git commands all run with the rights of
+the current account. Malicious software that already holds those same rights can read
+the files the account can reach, and is therefore not stopped by GitHealth.
 
-## Actifs protégés
+## Protected assets
 
-- références, objets, index, worktree et reflogs des dépôts analysés ;
-- noms et adresses des auteurs présents dans l'historique ;
-- base SQLite, politiques et snapshots ;
-- capacité de calcul de la machine locale ;
-- intégrité des archives distribuées.
+- references, objects, index, worktree and reflogs of the analysed repositories;
+- author names and addresses present in the history;
+- the SQLite database, the policies and the snapshots;
+- the local machine's compute capacity;
+- the integrity of the distributed archives.
 
-## Entrées non fiables
+## Untrusted inputs
 
-- chemins de dépôt et liens symboliques ;
-- noms de références, auteurs, messages et configuration Git du dépôt ;
-- sorties et durée des processus Git ;
-- requêtes HTTP émises par un autre site ou un processus local ;
-- configuration du lanceur, variables d'environnement et montage Docker.
+- repository paths and symbolic links;
+- reference names, authors, messages and the repository's Git configuration;
+- output and duration of Git processes;
+- HTTP requests issued by another site or a local process;
+- launcher configuration, environment variables and Docker mounts.
 
-## Contrôles HTTP
+## HTTP controls
 
-Le lanceur natif et Compose écoutent uniquement sur loopback. Toute requête applicative
-doit conserver un `Host` loopback. Les routes `/api` refusent une origine étrangère et
-un contexte `Sec-Fetch-Site` intersite.
+The native launcher and Compose listen on loopback only. Every application request must
+carry a loopback `Host`. The `/api` routes reject a foreign origin and a cross-site
+`Sec-Fetch-Site` context.
 
-Une navigation HTML, ou le bootstrap `GET /api/session` utilisé par le serveur Angular
-de développement, crée une session aléatoire en mémoire et un couple de jetons
-anti-forgery. Les cookies de session et d'anti-forgery sont `HttpOnly`, `SameSite=Strict`
-et `Secure` sous HTTPS. Angular lit seulement le cookie `XSRF-TOKEN` dédié et le renvoie
-dans `X-XSRF-TOKEN` pour les requêtes de modification. Une session sans activité expire
-après douze heures.
+An HTML navigation, or the `GET /api/session` bootstrap used by the Angular development
+server, creates a random in-memory session and a pair of anti-forgery tokens. The session
+and anti-forgery cookies are `HttpOnly`, `SameSite=Strict` and `Secure` over HTTPS.
+Angular only reads the dedicated `XSRF-TOKEN` cookie and echoes it back in `X-XSRF-TOKEN`
+for mutating requests. A session with no activity expires after twelve hours.
 
-Toutes les réponses reçoivent une politique CSP limitée à la même origine, ainsi que
+Every response receives a CSP restricted to the same origin, along with
 `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`
-et une `Permissions-Policy` restrictive. `base-uri` vaut `'self'` : l'application déclare
-`<base href="/">`, et l'interdire entièrement rendait illisible toute adresse profonde
-rechargée. La menace visée — un `<base>` injecté vers une autre origine — reste bloquée.
-L'inlining du CSS critique d'Angular est désactivé pour la même raison : le gestionnaire
-`onload` qu'il génère est un script en ligne, que `script-src 'self'` refuse.
-OpenAPI n'est publié qu'en développement. `/health` reste volontairement public sur
-loopback pour les smoke tests.
+and a restrictive `Permissions-Policy`. `base-uri` is `'self'`: the application declares
+`<base href="/">`, and forbidding it entirely made every deep link unreadable on reload.
+The threat it targets — an injected `<base>` pointing at another origin — remains
+blocked. Angular's critical CSS inlining is disabled for the same reason: the `onload`
+handler it generates is an inline script, which `script-src 'self'` rejects. OpenAPI is
+only published in development. `/health` stays deliberately public on loopback, for smoke
+tests.
 
-Ces protections ne transforment pas GitHealth en service réseau. Il ne faut pas ajouter
-une écoute LAN, un proxy inverse ou des origines non loopback sans concevoir une vraie
-authentification et un stockage de session distribué.
+These protections do not turn GitHealth into a network service. Do not add a LAN
+listener, a reverse proxy or non-loopback origins without designing real authentication
+and distributed session storage.
 
-## Isolation de Git
+## Git isolation
 
-Les commandes sont lancées directement avec `ProcessStartInfo.ArgumentList`, sans shell
-et avec l'entrée standard fermée. Les valeurs issues des dépôts restent des arguments
-séparés, y compris lorsqu'elles commencent par un tiret ou contiennent des caractères de
-commande.
+Commands are launched directly with `ProcessStartInfo.ArgumentList`, without a shell and
+with standard input closed. Values coming from repositories stay separate arguments,
+including when they start with a dash or contain command characters.
 
-Chaque processus possède :
+Each process gets:
 
-- un délai de 30 secondes par défaut, configurable seulement entre 1 et 120 secondes ;
-- un budget partagé de sortie de 4 Mio par défaut, borné entre 1 Kio et 16 Mio ;
-- une concurrence de quatre commandes par défaut, bornée entre une et huit ;
-- une annulation de tout l'arbre de processus en cas de dépassement ou d'arrêt.
+- a 30-second timeout by default, configurable only between 1 and 120 seconds;
+- a shared output budget of 4 MiB by default, bounded between 1 KiB and 16 MiB;
+- a concurrency of four commands by default, bounded between one and eight;
+- cancellation of the whole process tree on overrun or shutdown.
 
-GitHealth neutralise les helpers d'identification, les protocoles, la maintenance, le
-ramasse-miettes, les variables `GIT_TRACE*` et les principales variables `GIT_*` capables
-de rediriger les objets, l'index, le worktree, SSH ou la configuration globale.
-`GIT_OPTIONAL_LOCKS=0`,
-`GIT_NO_LAZY_FETCH=1` et `GIT_TERMINAL_PROMPT=0` maintiennent le scan non interactif et
-en lecture seule.
+GitHealth neutralises credential helpers, protocols, maintenance, garbage collection, the
+`GIT_TRACE*` variables and the main `GIT_*` variables able to redirect objects, the index,
+the worktree, SSH or the global configuration. `GIT_OPTIONAL_LOCKS=0`,
+`GIT_NO_LAZY_FETCH=1` and `GIT_TERMINAL_PROMPT=0` keep the scan non-interactive and
+read-only.
 
-## Chemins et conteneur
+## Paths and container
 
-En mode natif, l'utilisateur choisit les dépôts accessibles à son propre compte. En
-Docker, le chemin canonique, le worktree, le répertoire Git, son `commondir` et toutes
-les object databases, y compris les alternates imbriqués, doivent rester physiquement
-sous `/repositories`. Les composants de liens symboliques sont résolus avant ce contrôle.
+In native mode, the user chooses the repositories their own account can reach. Under
+Docker, the canonical path, the worktree, the Git directory, its `commondir` and every
+object database — including nested alternates — must stay physically under
+`/repositories`. Symbolic link components are resolved before that check.
 
-Compose monte `/repositories` en lecture seule, exécute le processus avec un UID non
-privilégié, rend le système de fichiers du conteneur non inscriptible et réserve seulement
-`/data` et `/tmp`. L'option `no-new-privileges` est active.
+Compose mounts `/repositories` read-only, runs the process with an unprivileged UID,
+makes the container filesystem non-writable and reserves only `/data` and `/tmp`. The
+`no-new-privileges` option is enabled.
 
-La base, ses fichiers WAL/SHM et son verrou d'instance sont créés avec des permissions
-privées lorsque le système le permet. Un répertoire de données créé par GitHealth est
-privé ; les permissions d'un répertoire parent préexistant ne sont jamais modifiées. Une
-sauvegarde SQLite est toujours demandée explicitement par l'utilisateur.
+The database, its WAL/SHM files and its instance lock are created with private
+permissions where the system allows it. A data directory created by GitHealth is private;
+the permissions of a pre-existing parent directory are never modified. A SQLite backup is
+always requested explicitly by the user.
 
-## Confidentialité et communications sortantes
+## Privacy and outbound communication
 
-Le code applicatif ne crée aucun client HTTP sortant, ne contient aucun SDK de
-télémétrie et n'intègre aucune ressource web tierce. La CSP limite aussi les connexions
-du navigateur à la même origine. Le scénario Playwright échoue s'il observe une requête
-HTTP vers un hôte autre que loopback.
+The application code creates no outbound HTTP client, contains no telemetry SDK and
+embeds no third-party web resource. The CSP also restricts the browser's connections to
+the same origin. The Playwright scenario fails if it observes an HTTP request to any host
+other than loopback.
 
-Les noms et adresses d'auteur sont conservés dans SQLite et peuvent apparaître dans le
-CSV ou la sauvegarde demandés par l'utilisateur. Ces fichiers doivent être protégés comme
-des données professionnelles.
+Author names and addresses are stored in SQLite and can appear in the CSV or in the
+backup the user requests. Those files must be protected like business data.
 
-## Chaîne de livraison
+## Supply chain
 
-La CI compile et teste .NET, Angular et le parcours E2E. Un workflow séparé exécute
-CodeQL, l'examen des dépendances et les audits NuGet/npm. Dependabot suit les actions,
-paquets NuGet, paquets npm et images Docker.
+CI builds and tests .NET, Angular and the end-to-end journey. A separate workflow runs
+CodeQL, dependency review and the NuGet/npm audits. Dependabot tracks actions, NuGet
+packages, npm packages and Docker images.
 
-La publication génère une somme SHA-256 et un SBOM SPDX. Pour un dépôt public, ou un dépôt
-privé disposant de GitHub Enterprise Cloud et explicitement configuré, elle ajoute des
-attestations GitHub de provenance et de SBOM. Ces éléments permettent de contrôler
-l'archive, mais ne remplacent pas la signature de code ou la notarisation macOS.
+Publishing generates a SHA-256 checksum and an SPDX SBOM. For a public repository — or a
+private repository with GitHub Enterprise Cloud and an explicit opt-in — it also adds
+GitHub provenance and SBOM attestations. These artefacts allow the archive to be
+verified, but do not replace code signing or macOS notarisation.
 
-## Risques résiduels
+## Residual risks
 
-- un logiciel du même utilisateur peut accéder aux dépôts et à SQLite sans passer par
-  l'API ;
-- une vulnérabilité de Git ou du runtime reste exploitable avant sa mise à jour ;
-- les archives macOS de la release candidate ne sont ni signées ni notariées ;
-- un export copié hors du poste échappe aux contrôles de GitHealth ;
-- les références locales peuvent être obsolètes, car aucun `fetch` n'est automatique.
+- software running as the same user can reach the repositories and SQLite without going
+  through the API;
+- a vulnerability in Git or in the runtime stays exploitable until it is patched;
+- the macOS archives of the release candidate are neither signed nor notarised;
+- an export copied off the machine escapes GitHealth's controls;
+- local references can be stale, because no `fetch` is ever automatic.

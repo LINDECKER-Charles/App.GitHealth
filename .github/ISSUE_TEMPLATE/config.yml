@@ -1,22 +1,20 @@
 blank_issues_enabled: false
 
 contact_links:
-  - name: Question d'usage
+  - name: Usage question
     url: https://github.com/LINDECKER-Charles/App.GitHealth/discussions
     about: >-
-      « Comment faire pour… », « pourquoi ce résultat » : posez la question dans les
-      discussions. Vérifiez d'abord le guide utilisateur, le dépannage et les limites
-      connues.
+      "How do I…", "why this result": ask in the discussions. Check the user guide, the
+      troubleshooting guide and the known limitations first.
 
-  - name: Signaler une faille de sécurité
+  - name: Report a security vulnerability
     url: https://github.com/LINDECKER-Charles/App.GitHealth/security/advisories/new
     about: >-
-      Ne jamais publier une faille dans une issue publique. Utilisez un avis de sécurité
-      privé — écriture Git non voulue, sortie de la racine Docker, lecture inter-origine
-      ou fuite de données.
+      Never publish a vulnerability in a public issue. Use a private security advisory —
+      unintended Git write, Docker root escape, cross-origin read or data leak.
 
-  - name: Lire la documentation
+  - name: Read the documentation
     url: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/USER_GUIDE.md
     about: >-
-      Guide utilisateur, dépannage et limites connues répondent à la plupart des
-      surprises liées à la sémantique de Git.
+      The user guide, the troubleshooting guide and the known limitations answer most of
+      the surprises tied to Git semantics.

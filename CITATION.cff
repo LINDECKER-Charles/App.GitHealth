@@ -1,11 +1,10 @@
 cff-version: 1.2.0
 title: GitHealth
 message: >-
-  GitHealth est distribué sous licence MIT : l'usage, la modification et la
-  redistribution sont libres, à condition de conserver la mention de copyright
-  et le texte de la licence. Si vous réutilisez ce projet, que vous vous en
-  inspirez ou que vous le citez dans un article, un article de blog ou une
-  présentation, merci de citer l'original avec les métadonnées ci-dessous.
+  GitHealth is distributed under the MIT license: use, modification and
+  redistribution are free, provided the copyright notice and the license text are
+  kept. If you reuse this project, draw inspiration from it, or cite it in a
+  paper, a blog post or a talk, please cite the original with the metadata below.
 type: software
 authors:
   - family-names: LINDECKER
@@ -14,12 +13,11 @@ authors:
 repository-code: https://github.com/LINDECKER-Charles/App.GitHealth
 url: https://github.com/LINDECKER-Charles/App.GitHealth
 abstract: >-
-  Application web locale qui analyse les branches d'un dépôt Git par rapport à
-  une branche de référence. Elle mesure l'avance, le retard, la fusion,
-  l'activité et les contributeurs de chaque branche afin de repérer celles qui
-  sont fusionnées, inactives, divergentes ou probablement abandonnées, sans
-  jamais modifier le dépôt analysé ni transmettre de données à un service
-  externe.
+  A local web application that analyses the branches of a Git repository against
+  a baseline branch. It measures how far ahead and behind each branch is, its
+  merge state, its activity and its contributors, in order to spot the ones that
+  are merged, inactive, diverged or probably abandoned — without ever modifying
+  the analysed repository or sending data to an external service.
 keywords:
   - git
   - branch-management

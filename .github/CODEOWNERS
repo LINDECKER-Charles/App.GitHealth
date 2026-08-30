@@ -1,18 +1,18 @@
-# Propriétaires du code GitHealth.
-# Chaque règle attribue une revue obligatoire ; la dernière règle qui correspond gagne.
-# Voir https://docs.github.com/articles/about-code-owners
+# GitHealth code owners.
+# Each rule assigns a mandatory review; the last matching rule wins.
+# See https://docs.github.com/articles/about-code-owners
 
-# Défaut — tout le dépôt.
+# Default — the whole repository.
 *                       @LINDECKER-Charles
 
-# Sécurité, licence et attribution : relecture systématique.
+# Security, license and attribution: systematic review.
 /LICENSE                @LINDECKER-Charles
 /docs/SECURITY_AUDIT.md @LINDECKER-Charles
 /CITATION.cff           @LINDECKER-Charles
 /THIRD-PARTY-NOTICES.md @LINDECKER-Charles
 
-# Chaîne de livraison, gouvernance et cadre de collaboration — workflows,
-# conteneur, publication native, politique de sécurité et code de conduite.
+# Supply chain, governance and collaboration framework — workflows,
+# container, native publishing, security policy and code of conduct.
 /.github/               @LINDECKER-Charles
 /Dockerfile             @LINDECKER-Charles
 /compose.yaml           @LINDECKER-Charles

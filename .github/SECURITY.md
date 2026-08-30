@@ -1,32 +1,31 @@
-# Politique de sécurité
+# Security policy
 
-## Versions prises en charge
+## Supported versions
 
-Pendant la phase release candidate, seule la dernière version `0.1.0-rc.*` reçoit des
-correctifs de sécurité. Cette politique sera révisée à la première version stable.
+During the release candidate phase, only the latest `0.1.0-rc.*` version receives security
+fixes. This policy will be revised at the first stable version.
 
-## Signaler une vulnérabilité
+## Reporting a vulnerability
 
-Ne pas ouvrir d'issue publique avec une preuve d'exploitation, un chemin local ou des
-données d'auteur. Utiliser la fonctionnalité **Security advisories** du dépôt GitHub pour
-créer un signalement privé. Si elle n'est pas disponible, contacter le mainteneur par le
-canal confidentiel habituel de l'organisation.
+Do not open a public issue containing a proof of exploitation, a local path or author data.
+Use the GitHub repository's **Security advisories** feature to create a private report. If
+it is not available, contact the maintainer through the organisation's usual confidential
+channel.
 
-Inclure, si possible :
+Include, where possible:
 
-- la version et le mode d'exécution concernés ;
-- les préconditions et étapes minimales de reproduction ;
-- l'impact attendu, sans joindre de dépôt d'entreprise ;
-- une proposition de correction ou de test de non-régression.
+- the version and execution mode concerned;
+- the preconditions and the minimal reproduction steps;
+- the expected impact, without attaching a company repository;
+- a suggested fix or regression test.
 
-Un accusé de réception est visé sous trois jours ouvrés. La correction est priorisée
-selon l'exploitabilité et l'impact sur les dépôts, les identités d'auteur et la base
-locale. Une publication coordonnée est convenue avant toute divulgation.
+An acknowledgement is aimed for within three business days. The fix is prioritised
+according to exploitability and impact on the repositories, the author identities and the
+local database. Coordinated disclosure is agreed before anything is made public.
 
-## Périmètre de confiance
+## Trust boundary
 
-GitHealth est une application locale mono-utilisateur. L'exposition volontaire sur un
-réseau, la modification du binaire, un système déjà compromis ou un logiciel exécuté
-avec les mêmes droits que l'utilisateur sortent du modèle de menace du MVP. Les défauts
-qui permettent néanmoins une écriture Git, une sortie de racine Docker, une lecture
-inter-origine ou une exfiltration silencieuse restent dans le périmètre.
+GitHealth is a local, single-user application. Deliberate network exposure, modifying the
+binary, an already compromised system, or software running with the same rights as the user
+fall outside the MVP threat model. Defects that nevertheless allow a Git write, a Docker
+root escape, a cross-origin read or a silent exfiltration remain in scope.

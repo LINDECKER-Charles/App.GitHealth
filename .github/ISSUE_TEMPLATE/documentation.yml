@@ -1,5 +1,5 @@
 name: Documentation
-description: Signaler une documentation fausse, incomplète ou trompeuse
+description: Report documentation that is wrong, incomplete or misleading
 title: 'docs: '
 labels:
   - documentation
@@ -7,13 +7,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        Une documentation qui décrit un comportement que le produit n'a pas est un
-        défaut à part entière. Merci de le signaler.
+        Documentation describing a behaviour the product does not have is a defect in its
+        own right. Thank you for reporting it.
 
   - type: dropdown
     id: document
     attributes:
-      label: Document concerné
+      label: Document concerned
       options:
         - README.md
         - docs/USER_GUIDE.md
@@ -24,31 +24,30 @@ body:
         - docs/BENCHMARKING.md
         - docs/ARCHITECTURE.md
         - .github/CONTRIBUTING.md
-        - Autre
+        - Other
     validations:
       required: true
 
   - type: input
-    id: emplacement
+    id: location
     attributes:
-      label: Emplacement précis
-      description: Titre de section, ou lien vers la ligne concernée.
-      placeholder: '« Configurer les politiques », tableau de l''échelle réduite'
+      label: Precise location
+      description: Section heading, or a link to the line concerned.
+      placeholder: '"Configuring policies", shortened scale table'
     validations:
       required: true
 
   - type: textarea
-    id: probleme
+    id: problem
     attributes:
-      label: Ce qui ne va pas
+      label: What is wrong
       description: >-
-        Information fausse, étape manquante, formulation ambiguë, exemple qui ne
-        fonctionne pas.
+        Incorrect information, missing step, ambiguous wording, example that does not work.
     validations:
       required: true
 
   - type: textarea
-    id: correction
+    id: fix
     attributes:
-      label: Correction proposée
-      description: Si vous avez la bonne formulation, écrivez-la ici.
+      label: Suggested correction
+      description: If you have the right wording, write it here.

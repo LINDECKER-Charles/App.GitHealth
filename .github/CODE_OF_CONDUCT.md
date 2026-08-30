@@ -1,127 +1,120 @@
-# Code de conduite
+# Code of Conduct
 
-## Notre engagement
+## Our Pledge
 
-En tant que membres, contributrices, contributeurs et responsables de ce projet, nous
-nous engageons à faire de la participation à la communauté GitHealth une expérience
-exempte de harcèlement pour tout le monde, quels que soient l'âge, la morphologie, le
-handicap visible ou invisible, l'origine ethnique, les caractéristiques sexuelles,
-l'identité ou l'expression de genre, le niveau d'expérience, la formation, la situation
-socio-économique, la nationalité, l'apparence personnelle, la religion ou l'orientation
-sexuelle.
+We as members, contributors, and leaders pledge to make participation in the GitHealth
+community a harassment-free experience for everyone, regardless of age, body size, visible
+or invisible disability, ethnicity, sex characteristics, gender identity and expression,
+level of experience, education, socio-economic status, nationality, personal appearance,
+race, religion, or sexual identity and orientation.
 
-Nous nous engageons à agir et à interagir de manière à contribuer à une communauté
-ouverte, accueillante, diverse, inclusive et saine.
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse,
+inclusive, and healthy community.
 
-## Nos critères
+## Our Standards
 
-Exemples de comportements qui contribuent à un environnement positif :
+Examples of behaviour that contributes to a positive environment:
 
-- faire preuve d'empathie et de bienveillance envers les autres ;
-- respecter les opinions, points de vue et expériences divergents ;
-- donner et accepter avec grâce les critiques constructives ;
-- assumer ses erreurs, s'en excuser auprès des personnes affectées et en tirer des
-  enseignements ;
-- se concentrer sur ce qui est le mieux pour la communauté, pas seulement pour soi.
+- demonstrating empathy and kindness toward other people;
+- being respectful of differing opinions, viewpoints, and experiences;
+- giving and gracefully accepting constructive feedback;
+- accepting responsibility for our mistakes, apologising to those affected, and learning
+  from the experience;
+- focusing on what is best for the community, not just for ourselves.
 
-Exemples de comportements inacceptables :
+Examples of unacceptable behaviour:
 
-- l'usage de langage ou d'imagerie sexualisés, et les avances sexuelles de toute nature ;
-- le trolling, les commentaires insultants ou désobligeants, et les attaques personnelles
-  ou politiques ;
-- le harcèlement en public ou en privé ;
-- la publication d'informations privées d'autrui — adresse physique ou électronique,
-  identité d'auteur extraite d'un dépôt d'entreprise — sans autorisation explicite ;
-- la publication d'un chemin, d'un nom de dépôt ou d'un journal d'analyse appartenant à
-  un tiers dans une issue publique ;
-- tout autre comportement qui pourrait raisonnablement être considéré comme inapproprié
-  dans un cadre professionnel.
+- the use of sexualised language or imagery, and sexual attention or advances of any kind;
+- trolling, insulting or derogatory comments, and personal or political attacks;
+- public or private harassment;
+- publishing others' private information — a physical or email address, an author identity
+  extracted from a company repository — without their explicit permission;
+- publishing a path, a repository name or an analysis log belonging to a third party in a
+  public issue;
+- other conduct which could reasonably be considered inappropriate in a professional
+  setting.
 
-## Responsabilités d'application
+## Enforcement Responsibilities
 
-Les responsables du projet ont la charge de clarifier et de faire respecter ces critères,
-et prendront des mesures correctives appropriées et équitables face à tout comportement
-jugé inapproprié, menaçant, offensant ou nuisible.
+Project maintainers are responsible for clarifying and enforcing these standards, and will
+take appropriate and fair corrective action in response to any behaviour that they deem
+inappropriate, threatening, offensive, or harmful.
 
-Ils ont le droit et la responsabilité de supprimer, modifier ou rejeter les commentaires,
-commits, code, modifications du wiki, issues et autres contributions qui ne respectent
-pas ce code de conduite, et communiqueront les raisons de leurs décisions de modération
-lorsque cela est approprié.
+They have the right and responsibility to remove, edit, or reject comments, commits, code,
+wiki edits, issues, and other contributions that are not aligned with this Code of Conduct,
+and will communicate reasons for moderation decisions when appropriate.
 
-## Portée
+## Scope
 
-Ce code de conduite s'applique à tous les espaces du projet — dépôt, issues, pull
-requests, discussions — ainsi qu'aux espaces publics où une personne représente le projet,
-par exemple via une adresse électronique officielle, un compte sur un réseau social ou
-une intervention lors d'un événement.
+This Code of Conduct applies within all project spaces — repository, issues, pull requests,
+discussions — and also applies when an individual is officially representing the project in
+public spaces, for example through an official email address, a social media account, or
+acting as an appointed representative at an event.
 
-## Application
+## Enforcement
 
-Les comportements abusifs, harcelants ou autrement inacceptables peuvent être signalés
-aux responsables du projet à l'adresse **charles.lindecker@outlook.fr**.
+Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported to the
+project maintainers at **charles.lindecker@outlook.fr**.
 
-Toutes les plaintes seront examinées et instruites rapidement et équitablement. Les
-responsables sont tenus de respecter la vie privée et la sécurité de la personne à
-l'origine du signalement.
+All complaints will be reviewed and investigated promptly and fairly. The maintainers are
+obligated to respect the privacy and security of the reporter of any incident.
 
-> Une faille de sécurité n'est pas un incident de conduite : elle suit la procédure
-> décrite dans [SECURITY.md](SECURITY.md), et ne doit jamais être publiée dans une issue
-> publique.
+> A security vulnerability is not a conduct incident: it follows the procedure described in
+> [SECURITY.md](SECURITY.md), and must never be published in a public issue.
 
-## Lignes directrices d'application
+## Enforcement Guidelines
 
-Les responsables suivront ces lignes directrices pour déterminer les conséquences de tout
-acte qu'ils jugent contraire à ce code de conduite.
+Maintainers will follow these Community Impact Guidelines in determining the consequences
+for any action they deem in violation of this Code of Conduct.
 
 ### 1. Correction
 
-**Impact** — usage d'un langage inapproprié ou d'un comportement jugé non professionnel
-ou malvenu.
+**Community impact** — use of inappropriate language or other behaviour deemed
+unprofessional or unwelcome.
 
-**Conséquence** — un avertissement écrit et privé, apportant de la clarté sur la nature
-de la violation et expliquant en quoi le comportement était inapproprié. Des excuses
-publiques peuvent être demandées.
+**Consequence** — a private, written warning, providing clarity around the nature of the
+violation and an explanation of why the behaviour was inappropriate. A public apology may
+be requested.
 
-### 2. Avertissement
+### 2. Warning
 
-**Impact** — une violation causée par un incident isolé ou par une série d'actions.
+**Community impact** — a violation through a single incident or series of actions.
 
-**Conséquence** — un avertissement assorti de conséquences en cas de comportement
-persistant. Aucune interaction avec les personnes concernées, y compris non sollicitée
-avec celles qui appliquent le code de conduite, pendant une période déterminée. Cela
-inclut les espaces communautaires comme les canaux externes. Le non-respect de ces
-conditions peut mener à un bannissement temporaire ou permanent.
+**Consequence** — a warning with consequences for continued behaviour. No interaction with
+the people involved, including unsolicited interaction with those enforcing the Code of
+Conduct, for a specified period of time. This includes community spaces as well as external
+channels. Violating these terms may lead to a temporary or permanent ban.
 
-### 3. Bannissement temporaire
+### 3. Temporary Ban
 
-**Impact** — une violation grave des critères de la communauté, y compris un comportement
-inapproprié maintenu dans la durée.
+**Community impact** — a serious violation of community standards, including sustained
+inappropriate behaviour.
 
-**Conséquence** — un bannissement temporaire de toute forme d'interaction ou de
-communication publique avec la communauté pendant une période déterminée. Aucune
-interaction publique ou privée avec les personnes concernées n'est autorisée pendant
-cette période. Le non-respect de ces conditions peut mener à un bannissement permanent.
+**Consequence** — a temporary ban from any sort of interaction or public communication with
+the community for a specified period of time. No public or private interaction with the
+people involved is allowed during this period. Violating these terms may lead to a
+permanent ban.
 
-### 4. Bannissement permanent
+### 4. Permanent Ban
 
-**Impact** — la démonstration d'un schéma répété de violation des critères de la
-communauté, incluant un comportement inapproprié maintenu dans la durée, le harcèlement
-d'une personne, ou l'agression ou le dénigrement de catégories de personnes.
+**Community impact** — demonstrating a pattern of violation of community standards,
+including sustained inappropriate behaviour, harassment of an individual, or aggression
+toward or disparagement of classes of individuals.
 
-**Conséquence** — un bannissement permanent de toute forme d'interaction publique au sein
-de la communauté du projet.
+**Consequence** — a permanent ban from any sort of public interaction within the project
+community.
 
 ## Attribution
 
-Ce code de conduite est adapté du [Contributor Covenant][homepage], version 2.1,
-disponible à l'adresse
+This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 2.1,
+available at
 https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
 
-Les lignes directrices d'application s'inspirent de l'[échelle d'application du code de
-conduite de Mozilla](https://github.com/mozilla/diversity).
+The Community Impact Guidelines were inspired by
+[Mozilla's code of conduct enforcement ladder](https://github.com/mozilla/diversity).
 
 [homepage]: https://www.contributor-covenant.org
 
-Pour obtenir des réponses aux questions courantes sur ce code de conduite, consultez la
-FAQ à l'adresse https://www.contributor-covenant.org/faq. Des traductions sont
-disponibles à l'adresse https://www.contributor-covenant.org/translations.
+For answers to common questions about this Code of Conduct, see the FAQ at
+https://www.contributor-covenant.org/faq. Translations are available at
+https://www.contributor-covenant.org/translations.

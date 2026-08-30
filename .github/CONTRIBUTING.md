@@ -1,76 +1,77 @@
-# Contribuer à GitHealth
+# Contributing to GitHealth
 
-Merci de l'intérêt porté au projet. Ce document décrit comment signaler un problème,
-préparer son environnement, écrire du code conforme aux conventions du dépôt et proposer
-une pull request.
+Thank you for your interest in the project. This document explains how to report a
+problem, prepare your environment, write code that follows the repository conventions, and
+open a pull request.
 
-La participation au projet implique le respect du [code de conduite](CODE_OF_CONDUCT.md).
+Taking part in the project implies respecting the [code of conduct](CODE_OF_CONDUCT.md).
 
-## Licence des contributions
+## License of contributions
 
-GitHealth est distribué sous [licence MIT](../LICENSE). En proposant une contribution, vous
-acceptez qu'elle soit publiée sous cette même licence et vous confirmez avoir le droit de
-la soumettre. Il n'y a pas de CLA à signer.
+GitHealth is distributed under the [MIT license](../LICENSE). By offering a contribution,
+you agree that it will be published under that same license, and you confirm that you have
+the right to submit it. There is no CLA to sign.
 
-N'intégrez pas de code, de police, d'icône ou de texte dont la licence est inconnue ou
-incompatible avec MIT. Tout ajout de dépendance ou de ressource tierce doit être déclaré
-dans [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md).
+Do not integrate code, fonts, icons or text whose license is unknown or incompatible with
+MIT. Every added dependency or third-party asset must be declared in
+[THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md).
 
-## Avant d'ouvrir une issue
+## Before opening an issue
 
-Commencez par vérifier :
+Start by checking:
 
-1. le [guide utilisateur](../docs/USER_GUIDE.md), qui décrit le comportement attendu ;
-2. le [dépannage](../docs/TROUBLESHOOTING.md) ;
-3. les [limites connues](../docs/KNOWN_LIMITATIONS.md) — plusieurs comportements
-   surprenants sont des conséquences assumées de la sémantique Git ;
-4. les issues existantes, ouvertes comme fermées.
+1. the [user guide](../docs/USER_GUIDE.md), which describes the expected behaviour;
+2. the [troubleshooting guide](../docs/TROUBLESHOOTING.md);
+3. the [known limitations](../docs/KNOWN_LIMITATIONS.md) — several surprising behaviours
+   are accepted consequences of Git semantics;
+4. the existing issues, both open and closed.
 
-Puis choisissez le bon canal :
+Then pick the right channel:
 
-| Situation | Canal |
+| Situation | Channel |
 | --- | --- |
-| Bug reproductible | issue **Rapport de bug** |
-| Idée ou besoin nouveau | issue **Proposition de fonctionnalité** |
-| Documentation fausse ou incomplète | issue **Documentation** |
-| Question d'usage | voir [SUPPORT.md](SUPPORT.md) |
-| **Faille de sécurité** | **jamais une issue publique** — voir [SECURITY.md](SECURITY.md) |
+| Reproducible bug | **Bug report** issue |
+| New idea or need | **Feature request** issue |
+| Wrong or incomplete documentation | **Documentation** issue |
+| Usage question | see [SUPPORT.md](SUPPORT.md) |
+| **Security vulnerability** | **never a public issue** — see [SECURITY.md](SECURITY.md) |
 
-Ne joignez jamais à une issue publique un chemin de dépôt d'entreprise, un nom de
-branche interne, une adresse d'auteur ou un extrait de base SQLite. Anonymisez avant de
-publier.
+Never attach a company repository path, an internal branch name, an author address or an
+extract of a SQLite database to a public issue. Anonymise before publishing.
 
-## Périmètre du projet
+## Project scope
 
-GitHealth **observe** un dépôt, il ne le modifie jamais. Les contributions suivantes
-seront refusées, quelle que soit leur qualité :
+GitHealth **observes** a repository, it never modifies it. The following contributions will
+be declined, however good they are:
 
-- supprimer, fusionner, faire un checkout ou pousser une branche ;
-- lancer automatiquement `git fetch` ou `git remote prune` ;
-- cloner un dépôt distant ou gérer des identifiants ;
-- transmettre des chemins, des noms de branches ou des identités d'auteur à un service
-  externe ;
-- transformer le produit en application multi-utilisateur exposée sur un réseau.
+- deleting, merging, checking out or pushing a branch;
+- automatically running `git fetch` or `git remote prune`;
+- cloning a remote repository or handling credentials;
+- sending paths, branch names or author identities to an external service;
+- turning the product into a multi-user application exposed on a network.
 
-Le périmètre complet et ses raisons sont décrits dans [ARCHITECTURE.md](../docs/ARCHITECTURE.md).
-Une évolution qui touche à ces frontières se discute dans une issue **avant** d'écrire du
-code.
+The full scope and the reasons behind it are described in
+[ARCHITECTURE.md](../docs/ARCHITECTURE.md). A change that touches those boundaries is
+discussed in an issue **before** any code is written.
 
-## Préparer l'environnement
+## Preparing the environment
 
-Les versions sont verrouillées par `global.json` et `.nvmrc` ; les respecter évite des
-échecs de CI difficiles à diagnostiquer.
+Versions are pinned by `global.json` and `.nvmrc`; honouring them avoids CI failures that
+are hard to diagnose.
 
-| Outil | Version | Source |
+| Tool | Version | Source |
 | --- | --- | --- |
-| SDK .NET | 10.0.400 | `global.json` |
+| .NET SDK | 10.0.400 | `global.json` |
 | Node.js | 24.20.0 LTS | `.nvmrc` |
 | npm | 11.19.0 | `packageManager` |
-| Git | 2.38 ou plus récent | prérequis d'exécution |
-| PowerShell 7 | pour les scripts `eng/` et `tests/Infrastructure/` | facultatif |
-| Docker | pour la vérification Compose | facultatif |
+| Git | 2.38 or newer | runtime prerequisite |
+| PowerShell 7 | for the `eng/` and `tests/Infrastructure/` scripts | macOS and Linux |
+| Docker | for the Compose check | optional |
 
-Restauration des dépendances depuis la racine du dépôt :
+On Windows, the PowerShell 5.1 shipped with the system is enough; elsewhere, PowerShell
+installs in one command, detailed in [`eng/README.md`](../eng/README.md).
+
+Restoring the dependencies from the repository root:
 
 ```shell
 dotnet restore App.GitHealth.sln
@@ -78,68 +79,83 @@ npm ci --prefix src/App.GitHealth.Web
 npm ci --prefix tests/App.GitHealth.E2E
 ```
 
-## Boucle de développement
+## Development loop
 
-Deux terminaux suffisent pour travailler sur l'interface avec l'API en direct.
+A single entry point covers local builds on all three operating systems, from day-to-day
+work up to the installer. The available levels and their limits are detailed in
+[`eng/README.md`](../eng/README.md).
 
 ```shell
-# terminal 1 — API sur http://localhost:5115
-dotnet run --project src/App.GitHealth.Api
+./eng/build.sh dev      # macOS, Linux
+```
+
+```powershell
+eng\build.cmd dev       # Windows
+```
+
+The `dev` level starts the Angular interface and the API in one terminal and stops them
+together. Both processes can also be launched by hand, as long as you keep the flags the
+script passes: without `--port`, the native launcher picks a random port and the Angular
+proxy can no longer find the API; without `--no-browser`, it opens a desktop window on an
+empty `wwwroot`.
+
+```shell
+# terminal 1 — API on http://localhost:5115
+dotnet run --project src/App.GitHealth.Api -- --no-browser --port 5115
 ```
 
 ```shell
-# terminal 2 — interface Angular sur http://localhost:4200
+# terminal 2 — Angular interface on http://localhost:4200
 npm start --prefix src/App.GitHealth.Web
 ```
 
-Le serveur de développement Angular relaie `/api`, `/health` et `/openapi` vers l'API via
-`proxy.conf.json`. En développement, l'origine `http://localhost:4200` est explicitement
-autorisée par `LocalSecurity:AllowedOrigins` ; en production, l'interface et l'API
-partagent la même origine.
+The Angular development server forwards `/api`, `/health` and `/openapi` to the API through
+`proxy.conf.json`. In development, the `http://localhost:4200` origin is explicitly allowed
+by `LocalSecurity:AllowedOrigins`; in production, the interface and the API share the same
+origin.
 
-Pour reproduire l'application telle qu'elle est livrée — bundle Angular servi depuis
-`wwwroot` — publier puis lancer le résultat :
+To reproduce the application as it ships — the Angular bundle served from `wwwroot` —
+publish it and run the result:
 
 ```shell
-dotnet publish src/App.GitHealth.Api/App.GitHealth.Api.csproj \
-  --configuration Release --output artifacts/publish
-./artifacts/publish/githealth --repo "$HOME/Dev/MonDepot"
+./eng/build.sh publish
+./eng/build.sh run --repo "$HOME/Dev/MyRepository"
 ```
 
-Plusieurs comportements ne se manifestent que dans ce mode intégré, en particulier ceux
-liés à la politique de sécurité du contenu et aux adresses profondes. Une correction qui
-touche au service des fichiers statiques, à la CSP ou au routage doit être vérifiée ainsi.
+Several behaviours only show up in that integrated mode, in particular those tied to the
+content security policy and to deep links. A fix touching static file serving, the CSP or
+routing must be verified that way.
 
-## Conventions de code
+## Code conventions
 
-Les conventions complètes vivent dans [AGENTS.md](../AGENTS.md). L'essentiel :
+The full conventions live in [AGENTS.md](../AGENTS.md). The essentials:
 
-- **DRY, KISS, SOLID** comme défauts ; s'en écarter demande une raison explicite ;
-- **un seul élément public par fichier**, nommé comme le fichier ;
-- **pas de nombre ni de chaîne magique** — une constante nommée dit l'intention ;
-- **guard clauses** plutôt que `if/else` imbriqués ;
-- **CQS** — une fonction modifie l'état ou retourne une valeur, jamais les deux ;
-- nommage C# idiomatique : `PascalCase` pour les types et membres, `camelCase` pour les
-  locales et paramètres, `I` devant les interfaces, `_camelCase` pour les champs privés ;
-- booléens préfixés par `Is`, `Has`, `Should`, `Can`.
+- **DRY, KISS, SOLID** as defaults; departing from them requires an explicit reason;
+- **a single public element per file**, named after the file;
+- **no magic number or string** — a named constant states the intent;
+- **guard clauses** rather than nested `if/else`;
+- **CQS** — a function either changes state or returns a value, never both;
+- idiomatic C# naming: `PascalCase` for types and members, `camelCase` for locals and
+  parameters, `I` in front of interfaces, `_camelCase` for private fields;
+- booleans prefixed with `Is`, `Has`, `Should`, `Can`.
 
-Limites vérifiables, à respecter :
+Verifiable limits, to be honoured:
 
-| Règle | Limite |
+| Rule | Limit |
 | --- | --- |
-| Taille d'un fichier | ≤ 300 lignes (alerte), 400 maximum |
-| Fichiers par dossier | ≤ 10 |
-| Taille d'une fonction | ≤ 30 lignes |
-| Nombre de paramètres | ≤ 3 |
-| Profondeur d'imbrication | ≤ 3 niveaux |
-| Complexité cyclomatique | ≤ 10 par fonction |
-| Longueur de ligne | ≤ 100 caractères |
+| File size | ≤ 300 lines (warning), 400 maximum |
+| Files per folder | ≤ 10 |
+| Function size | ≤ 30 lines |
+| Number of parameters | ≤ 3 |
+| Nesting depth | ≤ 3 levels |
+| Cyclomatic complexity | ≤ 10 per function |
+| Line length | ≤ 100 characters |
 
-Le dépôt compile avec `TreatWarningsAsErrors` et `EnforceCodeStyleInBuild` : un
-avertissement est un échec de build, pas un détail à traiter plus tard.
+The repository builds with `TreatWarningsAsErrors` and `EnforceCodeStyleInBuild`: a warning
+is a build failure, not a detail to handle later.
 
-Le formatage n'est pas négociable et n'a pas à être discuté en revue — il est appliqué
-par outil :
+Formatting is not negotiable and does not have to be discussed in review — it is applied by
+tooling:
 
 ```shell
 dotnet format App.GitHealth.sln
@@ -149,28 +165,28 @@ dotnet format App.GitHealth.sln
 
 ## Tests
 
-**Toute fonctionnalité s'accompagne de ses tests**, dans la même branche et la même pull
-request. Le principe est de couvrir le comportement nominal et les cas limites que la
-fonctionnalité introduit — ni plus, ni moins. On ne teste ni le framework, ni les
-bibliothèques tierces, et on ne court pas après un pourcentage de couverture.
+**Every feature ships with its tests**, in the same branch and the same pull request. The
+principle is to cover the nominal behaviour and the edge cases the feature introduces — no
+more, no less. We test neither the framework nor third-party libraries, and we do not chase
+a coverage percentage.
 
-Un bon test échoue quand le **comportement** casse, pas quand l'implémentation change.
+A good test fails when the **behaviour** breaks, not when the implementation changes.
 
-| Suite | Emplacement | Rôle |
+| Suite | Location | Role |
 | --- | --- | --- |
-| Domaine | `tests/App.GitHealth.Core.Tests` | règles de classement, politiques, calculs |
-| API | `tests/App.GitHealth.Api.Tests` | points d'entrée HTTP, file d'analyse, sécurité |
-| Git | `tests/App.GitHealth.Git.IntegrationTests` | lecture réelle de dépôts fabriqués |
-| Bout en bout | `tests/App.GitHealth.E2E` | parcours utilisateur sous Playwright |
+| Domain | `tests/App.GitHealth.Core.Tests` | classification rules, policies, computations |
+| API | `tests/App.GitHealth.Api.Tests` | HTTP entry points, analysis queue, security |
+| Git | `tests/App.GitHealth.Git.IntegrationTests` | real reads of purpose-built repositories |
+| End to end | `tests/App.GitHealth.E2E` | the user journey under Playwright |
 
-Exécution :
+Running them:
 
 ```shell
 dotnet test App.GitHealth.sln
 npm run test:ci --prefix src/App.GitHealth.Web
 ```
 
-Les tests bout en bout ont besoin d'une publication et de Chromium :
+The end-to-end tests need a publication and Chromium:
 
 ```shell
 (cd tests/App.GitHealth.E2E && npx playwright install --with-deps chromium)
@@ -178,13 +194,12 @@ GITHEALTH_E2E_PUBLISH="$PWD/artifacts/publish" \
   npm run test:ci --prefix tests/App.GitHealth.E2E
 ```
 
-Les tests d'intégration Git fabriquent leurs propres dépôts dans des dossiers temporaires
-et isolent l'environnement Git. Ne les faites jamais pointer vers un dépôt réel de la
-machine.
+The Git integration tests build their own repositories in temporary folders and isolate the
+Git environment. Never point them at a real repository on your machine.
 
-## Vérifier avant de pousser
+## Checks before pushing
 
-Cette séquence reproduit ce que fait la CI. La passer localement évite l'aller-retour :
+This sequence reproduces what CI does. Running it locally avoids the round trip:
 
 ```shell
 dotnet format App.GitHealth.sln --verify-no-changes
@@ -196,48 +211,57 @@ dotnet test App.GitHealth.sln --configuration Release --no-build
 npm run test:ci --prefix src/App.GitHealth.Web
 ```
 
-Si la contribution touche à Docker ou à Compose :
+If the contribution touches the `eng/` scripts:
+
+```shell
+pwsh ./tests/Infrastructure/Invoke-BuildEnvironmentTests.ps1
+```
+
+If it touches Docker or Compose:
 
 ```shell
 pwsh ./tests/Infrastructure/Assert-ComposeConfiguration.ps1
 docker buildx build --check .
 ```
 
-Le détail des workflows se trouve dans [docs/DEVOPS.md](../docs/DEVOPS.md).
+The workflows are detailed in [docs/DEVOPS.md](../docs/DEVOPS.md).
 
 ## Branches
 
-Une branche part de `main` et y revient par pull request. Une branche = un sujet.
+A branch starts from `dev` and returns to it through a pull request. One branch = one
+topic. `dev` is the integration branch: `test` and `main` are advanced automatically or at
+release time, never by hand. The model is detailed in
+[docs/DEVOPS.md](../docs/DEVOPS.md).
 
 ```
-type/description-courte
+type/short-description
 ```
 
-- **type** : `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `style`, `build`, `ci`,
-  `chore` — toujours la forme courte, `feat/` et jamais `feature/` ;
-- **description** : `kebab-case`, sans accent, deux à cinq mots qui disent l'objet de la
-  branche.
+- **type**: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `style`, `build`, `ci`,
+  `chore` — always the short form, `feat/` and never `feature/`;
+- **description**: `kebab-case`, without accents, two to five words stating what the branch
+  is about.
 
-Exemples : `feat/scan-dossier-parallele`, `fix/csp-base-uri`,
+Examples: `feat/scan-dossier-parallele`, `fix/csp-base-uri`,
 `docs/guide-utilisateur-politiques`.
 
 ## Commits
 
-Le dépôt suit **Conventional Commits**, rédigés **en français** :
+The repository follows **Conventional Commits**, written **in French**:
 
 ```
 type(scope): description
 ```
 
-- description à l'infinitif, minuscule initiale, sans point final ;
-- sujet de **72 caractères maximum** ;
-- corps facultatif, réservé au *pourquoi* ;
-- une rupture de compatibilité se signale par un pied `BREAKING CHANGE:` ;
-- **un commit = un changement cohérent** : ne mélangez jamais deux sujets.
+- description in the infinitive, lowercase initial, no trailing period;
+- subject of **72 characters maximum**;
+- optional body, reserved for the *why*;
+- a breaking change is signalled by a `BREAKING CHANGE:` footer;
+- **one commit = one coherent change**: never mix two topics.
 
-Le scope est obligatoire dès que la carte ci-dessous couvre les fichiers modifiés :
+The scope is mandatory as soon as the map below covers the modified files:
 
-| Chemin | Scope |
+| Path | Scope |
 | --- | --- |
 | `src/App.GitHealth.Api/**` | `api` |
 | `src/App.GitHealth.Core/**` | `core` |
@@ -245,13 +269,12 @@ Le scope est obligatoire dès que la carte ci-dessous couvre les fichiers modifi
 | `.github/**` | `ci` |
 | `docs/**` | `docs` |
 | `docker*`, `compose*`, `deploy*`, `k8s*` | `infra` |
-| config transverse à la racine | aucun scope, type `chore` |
+| cross-cutting configuration at the root | no scope, type `chore` |
 
-Les tests voyagent avec le code qu'ils testent — ils prennent son scope, pas un scope
-`test` séparé. L'entrée de changelog est jointe au commit de la fonctionnalité ou du
-correctif qu'elle documente.
+Tests travel with the code they test — they take its scope, not a separate `test` scope.
+The changelog entry is attached to the commit of the feature or the fix it documents.
 
-Exemple :
+Example:
 
 ```
 feat(front): ajouter la palette de commandes au clavier
@@ -261,39 +284,38 @@ docs(docs): documenter l'échelle réduite des branches fusionnées
 
 ## Changelog
 
-Toute évolution visible par l'utilisateur — fonctionnalité, correctif, changement de
-comportement, limite nouvelle — s'ajoute à la section `[Non publié]` de
-[CHANGELOG.md](../CHANGELOG.md), sous `Ajouté`, `Modifié`, `Corrigé`, `Sécurité` ou
-`Limites`.
+Every user-visible change — feature, fix, behaviour change, new limitation — is added to
+the `[Unreleased]` section of [CHANGELOG.md](../CHANGELOG.md), under `Added`, `Changed`,
+`Fixed`, `Security` or `Limitations`.
 
-L'entrée décrit ce que la personne qui utilise GitHealth constate, pas la mécanique
-interne. Un refactoring sans effet observable ne produit pas d'entrée.
+The entry describes what the person using GitHealth observes, not the internal mechanics. A
+refactoring with no observable effect produces no entry.
 
-## Ouvrir une pull request
+## Opening a pull request
 
-1. Créez la branche depuis `main`, en respectant le nommage ci-dessus.
-2. Écrivez le code, ses tests et son entrée de changelog.
-3. Passez la séquence de vérification locale.
-4. Ouvrez la pull request vers `main` et remplissez le gabarit.
-5. Une pull request en cours de travail s'ouvre en **brouillon**.
+1. Create the branch from `dev`, honouring the naming above.
+2. Write the code, its tests and its changelog entry.
+3. Run the local verification sequence.
+4. Open the pull request against `dev` and fill in the template.
+5. A pull request that is still work in progress opens as a **draft**.
 
-Une bonne pull request explique **pourquoi** le changement existe, ce qu'il change pour
-la personne qui utilise l'outil, et comment le vérifier. Un lien vers l'issue d'origine
-avec `Closes #123` clôt automatiquement celle-ci à la fusion.
+A good pull request explains **why** the change exists, what it changes for the person
+using the tool, and how to verify it. A link to the original issue with `Closes #123`
+closes it automatically on merge.
 
-Gardez les pull requests petites et centrées sur un sujet. Un renommage massif mélangé à
-un correctif rend la revue impossible : séparez-les en deux.
+Keep pull requests small and focused on one topic. A massive rename mixed with a fix makes
+review impossible: split them in two.
 
-## Revue et fusion
+## Review and merge
 
-La CI doit être verte avant toute revue. Les points regardés en priorité :
+CI must be green before any review. What is looked at first:
 
-- le comportement observé correspond-il à ce qui est annoncé ;
-- les tests échouent-ils réellement sans le correctif ;
-- les frontières du produit sont-elles respectées — aucune écriture Git, aucun accès
-  réseau, aucune fuite d'identité d'auteur ;
-- les conventions de taille, de nommage et de découpe sont-elles tenues ;
-- la documentation et le changelog suivent-ils le code.
+- does the observed behaviour match what is announced;
+- do the tests actually fail without the fix;
+- are the product boundaries respected — no Git write, no network access, no author
+  identity leak;
+- are the size, naming and slicing conventions honoured;
+- do the documentation and the changelog follow the code.
 
-Les retours de revue portent sur le code, jamais sur la personne. Une question en revue
-est une question, pas un reproche.
+Review feedback is about the code, never about the person. A question in review is a
+question, not a reproach.
