@@ -91,8 +91,8 @@ describe('App', () => {
 
     TestBed.inject(UpdateStore).status.set({
       availability: 'Available',
-      currentVersion: '0.1.0-rc.1',
-      availableVersion: '0.1.0-rc.2',
+      currentVersion: '0.1.0',
+      availableVersion: '0.1.1',
     });
     await fixture.whenStable();
 

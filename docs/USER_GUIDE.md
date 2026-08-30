@@ -1,6 +1,6 @@
 # GitHealth user guide
 
-This guide covers the `0.1.0-rc.1` release candidate. GitHealth runs on your machine,
+This guide covers version `0.1.0`. GitHealth runs on your machine,
 reads repositories that are already there, and keeps its results in a local SQLite
 database.
 

@@ -1,6 +1,6 @@
 {
   "name": "app-git-health-web",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0",
   "description": "Interface locale de diagnostic des branches Git",
   "scripts": {
     "ng": "ng",

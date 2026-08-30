@@ -308,7 +308,7 @@ repositories.
 7. Verify that no author data leaves the machine.
 8. Add an end-to-end scenario from launch to export.
 9. Complete the README, user guide, troubleshooting and known limitations.
-10. Produce a release candidate and test it on two large real repositories.
+10. Produce the first release and test it on two large real repositories.
 
 ### MVP exit criteria
 

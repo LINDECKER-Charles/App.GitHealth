@@ -80,7 +80,7 @@
       <path d="M0 42H610" stroke="#3c3831" />
       <text y="76" fill="#a39d93" font-size="15">Windows · macOS · Docker</text>
       <text x="440" y="76" fill="#847e74" font-family="IBM Plex Mono, monospace"
-        font-size="13">0.1.0-rc.1</text>
+        font-size="13">0.1.0</text>
     </g>
 
     <g transform="translate(790 54)" filter="url(#shadow)">

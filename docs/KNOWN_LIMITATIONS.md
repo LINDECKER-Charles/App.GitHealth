@@ -1,4 +1,4 @@
-# Known limitations of `0.1.0-rc.1`
+# Known limitations of `0.1.0`
 
 - GitHealth only analyses repositories that are already present; it does not clone and
   does not handle forge credentials.

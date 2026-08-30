@@ -6,8 +6,8 @@ import { UpdateStore } from './update-store';
 
 const available: UpdateStatus = {
   availability: 'Available',
-  currentVersion: '0.1.0-rc.1',
-  availableVersion: '0.1.0-rc.2',
+  currentVersion: '0.1.0',
+  availableVersion: '0.1.1',
 };
 
 describe('UpdateStore', () => {
@@ -34,7 +34,7 @@ describe('UpdateStore', () => {
     http.expectOne('/api/updates').flush(available);
 
     expect(store.isAvailable()).toBe(true);
-    expect(store.availableVersion()).toBe('0.1.0-rc.2');
+    expect(store.availableVersion()).toBe('0.1.1');
   });
 
   it('reste muet quand les mises à jour ne sont pas prises en charge', () => {
@@ -81,7 +81,7 @@ describe('UpdateStore', () => {
     // 200 porteur d'un statut : l'hôte n'a rien appliqué et dit pourquoi.
     http.expectOne('/api/updates/apply').flush({
       availability: 'Unknown',
-      currentVersion: '0.1.0-rc.1',
+      currentVersion: '0.1.0',
       availableVersion: null,
     } satisfies UpdateStatus);
 

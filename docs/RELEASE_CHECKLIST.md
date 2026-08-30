@@ -1,6 +1,6 @@
-# Release candidate checklist
+# Release checklist
 
-Version being prepared: `0.1.0-rc.1`.
+Version being prepared: `0.1.0`.
 
 ## Automated checks
 
@@ -50,7 +50,7 @@ dotnet publish src/App.GitHealth.Api/App.GitHealth.Api.csproj `
 ./tests/Infrastructure/Invoke-RealRepositoryAcceptance.ps1 `
   -RepositoryPath @("D:\Repos\large-1", "D:\Repos\large-2") `
   -PublishDirectory artifacts/acceptance-app `
-  -ReportPath docs/release/acceptance-0.1.0-rc.1.json
+  -ReportPath docs/release/acceptance-0.1.0.json
 ```
 
 The script compares up to five branches of each repository with `git rev-list`, requires
@@ -64,8 +64,9 @@ report.
 - [x] known limitations reviewed in `docs/KNOWN_LIMITATIONS.md`
 - [x] security audit reviewed in `SECURITY_AUDIT.md`
 - [x] release notes reviewed
-- [ ] annotated tag `v0.1.0-rc.1` created from a green commit and pushed
-- [ ] GitHub release drafted on that tag, "pre-release" box ticked
+- [ ] annotated tag `v0.1.0` created from a green commit and pushed
+- [ ] GitHub release drafted on that tag, left as a normal release — a pre-release would be
+      skipped by `/releases/latest`, which the README and the Scoop manifest rely on
 - [ ] release published — publishing triggers `release.yml`, which attaches the archives,
       checksums, SBOMs, installers and manifests once the matrix is green
 - [ ] artefacts downloaded from the release and their checksums verified

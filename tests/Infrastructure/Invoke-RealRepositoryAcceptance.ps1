@@ -265,7 +265,7 @@ try {
     }
 
     $report = [ordered]@{
-        version = "0.1.0-rc.1"
+        version = "0.1.0"
         executedAtUtc = [DateTimeOffset]::UtcNow.ToString("O")
         platform = [Runtime.InteropServices.RuntimeInformation]::OSDescription
         restartPreservedProjects = $true

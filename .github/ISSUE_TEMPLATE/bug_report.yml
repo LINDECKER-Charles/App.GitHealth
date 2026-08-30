@@ -93,7 +93,7 @@ body:
     attributes:
       label: GitHealth version
       description: Archive name, release tag, or Docker image tag.
-      placeholder: 0.1.0-rc.1
+      placeholder: 0.1.0
     validations:
       required: true
 

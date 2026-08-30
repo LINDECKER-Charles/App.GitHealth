@@ -94,6 +94,6 @@ Run `docker compose config`, check the value of `GITHEALTH_REPOSITORIES_ROOT`, t
 
 ## macOS blocks the executable
 
-The release candidate is neither signed nor notarised. Verify the archive and its
+The published archives are neither signed nor notarised. Verify the archive and its
 checksum, then explicitly allow the first launch from the security settings. Signing and
 notarisation are planned before any wide distribution.

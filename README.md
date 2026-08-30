@@ -21,8 +21,8 @@
       src="https://github.com/LINDECKER-Charles/App.GitHealth/actions/workflows/security.yml/badge.svg">
   </a>
   <a href="https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest">
-    <img alt="Version 0.1.0-rc.1"
-      src="https://img.shields.io/badge/version-0.1.0--rc.1-a87b27">
+    <img alt="Version 0.1.0"
+      src="https://img.shields.io/badge/version-0.1.0-a87b27">
   </a>
   <a href="LICENSE">
     <img alt="MIT license"
@@ -153,9 +153,7 @@ use.
 A Scoop manifest ships with every Windows release and installs the portable archive:
 
 ```powershell
-# `/latest/` skips pre-releases: target the published version explicitly.
-$version = "v0.1.0-rc.1"
-$base = "https://github.com/LINDECKER-Charles/App.GitHealth/releases/download/$version"
+$base = "https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest/download"
 scoop install "$base/githealth.json"
 ```
 
@@ -248,13 +246,13 @@ Docker infrastructure and the browser journey.
 
 ## 07 — Project status
 
-The version being prepared is **`0.1.0-rc.1`**. It includes the desktop application with
-its Windows and macOS installers, the Windows, macOS and Linux portable archives, the
-Scoop manifest, Docker Compose, CI qualification, a security audit and a performance
-baseline up to 1,000 branches. The project is still a release candidate: the
-[known limitations](docs/KNOWN_LIMITATIONS.md) are part of the public contract — no code
-signing or notarisation, no in-app update on Linux, and Git still has to be installed
-separately.
+The published version is **`0.1.0`**. It includes the desktop application with its Windows
+and macOS installers, the Windows, macOS and Linux portable archives, the Scoop manifest,
+Docker Compose, CI qualification, a security audit and a performance baseline up to 1,000
+branches. Being a `0.x`, the public contract is not frozen: a minor
+version may still break it. The [known limitations](docs/KNOWN_LIMITATIONS.md) are part of
+that contract — no code signing or notarisation, no in-app update on Linux, and Git still
+has to be installed separately.
 
 Contributions are welcome. Start with
 [CONTRIBUTING.md](.github/CONTRIBUTING.md), read the

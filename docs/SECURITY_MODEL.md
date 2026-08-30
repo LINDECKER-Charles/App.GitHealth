@@ -113,6 +113,6 @@ verified, but do not replace code signing or macOS notarisation.
 - software running as the same user can reach the repositories and SQLite without going
   through the API;
 - a vulnerability in Git or in the runtime stays exploitable until it is patched;
-- the macOS archives of the release candidate are neither signed nor notarised;
+- the macOS archives are neither signed nor notarised;
 - an export copied off the machine escapes GitHealth's controls;
 - local references can be stale, because no `fetch` is ever automatic.

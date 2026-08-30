@@ -1,4 +1,4 @@
-# Security audit — GitHealth `0.1.0-rc.1`
+# Security audit — GitHealth `0.1.0`
 
 Date: 29 August 2026
 Scope: the ASP.NET Core API, the Git scanner, Angular, SQLite, the launchers, Docker
@@ -11,7 +11,7 @@ honours its local single-user model: loopback listening, mutating requests tied 
 anti-forgery session, shell-free Git execution, confined Docker paths and no outbound
 application communication.
 
-The release candidate can be tested locally. The main risks before wide distribution
+This first version can be tested locally. The main risks before wide distribution
 concern binary signing, the immutability of build dependencies and the confidentiality of
 an unencrypted SQLite database.
 
@@ -136,7 +136,7 @@ Action: sign the executables and notarise the archives before any public distrib
 
 ## Conclusion
 
-The security level is appropriate for a local, single-user release candidate. The controls
+The security level is appropriate for a local, single-user first version. The controls
 prevent the attack classes most relevant to the MVP: web CSRF, simple DNS rebinding, Git
 argument injection, accidental network leakage, unbounded denial of service and Docker
 root escape. Public distribution remains conditional on the supply-chain and signing

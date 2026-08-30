@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-During the release candidate phase, only the latest `0.1.0-rc.*` version receives security
-fixes. This policy will be revised at the first stable version.
+Only the latest published `0.x` version receives security fixes. This policy will be
+revised at the first stable version, `1.0.0`.
 
 ## Reporting a vulnerability
 

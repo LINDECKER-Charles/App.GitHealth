@@ -22,8 +22,8 @@ evidence, the limitations and the structural choices.
 |---|---|---|
 | Publish a native archive | [DevOps](DEVOPS.md) | SHA-256 checksums, SBOM and smoke tests |
 | Deploy with Docker Compose | [DevOps](DEVOPS.md#docker-compose) | Read-only mount and hardened container |
-| Prepare a release candidate | [Release checklist](RELEASE_CHECKLIST.md) | Qualification matrix |
-| Review the first RC | [Report 0.1.0-rc.1](release/0.1.0-rc.1.md) | Versioned acceptance results |
+| Prepare a release | [Release checklist](RELEASE_CHECKLIST.md) | Qualification matrix |
+| Review the first release | [Report 0.1.0](release/0.1.0.md) | Versioned acceptance results |
 
 ## Understanding the system
 
@@ -63,7 +63,7 @@ evidence, the limitations and the structural choices.
 
 1. [DevOps](DEVOPS.md)
 2. [Release checklist](RELEASE_CHECKLIST.md)
-3. [Acceptance report 0.1.0-rc.1](release/0.1.0-rc.1.md)
+3. [Acceptance report 0.1.0](release/0.1.0.md)
 4. [Changelog](../CHANGELOG.md)
 
 ---
