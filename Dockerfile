@@ -1,4 +1,4 @@
-FROM node:24.20.0-alpine3.24 AS frontend-build
+FROM node:26.8.1-alpine3.24 AS frontend-build
 
 WORKDIR /source/src/App.GitHealth.Web
 
