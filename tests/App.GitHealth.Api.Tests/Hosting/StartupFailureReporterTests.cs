@@ -1,4 +1,5 @@
 using App.GitHealth.Api.Hosting;
+using App.GitHealth.Api.Persistence.Services;
 
 namespace App.GitHealth.Api.Tests.Hosting;
 
@@ -68,6 +69,46 @@ public sealed class StartupFailureReporterTests
 
         Assert.Contains("Installez Git", message, StringComparison.Ordinal);
         Assert.Contains("Diagnostic complémentaire", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DiagnoseRecognisesACauseBuriedInTheExceptionChain()
+    {
+        const string databasePath = "D:/data/githealth.db";
+        var wrapped = new InvalidOperationException(
+            "Échec du démarrage.",
+            new DatabaseInUseException(databasePath, new IOException()));
+
+        var message = StartupFailureReporter.Diagnose(wrapped, port: 5187, databasePath);
+
+        Assert.Equal(StartupFailureReporter.DatabaseInUse(databasePath), message);
+    }
+
+    [Fact]
+    public void DiagnoseMapsADirectoryFailureToItsParentDirectory()
+    {
+        var databasePath = Path.Combine("D:", "data", "githealth.db");
+
+        var message = StartupFailureReporter.Diagnose(
+            new UnauthorizedAccessException(),
+            port: 5187,
+            databasePath);
+
+        Assert.Equal(
+            StartupFailureReporter.DataDirectoryUnavailable(
+                Path.GetDirectoryName(databasePath)!),
+            message);
+    }
+
+    [Fact]
+    public void DiagnoseFallsBackToTheUnexpectedMessage()
+    {
+        var message = StartupFailureReporter.Diagnose(
+            new InvalidProgramException(),
+            port: 5187,
+            databasePath: "D:/data/githealth.db");
+
+        Assert.Equal(StartupFailureReporter.Unexpected(), message);
     }
 
     [Fact]

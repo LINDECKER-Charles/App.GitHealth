@@ -1,3 +1,7 @@
+using App.GitHealth.Api.Persistence.Services;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.Data.Sqlite;
+
 namespace App.GitHealth.Api.Hosting;
 
 internal static class StartupFailureReporter
@@ -48,6 +52,49 @@ internal static class StartupFailureReporter
 
     public static string Unexpected() =>
         "GitHealth n’a pas pu démarrer. Consultez les journaux pour identifier la cause.";
+
+    /// <summary>
+    /// Traduit un échec de démarrage en message actionnable. Les causes se cachent
+    /// souvent dans une exception interne : la recherche descend toute la chaîne.
+    /// </summary>
+    public static string Diagnose(Exception exception, int port, string databasePath)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        if (Find<DatabaseInUseException>(exception) is { } inUse)
+        {
+            return DatabaseInUse(inUse.DatabasePath);
+        }
+
+        if (Find<AddressInUseException>(exception) is not null)
+        {
+            return PortUnavailable(port);
+        }
+
+        if (Find<SqliteException>(exception) is not null)
+        {
+            return DatabaseUnavailable(databasePath);
+        }
+
+        var isDirectoryFailure = Find<UnauthorizedAccessException>(exception) is not null
+            || Find<IOException>(exception) is not null;
+        return isDirectoryFailure
+            ? DataDirectoryUnavailable(Path.GetDirectoryName(databasePath) ?? databasePath)
+            : Unexpected();
+    }
+
+    private static TException? Find<TException>(Exception exception)
+        where TException : Exception
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is TException match)
+            {
+                return match;
+            }
+        }
+
+        return null;
+    }
 
     public static void Write(TextWriter errorOutput, string message)
     {
