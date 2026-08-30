@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches:
+      - dev
       - main
   workflow_dispatch:
 
@@ -107,9 +108,48 @@ jobs:
             tests/App.GitHealth.E2E/test-results
           if-no-files-found: ignore
 
+      - name: Vérifier les règles de ciblage des builds
+        shell: pwsh
+        run: ./tests/Infrastructure/Invoke-BuildEnvironmentTests.ps1
+
       - name: Vérifier Docker Compose
         shell: pwsh
         run: ./tests/Infrastructure/Assert-ComposeConfiguration.ps1
 
       - name: Analyser le Dockerfile
         run: docker buildx build --check .
+
+  promote:
+    name: Promouvoir dev vers test
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: write
+      actions: write
+
+    # Sérialise les promotions sans annuler celle qui est en cours : deux poussées
+    # rapprochées sur dev doivent avancer test dans l'ordre, jamais en parallèle.
+    concurrency:
+      group: promote-test
+
+    steps:
+      # force=false exige un fast-forward strict : l'API refuse d'avancer test si le
+      # commit validé n'est pas un descendant direct de la référence.
+      - name: Avancer test sur le commit validé
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh api --method PATCH
+          repos/${{ github.repository }}/git/refs/heads/test
+          -f sha=${{ github.sha }}
+          -F force=false
+
+      # Une poussée faite avec le GITHUB_TOKEN ne déclenche aucun workflow : la matrice
+      # multiplateforme doit donc être appelée explicitement sur le commit promu.
+      - name: Déclencher la matrice multiplateforme
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release.yml --ref test

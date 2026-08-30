@@ -2,9 +2,9 @@ name: Publication
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v0.1.0-rc.1"
+  release:
+    types:
+      - published
 
 permissions:
   contents: read
@@ -95,41 +95,35 @@ jobs:
           "archive=$($archive.FullName)" >> $env:GITHUB_OUTPUT
 
       - name: Produire l’installeur Velopack
-        if: >-
-          matrix.runtime != 'linux-x64' && github.event_name == 'push' &&
-          startsWith(github.ref, 'refs/tags/')
+        if: matrix.runtime != 'linux-x64' && github.event_name == 'release'
         shell: pwsh
         run: >-
           ./eng/New-VelopackRelease.ps1
           -PublishDirectory artifacts/publish/${{ matrix.runtime }}
-          -Version '${{ github.ref_name }}'
+          -Version '${{ github.event.release.tag_name }}'
           -RuntimeIdentifier ${{ matrix.runtime }}
           -ReleaseDirectory artifacts/publish
 
       - name: Produire les manifestes winget
-        if: >-
-          matrix.runtime == 'win-x64' && github.event_name == 'push' &&
-          startsWith(github.ref, 'refs/tags/')
+        if: matrix.runtime == 'win-x64' && github.event_name == 'release'
         shell: pwsh
         run: >-
           ./eng/New-WingetManifest.ps1
           -InstallerPath artifacts/publish/App.GitHealth-win-x64-Setup.exe
-          -Version '${{ github.ref_name }}'
+          -Version '${{ github.event.release.tag_name }}'
           -OutputDirectory artifacts/publish
 
       - name: Produire le manifeste Scoop
-        if: >-
-          matrix.runtime == 'win-x64' && github.event_name == 'push' &&
-          startsWith(github.ref, 'refs/tags/')
+        if: matrix.runtime == 'win-x64' && github.event_name == 'release'
         shell: pwsh
         run: >-
           ./eng/New-ScoopManifest.ps1
           -ArchivePath '${{ steps.release-files.outputs.archive }}'
-          -Version '${{ github.ref_name }}'
+          -Version '${{ github.event.release.tag_name }}'
 
       - name: Attester la provenance
         if: >-
-          github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') &&
+          github.event_name == 'release' &&
           (github.event.repository.visibility == 'public' ||
           vars.ENABLE_GITHUB_ATTESTATIONS == 'true')
         uses: actions/attest@v4
@@ -138,7 +132,7 @@ jobs:
 
       - name: Attester le SBOM
         if: >-
-          github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') &&
+          github.event_name == 'release' &&
           (github.event.repository.visibility == 'public' ||
           vars.ENABLE_GITHUB_ATTESTATIONS == 'true')
         uses: actions/attest@v4
@@ -173,8 +167,8 @@ jobs:
         run: ./tests/Infrastructure/Invoke-DockerSmokeTest.ps1
 
   publish-release:
-    name: Publier la release candidate
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    name: Attacher les artefacts à la release
+    if: github.event_name == 'release'
     needs:
       - native
       - docker
@@ -183,9 +177,6 @@ jobs:
       contents: write
 
     steps:
-      - name: Récupérer le dépôt
-        uses: actions/checkout@v7
-
       - name: Télécharger les artefacts
         uses: actions/download-artifact@v8
         with:
@@ -193,13 +184,9 @@ jobs:
           path: artifacts/release
           merge-multiple: true
 
-      - name: Publier la release GitHub
+      - name: Attacher les artefacts à la release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create "${GITHUB_REF_NAME}"
-          artifacts/release/*
-          --prerelease
-          --verify-tag
-          --title "GitHealth ${GITHUB_REF_NAME}"
-          --notes-file docs/release/0.1.0-rc.1.md
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" artifacts/release/* --clobber
