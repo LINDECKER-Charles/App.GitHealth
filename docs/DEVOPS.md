@@ -353,7 +353,15 @@ behaviour.
 A push performed with the `GITHUB_TOKEN` triggers no other workflow — an Actions guardrail
 against loops. The job therefore explicitly calls
 `gh workflow run release.yml --ref test` to launch the cross-platform matrix on the
-promoted commit.
+promoted commit. The job runs no checkout, so `GH_REPO` names the repository explicitly:
+without it `gh` looks for a `.git` directory and fails.
+
+That dispatch carries a constraint worth knowing. GitHub only allows dispatching a workflow
+that is **present on the default branch** — the `--ref` chooses which version runs, not
+whether the workflow exists. A workflow added on `dev` therefore stays undispatchable until
+`main` catches up, and `gh workflow run` answers `404 not found on the default branch`. The
+same applies to the manual benchmark run before a tag. Letting `main` fall far behind
+silently disables every manual dispatch.
 
 On `test`, that matrix runs in rehearsal mode: it publishes and tests the four native
 targets and runs the Docker smoke test, without producing an installer, a manifest or an
