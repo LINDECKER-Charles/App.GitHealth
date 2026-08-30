@@ -1,7 +1,17 @@
 import { AnalysisHistoryItem } from '../../core/api/api.models';
 import { CompletedAnalysis, comparableAnalyses, toCaptureOptions } from './capture-history';
 
-const now = new Date('2026-08-30T18:00:00.000Z');
+/**
+ * Les libellés se lisent dans le fuseau du poste : les instants se posent donc en heure
+ * locale, sinon l'heure attendue ne tient que dans le fuseau où le test a été écrit.
+ */
+function localInstant(month: number, day: number, hour: number, minute: number): string {
+  return new Date(2026, month - 1, day, hour, minute).toISOString();
+}
+
+const now = new Date(2026, 7, 30, 18, 0);
+const julyNoon = localInstant(7, 2, 12, 0);
+const todayNoon = localInstant(8, 30, 12, 0);
 
 function analysis(overrides: Partial<AnalysisHistoryItem> = {}): AnalysisHistoryItem {
   return {
@@ -50,8 +60,8 @@ describe('comparableAnalyses', () => {
 
 describe('toCaptureOptions', () => {
   const captures = comparableAnalyses([
-    analysis({ analysisId: 'ancienne', capturedAtUtc: '2026-07-02T10:00:00.000Z' }),
-    analysis({ analysisId: 'derniere', capturedAtUtc: '2026-08-30T10:00:00.000Z' }),
+    analysis({ analysisId: 'ancienne', capturedAtUtc: julyNoon }),
+    analysis({ analysisId: 'derniere', capturedAtUtc: todayNoon }),
   ]) as readonly CompletedAnalysis[];
 
   it('signale explicitement la plus récente dans son libellé', () => {
@@ -78,8 +88,8 @@ describe('toCaptureOptions', () => {
 
   it('distingue deux captures du même jour sur le même commit par leur heure', () => {
     const sameDay = comparableAnalyses([
-      analysis({ analysisId: 'matin', capturedAtUtc: '2026-08-30T06:15:00.000Z' }),
-      analysis({ analysisId: 'soir', capturedAtUtc: '2026-08-30T16:42:00.000Z' }),
+      analysis({ analysisId: 'matin', capturedAtUtc: localInstant(8, 30, 6, 15) }),
+      analysis({ analysisId: 'soir', capturedAtUtc: localInstant(8, 30, 16, 42) }),
     ]);
 
     const labels = toCaptureOptions(sameDay, now).map((option) => option.label);
