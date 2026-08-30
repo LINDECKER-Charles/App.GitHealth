@@ -1,7 +1,15 @@
 # Plan — Passage en application de bureau
 
-> Document de passation. Statut : plan validé, non implémenté.
-> Public : agent chargé de l'implémentation.
+> Document de passation. Statut : **implémenté** — lots 0 à 4 livrés.
+> Conservé comme trace des décisions et de leurs raisons.
+>
+> Trois écarts assumés, découverts à l'exécution et documentés là où ils comptent :
+> le point d'entrée est devenu explicite et `[STAThread]` (en apartment MTA, WebView2
+> s'initialise sans jamais rendre la page) ; le repli du lot 1 attrape
+> `ApplicationException`, dans laquelle Photino réemballe toute panne native, et non
+> `DllNotFoundException` ; le statut de mise à jour compte une quatrième valeur,
+> `Unknown`, pour une source de releases injoignable — sans elle, `/api/updates`
+> répondait 500 hors ligne.
 
 ## 1. Objectif
 
