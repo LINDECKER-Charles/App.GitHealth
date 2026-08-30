@@ -44,7 +44,7 @@
   &nbsp;·&nbsp;
   <a href="docs/README.md">Documentation</a>
   &nbsp;·&nbsp;
-  <a href="ARCHITECTURE.md">Architecture</a>
+  <a href="docs/ARCHITECTURE.md">Architecture</a>
 </p>
 
 ---
@@ -120,7 +120,7 @@ la CSP, la session et les jetons anti-forgery renforcent cette frontière. La ch
 publication produit sommes SHA-256 et SBOM SPDX.
 
 [Lire le modèle de sécurité](docs/SECURITY_MODEL.md) ·
-[Consulter l'audit](SECURITY_AUDIT.md) ·
+[Consulter l'audit](docs/SECURITY_AUDIT.md) ·
 [Voir les limites assumées](docs/KNOWN_LIMITATIONS.md)
 
 ## 04 — Démarrer en quelques minutes
@@ -207,19 +207,19 @@ dotnet run --project src/App.GitHealth.Api -- --no-browser
 ```
 
 Le développement de l'interface Angular et la boucle complète sont détaillés dans
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ## 05 — Une documentation organisée par intention
 
 | Je veux… | Point d'entrée |
 |---|---|
 | prendre GitHealth en main | [Guide utilisateur](docs/USER_GUIDE.md) |
-| comprendre les choix techniques | [Architecture](ARCHITECTURE.md) |
+| comprendre les choix techniques | [Architecture](docs/ARCHITECTURE.md) |
 | installer, publier ou exploiter | [Guide DevOps](docs/DEVOPS.md) |
 | résoudre un problème de lancement | [Dépannage](docs/TROUBLESHOOTING.md) |
 | connaître précisément la frontière de confiance | [Modèle de sécurité](docs/SECURITY_MODEL.md) |
 | mesurer ou reproduire les performances | [Benchmarks](docs/BENCHMARKING.md) |
-| contribuer proprement | [Guide de contribution](CONTRIBUTING.md) |
+| contribuer proprement | [Guide de contribution](.github/CONTRIBUTING.md) |
 | parcourir toute la documentation | [Centre de documentation](docs/README.md) |
 
 ## 06 — Un socle volontairement simple
@@ -236,7 +236,7 @@ les lectures et la persistance ; Angular présente les faits et garde les filtre
 partageables dans l'URL. Les tests couvrent le domaine, l'API, de vrais dépôts Git,
 l'infrastructure Docker et le parcours navigateur.
 
-[Explorer l'architecture complète](ARCHITECTURE.md) ·
+[Explorer l'architecture complète](docs/ARCHITECTURE.md) ·
 [Lire les résultats de benchmark](docs/benchmarks/windows-initial.md)
 
 ## 07 — État du projet
@@ -250,9 +250,9 @@ signature de code ni notarisation, pas de mise à jour in-app sur Linux, et Git 
 installer soi-même.
 
 Les contributions sont bienvenues. Commencez par
-[CONTRIBUTING.md](CONTRIBUTING.md), consultez le
-[code de conduite](CODE_OF_CONDUCT.md) et utilisez le canal privé décrit dans
-[SECURITY.md](SECURITY.md) pour toute vulnérabilité.
+[CONTRIBUTING.md](.github/CONTRIBUTING.md), consultez le
+[code de conduite](.github/CODE_OF_CONDUCT.md) et utilisez le canal privé décrit dans
+[SECURITY.md](.github/SECURITY.md) pour toute vulnérabilité.
 
 ---
 

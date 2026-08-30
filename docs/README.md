@@ -29,18 +29,18 @@ preuves, aux limites et aux choix structurants.
 
 | Angle | Document | Question centrale |
 |---|---|---|
-| Domaine et flux | [Architecture](../ARCHITECTURE.md) | Comment les faits deviennent-ils un verdict ? |
+| Domaine et flux | [Architecture](ARCHITECTURE.md) | Comment les faits deviennent-ils un verdict ? |
 | Frontière de confiance | [Modèle de sécurité](SECURITY_MODEL.md) | Que lit GitHealth, et que refuse-t-il de faire ? |
-| Revue indépendante du code | [Audit de sécurité](../SECURITY_AUDIT.md) | Quels risques restent ouverts ? |
+| Revue indépendante du code | [Audit de sécurité](SECURITY_AUDIT.md) | Quels risques restent ouverts ? |
 | Performance | [Benchmarks](BENCHMARKING.md) | Comment détecter une régression mesurable ? |
 | Construction du MVP | [Plan d'implémentation](IMPLEMENTATION_PLAN.md) | Comment le produit a-t-il été découpé et qualifié ? |
 
 ## Contribuer
 
-- [Guide de contribution](../CONTRIBUTING.md) — environnement, conventions, tests et PR ;
-- [Code de conduite](../CODE_OF_CONDUCT.md) — cadre de collaboration ;
-- [Support](../SUPPORT.md) — choisir le bon canal et fournir un cas reproductible ;
-- [Politique de sécurité](../SECURITY.md) — signaler une vulnérabilité sans l'exposer ;
+- [Guide de contribution](../.github/CONTRIBUTING.md) — environnement, conventions, tests et PR ;
+- [Code de conduite](../.github/CODE_OF_CONDUCT.md) — cadre de collaboration ;
+- [Support](../.github/SUPPORT.md) — choisir le bon canal et fournir un cas reproductible ;
+- [Politique de sécurité](../.github/SECURITY.md) — signaler une vulnérabilité sans l'exposer ;
 - [Journal des changements](../CHANGELOG.md) — suivre les capacités livrées ;
 - [Direction éditoriale et visuelle](ART_DIRECTION.md) — prolonger l'identité sans la diluer.
 
@@ -54,10 +54,10 @@ preuves, aux limites et aux choix structurants.
 
 ### Je dois l'évaluer techniquement
 
-1. [Architecture](../ARCHITECTURE.md)
+1. [Architecture](ARCHITECTURE.md)
 2. [Modèle de sécurité](SECURITY_MODEL.md)
 3. [Benchmarks](BENCHMARKING.md)
-4. [Audit de sécurité](../SECURITY_AUDIT.md)
+4. [Audit de sécurité](SECURITY_AUDIT.md)
 
 ### Je prépare une livraison
 

@@ -1,7 +1,7 @@
 # Plan d'implémentation de GitHealth
 
 > Statut : étapes 1 à 8 terminées ; étape 9 implémentée et qualifiée localement
-> Architecture de référence : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
+> Architecture de référence : [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 ## Objectif du MVP
 

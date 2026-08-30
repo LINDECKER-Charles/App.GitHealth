@@ -10,13 +10,13 @@ La majorité des questions ont déjà une réponse écrite :
 
 | Question | Document |
 | --- | --- |
-| Comment installer, lancer et utiliser GitHealth | [Guide utilisateur](docs/USER_GUIDE.md) |
-| Ça ne démarre pas, le port est pris, Git manque | [Dépannage](docs/TROUBLESHOOTING.md) |
-| Pourquoi ce résultat est-il surprenant | [Limites connues](docs/KNOWN_LIMITATIONS.md) |
-| Comment les mesures sont-elles calculées | [Architecture](ARCHITECTURE.md) |
-| Ce que l'application lit, écrit et n'envoie pas | [Sécurité](docs/SECURITY_MODEL.md) |
-| Publication native, Docker, exploitation | [DEVOPS](docs/DEVOPS.md) |
-| Ce qui a changé d'une version à l'autre | [Changelog](CHANGELOG.md) |
+| Comment installer, lancer et utiliser GitHealth | [Guide utilisateur](../docs/USER_GUIDE.md) |
+| Ça ne démarre pas, le port est pris, Git manque | [Dépannage](../docs/TROUBLESHOOTING.md) |
+| Pourquoi ce résultat est-il surprenant | [Limites connues](../docs/KNOWN_LIMITATIONS.md) |
+| Comment les mesures sont-elles calculées | [Architecture](../docs/ARCHITECTURE.md) |
+| Ce que l'application lit, écrit et n'envoie pas | [Sécurité](../docs/SECURITY_MODEL.md) |
+| Publication native, Docker, exploitation | [DEVOPS](../docs/DEVOPS.md) |
+| Ce qui a changé d'une version à l'autre | [Changelog](../CHANGELOG.md) |
 
 Beaucoup de comportements déroutants ne sont pas des bugs mais des conséquences de la
 sémantique de Git : une branche fusionnée dont l'attribution des commits devient
@@ -91,4 +91,4 @@ Certaines demandes seront closes sans être traitées, non par manque d'intérê
 qu'elles sortent du produit : supprimer ou fusionner des branches, lancer `fetch`
 automatiquement, cloner un dépôt distant, s'intégrer aux API de GitHub, GitLab ou Azure
 DevOps, ou exposer une instance partagée sur un réseau. Les raisons de ces frontières
-sont documentées dans [ARCHITECTURE.md](ARCHITECTURE.md).
+sont documentées dans [ARCHITECTURE.md](../docs/ARCHITECTURE.md).

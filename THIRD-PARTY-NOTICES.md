@@ -117,7 +117,7 @@ Toute nouvelle dépendance ou ressource tierce doit :
 
 Une dépendance sous licence inconnue, sous copyleft fort (GPL, AGPL) ou dont l'origine
 n'est pas vérifiable ne peut pas être intégrée. Les modalités sont rappelées dans
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ## Signaler une erreur d'attribution
 

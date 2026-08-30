@@ -7,13 +7,12 @@
 
 # Sécurité, licence et attribution : relecture systématique.
 /LICENSE                @LINDECKER-Charles
-/SECURITY.md            @LINDECKER-Charles
-/SECURITY_AUDIT.md      @LINDECKER-Charles
+/docs/SECURITY_AUDIT.md @LINDECKER-Charles
 /CITATION.cff           @LINDECKER-Charles
 /THIRD-PARTY-NOTICES.md @LINDECKER-Charles
-/CODE_OF_CONDUCT.md     @LINDECKER-Charles
 
-# Chaîne de livraison — workflows, conteneur, publication native.
+# Chaîne de livraison, gouvernance et cadre de collaboration — workflows,
+# conteneur, publication native, politique de sécurité et code de conduite.
 /.github/               @LINDECKER-Charles
 /Dockerfile             @LINDECKER-Charles
 /compose.yaml           @LINDECKER-Charles

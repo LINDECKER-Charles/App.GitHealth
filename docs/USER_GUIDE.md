@@ -474,6 +474,6 @@ seulement — raccourcit nettement la lecture.
   conséquences assumées de la sémantique Git.
 - [Modèle de sécurité](SECURITY_MODEL.md) — ce que l'application lit, écrit, et
   n'envoie jamais.
-- [Architecture](../ARCHITECTURE.md) — comment les mesures sont calculées.
-- [Obtenir de l'aide](../SUPPORT.md) — choisir le bon canal et rédiger une demande
+- [Architecture](ARCHITECTURE.md) — comment les mesures sont calculées.
+- [Obtenir de l'aide](../.github/SUPPORT.md) — choisir le bon canal et rédiger une demande
   traitable, sans exposer de données réelles.

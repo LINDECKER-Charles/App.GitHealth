@@ -22,8 +22,8 @@ body:
         - docs/DEVOPS.md
         - docs/SECURITY_MODEL.md
         - docs/BENCHMARKING.md
-        - ARCHITECTURE.md
-        - CONTRIBUTING.md
+        - docs/ARCHITECTURE.md
+        - .github/CONTRIBUTING.md
         - Autre
     validations:
       required: true

@@ -17,7 +17,7 @@ body:
 
         Les raisons de ces frontières sont documentées dans [ARCHITECTURE.md][archi].
 
-        [archi]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/ARCHITECTURE.md
+        [archi]: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/ARCHITECTURE.md
 
   - type: checkboxes
     id: verifications

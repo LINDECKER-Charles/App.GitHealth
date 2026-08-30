@@ -8,21 +8,21 @@ La participation au projet implique le respect du [code de conduite](CODE_OF_CON
 
 ## Licence des contributions
 
-GitHealth est distribué sous [licence MIT](LICENSE). En proposant une contribution, vous
+GitHealth est distribué sous [licence MIT](../LICENSE). En proposant une contribution, vous
 acceptez qu'elle soit publiée sous cette même licence et vous confirmez avoir le droit de
 la soumettre. Il n'y a pas de CLA à signer.
 
 N'intégrez pas de code, de police, d'icône ou de texte dont la licence est inconnue ou
 incompatible avec MIT. Tout ajout de dépendance ou de ressource tierce doit être déclaré
-dans [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+dans [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md).
 
 ## Avant d'ouvrir une issue
 
 Commencez par vérifier :
 
-1. le [guide utilisateur](docs/USER_GUIDE.md), qui décrit le comportement attendu ;
-2. le [dépannage](docs/TROUBLESHOOTING.md) ;
-3. les [limites connues](docs/KNOWN_LIMITATIONS.md) — plusieurs comportements
+1. le [guide utilisateur](../docs/USER_GUIDE.md), qui décrit le comportement attendu ;
+2. le [dépannage](../docs/TROUBLESHOOTING.md) ;
+3. les [limites connues](../docs/KNOWN_LIMITATIONS.md) — plusieurs comportements
    surprenants sont des conséquences assumées de la sémantique Git ;
 4. les issues existantes, ouvertes comme fermées.
 
@@ -52,7 +52,7 @@ seront refusées, quelle que soit leur qualité :
   externe ;
 - transformer le produit en application multi-utilisateur exposée sur un réseau.
 
-Le périmètre complet et ses raisons sont décrits dans [ARCHITECTURE.md](ARCHITECTURE.md).
+Le périmètre complet et ses raisons sont décrits dans [ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 Une évolution qui touche à ces frontières se discute dans une issue **avant** d'écrire du
 code.
 
@@ -112,8 +112,7 @@ touche au service des fichiers statiques, à la CSP ou au routage doit être vé
 
 ## Conventions de code
 
-Les conventions complètes vivent dans [CLAUDE.md](CLAUDE.md) et son miroir
-[AGENTS.md](AGENTS.md). L'essentiel :
+Les conventions complètes vivent dans [AGENTS.md](../AGENTS.md). L'essentiel :
 
 - **DRY, KISS, SOLID** comme défauts ; s'en écarter demande une raison explicite ;
 - **un seul élément public par fichier**, nommé comme le fichier ;
@@ -204,7 +203,7 @@ pwsh ./tests/Infrastructure/Assert-ComposeConfiguration.ps1
 docker buildx build --check .
 ```
 
-Le détail des workflows se trouve dans [docs/DEVOPS.md](docs/DEVOPS.md).
+Le détail des workflows se trouve dans [docs/DEVOPS.md](../docs/DEVOPS.md).
 
 ## Branches
 
@@ -264,7 +263,7 @@ docs(docs): documenter l'échelle réduite des branches fusionnées
 
 Toute évolution visible par l'utilisateur — fonctionnalité, correctif, changement de
 comportement, limite nouvelle — s'ajoute à la section `[Non publié]` de
-[CHANGELOG.md](CHANGELOG.md), sous `Ajouté`, `Modifié`, `Corrigé`, `Sécurité` ou
+[CHANGELOG.md](../CHANGELOG.md), sous `Ajouté`, `Modifié`, `Corrigé`, `Sécurité` ou
 `Limites`.
 
 L'entrée décrit ce que la personne qui utilise GitHealth constate, pas la mécanique
