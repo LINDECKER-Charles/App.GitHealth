@@ -2,12 +2,14 @@ using System.Reflection;
 using App.GitHealth.Api.Features;
 using App.GitHealth.Api.Features.Common;
 using App.GitHealth.Api.Features.Security;
+using App.GitHealth.Api.Features.Updates;
 using App.GitHealth.Api.Git;
 using App.GitHealth.Api.Git.Process;
 using App.GitHealth.Api.Hosting;
 using App.GitHealth.Api.Hosting.Desktop;
 using App.GitHealth.Api.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Velopack;
 
 namespace App.GitHealth.Api;
 
@@ -28,6 +30,10 @@ public sealed partial class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        // Première instruction du programme, sans exception : Velopack y intercepte les
+        // hooks d'installation et de mise à jour. Placé plus bas, il ne les voit jamais.
+        VelopackApp.Build().Run();
+
         var parseResult = LauncherOptionsParser.Parse(args);
         if (!parseResult.IsSuccess)
         {
@@ -88,7 +94,7 @@ public sealed partial class Program
             return;
         }
 
-        AddServices(builder);
+        AddServices(builder, useNativeLauncher);
         using var app = builder.Build();
         MapPipeline(app);
         if (isDirectLaunch)
@@ -118,7 +124,7 @@ public sealed partial class Program
         return true;
     }
 
-    private static void AddServices(WebApplicationBuilder builder)
+    private static void AddServices(WebApplicationBuilder builder, bool useNativeLauncher)
     {
         if (builder.Environment.IsDevelopment())
         {
@@ -129,6 +135,7 @@ public sealed partial class Program
         builder.Services.AddPersistence(builder.Configuration);
         builder.Services.AddGitHealthApi(builder.Configuration);
         builder.Services.AddLocalRequestSecurity(builder.Configuration);
+        builder.Services.AddUpdates(useNativeLauncher);
     }
 
     private static void MapPipeline(WebApplication app)

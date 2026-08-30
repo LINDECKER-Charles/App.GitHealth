@@ -21,6 +21,20 @@
       <span>tout est local · lecture seule</span>
     </div>
 
+    @if (updates.isAvailable()) {
+      <button
+        dsButton
+        class="update-action"
+        size="sm"
+        variant="secondary"
+        iconLeft="circle-arrow-up"
+        [disabled]="updates.isApplying()"
+        (click)="updates.apply()"
+      >
+        {{ updates.isApplying() ? 'Mise à jour…' : 'Mettre à jour' }}
+      </button>
+    }
+
     <button
       dsIconButton
       [icon]="themeIcon()"

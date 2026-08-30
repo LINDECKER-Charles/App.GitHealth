@@ -12,6 +12,7 @@ export type IconName =
   | 'chevron-right'
   | 'chevron-up'
   | 'circle-alert'
+  | 'circle-arrow-up'
   | 'circle-check'
   | 'clock'
   | 'command'

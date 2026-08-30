@@ -4,6 +4,8 @@ export type UtcDateTime = string;
 
 export type RuntimeMode = 'native' | 'docker';
 
+export type UpdateAvailability = 'Unsupported' | 'UpToDate' | 'Unknown' | 'Available';
+
 export type AnalysisRunStatus = 'Running' | 'Completed' | 'Failed' | 'Cancelled';
 
 export type AnalysisPhase =
@@ -35,6 +37,14 @@ export interface RuntimeInfo {
   readonly gitExecutablePath: string | null;
   /** Version de Git, ou la raison de son indisponibilité. */
   readonly gitDiagnostic: string;
+}
+
+export interface UpdateStatus {
+  readonly availability: UpdateAvailability;
+  /** Version installée, ou `null` hors installation gérée. */
+  readonly currentVersion: string | null;
+  /** Version publiée plus récente, renseignée seulement si elle existe. */
+  readonly availableVersion: string | null;
 }
 
 export interface DirectoryEntry {

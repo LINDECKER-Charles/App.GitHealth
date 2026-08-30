@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
 import { RuntimeInfo } from './core/api/api.models';
+import { UpdateStore } from './core/updates/update-store';
 import { ProjectsStore } from './core/workspace/projects-store';
 import { WorkspaceDialogs } from './core/workspace/workspace-dialogs';
 import { databaseBackupUrl } from './core/workspace/app-identity';
@@ -82,6 +83,21 @@ describe('App', () => {
 
     const alert = fixture.nativeElement.querySelector('.workspace-alert') as HTMLElement;
     expect(alert.textContent).toContain(runtimeWithoutGit.gitDiagnostic);
+  });
+
+  it('propose la mise à jour seulement quand elle est publiée', async () => {
+    const fixture = await render();
+    expect(fixture.nativeElement.querySelector('.update-action')).toBeNull();
+
+    TestBed.inject(UpdateStore).status.set({
+      availability: 'Available',
+      currentVersion: '0.1.0-rc.1',
+      availableVersion: '0.1.0-rc.2',
+    });
+    await fixture.whenStable();
+
+    const action = fixture.nativeElement.querySelector('.update-action') as HTMLButtonElement;
+    expect(action.textContent).toContain('Mettre à jour');
   });
 
   it('ne rejoue pas l’introduction une fois passée dans la session', async () => {

@@ -21,6 +21,7 @@ import {
   SnapshotDetailResponse,
   SnapshotPageResponse,
   SnapshotQuery,
+  UpdateStatus,
 } from './api.models';
 
 const apiRoot = '/api';
@@ -32,6 +33,15 @@ export class GitHealthApiClient {
 
   getRuntime(): Observable<RuntimeInfo> {
     return this.request(this.http.get<RuntimeInfo>(`${apiRoot}/runtime`));
+  }
+
+  getUpdateStatus(): Observable<UpdateStatus> {
+    return this.request(this.http.get<UpdateStatus>(`${apiRoot}/updates`));
+  }
+
+  /** Déclenche la mise à jour ; l'application se relance ensuite d'elle-même. */
+  applyUpdate(): Observable<void> {
+    return this.request(this.http.post<void>(`${apiRoot}/updates/apply`, null));
   }
 
   browseDirectories(path: string | null): Observable<DirectoryListing> {

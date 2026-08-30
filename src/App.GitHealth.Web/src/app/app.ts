@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterOutlet } from '@angular/router';
 import { databaseBackupUrl, appVersion, userGuideUrl } from './core/workspace/app-identity';
 import { ProjectsStore } from './core/workspace/projects-store';
+import { UpdateStore } from './core/updates/update-store';
 import { ThemeService } from './core/workspace/theme';
 import { ToastService } from './core/workspace/toast';
 import { WorkspaceDialogs } from './core/workspace/workspace-dialogs';
@@ -13,6 +14,7 @@ import { ProjectGroupDialog } from './shell/project-group/project-group-dialog';
 import { ProjectRail } from './shell/rail/project-rail';
 import { ScanFolderDialog } from './shell/scan-folder/scan-folder-dialog';
 import { DsBadge } from './ui/core/ds-badge';
+import { DsButton } from './ui/core/ds-button';
 import { DsIcon } from './ui/core/ds-icon';
 import { DsIconButton } from './ui/core/ds-icon-button';
 import { DsKbd } from './ui/core/ds-kbd';
@@ -31,6 +33,7 @@ const introSkippedValue = 'skipped';
     BootIntro,
     CommandPalette,
     DsBadge,
+    DsButton,
     DsCallout,
     DsIcon,
     DsIconButton,
@@ -51,6 +54,7 @@ export class App {
 
   protected readonly dialogs = inject(WorkspaceDialogs);
   protected readonly theme = inject(ThemeService);
+  protected readonly updates = inject(UpdateStore);
   protected readonly toast = inject(ToastService);
 
   protected readonly version = appVersion;
@@ -68,6 +72,7 @@ export class App {
   constructor() {
     this.isIntroVisible.set(this.shouldPlayIntro());
     this.store.load();
+    this.updates.load();
   }
 
   protected dismissIntro(wasSkipped: boolean): void {

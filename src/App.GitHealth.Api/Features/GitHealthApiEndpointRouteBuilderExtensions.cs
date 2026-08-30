@@ -6,6 +6,7 @@ using App.GitHealth.Api.Features.Projects;
 using App.GitHealth.Api.Features.Runtime;
 using App.GitHealth.Api.Features.Security;
 using App.GitHealth.Api.Features.Snapshots;
+using App.GitHealth.Api.Features.Updates;
 
 namespace App.GitHealth.Api.Features;
 
@@ -22,6 +23,7 @@ internal static class GitHealthApiEndpointRouteBuilderExtensions
         endpoints.MapSnapshotEndpoints();
         endpoints.MapSnapshotCsvEndpoints();
         endpoints.MapDatabaseExportEndpoints();
+        endpoints.MapUpdateEndpoints();
         return endpoints;
     }
 }
