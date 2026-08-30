@@ -12,6 +12,9 @@ coverage/
 .idea/
 .vscode/
 
+# Instructions agent locales — miroir non versionné de AGENTS.md
+CLAUDE.md
+
 # Angular / Node.js
 node_modules/
 .angular/

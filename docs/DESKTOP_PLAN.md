@@ -309,7 +309,7 @@ Par ordre de rapport effort / bénéfice.
 
 ## 5. Conventions du dépôt à respecter
 
-Voir `CLAUDE.md`. Les points qui vont mordre sur ce chantier :
+Voir `AGENTS.md`. Les points qui vont mordre sur ce chantier :
 
 - **Commits** : Conventional Commits en français, sujet ≤ 72 caractères, un
   commit = un changement cohérent. Scopes : `src/App.GitHealth.Api/**` → `api`,
