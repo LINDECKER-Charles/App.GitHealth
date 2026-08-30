@@ -1,0 +1,6 @@
+# Manifeste de version winget. Genere par eng/New-WingetManifest.ps1.
+PackageIdentifier: LINDECKER-Charles.GitHealth
+PackageVersion: __VERSION__
+DefaultLocale: fr-FR
+ManifestType: version
+ManifestVersion: 1.6.0

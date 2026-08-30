@@ -1,0 +1,29 @@
+# Manifeste de localisation winget. Genere par eng/New-WingetManifest.ps1.
+PackageIdentifier: LINDECKER-Charles.GitHealth
+PackageVersion: __VERSION__
+PackageLocale: fr-FR
+Publisher: Charles LINDECKER
+PublisherUrl: https://github.com/LINDECKER-Charles
+PublisherSupportUrl: https://github.com/LINDECKER-Charles/App.GitHealth/issues
+PackageName: GitHealth
+PackageUrl: https://github.com/LINDECKER-Charles/App.GitHealth
+License: MIT
+LicenseUrl: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/LICENSE
+Copyright: Copyright (c) 2026 Charles LINDECKER
+ShortDescription: Diagnostic local des branches Git.
+Description: >-
+  GitHealth lit les depots Git deja presents sur le poste et mesure l'etat de leurs
+  branches : ce qui est fusionne, ce qui diverge, ce qui dort. Tout reste local et en
+  lecture seule ; aucune analyse n'ecrit dans le depot observe.
+Moniker: githealth
+Tags:
+  - git
+  - branches
+  - developer-tools
+  - local-first
+ReleaseNotesUrl: https://github.com/LINDECKER-Charles/App.GitHealth/releases/tag/v__VERSION__
+Documentations:
+  - DocumentLabel: Guide utilisateur
+    DocumentUrl: https://github.com/LINDECKER-Charles/App.GitHealth/blob/main/docs/USER_GUIDE.md
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

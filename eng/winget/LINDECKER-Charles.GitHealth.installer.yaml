@@ -1,0 +1,20 @@
+# Manifeste d'installeur winget. Genere par eng/New-WingetManifest.ps1.
+# L'installeur Velopack s'installe par utilisateur, sans elevation, et accepte --silent.
+PackageIdentifier: LINDECKER-Charles.GitHealth
+PackageVersion: __VERSION__
+InstallerType: exe
+Scope: user
+InstallModes:
+  - silent
+  - silentWithProgress
+InstallerSwitches:
+  Silent: --silent
+  SilentWithProgress: --silent
+UpgradeBehavior: install
+ReleaseDate: __RELEASE_DATE__
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/LINDECKER-Charles/App.GitHealth/releases/download/v__VERSION__/App.GitHealth-win-x64-Setup.exe
+    InstallerSha256: __HASH__
+ManifestType: installer
+ManifestVersion: 1.6.0
