@@ -52,11 +52,25 @@ jobs:
           cache: npm
           cache-dependency-path: src/App.GitHealth.Web/package-lock.json
 
+      # --blame-hang nomme le test qui se fige au lieu de laisser le job courir
+      # jusqu'au timeout : un runner bloqué ne remonte pas ses journaux, et la
+      # trace est alors définitivement perdue.
       - name: Tester les fixtures Git sur la plateforme
         run: >-
           dotnet test
           tests/App.GitHealth.Git.IntegrationTests/App.GitHealth.Git.IntegrationTests.csproj
           --configuration Release
+          --blame-hang
+          --blame-hang-timeout 3m
+          --blame-hang-dump-type none
+
+      - name: Conserver la trace du test figé
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: blame-${{ matrix.runtime }}
+          path: tests/App.GitHealth.Git.IntegrationTests/TestResults
+          if-no-files-found: ignore
 
       - name: Publier l’artefact autonome
         shell: pwsh
