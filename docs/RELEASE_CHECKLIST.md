@@ -19,9 +19,10 @@ Version being prepared: `0.1.0`.
 ## Distribution matrix
 
 - [x] Windows x64: publication and native smoke test
-- [ ] macOS Intel: publication and native smoke test
-- [ ] macOS Apple Silicon: publication and native smoke test
-- [ ] Docker: startup, unprivileged user and persistence after recreation
+- [x] macOS Intel: publication and native smoke test
+- [x] macOS Apple Silicon: publication and native smoke test
+- [x] Linux x64: publication and native smoke test
+- [x] Docker: startup, unprivileged user and persistence after recreation
 - [x] Docker Compose: static configuration and confinement validated
 - [ ] SHA-256 checksums published for every archive
 - [ ] CycloneDX/SPDX SBOM and provenance attestation attached to the artefacts
