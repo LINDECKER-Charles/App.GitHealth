@@ -3,6 +3,16 @@
 All notable changes to GitHealth are recorded in this file. The format follows Keep a
 Changelog and semantic versioning.
 
+## [Unreleased]
+
+### Added
+
+- **choosing a branch instead of typing it**: in the Policies tab, "Choose…" opens a picker
+  listing the repository's references, searchable and navigable with the keyboard, that marks
+  the ones an existing pattern already covers. A picked branch is added as an exact pattern;
+  the text field stays for globs such as `refs/heads/release/*`. If the repository is out of
+  reach, the list falls back to the last capture and says so;
+
 ## [0.1.0] - 2026-08-30
 
 First public release. It is a `0.x`: the public contract is not frozen yet, and a later

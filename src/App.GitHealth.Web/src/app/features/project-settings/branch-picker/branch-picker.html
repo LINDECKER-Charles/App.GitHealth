@@ -1,0 +1,106 @@
+<div class="dialog-scrim" (click)="close.emit()">
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="branch-picker-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="dialog-heading">
+      <span class="dialog-heading-mark"><ds-icon name="git-branch" [size]="16" /></span>
+      <span id="branch-picker-title" class="dialog-heading-title">Choisir une branche</span>
+      <ds-badge size="sm" tone="info">{{ subtitle() }}</ds-badge>
+      <button dsIconButton icon="x" label="Fermer" size="sm" (click)="close.emit()"></button>
+    </header>
+
+    <div class="dialog-body">
+      <div class="picker-search">
+        <span class="picker-search-mark"><ds-icon name="search" [size]="15" /></span>
+        <input
+          #search
+          class="picker-input"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Filtrer les branches…"
+          aria-label="Filtrer les branches"
+          [value]="query()"
+          (input)="onQuery(search.value)"
+          (keydown.arrowdown)="$event.preventDefault(); move(1)"
+          (keydown.arrowup)="$event.preventDefault(); move(-1)"
+          (keydown.enter)="$event.preventDefault(); toggleHighlighted()"
+        />
+      </div>
+
+      @if (isFromLastCapture()) {
+        <div class="picker-alert">
+          <ds-callout tone="warning" title="Dépôt injoignable">
+            Cette liste vient de la dernière capture enregistrée, pas du dépôt lui-même.
+          </ds-callout>
+        </div>
+      }
+
+      @if (isLoading()) {
+        <p class="picker-loading" role="status">
+          <ds-spinner [size]="14" />
+          <span>Lecture des références du dépôt…</span>
+        </p>
+      } @else {
+        <div class="picker-list" role="group" aria-label="Branches du dépôt">
+          @for (option of options(); track option.referenceName; let index = $index) {
+            <div
+              #row
+              class="picker-row"
+              [class.is-highlighted]="index === highlighted()"
+              [class.is-covered]="option.coveredBy !== null"
+            >
+              <ds-checkbox
+                [ariaLabel]="option.displayName"
+                [disabled]="option.coveredBy !== null"
+                [checked]="isSelected(option.referenceName)"
+                (checkedChange)="toggle(option, $event)"
+              />
+              <button
+                class="picker-row-main"
+                type="button"
+                [disabled]="option.coveredBy !== null"
+                (click)="toggle(option, !isSelected(option.referenceName))"
+              >
+                <span class="picker-row-name">{{ option.displayName }}</span>
+                <span class="picker-row-reference">{{ option.referenceName }}</span>
+              </button>
+              @if (option.coveredBy; as pattern) {
+                <span class="picker-row-covered">
+                  <ds-badge size="sm">déjà couverte</ds-badge>
+                  <em class="picker-row-pattern">{{ pattern }}</em>
+                </span>
+              }
+            </div>
+          } @empty {
+            <p class="picker-empty">Aucune branche ne correspond.</p>
+          }
+        </div>
+      }
+
+      <p class="field-hint">
+        Une branche retenue est ajoutée comme motif exact, sur son nom de référence complet. Les
+        motifs à joker, eux, se saisissent à la main dans le champ.
+      </p>
+    </div>
+
+    <footer class="dialog-footer">
+      <span>Lecture seule. Rien n’est écrit avant « Enregistrer la politique ».</span>
+      <button dsButton size="md" variant="ghost" (click)="close.emit()">Annuler</button>
+      <button
+        dsButton
+        size="md"
+        variant="primary"
+        iconLeft="check"
+        [disabled]="selectedCount() === 0"
+        (click)="submit()"
+      >
+        {{ confirmLabel() }}
+      </button>
+    </footer>
+  </div>
+</div>

@@ -97,6 +97,17 @@
               [(value)]="newProtected"
             />
             <button dsButton size="sm" variant="secondary" type="submit">Ajouter</button>
+            <button
+              dsButton
+              class="pattern-pick"
+              size="sm"
+              variant="secondary"
+              iconLeft="git-branch"
+              type="button"
+              (click)="openPicker('protected')"
+            >
+              Choisir…
+            </button>
           </form>
         </div>
 
@@ -122,6 +133,17 @@
               [(value)]="newExcluded"
             />
             <button dsButton size="sm" variant="secondary" type="submit">Ajouter</button>
+            <button
+              dsButton
+              class="pattern-pick"
+              size="sm"
+              variant="secondary"
+              iconLeft="git-branch"
+              type="button"
+              (click)="openPicker('excluded')"
+            >
+              Choisir…
+            </button>
           </form>
         </div>
       </div>
@@ -217,3 +239,14 @@
     </ds-panel>
   </div>
 </div>
+
+@if (pickerKind(); as kind) {
+  <app-branch-picker
+    [kind]="kind"
+    [patterns]="pickerPatterns()"
+    [repositoryPath]="repositoryPath()"
+    [fallbackReferences]="capturedReferences()"
+    (close)="closePicker()"
+    (confirm)="addPicked($event)"
+  />
+}
