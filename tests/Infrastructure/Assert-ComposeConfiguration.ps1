@@ -85,6 +85,23 @@ try {
         $dockerfile.Contains("GitHealth__DataDirectory=/data")
     ) "L'image doit utiliser /data même lorsqu'elle démarre hors Compose."
 
+    # nvm et actions/setup-node acceptent aussi la forme « v24.20.0 » : la comparaison porte
+    # sur le numéro seul. Le motif tolère les drapeaux de FROM (--platform notamment), sans
+    # quoi un stage node y échapperait sans jamais être confronté à .nvmrc.
+    $pinnedNodeVersion = (Get-Content -LiteralPath ".nvmrc" -Raw).Trim() -replace '^[vV]', ''
+    $nodeImages = @([regex]::Matches(
+        $dockerfile,
+        '(?im)^FROM\s+(?:--\S+\s+)*node:(?<tag>\S+)'))
+    Assert-True (
+        $nodeImages.Count -gt 0
+    ) "Le Dockerfile doit construire le front depuis une image node officielle étiquetée."
+    foreach ($nodeImage in $nodeImages) {
+        $imageVersion = ($nodeImage.Groups["tag"].Value -split "-", 2)[0]
+        Assert-Equal $pinnedNodeVersion $imageVersion (
+            "L'image Node du Dockerfile doit rester alignée sur .nvmrc."
+        )
+    }
+
     Write-Output "Configuration Docker Compose vérifiée."
 }
 finally {
