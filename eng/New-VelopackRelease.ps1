@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Produit l'installeur Velopack et les paquets delta de GitHealth.
 

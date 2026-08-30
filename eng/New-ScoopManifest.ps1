@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Produit le manifeste Scoop de GitHealth à partir de l'archive Windows publiée.
 

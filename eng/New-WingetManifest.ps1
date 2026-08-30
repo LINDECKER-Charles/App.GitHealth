@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Produit les manifestes winget de GitHealth a partir de l'installeur publie.
 
