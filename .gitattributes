@@ -8,6 +8,3 @@
 # Passerelles de build : le shebang exige des fins de ligne LF, cmd.exe des CRLF.
 *.sh text eol=lf
 *.cmd text eol=crlf
-
-# Hooks Git : le shebang exige des fins de ligne LF.
-eng/hooks/* text eol=lf

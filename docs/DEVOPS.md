@@ -403,32 +403,14 @@ checksums, SBOMs, installers and manifests to the release that triggered the wor
 The model rests on one invariant: `test` must remain an ancestor of `dev`. Rewriting
 `dev`'s history breaks it — the `promote` job then pushes a reference that is no longer a
 direct descendant, the API answers 422, and no promotion succeeds until someone repairs it
-by hand. Forbidding force pushes on `dev` and `main` is therefore the only protection that
+by hand. Forbidding force pushes on `dev` and `main` is therefore the protection that
 matters here. Keeping `test` from ever receiving a red commit is already handled by
 `needs: verify`, with no branch protection involved.
 
-`test` must carry no rule at all: any rule would cause the `promote` job's push to be
-rejected, and `GITHUB_TOKEN` is subject to protection like anyone else.
-
-### Local guard
-
-Server-side protection is unavailable on this repository: private on the GitHub Free plan,
-both `branches/*/protection` and `rulesets` answer 403. The guard therefore lives on the
-workstation, and is set once per clone:
-
-```bash
-git config core.hooksPath eng/hooks
-```
-
-For every push to `dev` or `main`, `eng/hooks/pre-push` compares the remote reference with
-the local one: if the old commit is not an ancestor of the new one, the push is refused.
-It also rejects deleting either branch. It covers the accident, not malice — `--no-verify`
-bypasses it, and it only holds on the workstations that enabled it.
-
-### Once server-side protection becomes available
-
-Making the repository public or subscribing to GitHub Pro unlocks both APIs. The minimal
-rule, equivalent to the hook, on `dev` and on `main`:
+`dev` and `main` carry the rule below. `enforce_admins` is on, so it applies to the
+repository owner too: the accidental force push it guards against is precisely the one an
+owner is able to make. A deliberate rewrite means disabling the rule first, which is the
+right amount of friction for rewriting published history.
 
 ```bash
 gh api --method PUT repos/LINDECKER-Charles/App.GitHealth/branches/dev/protection \
@@ -436,7 +418,7 @@ gh api --method PUT repos/LINDECKER-Charles/App.GitHealth/branches/dev/protectio
 {
   "required_status_checks": null,
   "required_pull_request_reviews": null,
-  "enforce_admins": false,
+  "enforce_admins": true,
   "restrictions": null,
   "allow_force_pushes": false,
   "allow_deletions": false
@@ -444,17 +426,27 @@ gh api --method PUT repos/LINDECKER-Charles/App.GitHealth/branches/dev/protectio
 JSON
 ```
 
-To go further and make `dev` green by construction, add the required checks
+No required check and no mandatory pull request: ordinary pushes to `dev` keep working, and
+the promotion is already gated by `needs: verify`.
+
+`test` carries no rule at all, deliberately. Any rule would cause the `promote` job's push
+to be rejected — `GITHUB_TOKEN` is subject to branch protection like anyone else.
+
+### Going further
+
+To make `dev` green by construction rather than after the fact, add the required checks
 `Vérifier le socle` and `Auditer les dépendances`. Those contexts are the workflow job
 names, written in French in `.github/workflows/`, and must be copied exactly. Keep
 `strict: false`: requiring an up-to-date branch before merging would be redundant, because
 CI replays on the merge commit anyway, and it is that run which gates the promotion.
-Required checks impose the pull request on their own — a commit pushed directly has no
-result yet and gets refused.
 
-Do not declare the dependency review job or CodeQL as required while the repository is
-private without an Advanced Security licence: their job condition makes them skipped, and
-a skipped check counts as green. The gate would look active while analysing nothing.
+Required checks impose the pull request on their own — a commit pushed directly has no
+result yet and gets refused. That is the trade-off to weigh: the branch can no longer be
+pushed to directly, for any change.
+
+Now that the repository is public, `Examiner les dépendances` and the two `CodeQL` jobs
+actually run and can be required as well. They stay skipped, and would therefore count as
+green, on a private repository without an Advanced Security licence.
 
 On a public repository, Dependency Review, CodeQL and the GitHub attestations are enabled
 automatically. For a private repository with the corresponding GitHub plans, create the
