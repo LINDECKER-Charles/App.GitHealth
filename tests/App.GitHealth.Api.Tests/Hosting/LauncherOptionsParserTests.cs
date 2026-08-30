@@ -15,6 +15,7 @@ public sealed class LauncherOptionsParserTests
         Assert.Equal(LauncherOptions.AutomaticPort, options.Port);
         Assert.Equal(IPAddress.Loopback, LauncherOptions.ListenAddress);
         Assert.True(options.ShouldOpenBrowser);
+        Assert.True(options.ShouldOpenWindow);
         Assert.False(options.ShowHelp);
         Assert.Null(options.RepositoryPath);
         Assert.Null(options.DataDirectory);

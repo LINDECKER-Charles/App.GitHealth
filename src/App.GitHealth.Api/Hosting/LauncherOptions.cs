@@ -17,7 +17,16 @@ internal sealed record LauncherOptions
     /// </summary>
     public string? GitExecutablePath { get; init; }
 
+    /// <summary>
+    /// Faux sur <c>--no-browser</c>, qui vaut « aucune interface » et couvre donc aussi
+    /// la fenêtre. L'interprétation appartient à <c>DesktopDisplayModeResolver</c>.
+    /// </summary>
     public bool ShouldOpenBrowser { get; init; } = true;
+
+    /// <summary>
+    /// Faux sur <c>--no-window</c> : l'interface repasse par le navigateur système.
+    /// </summary>
+    public bool ShouldOpenWindow { get; init; } = true;
 
     public bool ShowHelp { get; init; }
 

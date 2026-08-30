@@ -12,7 +12,8 @@ internal static class StartupFailureReporter
           --port <1-65535>      Utiliser un port loopback précis (automatique par défaut).
           --data-dir <chemin>   Choisir le répertoire des données locales.
           --git-path <chemin>   Utiliser cet exécutable Git plutôt que celui du PATH.
-          --no-browser          Ne pas ouvrir le navigateur au démarrage.
+          --no-window           Ouvrir le navigateur système plutôt qu'une fenêtre.
+          --no-browser          N'ouvrir aucune interface au démarrage.
           --help, -h            Afficher cette aide.
         """;
 

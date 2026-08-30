@@ -8,6 +8,7 @@ internal static class LauncherOptionsParser
     private const string GitPathOption = "--git-path";
     private const string HelpOption = "--help";
     private const string NoBrowserOption = "--no-browser";
+    private const string NoWindowOption = "--no-window";
     private const string PortOption = "--port";
     private const string RepositoryOption = "--repo";
 
@@ -69,6 +70,12 @@ internal static class LauncherOptionsParser
             return true;
         }
 
+        if (argument == NoWindowOption)
+        {
+            state.DisableWindow();
+            return true;
+        }
+
         if (argument is HelpOption or "-h")
         {
             state.ShowHelp = true;
@@ -76,6 +83,7 @@ internal static class LauncherOptionsParser
         }
 
         RejectFlagValue(argument, NoBrowserOption);
+        RejectFlagValue(argument, NoWindowOption);
         RejectFlagValue(argument, HelpOption);
         return false;
     }
@@ -151,6 +159,7 @@ internal static class LauncherOptionsParser
     {
         private readonly HashSet<ValueOption> _seenOptions = [];
         private bool _noBrowserSeen;
+        private bool _noWindowSeen;
 
         public string? RepositoryPath { get; private set; }
 
@@ -161,6 +170,8 @@ internal static class LauncherOptionsParser
         public string? GitExecutablePath { get; private set; }
 
         public bool ShouldOpenBrowser { get; private set; } = true;
+
+        public bool ShouldOpenWindow { get; private set; } = true;
 
         public bool ShowHelp { get; set; }
 
@@ -205,6 +216,18 @@ internal static class LauncherOptionsParser
             ShouldOpenBrowser = false;
         }
 
+        public void DisableWindow()
+        {
+            if (_noWindowSeen)
+            {
+                throw new LauncherArgumentException(
+                    $"L’option {NoWindowOption} ne peut être fournie qu’une fois.");
+            }
+
+            _noWindowSeen = true;
+            ShouldOpenWindow = false;
+        }
+
         public LauncherOptions Build() => new()
         {
             RepositoryPath = RepositoryPath,
@@ -212,6 +235,7 @@ internal static class LauncherOptionsParser
             DataDirectory = DataDirectory,
             GitExecutablePath = GitExecutablePath,
             ShouldOpenBrowser = ShouldOpenBrowser,
+            ShouldOpenWindow = ShouldOpenWindow,
             ShowHelp = ShowHelp,
             HostArguments = HostArguments.ToArray(),
         };

@@ -12,6 +12,7 @@ public sealed class StartupFailureReporterTests
         Assert.Contains("--data-dir", StartupFailureReporter.HelpText, StringComparison.Ordinal);
         Assert.Contains("--git-path", StartupFailureReporter.HelpText, StringComparison.Ordinal);
         Assert.Contains("--no-browser", StartupFailureReporter.HelpText, StringComparison.Ordinal);
+        Assert.Contains("--no-window", StartupFailureReporter.HelpText, StringComparison.Ordinal);
         Assert.Contains("--help", StartupFailureReporter.HelpText, StringComparison.Ordinal);
     }
 
