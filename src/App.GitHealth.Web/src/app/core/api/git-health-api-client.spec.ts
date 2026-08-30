@@ -86,6 +86,9 @@ describe('GitHealthApiClient', () => {
       initialRepositoryPath: null,
       repositoriesRoot: '/repositories',
       canBrowseDirectories: false,
+      isGitAvailable: true,
+      gitExecutablePath: '/usr/bin/git',
+      gitDiagnostic: 'git version 2.51.0',
     };
     const result = firstValueFrom(client.getRuntime());
 

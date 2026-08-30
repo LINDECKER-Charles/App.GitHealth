@@ -3,8 +3,20 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { RuntimeInfo } from './core/api/api.models';
+import { ProjectsStore } from './core/workspace/projects-store';
 import { WorkspaceDialogs } from './core/workspace/workspace-dialogs';
 import { databaseBackupUrl } from './core/workspace/app-identity';
+
+const runtimeWithoutGit: RuntimeInfo = {
+  mode: 'native',
+  initialRepositoryPath: null,
+  repositoriesRoot: null,
+  canBrowseDirectories: true,
+  isGitAvailable: false,
+  gitExecutablePath: null,
+  gitDiagnostic: 'Git est introuvable. Emplacements testés : le PATH.',
+};
 
 describe('App', () => {
   beforeEach(async () => {
@@ -59,6 +71,17 @@ describe('App', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     await fixture.whenStable();
     expect(dialogs.isPaletteOpen()).toBe(false);
+  });
+
+  it('annonce l’indisponibilité de Git avant le premier scan', async () => {
+    const fixture = await render();
+    expect(fixture.nativeElement.querySelector('.workspace-alert')).toBeNull();
+
+    TestBed.inject(ProjectsStore).runtime.set(runtimeWithoutGit);
+    await fixture.whenStable();
+
+    const alert = fixture.nativeElement.querySelector('.workspace-alert') as HTMLElement;
+    expect(alert.textContent).toContain(runtimeWithoutGit.gitDiagnostic);
   });
 
   it('ne rejoue pas l’introduction une fois passée dans la session', async () => {

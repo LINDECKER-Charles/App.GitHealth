@@ -12,6 +12,11 @@ internal sealed record LauncherOptions
 
     public string? DataDirectory { get; init; }
 
+    /// <summary>
+    /// Chemin explicite de l'exécutable Git, quand il n'est pas sur le <c>PATH</c>.
+    /// </summary>
+    public string? GitExecutablePath { get; init; }
+
     public bool ShouldOpenBrowser { get; init; } = true;
 
     public bool ShowHelp { get; init; }

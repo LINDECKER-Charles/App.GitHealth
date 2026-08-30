@@ -18,6 +18,7 @@ public sealed class LauncherOptionsParserTests
         Assert.False(options.ShowHelp);
         Assert.Null(options.RepositoryPath);
         Assert.Null(options.DataDirectory);
+        Assert.Null(options.GitExecutablePath);
         Assert.Empty(options.HostArguments);
         Assert.Equal(
             "http://127.0.0.1:5187/",
@@ -33,6 +34,7 @@ public sealed class LauncherOptionsParserTests
             "--environment", "Development",
             "--port=5187",
             "--data-dir", "D:/données GitHealth",
+            "--git-path", "D:/outils/Git/cmd/git.exe",
             "--no-browser",
         };
 
@@ -42,6 +44,7 @@ public sealed class LauncherOptionsParserTests
         Assert.Equal("D:/dépôts/produit", options.RepositoryPath);
         Assert.Equal(5187, options.Port);
         Assert.Equal("D:/données GitHealth", options.DataDirectory);
+        Assert.Equal("D:/outils/Git/cmd/git.exe", options.GitExecutablePath);
         Assert.False(options.ShouldOpenBrowser);
         Assert.Equal(["--environment", "Development"], options.HostArguments);
     }
@@ -61,6 +64,7 @@ public sealed class LauncherOptionsParserTests
     [Theory]
     [InlineData("--repo=")]
     [InlineData("--data-dir=")]
+    [InlineData("--git-path=")]
     [InlineData("--port")]
     [InlineData("--port=0")]
     [InlineData("--port=65536")]

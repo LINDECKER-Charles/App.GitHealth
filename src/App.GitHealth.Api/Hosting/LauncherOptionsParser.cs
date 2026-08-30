@@ -5,6 +5,7 @@ namespace App.GitHealth.Api.Hosting;
 internal static class LauncherOptionsParser
 {
     private const string DataDirectoryOption = "--data-dir";
+    private const string GitPathOption = "--git-path";
     private const string HelpOption = "--help";
     private const string NoBrowserOption = "--no-browser";
     private const string PortOption = "--port";
@@ -16,6 +17,7 @@ internal static class LauncherOptionsParser
             [RepositoryOption] = ValueOption.Repository,
             [PortOption] = ValueOption.Port,
             [DataDirectoryOption] = ValueOption.DataDirectory,
+            [GitPathOption] = ValueOption.GitExecutablePath,
         };
 
     public static LauncherParseResult Parse(IReadOnlyList<string> arguments)
@@ -133,6 +135,7 @@ internal static class LauncherOptionsParser
         ValueOption.Repository => RepositoryOption,
         ValueOption.Port => PortOption,
         ValueOption.DataDirectory => DataDirectoryOption,
+        ValueOption.GitExecutablePath => GitPathOption,
         _ => throw new ArgumentOutOfRangeException(nameof(option)),
     };
 
@@ -141,6 +144,7 @@ internal static class LauncherOptionsParser
         Repository,
         Port,
         DataDirectory,
+        GitExecutablePath,
     }
 
     private sealed class ParserState
@@ -153,6 +157,8 @@ internal static class LauncherOptionsParser
         public int Port { get; private set; } = LauncherOptions.AutomaticPort;
 
         public string? DataDirectory { get; private set; }
+
+        public string? GitExecutablePath { get; private set; }
 
         public bool ShouldOpenBrowser { get; private set; } = true;
 
@@ -179,6 +185,9 @@ internal static class LauncherOptionsParser
                 case ValueOption.DataDirectory:
                     DataDirectory = RequiredValue(value, DataDirectoryOption);
                     break;
+                case ValueOption.GitExecutablePath:
+                    GitExecutablePath = RequiredValue(value, GitPathOption);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(option));
             }
@@ -201,6 +210,7 @@ internal static class LauncherOptionsParser
             RepositoryPath = RepositoryPath,
             Port = Port,
             DataDirectory = DataDirectory,
+            GitExecutablePath = GitExecutablePath,
             ShouldOpenBrowser = ShouldOpenBrowser,
             ShowHelp = ShowHelp,
             HostArguments = HostArguments.ToArray(),

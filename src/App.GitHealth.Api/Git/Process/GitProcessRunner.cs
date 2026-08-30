@@ -11,11 +11,14 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
 {
     private const int ReadBufferSize = 4096;
     private readonly SemaphoreSlim _concurrency;
+    private readonly GitExecutableLocation _location;
     private readonly GitScannerOptions _options;
 
-    public GitProcessRunner(IOptions<GitScannerOptions> options)
+    public GitProcessRunner(IOptions<GitScannerOptions> options, GitExecutableResolver resolver)
     {
+        ArgumentNullException.ThrowIfNull(resolver);
         _options = options.Value;
+        _location = resolver.Location;
         _concurrency = new SemaphoreSlim(
             _options.MaximumParallelCommands,
             _options.MaximumParallelCommands);
@@ -96,9 +99,15 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
         return new GitCommandResult(process.ExitCode, streams[0], streams[1]);
     }
 
-    private static DiagnosticsProcess StartProcess(GitCommand command)
+    private DiagnosticsProcess StartProcess(GitCommand command)
     {
-        var process = new DiagnosticsProcess { StartInfo = CreateStartInfo(command) };
+        var executablePath = _location.ExecutablePath ?? throw new GitProcessException(
+            RepositoryErrorCode.GitUnavailable,
+            _location.UnavailableMessage);
+        var process = new DiagnosticsProcess
+        {
+            StartInfo = CreateStartInfo(command, executablePath),
+        };
         try
         {
             process.Start();
@@ -110,14 +119,15 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
             process.Dispose();
             throw new GitProcessException(
                 RepositoryErrorCode.GitUnavailable,
-                "Git est introuvable ou ne peut pas être démarré.",
+                $"Git ne peut pas être démarré depuis « {executablePath} ». Indiquez un autre "
+                + $"chemin avec {GitExecutableLocation.CommandLineOption} <chemin>.",
                 exception);
         }
     }
 
-    internal static ProcessStartInfo CreateStartInfo(GitCommand command)
+    internal static ProcessStartInfo CreateStartInfo(GitCommand command, string executablePath)
     {
-        var startInfo = new ProcessStartInfo("git")
+        var startInfo = new ProcessStartInfo(executablePath)
         {
             WorkingDirectory = command.WorkingDirectory,
             UseShellExecute = false,

@@ -23,6 +23,21 @@ public sealed class RuntimeEndpointTests
     }
 
     [Fact]
+    public async Task RuntimeReportsGitAvailabilityAndTheResolvedExecutable()
+    {
+        using var factory = new ApiApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var payload = await client.GetFromJsonAsync<JsonElement>("/api/runtime");
+
+        var isGitAvailable = payload.GetProperty("isGitAvailable").GetBoolean();
+        var executablePath = payload.GetProperty("gitExecutablePath").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(
+            payload.GetProperty("gitDiagnostic").GetString()));
+        Assert.Equal(isGitAvailable, executablePath is not null);
+    }
+
+    [Fact]
     public async Task RuntimeExposesTheRepositoryProvidedByTheLauncher()
     {
         var repositoryPath = Path.Combine(Path.GetTempPath(), "githealth-initial-repository");

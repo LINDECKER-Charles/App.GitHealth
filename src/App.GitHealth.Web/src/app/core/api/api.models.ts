@@ -29,6 +29,12 @@ export interface RuntimeInfo {
   readonly initialRepositoryPath: string | null;
   readonly repositoriesRoot: string | null;
   readonly canBrowseDirectories: boolean;
+  /** Git répond au démarrage ; faux, aucune analyse ne peut aboutir. */
+  readonly isGitAvailable: boolean;
+  /** Exécutable Git retenu, ou `null` s'il est introuvable. */
+  readonly gitExecutablePath: string | null;
+  /** Version de Git, ou la raison de son indisponibilité. */
+  readonly gitDiagnostic: string;
 }
 
 export interface DirectoryEntry {

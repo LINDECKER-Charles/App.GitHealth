@@ -17,6 +17,7 @@ import { DsIcon } from './ui/core/ds-icon';
 import { DsIconButton } from './ui/core/ds-icon-button';
 import { DsKbd } from './ui/core/ds-kbd';
 import { DsStatusDot } from './ui/core/ds-status-dot';
+import { DsCallout } from './ui/surfaces/ds-callout';
 import { IconName } from './ui/icon-name';
 
 const introStorageKey = 'githealth.intro';
@@ -30,6 +31,7 @@ const introSkippedValue = 'skipped';
     BootIntro,
     CommandPalette,
     DsBadge,
+    DsCallout,
     DsIcon,
     DsIconButton,
     DsKbd,
@@ -56,6 +58,12 @@ export class App {
   protected readonly guideUrl = userGuideUrl;
   protected readonly isIntroVisible = signal(false);
   protected readonly themeIcon = computed<IconName>(() => (this.theme.isDark() ? 'sun' : 'moon'));
+
+  /** Sans Git, aucune analyse n'aboutit : la cause est annoncée avant le premier scan. */
+  protected readonly gitFailure = computed(() => {
+    const runtime = this.store.runtime();
+    return runtime !== null && !runtime.isGitAvailable ? runtime.gitDiagnostic : null;
+  });
 
   constructor() {
     this.isIntroVisible.set(this.shouldPlayIntro());

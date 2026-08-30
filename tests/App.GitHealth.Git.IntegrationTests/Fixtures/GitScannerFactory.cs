@@ -18,7 +18,7 @@ internal static class GitScannerFactory
             UseAheadBehind = useAheadBehind,
         });
         settings.Value.RepositoriesRoot = repositoriesRoot;
-        var runner = new GitProcessRunner(settings);
+        var runner = new GitProcessRunner(settings, GitExecutableResolver.Capture(null));
         return new GitRepositoryScanner(runner, settings, new FixedClock(ScanTime));
     }
 }

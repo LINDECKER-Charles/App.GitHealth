@@ -8,6 +8,8 @@ namespace App.GitHealth.Git.IntegrationTests.Process;
 
 public sealed class GitProcessRunnerTests
 {
+    private static GitExecutableResolver GitResolver => GitExecutableResolver.Capture(null);
+
     [Fact]
     public async Task OutputLimitStopsTheCommandWithAControlledError()
     {
@@ -15,7 +17,7 @@ public sealed class GitProcessRunnerTests
         {
             MaximumOutputBytes = 4,
         });
-        var runner = new GitProcessRunner(options);
+        var runner = new GitProcessRunner(options, GitResolver);
         var command = GitCommand.Create(Environment.CurrentDirectory, ["--version"]);
 
         var exception = await Assert.ThrowsAsync<GitProcessException>(() =>
@@ -28,7 +30,7 @@ public sealed class GitProcessRunnerTests
     public async Task PreCancelledCommandPropagatesCancellation()
     {
         var options = Options.Create(new GitScannerOptions());
-        var runner = new GitProcessRunner(options);
+        var runner = new GitProcessRunner(options, GitResolver);
         var command = GitCommand.Create(Environment.CurrentDirectory, ["--version"]);
         using var cancellation = new CancellationTokenSource();
         await cancellation.CancelAsync();
@@ -45,7 +47,7 @@ public sealed class GitProcessRunnerTests
         {
             CommandTimeout = TimeSpan.FromMilliseconds(100),
         });
-        var runner = new GitProcessRunner(options);
+        var runner = new GitProcessRunner(options, GitResolver);
         var command = GitCommand.Create(
             Environment.CurrentDirectory,
             ["daemon", "--verbose", "--listen=127.0.0.1", "--port=0",
@@ -65,7 +67,7 @@ public sealed class GitProcessRunnerTests
         {
             CommandTimeout = TimeSpan.FromSeconds(15),
         });
-        var runner = new GitProcessRunner(options);
+        var runner = new GitProcessRunner(options, GitResolver);
         using var cancellation = new CancellationTokenSource();
         var execution = runner.RunAsync(probe.CreateCommand(), cancellation.Token);
         var processIds = await probe.WaitForProcessesAsync(execution);
@@ -80,11 +82,13 @@ public sealed class GitProcessRunnerTests
     public async Task ConcurrencyLimitAppliesAcrossAllGitCommands()
     {
         using var repository = GitTestRepository.Create();
-        using var runner = new GitProcessRunner(Options.Create(new GitScannerOptions
-        {
-            CommandTimeout = TimeSpan.FromSeconds(15),
-            MaximumParallelCommands = 1,
-        }));
+        using var runner = new GitProcessRunner(
+            Options.Create(new GitScannerOptions
+            {
+                CommandTimeout = TimeSpan.FromSeconds(15),
+                MaximumParallelCommands = 1,
+            }),
+            GitResolver);
         using var firstCancellation = new CancellationTokenSource();
         using var secondCancellation = new CancellationTokenSource();
         var first = runner.RunAsync(CreateBlockingCommand(repository), firstCancellation.Token);
@@ -110,7 +114,7 @@ public sealed class GitProcessRunnerTests
             Environment.CurrentDirectory,
             ["show-ref", "--verify", hostile]);
 
-        var startInfo = GitProcessRunner.CreateStartInfo(command);
+        var startInfo = GitProcessRunner.CreateStartInfo(command, "git");
 
         Assert.False(startInfo.UseShellExecute);
         Assert.Contains(hostile, startInfo.ArgumentList);
@@ -131,7 +135,7 @@ public sealed class GitProcessRunnerTests
             repositoryPath,
             ["-C", repositoryPath, "status", "--short"]);
 
-        var startInfo = GitProcessRunner.CreateStartInfo(command);
+        var startInfo = GitProcessRunner.CreateStartInfo(command, "git");
 
         Assert.Contains($"safe.directory={repositoryPath}", startInfo.ArgumentList);
         Assert.DoesNotContain("safe.directory=*", startInfo.ArgumentList);

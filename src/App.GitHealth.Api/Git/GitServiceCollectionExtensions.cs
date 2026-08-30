@@ -2,6 +2,7 @@ using App.GitHealth.Api.Git.Process;
 using App.GitHealth.Core.Analysis;
 using App.GitHealth.Core.Common;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace App.GitHealth.Api.Git;
 
@@ -18,9 +19,11 @@ public static class GitServiceCollectionExtensions
             .ValidateOnStart();
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton<
-                Microsoft.Extensions.Options.IValidateOptions<GitScannerOptions>,
+                IValidateOptions<GitScannerOptions>,
                 GitScannerOptionsValidator>());
         services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton(provider => GitExecutableResolver.Capture(
+            provider.GetRequiredService<IOptions<GitScannerOptions>>().Value.ExecutablePath));
         services.AddSingleton<IGitProcessRunner, GitProcessRunner>();
         services.AddSingleton<IRepositoryScanner, GitRepositoryScanner>();
         services.AddSingleton<GitRuntimeDiagnostic>();

@@ -42,7 +42,9 @@ internal sealed class GitPhaseBenchmark
             MaximumParallelCommands = 4,
             UseAheadBehind = true,
         };
-        var runner = new GitProcessRunner(Options.Create(settings));
+        var runner = new GitProcessRunner(
+            Options.Create(settings),
+            GitExecutableResolver.Capture(settings.ExecutablePath));
         var repository = await GitRepositoryReader.CaptureAsync(
             runner,
             new GitRepositoryCaptureRequest(repositoryPath, RepositoriesRoot: null),

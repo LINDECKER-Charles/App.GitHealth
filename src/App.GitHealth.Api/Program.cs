@@ -3,6 +3,7 @@ using App.GitHealth.Api.Features;
 using App.GitHealth.Api.Features.Common;
 using App.GitHealth.Api.Features.Security;
 using App.GitHealth.Api.Git;
+using App.GitHealth.Api.Git.Process;
 using App.GitHealth.Api.Hosting;
 using App.GitHealth.Api.Persistence;
 using App.GitHealth.Api.Persistence.Services;
@@ -116,7 +117,19 @@ static void ApplyLauncherConfiguration(
     LauncherOptions options)
 {
     ApplyRepositoryConfiguration(configuration, options.RepositoryPath);
+    ApplyGitConfiguration(configuration, options.GitExecutablePath);
     ApplyDataConfiguration(configuration, options.DataDirectory);
+}
+
+static void ApplyGitConfiguration(
+    ConfigurationManager configuration,
+    string? gitExecutablePath)
+{
+    if (!string.IsNullOrWhiteSpace(gitExecutablePath))
+    {
+        configuration[GitExecutableLocation.ConfigurationKey] = Path.GetFullPath(
+            gitExecutablePath);
+    }
 }
 
 static void ApplyRepositoryConfiguration(

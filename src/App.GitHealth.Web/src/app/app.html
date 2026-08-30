@@ -48,6 +48,12 @@
     </a>
   </header>
 
+  @if (gitFailure(); as diagnostic) {
+    <ds-callout class="workspace-alert" tone="danger" title="Git est indisponible">
+      {{ diagnostic }}
+    </ds-callout>
+  }
+
   <div class="workspace-body">
     <app-project-rail />
     <main id="workspace-content" class="workspace-main" tabindex="-1">
