@@ -74,6 +74,18 @@ if (-not (Test-Path -LiteralPath (Join-Path $resolvedPublish $mainExecutable) -P
     throw "La publication $RuntimeIdentifier ne contient pas '$mainExecutable'."
 }
 
+# --icon attend un .ico sous Windows et un .icns sous macOS : seule la cible Windows
+# dispose aujourd'hui du format attendu.
+$iconArguments = @()
+if ($RuntimeIdentifier -eq "win-x64") {
+    $iconPath = Join-Path $PSScriptRoot "../src/App.GitHealth.Api/githealth.ico"
+    if (-not (Test-Path -LiteralPath $iconPath -PathType Leaf)) {
+        throw "L'icone '$iconPath' est introuvable : les raccourcis seraient sans icone."
+    }
+
+    $iconArguments = @("--icon", (Resolve-Path -LiteralPath $iconPath).Path)
+}
+
 $destination = Join-Path ([System.IO.Path]::GetFullPath($OutputRoot)) $RuntimeIdentifier
 [System.IO.Directory]::CreateDirectory($destination) | Out-Null
 $vpk = Resolve-VpkCommand -RequiredVersion $vpkVersion
@@ -87,7 +99,8 @@ Write-Host "Empaquetage Velopack de GitHealth $normalizedVersion pour $RuntimeId
     --packTitle $packTitle `
     --packAuthors $packAuthors `
     --outputDir $destination `
-    --channel $RuntimeIdentifier
+    --channel $RuntimeIdentifier `
+    @iconArguments
 if ($LASTEXITCODE -ne 0) {
     throw "L'empaquetage Velopack $RuntimeIdentifier a echoue."
 }

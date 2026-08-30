@@ -397,6 +397,15 @@ La fenêtre s'ouvre depuis le thread principal du processus, marqué `[STAThread
 instructions de haut niveau le laisseraient en apartment MTA, où WebView2 s'initialise
 sans jamais rendre la page. macOS impose le même thread pour sa boucle d'évènements.
 
+L'exécutable est un programme de sous-système fenêtré : au double-clic, il n'ouvre pas
+de console à côté de sa fenêtre, dont la fermeture arrêterait l'application. Windows ne
+lui en attache alors aucune non plus quand il est lancé depuis un terminal, ce qui
+rendrait l'aide et les diagnostics muets : le démarrage se rattache donc à la console du
+processus appelant, sauf quand la sortie standard est déjà héritée — une redirection,
+comme celle du smoke test, ne doit jamais être remplacée. L'icône de l'application est
+embarquée dans l'exécutable, d'où la reprennent l'explorateur, le menu Démarrer et les
+raccourcis posés par l'installeur.
+
 Si le moteur de rendu du système est inutilisable, l'hôte écrit un avertissement sur
 `stderr` et bascule sur le navigateur système : l'application ne s'arrête jamais faute de
 webview.

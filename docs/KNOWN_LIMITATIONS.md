@@ -14,10 +14,6 @@
   seules les archives portables sont publiées et la mise à jour reste manuelle.
 - Sous Windows, la fenêtre a besoin du runtime WebView2. S'il est absent, l'application
   tente de le télécharger et peut s'arrêter sans message si ce téléchargement échoue.
-- Lancé au double-clic depuis l'explorateur, `githealth.exe` ouvre une console à côté de
-  sa fenêtre, et la fermer arrête l'application. L'exécutable reste un programme de
-  sous-système console pour que `--help` et les diagnostics restent lisibles depuis un
-  terminal. Les raccourcis posés par l'installeur ne sont pas concernés.
 - GitHealth n'embarque pas Git : un Git installé sur le poste reste nécessaire.
   `--git-path` désigne un exécutable situé hors du `PATH` et des emplacements standards.
 - Les dépôts de plusieurs milliers de branches peuvent nécessiter plusieurs minutes. Le

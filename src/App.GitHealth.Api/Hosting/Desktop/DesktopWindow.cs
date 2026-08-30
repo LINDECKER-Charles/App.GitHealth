@@ -27,7 +27,7 @@ internal static class DesktopWindow
     /// </summary>
     private const int SilentLogVerbosity = 0;
 
-    private const string IconRelativePath = "wwwroot/favicon.ico";
+    private const string IconFileName = "githealth.ico";
 
     /// <summary>
     /// Ouvre la fenêtre et rend la main à sa fermeture.
@@ -81,7 +81,7 @@ internal static class DesktopWindow
             return null;
         }
 
-        var iconPath = Path.Combine(AppContext.BaseDirectory, IconRelativePath);
+        var iconPath = Path.Combine(AppContext.BaseDirectory, IconFileName);
         return File.Exists(iconPath) ? iconPath : null;
     }
 

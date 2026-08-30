@@ -5,6 +5,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="githealth.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
       <PrivateAssets>all</PrivateAssets>
@@ -20,6 +24,13 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>githealth</AssemblyName>
+    <!--
+      Sous-systeme fenetre : au double-clic, l'application ne doit pas trainer une
+      console a cote de sa fenetre, dont la fermeture l'arreterait. La sortie standard
+      reste lisible depuis un terminal, TerminalOutput l'y rebranche.
+    -->
+    <OutputType>WinExe</OutputType>
+    <ApplicationIcon>githealth.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <FrontendRoot>$(MSBuildProjectDirectory)/../App.GitHealth.Web</FrontendRoot>

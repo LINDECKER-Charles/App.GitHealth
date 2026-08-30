@@ -34,6 +34,10 @@ public sealed partial class Program
         // hooks d'installation et de mise à jour. Placé plus bas, il ne les voit jamais.
         VelopackApp.Build().Run();
 
+        // Avant toute écriture : l'exécutable est fenêtré, sans cela l'aide et les
+        // diagnostics de démarrage n'atteindraient aucun terminal.
+        TerminalOutput.AttachToCallingTerminal();
+
         var parseResult = LauncherOptionsParser.Parse(args);
         if (!parseResult.IsSuccess)
         {
