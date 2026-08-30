@@ -44,13 +44,28 @@ reflogs restent intacts. Le détail de ces garanties est décrit dans le
 
 ## Installer et démarrer
 
+GitHealth s'installe comme une application de bureau : il ouvre sa propre fenêtre,
+adossée au moteur de rendu du système. Les archives portables restent publiées pour qui
+préfère se passer d'installeur, et le mode Docker sert l'auto-hébergement.
+
 ### Windows
 
-1. Extraire entièrement `githealth-win-x64.zip`.
-2. Lancer `githealth.exe`.
-3. Autoriser l'ouverture du navigateur si Windows la demande.
+1. Télécharger `App.GitHealth-win-x64-Setup.exe` depuis la page des releases.
+2. Le lancer : GitHealth s'installe pour l'utilisateur courant dans
+   `%LOCALAPPDATA%\App.GitHealth`, sans invite UAC, avec un raccourci sur le Bureau et
+   dans le menu Démarrer.
+3. Ouvrir GitHealth : la fenêtre s'affiche maximisée.
 
-Un dépôt peut être prérempli dès le lancement :
+L'installeur n'est pas signé. Si Windows demande une confirmation supplémentaire au
+premier lancement, vérifier l'origine du fichier avant de poursuivre.
+
+**Scoop** installe l'archive portable plutôt que l'installeur : chaque release Windows
+publie un manifeste `githealth.json` à côté des archives, et `scoop install` accepte son
+URL directement. Les données vivant dans `%LOCALAPPDATA%\GitHealth`, elles survivent à
+`scoop uninstall`.
+
+Sans installeur, extraire entièrement `githealth-win-x64.zip` puis lancer
+`githealth.exe`. Un dépôt peut être prérempli dès le lancement :
 
 ```powershell
 githealth.exe --repo D:\Dev\MonDepot
@@ -58,17 +73,31 @@ githealth.exe --repo D:\Dev\MonDepot
 
 ### macOS
 
-Extraire l'archive correspondant au processeur, puis lancer `githealth` :
+Télécharger `App.GitHealth-osx-arm64-Setup.pkg`, ou la variante `osx-x64` sur un Mac
+Intel, puis ouvrir le paquet et suivre l'installation.
+
+Ni l'installeur ni les archives ne sont signés ni notariés. Si Gatekeeper bloque le
+premier lancement, vérifier l'origine du fichier avant d'autoriser explicitement
+l'application dans les réglages de confidentialité de macOS.
+
+Sans installeur, extraire l'archive correspondant au processeur, puis lancer
+`githealth` :
 
 ```shell
 ./githealth --repo "$HOME/Dev/MonDepot"
 ```
 
-La release candidate n'est ni signée ni notariée. Si Gatekeeper bloque le premier
-lancement, vérifier l'origine de l'archive avant d'autoriser explicitement le binaire
-dans les réglages de confidentialité de macOS.
+### Linux
 
-### Docker
+Extraire `githealth-linux-x64.tar.gz`, puis lancer `githealth`. La fenêtre y dépend de
+WebKitGTK : sans cette bibliothèque, GitHealth écrit un avertissement et ouvre
+l'interface dans le navigateur système. Il n'y a pas d'installeur ni de mise à jour
+depuis l'application ; une nouvelle version se récupère comme la première.
+
+### Auto-hébergement avec Docker
+
+Le mode conteneur n'ouvre aucune fenêtre : il sert l'interface en HTTP, à ouvrir dans un
+navigateur.
 
 Copier `.env.example` vers `.env`, indiquer dans `GITHEALTH_REPOSITORIES_ROOT` le
 dossier parent des dépôts, puis lancer :
@@ -81,12 +110,32 @@ Ouvrir ensuite `http://127.0.0.1:8080`. Le bouton **Parcourir** affiche les doss
 montés sous `/repositories` et permet de choisir le dépôt sans saisir son chemin de
 conteneur.
 
+### Mettre à jour
+
+Installé par `Setup.exe` ou par le paquet macOS, GitHealth vérifie si une version plus
+récente est publiée. Le cas échéant, un bouton **Mettre à jour** apparaît dans la barre
+supérieure : il télécharge la version, l'installe et relance l'application. Hors d'une
+installation gérée — archive portable, Scoop, Docker, Linux — le bouton n'apparaît pas.
+
+Si la source des releases est injoignable, rien ne s'affiche et rien n'échoue :
+l'application reste utilisable hors ligne. La base vit dans un dossier disjoint de
+l'installation : elle survit aux mises à jour comme à la désinstallation.
+
 ### Prérequis
 
-Git 2.38 ou plus récent est recommandé. Les archives natives embarquent le runtime .NET,
-mais **pas Git** : il doit déjà être installé et joignable depuis un terminal. Les
-archives ne sont pas des exécutables monofichiers — les extraire entièrement et garder
-leurs fichiers ensemble.
+Git 2.38 ou plus récent est recommandé. GitHealth embarque le runtime .NET, mais **pas
+Git** : il doit déjà être installé sur le poste. Il le cherche seul, et le premier trouvé
+gagne : le chemin donné par `--git-path`, puis `git` via le `PATH`, puis les emplacements
+d'installation standards — `%ProgramFiles%\Git\cmd`, `%ProgramFiles(x86)%\Git\cmd` et
+`%LOCALAPPDATA%\Programs\Git\cmd` sur Windows, `/opt/homebrew/bin`, `/usr/local/bin` et
+`/usr/bin` sur macOS, `/usr/bin` et `/usr/local/bin` sur Linux.
+
+Si aucun ne convient, l'interface affiche un bandeau nommant les emplacements testés au
+lieu d'échouer au premier scan. `--git-path <chemin>`, ou la configuration
+`GitHealth:Git:ExecutablePath`, désigne alors l'exécutable à utiliser.
+
+Les archives ne sont pas des exécutables monofichiers — les extraire entièrement et
+garder leurs fichiers ensemble.
 
 ## Options du lanceur
 
@@ -95,11 +144,17 @@ leurs fichiers ensemble.
 | `--repo <chemin>` | vide | préremplit le dépôt proposé sur l'accueil |
 | `--port <1-65535>` | port disponible | impose un port précis sur l'interface loopback |
 | `--data-dir <chemin>` | répertoire système | déplace la base et son verrou d'instance |
-| `--no-browser` | navigateur ouvert | n'ouvre pas le navigateur au démarrage |
+| `--git-path <chemin>` | résolution automatique | impose l'exécutable Git à utiliser |
+| `--no-window` | fenêtre de bureau | ouvre l'interface dans le navigateur système |
+| `--no-browser` | interface ouverte | n'ouvre aucune interface au démarrage |
 | `--help`, `-h` | — | affiche l'aide puis quitte |
 
-Les formes `--repo=…`, `--port=…` et `--data-dir=…` sont également acceptées. Sans
-`--port`, le système attribue un port disponible ; GitHealth n'écoute que sur
+Les formes `--repo=…`, `--port=…`, `--data-dir=…` et `--git-path=…` sont également
+acceptées. `--no-browser` implique `--no-window` : ni fenêtre ni navigateur, l'interface
+reste joignable à l'adresse annoncée sur la console. En mode conteneur, aucune interface
+n'est ouverte et ces deux options n'ont pas d'objet.
+
+Sans `--port`, le système attribue un port disponible ; GitHealth n'écoute que sur
 `127.0.0.1` et refuse de démarrer plutôt que de basculer silencieusement sur une
 interface réseau.
 
@@ -112,10 +167,15 @@ Une séquence d'ouverture décrit ce que GitHealth lit au démarrage. **Passer
 l'introduction** ou la touche `Échap` la coupent ; elle ne rejoue plus pendant la
 session. Un mouvement réduit demandé par le système la supprime entièrement.
 
+La fenêtre s'ouvre maximisée : l'espace de travail réclame au moins 1180 pixels CSS de
+large, et une taille fixe ne les garantit pas sur un écran mis à l'échelle. La restaurer
+la ramène à 1360 × 860 pixels, sans jamais descendre sous 960 × 600.
+
 L'écran tient en trois zones :
 
 - la **barre supérieure** porte la recherche globale, le thème clair ou sombre, la
-  sauvegarde des données et le guide ;
+  sauvegarde des données et le guide — ainsi que **Mettre à jour** quand une version plus
+  récente est publiée ;
 - le **rail** liste les dépôts observés, leur accessibilité et leur chemin, rangés en
   sections repliables ;
 - la **zone centrale** présente le dépôt courant sous trois onglets : **Diagnostic**,
@@ -162,6 +222,10 @@ données. Les sections repliées, elles, restent dans le navigateur de ce poste.
 3. Choisir le nom affiché, la référence de comparaison et le périmètre des branches.
 4. Sélectionner **Ajouter le dépôt**.
 
+En fenêtre, **Parcourir** ouvre le dialogue de dossier du système : le chemin choisi
+revient dans le champ. Dans un navigateur et en Docker, il affiche le navigateur de
+dossiers servi par l'application.
+
 GitHealth accepte les dépôts standards, bare et les worktrees liés. Il ne clone pas de
 dépôt et n'utilise aucun identifiant distant.
 
@@ -183,7 +247,8 @@ son enregistrement, sans attendre les suivants.
 
 Les analyses avancent **en parallèle** dans la limite fixée par l'hôte, et en file pour
 le reste : un dépôt refusé par une file pleine repart automatiquement dès qu'une place se
-libère. Le suivi reste lisible dans le rail, et fermer la fenêtre n'interrompt rien.
+libère. Le suivi reste lisible dans le rail. Fermer l'onglet du navigateur n'interrompt
+rien ; fermer la fenêtre de bureau arrête GitHealth, et les analyses en cours avec lui.
 
 ## Lire une analyse
 
@@ -346,9 +411,11 @@ courante, remplacer `githealth.db`, puis redémarrer l'application.
 
 ## Arrêter et reprendre
 
-Fermer le processus `githealth` arrête l'application. Au prochain démarrage avec le même
-répertoire de données, les projets, politiques et snapshots sont restaurés. Les options
-du lanceur et les emplacements de données sont détaillés dans [DEVOPS.md](DEVOPS.md).
+Fermer la fenêtre de bureau, ou le processus `githealth`, arrête l'application. En mode
+navigateur, fermer l'onglet laisse le processus en place : c'est lui qu'il faut arrêter.
+Au prochain démarrage avec le même répertoire de données, les projets, politiques et
+snapshots sont restaurés. Les options du lanceur et les emplacements de données sont
+détaillés dans [DEVOPS.md](DEVOPS.md).
 Une analyse interrompue par un arrêt brutal est classée **Annulée** au redémarrage ; le
 dernier snapshot réussi reste disponible.
 
@@ -375,7 +442,20 @@ branche ou depuis les actions groupées ; c'est à vous de l'exécuter, après r
 
 **Où sont stockées mes données ?**
 Dans un fichier `githealth.db` local, dont l'emplacement dépend du système et de
-`--data-dir`. Rien n'est envoyé à l'extérieur.
+`--data-dir`. Rien n'est envoyé à l'extérieur. Sur Windows, il vit dans
+`%LOCALAPPDATA%\GitHealth`, un dossier disjoint de l'installation : mise à jour,
+désinstallation et `scoop uninstall` le laissent intact.
+
+**Le bouton « Mettre à jour » n'apparaît jamais.**
+Il ne concerne que les installations gérées, sur Windows et macOS. Depuis une archive
+portable, Scoop, Docker ou Linux, la mise à jour passe par le canal d'origine. Sinon,
+c'est qu'aucune version plus récente n'est publiée, ou que la source des releases est
+injoignable.
+
+**GitHealth ne trouve pas Git alors qu'il est installé.**
+Il cherche dans le `PATH`, puis aux emplacements d'installation standards. Une
+installation ailleurs se déclare avec `--git-path <chemin>` ; le bandeau d'alerte liste
+les emplacements déjà testés.
 
 **Puis-je exposer GitHealth à mon équipe sur le réseau ?**
 Non. Le produit est mono-utilisateur, écoute sur `127.0.0.1` et n'a ni authentification

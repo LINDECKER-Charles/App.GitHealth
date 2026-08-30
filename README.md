@@ -32,7 +32,7 @@
 
 <p align="center">
   <strong>Voyez quelles branches comptent encore — sans toucher au dépôt.</strong><br>
-  Local par conception · explicable par défaut · Windows, macOS et Docker
+  Local par conception · explicable par défaut · Windows, macOS, Linux et Docker
 </p>
 
 <p align="center">
@@ -102,7 +102,8 @@ Quand les faits ne suffisent pas, l'interface le dit au lieu d'inventer une cert
   du verdict ;
 - relocaliser un dépôt déplacé sans perdre son historique d'analyses ;
 - filtrer, trier, comparer les snapshots et exporter la vue en CSV ;
-- fonctionner en archive native autonome ou dans un conteneur durci.
+- s'installer en application de bureau, se lancer depuis une archive portable ou
+  tourner dans un conteneur durci.
 
 ## 03 — Local n'est pas un slogan, c'est la frontière du produit
 
@@ -114,7 +115,7 @@ Quand les faits ne suffisent pas, l'interface le dit au lieu d'inventer une cert
 | Exposer un service réseau | GitHealth est un outil local mono-utilisateur | [Frontière de confiance](docs/SECURITY_MODEL.md#objectif-et-frontière-de-confiance) |
 
 Les commandes Git sont lancées sans shell, avec délai, budget de sortie, concurrence
-bornée et environnement neutralisé. Le navigateur et l'API partagent une origine locale ;
+bornée et environnement neutralisé. L'interface et l'API partagent une origine locale ;
 la CSP, la session et les jetons anti-forgery renforcent cette frontière. La chaîne de
 publication produit sommes SHA-256 et SBOM SPDX.
 
@@ -124,11 +125,48 @@ publication produit sommes SHA-256 et SBOM SPDX.
 
 ## 04 — Démarrer en quelques minutes
 
-### Archive native — parcours recommandé
+### Application de bureau — parcours recommandé
 
-Télécharger l'archive correspondant à la machine depuis la
-[dernière release](https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest),
-puis lancer l'exécutable depuis n'importe quel répertoire :
+Télécharger l'installeur depuis la
+[dernière release](https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest) :
+`App.GitHealth-win-x64-Setup.exe` sur Windows, `App.GitHealth-<rid>-Setup.pkg` sur macOS.
+L'installation se fait par utilisateur dans `%LocalAppData%\App.GitHealth`, sans invite
+UAC, avec raccourcis Bureau et menu Démarrer.
+
+Au double-clic, GitHealth ouvre une fenêtre native : le serveur local et l'interface
+vivent dans le même processus, et le bouton « Parcourir » ouvre le dialogue de dossier du
+système. Les données restent dans `%LOCALAPPDATA%\GitHealth`, à l'écart de
+l'installation : elles survivent aux mises à jour comme à la désinstallation. Quand une
+version plus récente est publiée, un bouton « Mettre à jour » apparaît dans la barre
+supérieure.
+
+Le runtime .NET est inclus ; Git 2.38 ou plus récent est recommandé. Hors du `PATH` et
+des emplacements d'installation habituels, `--git-path <chemin>` désigne l'exécutable
+Git à utiliser.
+
+> [!NOTE]
+> Les installeurs ne sont ni signés ni notariés. SmartScreen et Gatekeeper peuvent
+> demander une autorisation explicite au premier lancement.
+
+### Gestionnaires de paquets
+
+Un manifeste Scoop accompagne chaque release Windows et installe l'archive portable :
+
+```powershell
+# `/latest/` ignore les préversions : viser la version publiée.
+$version = "v0.1.0-rc.1"
+$base = "https://github.com/LINDECKER-Charles/App.GitHealth/releases/download/$version"
+scoop install "$base/githealth.json"
+```
+
+Les manifestes winget sont produits avec la release, mais leur soumission à
+`microsoft/winget-pkgs` reste à faire : `winget install` n'est pas encore disponible.
+
+### Archives portables
+
+Pour un poste sans installation : télécharger `githealth-win-x64.zip`,
+`githealth-osx-x64.tar.gz`, `githealth-osx-arm64.tar.gz` ou
+`githealth-linux-x64.tar.gz`, puis lancer l'exécutable depuis n'importe quel répertoire :
 
 ```powershell
 # Windows x64
@@ -140,15 +178,16 @@ C:\Applications\GitHealth\githealth.exe --repo D:\Dev\MonDepot
 /Applications/GitHealth/githealth --repo "$HOME/Dev/MonDepot"
 ```
 
-Le lanceur choisit un port libre sur `127.0.0.1`, ouvre le navigateur et conserve les
-données dans le répertoire applicatif de l'utilisateur. Le runtime .NET est inclus ;
-Git 2.38 ou plus récent est recommandé.
+Le lanceur choisit un port libre sur `127.0.0.1` et ouvre la même fenêtre native ;
+`--no-window` lui préfère le navigateur système. Sous Linux, la fenêtre dépend de
+WebKitGTK : à défaut, GitHealth bascule sur le navigateur. Aucune mise à jour in-app en
+dehors des installeurs Windows et macOS.
 
-> [!NOTE]
-> La release candidate macOS n'est pas encore signée ni notariée. Gatekeeper peut
-> demander une autorisation explicite au premier lancement.
+### Docker Compose — auto-hébergement
 
-### Docker Compose
+Le conteneur ne vise pas le poste de développement : il fait tourner GitHealth sur une
+machine que l'on administre. Ni fenêtre, ni mise à jour in-app, et les dépôts doivent
+être montés explicitement.
 
 ```shell
 cp .env.example .env
@@ -186,7 +225,7 @@ Le développement de l'interface Angular et la boucle complète sont détaillés
 ## 06 — Un socle volontairement simple
 
 ```text
-Angular 21  ──HTTP local──▶  ASP.NET Core 10  ──▶  domaine C# pur
+Angular 22  ──HTTP local──▶  ASP.NET Core 10  ──▶  domaine C# pur
                                     │
                                     ├──▶  processus Git bornés et read-only
                                     └──▶  SQLite · projets, politiques, snapshots
@@ -202,10 +241,13 @@ l'infrastructure Docker et le parcours navigateur.
 
 ## 07 — État du projet
 
-La version préparée est **`0.1.0-rc.1`**. Elle inclut les distributions Windows et
-macOS, Docker Compose, la qualification CI, un audit de sécurité et une baseline de
-performance jusqu'à 1 000 branches. Le projet reste une release candidate : les
-[limites connues](docs/KNOWN_LIMITATIONS.md) font partie du contrat public.
+La version préparée est **`0.1.0-rc.1`**. Elle inclut l'application de bureau et ses
+installeurs Windows et macOS, les archives portables Windows, macOS et Linux, le
+manifeste Scoop, Docker Compose, la qualification CI, un audit de sécurité et une
+baseline de performance jusqu'à 1 000 branches. Le projet reste une release candidate :
+les [limites connues](docs/KNOWN_LIMITATIONS.md) font partie du contrat public — ni
+signature de code ni notarisation, pas de mise à jour in-app sur Linux, et Git reste à
+installer soi-même.
 
 Les contributions sont bienvenues. Commencez par
 [CONTRIBUTING.md](CONTRIBUTING.md), consultez le

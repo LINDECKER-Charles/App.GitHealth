@@ -260,6 +260,8 @@ peuvent être adaptées aux conventions du dépôt.
 ## Étape 8 — Finaliser les points d'entrée Windows, macOS et Docker
 
 > Statut : terminée le 29 août 2026
+> Depuis : le lancement natif ouvre une fenêtre de bureau et `--no-window` restitue le
+> navigateur système. Le lanceur accepte aussi `--git-path`, et `linux-x64` est publié.
 
 ### Résultat attendu
 
@@ -364,7 +366,7 @@ Priorité proposée :
 2. Intégrations aux fournisseurs Git et détection des pull requests ouvertes.
 3. Regroupement manuel des identités d'auteur.
 4. Tendances entre snapshots et notifications locales.
-5. Installeurs signés et mise à jour automatique.
+5. Signature des installeurs, notarisation macOS et publication Homebrew Cask.
 
 La suppression distante d'une branche reste volontairement hors de GitHealth tant
 qu'un workflow d'approbation et une intégration fournisseur ne sont pas conçus.

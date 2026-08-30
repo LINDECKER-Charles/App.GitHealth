@@ -50,6 +50,8 @@ le navigateur ne communique donc qu'avec un seul processus et une seule origine.
 | Hôte | ASP.NET Core sert l'API et les fichiers Angular | Un processus, un port et une origine |
 | Exécution principale | Exécutable .NET autonome | Accès direct aux dépôts du poste |
 | Alternative | Docker Compose | Dépôts montés explicitement en lecture seule |
+| Coque de bureau | Photino dans le processus de l'hôte | Pas de processus enfant à superviser |
+| Distribution | Velopack, installation par utilisateur | Sans UAC, données hors de l'installation |
 | Analyse Git | Client Git en ligne de commande | Sémantique Git sans checkout |
 | Persistance | SQLite avec EF Core | Base locale, migrable et sauvegardable |
 | État du front | Services Angular et Signals | Pas de store global externe pour le MVP |
@@ -116,7 +118,14 @@ Aucune recommandation ne déclenche une action Git.
 | Analyse | Exécutable `git`, détection de capacités au démarrage |
 | Contrat HTTP | JSON, Problem Details et OpenAPI |
 | Conteneur | Image Linux multi-stage et Docker Compose |
+| Coque de bureau | Photino.NET 4.0.16 |
+| Installeur et mises à jour | Velopack 1.2.0 |
 | Tests | Tests .NET, tests Angular et scénarios Git d'intégration |
+
+Photino embarque le moteur de rendu du système dans le processus de l'hôte : la fenêtre
+et Kestrel partagent un cycle de vie, sans supervision de processus enfant ni handshake
+de port. Velopack produit un installeur par utilisateur et des paquets delta à partir du
+flux de releases GitHub que la CI publie déjà.
 
 Les versions correctives sont verrouillées dans le dépôt et maintenues dans leur
 branche majeure. Node.js utilise une version supportée par Angular 22, fixée par le
@@ -149,10 +158,10 @@ des données déterministes.
 src/
 ├── App.GitHealth.Core/{Analysis,Branches,Common,Projects,Shared}/
 ├── App.GitHealth.Api/
-│   ├── Features/{Projects,Analyses,Discovery,Policies,Snapshots,Exports,Runtime,Security}/
-│   └── {Git,Persistence,Hosting}/
+│   ├── Features/{Projects,Analyses,Discovery,Policies,Snapshots,Exports,Runtime,Security,Updates}/
+│   └── {Git,Persistence,Hosting,Hosting/Desktop}/
 └── App.GitHealth.Web/src/app/
-    ├── core/{api,branches,scan,workspace}/
+    ├── core/{api,branches,desktop,scan,updates,workspace}/
     └── features/{home,dashboard,branch-details,project-settings,analysis-history}/
 tests/
 ├── App.GitHealth.Core.Tests/
@@ -172,6 +181,9 @@ Contient l'hôte, les endpoints, l'orchestration des analyses et les adaptateurs
 Git, SQLite, horloge et système de fichiers. Une séparation en projet
 `Infrastructure` ne sera introduite que si la taille ou les dépendances le
 justifient.
+
+`Hosting/Desktop/` porte la coque de bureau : fenêtre, résolution du mode d'affichage et
+pont de messages. `Features/Updates/` porte l'état des mises à jour et son application.
 
 ### `App.GitHealth.Web`
 
@@ -287,6 +299,9 @@ scan suivant reflétera le nouvel état.
 
 ### Stratégie de commandes Git
 
+- Exécutable résolu une fois au démarrage, premier trouvé gagne : chemin configuré
+  (`--git-path` ou `GitHealth:Git:ExecutablePath`), puis le `PATH`, puis les emplacements
+  d'installation standards de la plateforme.
 - Aucun shell : arguments fournis avec `ProcessStartInfo.ArgumentList`.
 - Aucun checkout, index, commit, fetch, prune ou écriture de référence.
 - `GIT_OPTIONAL_LOCKS=0`, délai maximal et annulation sur chaque processus.
@@ -317,6 +332,20 @@ Les routes sont groupées sous `/api` et renvoient des DTO dédiés.
 | `GET /api/projects/{id}/analyses/latest/branches` | Lister les snapshots |
 | `GET /api/branch-snapshots/{id}` | Lire détail et contributeurs |
 | `GET /api/exports/database` | Télécharger une sauvegarde SQLite cohérente |
+| `GET /api/updates` | Lire l'état des mises à jour de l'application |
+| `POST /api/updates/apply` | Télécharger puis appliquer la mise à jour disponible |
+
+`GET /api/runtime` décrit le mode d'exécution. Il expose aussi la disponibilité de Git,
+le chemin d'exécutable retenu et un diagnostic actionnable : sans Git, l'interface
+affiche un bandeau nommant les emplacements testés et `--git-path` au lieu d'échouer au
+premier scan.
+
+L'état des mises à jour vaut `Unsupported`, `UpToDate`, `Unknown` ou `Available`. Il vaut
+`Unsupported` hors installation gérée — Docker, archive portable, exécution depuis le
+dossier de publication — et sur Linux, où l'utilisateur attend son gestionnaire de
+paquets. Il vaut `Unknown` quand la source des releases est injoignable : hors ligne,
+quota atteint ou dépôt indisponible, sans erreur ni perte d'usage. Le bouton de mise à
+jour n'apparaît dans la barre supérieure que sur `Available`.
 
 Les erreurs utilisent Problem Details avec un code stable, un message utilisateur
 et un identifiant de corrélation. Aucune sortie brute de processus n'est envoyée au
@@ -338,28 +367,86 @@ navigateur.
 
 ### Exécutable natif, mode recommandé
 
-La publication produit `githealth.exe` pour Windows et `githealth` pour macOS. Le
-même processus :
+La publication produit `githealth.exe` pour Windows et `githealth` pour macOS et
+Linux. Le même processus :
 
 1. vérifie Git et la base ;
 2. écoute uniquement sur `127.0.0.1` ;
 3. choisit un port disponible ou celui demandé ;
-4. ouvre le navigateur par défaut ;
-5. sert Angular et l'API jusqu'à son arrêt.
+4. ouvre une fenêtre de bureau embarquant le moteur de rendu du système ;
+5. sert Angular et l'API jusqu'à la fermeture de la fenêtre.
 
-Options prévues : `--repo`, `--port`, `--data-dir` et `--no-browser`.
+La coque est fournie par Photino : WebView2 sur Windows, WKWebView sur macOS et
+WebKitGTK sur Linux. Le front n'est pas embarqué, il reste chargé en HTTP depuis
+l'adresse loopback — la coque est donc un composant isolé et remplaçable.
+
+| Invocation | Interface ouverte |
+|---|---|
+| défaut, mode natif | Fenêtre de bureau |
+| `--no-window` | Aucune fenêtre, navigateur système |
+| `--no-browser` | Aucune interface ; implique `--no-window` |
+| mode conteneur | Inchangé, l'hôte tourne seul |
+
+La fenêtre s'ouvre maximisée. Photino dimensionne en pixels physiques : sur un écran mis
+à l'échelle à 150 %, les 1360 pixels de la taille de restauration ne font que 907 pixels
+CSS, sous la largeur minimale de 1180 px de l'espace de travail. Une taille fixe ne
+garantit donc pas cette largeur. La taille de restauration est 1360×860, la taille
+minimale 960×600.
+
+La fenêtre s'ouvre depuis le thread principal du processus, marqué `[STAThread]` : les
+instructions de haut niveau le laisseraient en apartment MTA, où WebView2 s'initialise
+sans jamais rendre la page. macOS impose le même thread pour sa boucle d'évènements.
+
+Si le moteur de rendu du système est inutilisable, l'hôte écrit un avertissement sur
+`stderr` et bascule sur le navigateur système : l'application ne s'arrête jamais faute de
+webview.
+
+Options : `--repo`, `--port`, `--data-dir`, `--git-path`, `--no-window` et
+`--no-browser`.
 
 Emplacements par défaut :
 
 - Windows : `%LOCALAPPDATA%\GitHealth` ;
-- macOS : `~/Library/Application Support/GitHealth`.
+- macOS : `~/Library/Application Support/GitHealth` ;
+- Linux : `$XDG_DATA_HOME/GitHealth`, à défaut `~/.local/share/GitHealth`.
 
-Des publications autonomes sont générées pour les architectures retenues. La
-signature Windows et la notarisation macOS sont des sujets de distribution, pas
-des prérequis pour valider le MVP en développement.
+Des publications autonomes sont générées pour les architectures retenues.
 
-### Docker Compose
+### Pont de messages avec la coque
 
+En fenêtre, le bouton de sélection de dossier ouvre le dialogue du système. La page et
+l'hôte échangent par le pont `postMessage` de Photino : `window.external.sendMessage`
+pour émettre, `window.external.receiveMessage` pour recevoir.
+
+- Charges utiles JSON : `{ id, kind }` en demande, `{ id, kind, path }` en réponse,
+  `path` valant `null` quand l'utilisateur annule.
+- `kind` vaut `pickFolder` ; tout autre message est ignoré en silence des deux côtés.
+- Le pont est asynchrone : chaque réponse porte l'identifiant de sa demande, et une seule
+  requête reste en vol puisque le dialogue est modal.
+- Le handler de l'hôte s'exécute sur le thread de la fenêtre, celui qui pompe la boucle
+  d'évènements : le dialogue s'ouvre sans marshalling ni interblocage.
+- Ce qui vient de la webview est une entrée non fiable : un message illisible est écarté,
+  jamais traité comme une commande.
+
+Côté Angular l'ajout est strictement additif. Le service détecte la présence du pont et
+l'utilise s'il existe ; sinon l'application garde le navigateur de dossiers HTML servi par
+`GET /api/runtime/directories`. Les modes navigateur et Docker restent inchangés.
+
+### Installation et mises à jour
+
+Velopack produit `App.GitHealth-win-x64-Setup.exe` sur Windows et
+`App.GitHealth-<rid>-Setup.pkg` sur macOS. L'installation se fait par utilisateur dans
+`%LocalAppData%\App.GitHealth`, sans invite UAC, avec raccourcis Bureau et menu Démarrer.
+Le `packId` est volontairement disjoint du répertoire de données : la base reste dans
+`%LOCALAPPDATA%\GitHealth` et survit aux mises à jour comme à la désinstallation.
+
+Les archives portables `.zip` et `.tar.gz` restent publiées en plus des installeurs :
+elles servent Scoop et les postes où l'on ne veut rien installer. Ni le `Setup.exe` ni le
+`.pkg` ne sont signés à ce jour.
+
+### Docker Compose, auto-hébergement
+
+Ce mode vise l'auto-hébergement d'une instance, pas l'usage de bureau.
 `docker compose up --build` lance un service applicatif unique. L'image contient
 le runtime .NET, les fichiers Angular et Git. Compose configure :
 
@@ -415,7 +502,7 @@ locale et son export est une action explicite de l'utilisateur.
 - Regroupement manuel d'identités en complément de `.mailmap`.
 - Tendances d'activité, comparaison entre analyses et politiques par équipe.
 - Exports CSV/JSON et rapports partageables sans exposer le dépôt.
-- Signature/notarisation et installeurs graphiques pour les distributions publiques.
+- Signature Windows et notarisation macOS des installeurs, aujourd'hui non signés.
 
 ## Références techniques
 - [Politique de support .NET](https://dotnet.microsoft.com/en-us/platform/support/policy)
