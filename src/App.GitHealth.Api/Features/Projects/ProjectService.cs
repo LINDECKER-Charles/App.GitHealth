@@ -23,7 +23,7 @@ internal sealed class ProjectService(
         if (string.IsNullOrWhiteSpace(request.DisplayName)
             || request.DisplayName.Length > MaximumDisplayNameLength)
         {
-            return Invalid<ProjectResponse>("Le nom du projet est absent ou trop long.");
+            return Invalid<ProjectResponse>("The project name is missing or too long.");
         }
 
         var validation = await validator.ValidateAsync(request.RepositoryPath, cancellationToken);
@@ -71,7 +71,7 @@ internal sealed class ProjectService(
         {
             return ApiOutcome<ProjectResponse>.Failed(ApiProblems.Conflict(
                 ApiErrorCodes.ProjectBusy,
-                "Le projet est occupé par une analyse ou une relocalisation en cours."));
+                "The project is busy with an analysis or a relocation in progress."));
         }
 
         return await RelocateReservedAsync(projectId, request, cancellationToken);
@@ -99,7 +99,7 @@ internal sealed class ProjectService(
         {
             return ApiOutcome<ProjectResponse>.Failed(ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidReference,
-                "La référence configurée n’existe pas dans le dépôt relocalisé."));
+                "The configured baseline does not exist in the relocated repository."));
         }
 
         return await RelocateVerifiedAsync(projectId, descriptor, cancellationToken);
@@ -163,7 +163,7 @@ internal sealed class ProjectService(
         {
             return ApiOutcome<ProjectResponse>.Failed(ApiProblems.Conflict(
                 ApiErrorCodes.ProjectAlreadyExists,
-                "Un projet utilise déjà ce dépôt."));
+                "Another project already uses this repository."));
         }
     }
 
@@ -203,7 +203,7 @@ internal sealed class ProjectService(
         {
             return ApiOutcome<ProjectResponse>.Failed(ApiProblems.Conflict(
                 ApiErrorCodes.ProjectAlreadyExists,
-                "Un projet utilise déjà ce dépôt."));
+                "Another project already uses this repository."));
         }
     }
 
@@ -231,7 +231,7 @@ internal sealed class ProjectService(
 
         return identity.Value ? null : ApiProblems.Conflict(
             ApiErrorCodes.RepositoryIdentityMismatch,
-            "Le dépôt relocalisé ne contient pas le dernier commit de référence connu.");
+            "The relocated repository does not contain the last known baseline commit.");
     }
 
     private static ApiOutcome<ProjectSettings> BuildSettings(
@@ -266,7 +266,7 @@ internal sealed class ProjectService(
         var reference = requested is null ? descriptor.SuggestedReference : new GitRef(requested);
         if (reference is null || !descriptor.References.Contains(reference))
         {
-            throw new ArgumentException("La référence choisie n’existe pas dans le dépôt.");
+            throw new ArgumentException("The chosen baseline does not exist in the repository.");
         }
 
         return reference;
@@ -282,5 +282,5 @@ internal sealed class ProjectService(
 
     private static ApiFailure ProjectNotFound() => ApiProblems.NotFound(
         ApiErrorCodes.ProjectNotFound,
-        "Le projet demandé n’existe pas.");
+        "The requested project does not exist.");
 }

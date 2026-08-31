@@ -13,7 +13,7 @@ internal sealed class SqliteDatabaseBackupService(SqliteConnectionFactory connec
         if (!destination.CanWrite)
         {
             throw new ArgumentException(
-                "Le flux de sauvegarde doit être inscriptible.",
+                "The backup stream must be writable.",
                 nameof(destination));
         }
 

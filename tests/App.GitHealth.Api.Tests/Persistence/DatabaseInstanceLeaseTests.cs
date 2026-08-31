@@ -62,7 +62,7 @@ public sealed class DatabaseInstanceLeaseTests
         var exception = Assert.Throws<DatabaseInUseException>(secondLease.Acquire);
         Assert.Equal(firstDatabase.DatabasePath, exception.DatabasePath);
         Assert.Contains(
-            "déjà utilisée par une autre instance de GitHealth",
+            "already used by another GitHealth instance",
             exception.Message,
             StringComparison.Ordinal);
 
@@ -77,7 +77,7 @@ public sealed class DatabaseInstanceLeaseTests
     {
         await using var database = await SqliteTestDatabase.CreateAsync();
         var lease = database.Services.GetRequiredService<DatabaseInstanceLease>();
-        await File.WriteAllTextAsync(lease.LockPath, "instance interrompue");
+        await File.WriteAllTextAsync(lease.LockPath, "interrupted instance");
 
         lease.Acquire();
         lease.Dispose();
@@ -94,7 +94,7 @@ public sealed class DatabaseInstanceLeaseTests
             Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(rootPath);
         var filePath = Path.Combine(rootPath, "not-a-directory");
-        File.WriteAllText(filePath, "fichier");
+        File.WriteAllText(filePath, "file");
         try
         {
             var factory = new SqliteConnectionFactory(
@@ -156,7 +156,7 @@ public sealed class DatabaseInstanceLeaseTests
             }
 
             throw new InvalidOperationException(
-                "La migration a démarré avant l’acquisition du verrou SQLite.");
+                "The migration started before the SQLite lock was acquired.");
         }
     }
 }

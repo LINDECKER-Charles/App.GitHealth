@@ -47,6 +47,6 @@ internal sealed record LauncherEnvironment
         return OperatingSystem.IsLinux()
             ? RuntimePlatform.Linux
             : throw new PlatformNotSupportedException(
-                "GitHealth prend en charge Windows, macOS et Linux.");
+                "GitHealth supports Windows, macOS and Linux.");
     }
 }

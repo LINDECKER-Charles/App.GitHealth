@@ -120,9 +120,9 @@ internal sealed class PolicyService(
 
     private static ApiFailure ProjectNotFound() => ApiProblems.NotFound(
         ApiErrorCodes.ProjectNotFound,
-        "Le projet demandé n’existe pas.");
+        "The requested project does not exist.");
 
     private static ApiFailure NoSuccessfulResult() => ApiProblems.NotFound(
         ApiErrorCodes.AnalysisNotAvailable,
-        "Aucune analyse réussie n’est disponible pour ce projet.");
+        "No successful analysis is available for this project.");
 }

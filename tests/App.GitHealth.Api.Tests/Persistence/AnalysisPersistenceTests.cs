@@ -50,7 +50,7 @@ public sealed class AnalysisPersistenceTests
         Assert.Equal(successfulId, (await repository.GetLastSuccessfulAsync(
             projectId,
             CancellationToken.None))!.Id);
-        var failure = new AnalysisFailure("git.timeout", "Délai dépassé", Start.AddHours(2));
+        var failure = new AnalysisFailure("git.timeout", "Timed out", Start.AddHours(2));
         await repository.FailAsync(interruptedId, failure, CancellationToken.None);
 
         Assert.Equal(successfulId, (await repository.GetLastSuccessfulAsync(

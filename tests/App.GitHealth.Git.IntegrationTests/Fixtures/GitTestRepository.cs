@@ -113,7 +113,7 @@ internal sealed partial class GitTestRepository : IDisposable
             Path.Combine(RepositoryPath, ".mailmap"),
             "Ada Lovelace <ada@example.test> Alias One <alias1@example.test>\n" +
             "Ada Lovelace <ada@example.test> Alias Two <alias2@example.test>\n");
-        CommitFile("base.txt", "base", "Créer la base");
+        CommitFile("base.txt", "base", "Create the base");
         CreateMergedBranch();
         CreateDivergedBranch();
         CreateReferenceMergeBranch();
@@ -126,7 +126,7 @@ internal sealed partial class GitTestRepository : IDisposable
     private void CreateMergedBranch()
     {
         RunGit("switch", "-c", "feature/merged");
-        CommitFile("merged.txt", "merged", "Créer une branche fusionnée");
+        CommitFile("merged.txt", "merged", "Create a merged branch");
         RunGit("switch", "main");
         RunGit("merge", "--no-ff", "--no-edit", "feature/merged");
     }
@@ -134,15 +134,15 @@ internal sealed partial class GitTestRepository : IDisposable
     private void CreateDivergedBranch()
     {
         RunGit("switch", "-c", "feature/diverged");
-        CommitFile("diverged.txt", "branch", "Créer la divergence");
+        CommitFile("diverged.txt", "branch", "Create the divergence");
         RunGit("switch", "main");
-        CommitFile("main.txt", "main", "Avancer la référence");
+        CommitFile("main.txt", "main", "Move the baseline forward");
     }
 
     private void CreateOrphanBranch()
     {
         RunGit("switch", "--orphan", "feature/orpheline");
-        CommitFile("orphan.txt", "orphan", "Créer un historique indépendant");
+        CommitFile("orphan.txt", "orphan", "Create an independent history");
         RunGit("switch", "main");
     }
 
@@ -161,14 +161,14 @@ internal sealed partial class GitTestRepository : IDisposable
             "ahead-one.txt",
             "one",
             new GitCommitDetails(
-                "Premier commit propre",
+                "First own commit",
                 "Alias One",
                 "alias1@example.test"));
         CommitFile(
             "ahead-two.txt",
             "two",
             new GitCommitDetails(
-                "Second commit propre",
+                "Second own commit",
                 "Alias Two",
                 "alias2@example.test"));
         RunGit("switch", "main");
@@ -221,7 +221,7 @@ internal sealed partial class GitTestRepository : IDisposable
     {
         using var process = DiagnosticsProcess.Start(
             CreateStartInfo(workingDirectory, arguments, environment))
-            ?? throw new InvalidOperationException("Git n’a pas démarré dans la fixture.");
+            ?? throw new InvalidOperationException("Git did not start in the fixture.");
         var output = process.StandardOutput.ReadToEnd();
         var error = process.StandardError.ReadToEnd();
         process.WaitForExit();
@@ -274,12 +274,12 @@ internal sealed partial class GitTestRepository : IDisposable
         }
 
         using var process = DiagnosticsProcess.Start(startInfo)
-            ?? throw new InvalidOperationException("La jonction de test n’a pas démarré.");
+            ?? throw new InvalidOperationException("The test junction did not start.");
         var error = process.StandardError.ReadToEnd();
         process.WaitForExit();
         if (process.ExitCode != 0)
         {
-            throw new InvalidOperationException($"Jonction de test invalide : {error}");
+            throw new InvalidOperationException($"Invalid test junction: {error}");
         }
     }
 }

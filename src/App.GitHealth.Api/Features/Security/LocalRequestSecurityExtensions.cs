@@ -12,7 +12,7 @@ internal static class LocalRequestSecurityExtensions
     {
         services.AddOptions<LocalSecurityOptions>()
             .Bind(configuration.GetSection(LocalSecurityOptions.SectionName))
-            .Validate(HasValidOrigins, "Les origines autorisées doivent être loopback.")
+            .Validate(HasValidOrigins, "The allowed origins must be loopback.")
             .ValidateOnStart();
         services.AddDistributedMemoryCache();
         services.AddSession(ConfigureSession);

@@ -20,7 +20,7 @@ internal static class SnapshotPaginator
         if (query.PageSize is < 1 or > MaximumPageSize)
         {
             return ApiOutcome<SnapshotPageData>.Failed(
-                InvalidCursor("La taille de page est invalide."));
+                InvalidCursor("The page size is invalid."));
         }
 
         var selection = Select(branches, query);
@@ -70,20 +70,20 @@ internal static class SnapshotPaginator
         if (!AllowedSorts.Contains(Sort(query), StringComparer.Ordinal)
             || !AllowedDirections.Contains(Direction(query), StringComparer.Ordinal))
         {
-            return InvalidCursor("Les paramètres de tri sont invalides.");
+            return InvalidCursor("The sort parameters are invalid.");
         }
 
-        return ValidateEnum<BranchRelationship>(query.Relationship, "relation Git")
-            ?? ValidateEnum<BranchTopology>(query.Topology, "topologie")
-            ?? ValidateEnum<ActivityStatus>(query.Activity, "activité")
-            ?? ValidateEnum<RecommendationKind>(query.Recommendation, "recommandation");
+        return ValidateEnum<BranchRelationship>(query.Relationship, "Git relationship")
+            ?? ValidateEnum<BranchTopology>(query.Topology, "topology")
+            ?? ValidateEnum<ActivityStatus>(query.Activity, "activity")
+            ?? ValidateEnum<RecommendationKind>(query.Recommendation, "recommendation");
     }
 
     private static ApiFailure? ValidateEnum<T>(string? value, string filterName)
         where T : struct, Enum
     {
         return value is not null && !Enum.TryParse<T>(value, true, out _)
-            ? InvalidCursor($"Le filtre de {filterName} est invalide.")
+            ? InvalidCursor($"The {filterName} filter is invalid.")
             : null;
     }
 
@@ -180,14 +180,14 @@ internal static class SnapshotPaginator
         if (!SnapshotCursor.TryDecode(query.Cursor, out var cursor)
             || !MatchesQuery(cursor!, analysisId, query))
         {
-            return ApiOutcome<int>.Failed(InvalidCursor("Le curseur est invalide."));
+            return ApiOutcome<int>.Failed(InvalidCursor("The cursor is invalid."));
         }
 
         var index = Array.FindIndex(ordered, item => item.Branch.Id == cursor!.SnapshotId);
         if (index < 0 || !MatchesBranch(cursor!, ordered[index], Sort(query)))
         {
             return ApiOutcome<int>.Failed(
-                InvalidCursor("Le curseur n’est plus disponible."));
+                InvalidCursor("The cursor is no longer available."));
         }
 
         return ApiOutcome<int>.Success(index + 1);

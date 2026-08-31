@@ -1,16 +1,16 @@
 namespace App.GitHealth.Api.Hosting.Desktop;
 
-/// <summary>Interface ouverte au démarrage en mode natif.</summary>
+/// <summary>Interface opened at startup in native mode.</summary>
 internal enum DesktopDisplayMode
 {
     /// <summary>
-    /// Aucune interface : l'hôte tourne seul, pour les tests et l'automatisation.
+    /// No interface: the host runs on its own, for tests and automation.
     /// </summary>
     None,
 
-    /// <summary>Fenêtre de bureau embarquant la webview du système.</summary>
+    /// <summary>Desktop window embedding the system webview.</summary>
     Window,
 
-    /// <summary>Navigateur système sur l'adresse loopback.</summary>
+    /// <summary>System browser on the loopback address.</summary>
     SystemBrowser,
 }

@@ -126,6 +126,6 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
         return await context.Projects.SingleOrDefaultAsync(
             project => project.Id == projectId,
             cancellationToken)
-            ?? throw new KeyNotFoundException("Le projet demandé n’existe pas.");
+            ?? throw new KeyNotFoundException("The requested project does not exist.");
     }
 }

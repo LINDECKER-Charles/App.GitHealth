@@ -13,7 +13,7 @@ internal static class ApiTestWorkflow
     {
         var request = new
         {
-            displayName = "Dépôt API",
+            displayName = "API repository",
             repositoryPath,
             settings = DefaultSettings(),
         };
@@ -62,7 +62,7 @@ internal static class ApiTestWorkflow
             await Task.Delay(PollDelay);
         }
 
-        throw new TimeoutException($"L’analyse {analysisId} n’a pas atteint {expectedStatus}.");
+        throw new TimeoutException($"Analysis {analysisId} did not reach {expectedStatus}.");
     }
 
     public static async Task<string?> ReadProblemCodeAsync(HttpResponseMessage response)

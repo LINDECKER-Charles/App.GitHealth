@@ -1,31 +1,32 @@
 namespace App.GitHealth.Api.Git.Process;
 
 /// <summary>
-/// Résultat de la recherche de Git : le chemin retenu, et de quoi rendre son absence actionnable.
+/// Result of the search for Git: the path that was selected, and enough to make its absence
+/// actionable.
 /// </summary>
 internal sealed record GitExecutableLocation
 {
     public const string ConfigurationKey = "GitHealth:Git:ExecutablePath";
     public const string CommandLineOption = "--git-path";
 
-    /// <summary>Chemin retenu, ou <see langword="null" /> si aucun candidat n'existe.</summary>
+    /// <summary>Path selected, or <see langword="null" /> if no candidate exists.</summary>
     public string? ExecutablePath { get; init; }
 
     /// <summary>
-    /// Emplacements explicites testés. Les entrées du <c>PATH</c> en sont exclues : trop
-    /// nombreuses pour un diagnostic lisible, elles sont mentionnées collectivement.
+    /// Explicit locations tried. The <c>PATH</c> entries are left out: too numerous for a
+    /// readable diagnostic, they are mentioned collectively.
     /// </summary>
     public required IReadOnlyList<string> SearchedLocations { get; init; }
 
     public bool IsResolved => ExecutablePath is not null;
 
     /// <summary>
-    /// Message affiché quand Git reste introuvable : où l'on a cherché, et quoi faire.
+    /// Message shown when Git cannot be found: where the search looked, and what to do.
     /// </summary>
     public string UnavailableMessage =>
-        $"Git est introuvable. Emplacements testés : le PATH{DescribeSearchedLocations()}. "
-        + $"Indiquez le chemin de l'exécutable avec {CommandLineOption} <chemin> "
-        + $"ou la configuration {ConfigurationKey}.";
+        $"Git cannot be found. Locations tried: the PATH{DescribeSearchedLocations()}. "
+        + $"Point at the executable with {CommandLineOption} <path> "
+        + $"or the {ConfigurationKey} setting.";
 
     private string DescribeSearchedLocations() => SearchedLocations.Count == 0
         ? string.Empty

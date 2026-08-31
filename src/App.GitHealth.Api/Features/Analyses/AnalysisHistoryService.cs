@@ -22,14 +22,14 @@ internal sealed class AnalysisHistoryService(
         {
             return ApiOutcome<AnalysisHistoryPageResponse>.Failed(ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidPage,
-                "Les paramètres de pagination sont invalides."));
+                "The pagination parameters are invalid."));
         }
 
         if (await projects.GetAsync(projectId, cancellationToken) is null)
         {
             return ApiOutcome<AnalysisHistoryPageResponse>.Failed(ApiProblems.NotFound(
                 ApiErrorCodes.ProjectNotFound,
-                "Le projet demandé n’existe pas."));
+                "The requested project does not exist."));
         }
 
         var pageNumber = Page(query);

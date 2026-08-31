@@ -5,16 +5,16 @@ using Velopack.Sources;
 namespace App.GitHealth.Api.Features.Updates;
 
 /// <summary>
-/// Mises à jour delta servies par les releases GitHub du projet. Enregistrée uniquement
-/// quand le lanceur natif est actif sur Windows ou macOS.
+/// Delta updates served by the project's GitHub releases. Registered only when the
+/// native launcher is active on Windows or macOS.
 /// </summary>
 internal sealed class VelopackUpdateService : IUpdateService
 {
     private const string RepositoryUrl = "https://github.com/LINDECKER-Charles/App.GitHealth";
 
     /// <summary>
-    /// Les pré-releases restent hors du flux : une version publiée pour validation ne doit
-    /// pas atteindre les installations qui suivent les versions publiées.
+    /// Pre-releases stay out of the stream: a version published for validation must not
+    /// reach the installations that follow the released versions.
     /// </summary>
     private const bool IncludePrereleases = false;
 
@@ -22,7 +22,7 @@ internal sealed class VelopackUpdateService : IUpdateService
         LoggerMessage.Define<string>(
             LogLevel.Warning,
             new EventId(1, nameof(VelopackUpdateService)),
-            "La recherche de mise à jour a échoué : {Reason}");
+            "The update check failed: {Reason}");
 
     private readonly ILogger<VelopackUpdateService> _logger;
     private readonly UpdateManager _manager;
@@ -48,8 +48,8 @@ internal sealed class VelopackUpdateService : IUpdateService
 
     public async Task<UpdateStatus> GetStatusAsync(CancellationToken cancellationToken)
     {
-        // Hors installation gérée — archive portable, exécution depuis le dossier de
-        // publication — toute interrogation de la source lèverait NotInstalledException.
+        // Outside a managed installation — portable archive, run from the publication
+        // folder — any query to the source would throw NotInstalledException.
         if (!_manager.IsInstalled)
         {
             return UpdateStatus.Unsupported;
@@ -94,13 +94,13 @@ internal sealed class VelopackUpdateService : IUpdateService
     public void ApplyAndRestart()
     {
         var update = _downloaded ?? throw new InvalidOperationException(
-            "Aucune mise à jour n'a été téléchargée.");
+            "No update was downloaded.");
         _manager.ApplyUpdatesAndRestart(update.TargetFullRelease);
     }
 
     /// <summary>
-    /// Interroge la source des releases. Un dépôt injoignable, hors ligne ou limité en
-    /// quota n'est pas une panne de l'application : l'échec est rapporté, pas propagé.
+    /// Queries the release source. An unreachable, offline or quota-limited repository is
+    /// not an application failure: the failure is reported, not propagated.
     /// </summary>
     private async Task<(bool HasSucceeded, UpdateInfo? Update)> CheckAsync(
         CancellationToken cancellationToken)

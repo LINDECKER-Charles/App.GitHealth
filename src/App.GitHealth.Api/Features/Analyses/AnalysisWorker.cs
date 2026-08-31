@@ -15,7 +15,7 @@ internal sealed partial class AnalysisWorker(
     ILogger<AnalysisWorker> logger) : BackgroundService
 {
     private const string UnexpectedFailureMessage =
-        "L’analyse {AnalysisId} du projet {ProjectId} a échoué de façon inattendue.";
+        "Analysis {AnalysisId} of project {ProjectId} failed unexpectedly.";
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -34,8 +34,8 @@ internal sealed partial class AnalysisWorker(
     }
 
     /// <summary>
-    /// Une boucle de lecture par analyse menée de front : la file répartit les projets entre
-    /// elles, et un seul projet reste actif à la fois grâce à la réservation de la file.
+    /// One read loop per analysis run in parallel: the queue spreads the projects across
+    /// them, and a single project stays active at a time thanks to the queue reservation.
     /// </summary>
     private async Task ConsumeAsync(CancellationToken stoppingToken)
     {
@@ -123,9 +123,9 @@ internal sealed partial class AnalysisWorker(
         var projects = services.GetRequiredService<IProjectRepository>();
         var analyses = services.GetRequiredService<IAnalysisRepository>();
         var project = await projects.GetAsync(item.ProjectId, cancellationToken)
-            ?? throw new KeyNotFoundException("Le projet demandé n’existe pas.");
+            ?? throw new KeyNotFoundException("The requested project does not exist.");
         var analysis = await analyses.GetAsync(item.AnalysisId, cancellationToken)
-            ?? throw new KeyNotFoundException("L’analyse demandée n’existe pas.");
+            ?? throw new KeyNotFoundException("The requested analysis does not exist.");
         return new AnalysisExecution(services, project, analysis);
     }
 
@@ -171,7 +171,7 @@ internal sealed partial class AnalysisWorker(
     {
         var failure = new AnalysisFailure(
             "analysis.cancelled",
-            "L’analyse a été annulée pendant l’arrêt de l’application.",
+            "The analysis was cancelled while the application was shutting down.",
             queue.UtcNow,
             IsCancellation: true);
         await TryFailAsync(item, failure);
@@ -182,7 +182,7 @@ internal sealed partial class AnalysisWorker(
     {
         var failure = new AnalysisFailure(
             "analysis.timed_out",
-            "L’analyse a dépassé le délai global autorisé.",
+            "The analysis exceeded the overall timeout allowed.",
             queue.UtcNow);
         await TryFailAsync(item, failure);
         queue.Update(item.AnalysisId, AnalysisPhase.Failed, failure.Message);
@@ -219,7 +219,7 @@ internal sealed partial class AnalysisWorker(
         LogUnexpectedFailure(logger, item.AnalysisId, item.ProjectId, exception);
         var failure = new AnalysisFailure(
             "analysis.unexpected",
-            "Une erreur inattendue a interrompu l’analyse.",
+            "An unexpected error interrupted the analysis.",
             queue.UtcNow);
         await TryFailAsync(item, failure);
         queue.Update(item.AnalysisId, AnalysisPhase.Failed, exception.Message);

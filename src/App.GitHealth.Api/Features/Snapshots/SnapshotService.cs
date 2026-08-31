@@ -66,7 +66,7 @@ internal sealed class SnapshotService(
         return branch is null
             ? ApiOutcome<SnapshotDetailResponse>.Failed(ApiProblems.NotFound(
                 ApiErrorCodes.SnapshotNotFound,
-                "Le snapshot demandé n’existe pas."))
+                "The requested snapshot does not exist."))
             : ApiOutcome<SnapshotDetailResponse>.Success(SnapshotMapper.MapDetail(branch));
     }
 
@@ -148,13 +148,13 @@ internal sealed class SnapshotService(
 
     private static ApiFailure ProjectNotFound() => ApiProblems.NotFound(
         ApiErrorCodes.ProjectNotFound,
-        "Le projet demandé n’existe pas.");
+        "The requested project does not exist.");
 
     private static ApiFailure NoSuccessfulResult() => ApiProblems.NotFound(
         ApiErrorCodes.AnalysisNotAvailable,
-        "Aucune analyse réussie n’est disponible pour ce projet.");
+        "No successful analysis is available for this project.");
 
     private static ApiFailure AnalysisResultsNotAvailable() => ApiProblems.NotFound(
         ApiErrorCodes.AnalysisNotAvailable,
-        "Les résultats de cette analyse ne sont pas disponibles.");
+        "The results of this analysis are not available.");
 }

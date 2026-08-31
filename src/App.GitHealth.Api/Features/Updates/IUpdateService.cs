@@ -1,20 +1,20 @@
 namespace App.GitHealth.Api.Features.Updates;
 
 /// <summary>
-/// Source de vérité des mises à jour. L'implémentation dépend du mode d'exécution et de
-/// la plateforme ; l'application, elle, ne connaît que ce contrat.
+/// Source of truth for updates. The implementation depends on the run mode and on the
+/// platform; the application itself knows only this contract.
 /// </summary>
 internal interface IUpdateService
 {
     Task<UpdateStatus> GetStatusAsync(CancellationToken cancellationToken);
 
-    /// <summary>Télécharge la mise à jour disponible.</summary>
-    /// <returns>Vrai lorsqu'une mise à jour est prête à être appliquée.</returns>
+    /// <summary>Downloads the available update.</summary>
+    /// <returns>True when an update is ready to be applied.</returns>
     Task<bool> DownloadAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Applique la mise à jour téléchargée et relance l'application. Cet appel ne rend
-    /// jamais la main : il doit suivre l'émission de la réponse HTTP, pas la précéder.
+    /// Applies the downloaded update and restarts the application. This call never
+    /// returns: it must follow the emission of the HTTP response, not precede it.
     /// </summary>
     void ApplyAndRestart();
 }

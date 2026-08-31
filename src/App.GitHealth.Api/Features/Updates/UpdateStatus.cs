@@ -1,18 +1,20 @@
 namespace App.GitHealth.Api.Features.Updates;
 
-/// <summary>État des mises à jour, tel que servi par <c>GET /api/updates</c>.</summary>
+/// <summary>Update state, as served by <c>GET /api/updates</c>.</summary>
 internal sealed record UpdateStatus
 {
     /// <summary>
-    /// Nom d'un <see cref="UpdateAvailability" />. Comme les autres réponses de l'API,
-    /// le contrat reste textuel plutôt que numérique.
+    /// Name of an <see cref="UpdateAvailability" />. As with the other API responses,
+    /// the contract stays textual rather than numeric.
     /// </summary>
     public required string Availability { get; init; }
 
-    /// <summary>Version installée, ou <see langword="null" /> hors installation gérée.</summary>
+    /// <summary>
+    /// Installed version, or <see langword="null" /> outside a managed installation.
+    /// </summary>
     public string? CurrentVersion { get; init; }
 
-    /// <summary>Version publiée plus récente, renseignée seulement si elle existe.</summary>
+    /// <summary>Newer released version, set only when one exists.</summary>
     public string? AvailableVersion { get; init; }
 
     public static UpdateStatus Unsupported { get; } = For(UpdateAvailability.Unsupported);

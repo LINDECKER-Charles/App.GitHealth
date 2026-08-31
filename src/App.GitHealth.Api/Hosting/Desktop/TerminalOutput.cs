@@ -3,14 +3,13 @@ using System.Runtime.InteropServices;
 namespace App.GitHealth.Api.Hosting.Desktop;
 
 /// <summary>
-/// Rebranche la sortie standard sur le terminal appelant, quand il y en a un.
+/// Reconnects the standard output to the calling terminal, when there is one.
 /// </summary>
 /// <remarks>
-/// L'exécutable est un programme de sous-système fenêtré : lancé au double-clic, il
-/// n'ouvre aucune console. Windows ne lui en attache alors aucune non plus lorsqu'il est
-/// lancé depuis un terminal, et l'aide comme les diagnostics de démarrage
-/// disparaîtraient. Ce rattachement les rend de nouveau lisibles sans jamais faire
-/// apparaître de fenêtre.
+/// The executable is a windowed-subsystem program: launched by double-click, it opens
+/// no console. Windows then attaches none to it either when it is launched from a
+/// terminal, and the help as well as the startup diagnostics would disappear. This
+/// attachment makes them readable again without ever showing a window.
 /// </remarks>
 internal static class TerminalOutput
 {
@@ -31,9 +30,10 @@ internal static class TerminalOutput
     }
 
     /// <summary>
-    /// Une sortie déjà héritée — un tube de redirection, typiquement — ne doit pas être
-    /// touchée : le rattachement remplacerait les descripteurs standards et le lecteur du
-    /// tube ne recevrait plus rien. C'est le cas des smoke tests et des tests bout en bout.
+    /// An already inherited output — a redirection pipe, typically — must not be
+    /// touched: the attachment would replace the standard descriptors and the pipe
+    /// reader would receive nothing more. This is the case of the smoke tests and
+    /// the end-to-end tests.
     /// </summary>
     private static bool HasInheritedStandardOutput()
     {
@@ -42,8 +42,8 @@ internal static class TerminalOutput
     }
 
     /// <summary>
-    /// <see cref="Console" /> met ses écrivains en cache au premier accès : sans ce
-    /// remplacement, ils continueraient d'écrire dans le vide d'avant le rattachement.
+    /// <see cref="Console" /> caches its writers on first access: without this
+    /// replacement, they would keep writing into the void from before the attachment.
     /// </summary>
     private static void RebindStandardStreams()
     {
@@ -58,8 +58,8 @@ internal static class TerminalOutput
 
     private static IntPtr InvalidHandle => new(-1);
 
-    // Signatures entierement blittables : aucun marshalling, donc aucun code non
-    // securise a activer sur le projet pour ces deux appels.
+    // Fully blittable signatures: no marshalling, hence no unsafe code to enable on
+    // the project for these two calls.
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern int AttachConsole(int processId);
 

@@ -108,7 +108,7 @@ public sealed class SnapshotCsvEndpointTests
         Topology = "Ahead",
         Activity = "Active",
         Recommendation = "Keep",
-        Reason = "Aucune action recommandée",
+        Reason = "No action recommended",
         IsProtected = false,
         IsExcluded = false,
     };

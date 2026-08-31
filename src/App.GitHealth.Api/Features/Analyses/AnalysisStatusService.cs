@@ -17,7 +17,7 @@ internal sealed class AnalysisStatusService(
         return analysis is null
             ? ApiOutcome<AnalysisStatusResponse>.Failed(ApiProblems.NotFound(
                 ApiErrorCodes.AnalysisNotFound,
-                "L’analyse demandée n’existe pas."))
+                "The requested analysis does not exist."))
             : ApiOutcome<AnalysisStatusResponse>.Success(Map(analysis));
     }
 

@@ -18,8 +18,8 @@ public sealed class GitScannerOptions
     public bool UseAheadBehind { get; init; } = true;
 
     /// <summary>
-    /// Chemin explicite de l'exécutable Git. Vide, la résolution retombe sur le
-    /// <c>PATH</c> puis sur les emplacements d'installation standards.
+    /// Explicit path of the Git executable. When empty, resolution falls back to the
+    /// <c>PATH</c>, then to the standard installation locations.
     /// </summary>
     public string? ExecutablePath { get; init; }
 

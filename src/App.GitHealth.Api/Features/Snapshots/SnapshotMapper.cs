@@ -24,7 +24,7 @@ internal sealed class SnapshotMapper(IClock clock)
         BranchSnapshotEntity branch)
     {
         var capturedAt = analysis.CapturedAtUtc
-            ?? throw new InvalidOperationException("L’analyse n’a pas de date de capture.");
+            ?? throw new InvalidOperationException("The analysis has no capture date.");
         var classifier = new BranchClassifier(new CapturedAnalysisClock(capturedAt));
         var comparison = classifier.Classify(
             MapFacts(branch),

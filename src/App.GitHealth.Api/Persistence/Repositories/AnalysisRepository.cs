@@ -146,7 +146,7 @@ internal sealed class AnalysisRepository(IDbContextFactory<GitHealthDbContext> c
         return await context.Projects.SingleOrDefaultAsync(
             project => project.Id == projectId,
             cancellationToken)
-            ?? throw new KeyNotFoundException("Le projet demandé n’existe pas.");
+            ?? throw new KeyNotFoundException("The requested project does not exist.");
     }
 
     private static async Task<AnalysisRunEntity> FindAnalysisAsync(
@@ -156,6 +156,6 @@ internal sealed class AnalysisRepository(IDbContextFactory<GitHealthDbContext> c
     {
         return await context.AnalysisRuns.Include(analysis => analysis.Project)
             .SingleOrDefaultAsync(analysis => analysis.Id == analysisId, cancellationToken)
-            ?? throw new KeyNotFoundException("L’analyse demandée n’existe pas.");
+            ?? throw new KeyNotFoundException("The requested analysis does not exist.");
     }
 }

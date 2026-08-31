@@ -20,9 +20,9 @@ public sealed class StartupFailureReporterTests
     [Fact]
     public void InvalidArgumentsDirectUsersToHelp()
     {
-        var message = StartupFailureReporter.InvalidArguments("Port incorrect.");
+        var message = StartupFailureReporter.InvalidArguments("Invalid port.");
 
-        Assert.Contains("Port incorrect", message, StringComparison.Ordinal);
+        Assert.Contains("Invalid port", message, StringComparison.Ordinal);
         Assert.Contains("--help", message, StringComparison.Ordinal);
         Assert.Equal(1, StartupFailureReporter.FailureExitCode);
     }
@@ -35,7 +35,7 @@ public sealed class StartupFailureReporterTests
 
         Assert.Contains("5187", requested, StringComparison.Ordinal);
         Assert.Contains("--port", requested, StringComparison.Ordinal);
-        Assert.Contains("Aucun port loopback", automatic, StringComparison.Ordinal);
+        Assert.Contains("No loopback port", automatic, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -57,18 +57,18 @@ public sealed class StartupFailureReporterTests
         var inUse = StartupFailureReporter.DatabaseInUse(path);
 
         Assert.Contains(path, invalid, StringComparison.Ordinal);
-        Assert.Contains("invalide ou inaccessible", invalid, StringComparison.Ordinal);
+        Assert.Contains("invalid or unreachable", invalid, StringComparison.Ordinal);
         Assert.Contains(path, inUse, StringComparison.Ordinal);
-        Assert.Contains("autre instance", inUse, StringComparison.Ordinal);
+        Assert.Contains("another GitHealth instance", inUse, StringComparison.Ordinal);
     }
 
     [Fact]
     public void GitFailureProvidesAnActionableInstruction()
     {
-        var message = StartupFailureReporter.GitUnavailable("Diagnostic complémentaire.");
+        var message = StartupFailureReporter.GitUnavailable("Additional diagnostic.");
 
-        Assert.Contains("Installez Git", message, StringComparison.Ordinal);
-        Assert.Contains("Diagnostic complémentaire", message, StringComparison.Ordinal);
+        Assert.Contains("Install Git", message, StringComparison.Ordinal);
+        Assert.Contains("Additional diagnostic", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public sealed class StartupFailureReporterTests
     {
         const string databasePath = "D:/data/githealth.db";
         var wrapped = new InvalidOperationException(
-            "Échec du démarrage.",
+            "Startup failed.",
             new DatabaseInUseException(databasePath, new IOException()));
 
         var message = StartupFailureReporter.Diagnose(wrapped, port: 5187, databasePath);
@@ -116,8 +116,8 @@ public sealed class StartupFailureReporterTests
     {
         using var output = new StringWriter();
 
-        StartupFailureReporter.Write(output, "Échec contrôlé.");
+        StartupFailureReporter.Write(output, "Controlled failure.");
 
-        Assert.Equal($"Échec contrôlé.{Environment.NewLine}", output.ToString());
+        Assert.Equal($"Controlled failure.{Environment.NewLine}", output.ToString());
     }
 }

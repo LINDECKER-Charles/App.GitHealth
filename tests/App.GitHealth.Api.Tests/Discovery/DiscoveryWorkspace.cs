@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace App.GitHealth.Api.Tests.Discovery;
 
-/// <summary>Arborescence temporaire où poser des dépôts Git à des profondeurs choisies.</summary>
+/// <summary>Temporary tree in which to place Git repositories at chosen depths.</summary>
 public sealed class DiscoveryWorkspace : IDisposable
 {
     private const int GitTimeoutMilliseconds = 10_000;
@@ -32,7 +32,7 @@ public sealed class DiscoveryWorkspace : IDisposable
         return path;
     }
 
-    /// <summary>Dépôt standard avec une branche <c>main</c> et un commit, donc lisible.</summary>
+    /// <summary>Standard repository with a <c>main</c> branch and a commit, so readable.</summary>
     public string AddRepository(string relativePath)
     {
         var path = AddDirectory(relativePath);
@@ -79,17 +79,17 @@ public sealed class DiscoveryWorkspace : IDisposable
         }
 
         using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("Impossible de lancer Git.");
+            ?? throw new InvalidOperationException("Git could not be started.");
         var standardError = process.StandardError.ReadToEnd();
         if (!process.WaitForExit(GitTimeoutMilliseconds))
         {
             process.Kill(entireProcessTree: true);
-            throw new TimeoutException("La préparation du dépôt Git a expiré.");
+            throw new TimeoutException("Preparing the Git repository timed out.");
         }
 
         if (process.ExitCode != 0)
         {
-            throw new InvalidOperationException($"Git a échoué : {standardError}");
+            throw new InvalidOperationException($"Git failed: {standardError}");
         }
     }
 }

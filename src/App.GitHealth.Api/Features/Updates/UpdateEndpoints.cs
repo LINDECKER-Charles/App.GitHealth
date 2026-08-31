@@ -15,8 +15,8 @@ internal static class UpdateEndpoints
         Results.Ok(await updates.GetStatusAsync(cancellationToken));
 
     /// <summary>
-    /// Télécharge la mise à jour puis programme son application après l'émission de la
-    /// réponse : appliquer relance le processus, et la réponse ne partirait jamais.
+    /// Downloads the update, then schedules it to be applied after the response is
+    /// emitted: applying restarts the process, and the response would never be sent.
     /// </summary>
     private static async Task<IResult> ApplyAsync(
         HttpContext context,

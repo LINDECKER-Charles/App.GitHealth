@@ -125,19 +125,19 @@ public sealed class GitTestRepository : IDisposable
     {
         var startInfo = CreateStartInfo(arguments);
         using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("Impossible de lancer Git.");
+            ?? throw new InvalidOperationException("Git could not be started.");
         var standardOutput = process.StandardOutput.ReadToEnd();
         var standardError = process.StandardError.ReadToEnd();
         if (!process.WaitForExit(GitTimeoutMilliseconds))
         {
             process.Kill(entireProcessTree: true);
-            throw new TimeoutException("La préparation du dépôt Git a expiré.");
+            throw new TimeoutException("Preparing the Git repository timed out.");
         }
 
         if (process.ExitCode != 0)
         {
             var output = $"{standardError}{standardOutput}";
-            throw new InvalidOperationException($"Git a échoué : {output}");
+            throw new InvalidOperationException($"Git failed: {output}");
         }
     }
 
@@ -185,12 +185,12 @@ public sealed class GitTestRepository : IDisposable
         }
 
         using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("La jonction de test n’a pas démarré.");
+            ?? throw new InvalidOperationException("The test junction did not start.");
         var error = process.StandardError.ReadToEnd();
         process.WaitForExit();
         if (process.ExitCode != 0)
         {
-            throw new InvalidOperationException($"Jonction de test invalide : {error}");
+            throw new InvalidOperationException($"Invalid test junction: {error}");
         }
     }
 }

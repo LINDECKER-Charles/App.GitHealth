@@ -142,6 +142,6 @@ internal static class GitObjectDatabaseGuard
 
     private static GitProcessException UnsafeObjectDatabase(Exception? inner = null) => new(
         RepositoryErrorCode.PathNotAllowed,
-        "Une base d’objets Git sort de la racine autorisée ou est invalide.",
+        "A Git object database is outside the allowed root or is invalid.",
         inner);
 }

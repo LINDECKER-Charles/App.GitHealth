@@ -23,7 +23,7 @@ public sealed class DesktopDisplayModeResolverTests
             DesktopDisplayModeResolver.Resolve(options));
     }
 
-    /// <summary>Le smoke test natif passe ce drapeau : une fenêtre y bloquerait la CI.</summary>
+    /// <summary>The native smoke test passes this flag: a window would block CI there.</summary>
     [Fact]
     public void NoBrowserOpensNoInterfaceEvenWithoutNoWindow()
     {

@@ -9,53 +9,53 @@ internal static class StartupFailureReporter
     public const int FailureExitCode = 1;
 
     public static string HelpText => """
-        Usage : githealth [options]
+        Usage: githealth [options]
 
-        Options :
-          --repo <chemin>       Préremplir le dépôt à analyser.
-          --port <1-65535>      Utiliser un port loopback précis (automatique par défaut).
-          --data-dir <chemin>   Choisir le répertoire des données locales.
-          --git-path <chemin>   Utiliser cet exécutable Git plutôt que celui du PATH.
-          --no-window           Ouvrir le navigateur système plutôt qu'une fenêtre.
-          --no-browser          N'ouvrir aucune interface au démarrage.
-          --help, -h            Afficher cette aide.
+        Options:
+          --repo <path>         Pre-fill the repository offered on the home screen.
+          --port <1-65535>      Force a specific port on the loopback interface.
+          --data-dir <path>     Move the database and its instance lock.
+          --git-path <path>     Force the Git executable to use.
+          --no-window           Open the interface in the system browser.
+          --no-browser          Open no interface at startup.
+          --help, -h            Print the help and exit.
         """;
 
     public static string InvalidArguments(string details) =>
-        $"Arguments invalides : {details} Utilisez --help pour afficher l’aide.";
+        $"Invalid arguments: {details} Use --help to print the help.";
 
     public static string PortUnavailable(int port) => port == LauncherOptions.AutomaticPort
-        ? "Aucun port loopback disponible n’a pu être attribué à GitHealth."
-        : $"Le port loopback {port} est déjà utilisé. Choisissez un autre port avec --port.";
+        ? "No loopback port could be assigned to GitHealth."
+        : $"Loopback port {port} is already in use. Choose another port with --port.";
 
     public static string KestrelEndpointsNotAllowed() =>
-        "La configuration Kestrel:Endpoints est refusée par le lanceur natif afin de préserver "
-        + "l’écoute loopback. Utilisez --port pour choisir le port local.";
+        "The Kestrel:Endpoints configuration is refused by the native launcher to "
+        + "preserve loopback-only listening. Use --port to choose the local port.";
 
     public static string DataDirectoryUnavailable(string directoryPath) =>
-        $"Le répertoire de données « {directoryPath} » est inaccessible ou non inscriptible.";
+        $"The data directory \"{directoryPath}\" is unreachable or not writable.";
 
     public static string DatabaseUnavailable(string databasePath) =>
-        $"La base SQLite « {databasePath} » est invalide ou inaccessible. "
-        + "Vérifiez le répertoire de données et ses droits.";
+        $"The SQLite database \"{databasePath}\" is invalid or unreachable. "
+        + "Check the data directory and its permissions.";
 
     public static string DatabaseInUse(string databasePath) =>
-        $"La base SQLite « {databasePath} » est déjà utilisée "
-        + "par une autre instance de GitHealth.";
+        $"The SQLite database \"{databasePath}\" is already used "
+        + "by another GitHealth instance.";
 
     public static string GitUnavailable(string? details = null)
     {
         var suffix = string.IsNullOrWhiteSpace(details) ? string.Empty : $" {details}";
-        return "Git est introuvable ou ne peut pas être démarré. "
-            + $"Installez Git puis relancez GitHealth.{suffix}";
+        return "Git cannot be found or started. "
+            + $"Install Git, then start GitHealth again.{suffix}";
     }
 
     public static string Unexpected() =>
-        "GitHealth n’a pas pu démarrer. Consultez les journaux pour identifier la cause.";
+        "GitHealth could not start. Check the logs to identify the cause.";
 
     /// <summary>
-    /// Traduit un échec de démarrage en message actionnable. Les causes se cachent
-    /// souvent dans une exception interne : la recherche descend toute la chaîne.
+    /// Turns a startup failure into an actionable message. The causes often hide in
+    /// an inner exception: the search walks the whole chain.
     /// </summary>
     public static string Diagnose(Exception exception, int port, string databasePath)
     {

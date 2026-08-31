@@ -25,13 +25,13 @@ public sealed class SystemBrowserLauncherTests
     public void OpenReturnsManualInstructionWhenTheSystemRefusesTheBrowser()
     {
         var launcher = new SystemBrowserLauncher(
-            _ => throw new Win32Exception("Aucun navigateur"));
+            _ => throw new Win32Exception("No browser"));
         var address = new Uri("http://127.0.0.1:5187/");
 
         var warning = launcher.Open(address);
 
         Assert.Contains(address.AbsoluteUri, warning, StringComparison.Ordinal);
-        Assert.Contains("manuellement", warning, StringComparison.Ordinal);
+        Assert.Contains("manually", warning, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -43,6 +43,6 @@ public sealed class SystemBrowserLauncherTests
         var warning = launcher.Open(new Uri("file:///tmp/githealth"));
 
         Assert.False(wasStarted);
-        Assert.Contains("ne peut pas être ouverte", warning, StringComparison.Ordinal);
+        Assert.Contains("cannot be opened", warning, StringComparison.Ordinal);
     }
 }

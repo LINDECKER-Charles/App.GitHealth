@@ -7,8 +7,8 @@ using App.GitHealth.Core.Projects;
 namespace App.GitHealth.Api.Features.Projects;
 
 /// <summary>
-/// Range un projet dans l'espace de travail. Aucune lecture du dépôt n'est nécessaire :
-/// le favori et le groupe ne décrivent que la navigation, jamais l'état Git.
+/// Moves a project inside the workspace. No read of the repository is needed:
+/// the favourite flag and the group describe navigation only, never the Git state.
 /// </summary>
 internal sealed class ProjectOrganizationService(IProjectRepository projects, IClock clock)
 {
@@ -22,7 +22,7 @@ internal sealed class ProjectOrganizationService(IProjectRepository projects, IC
         {
             return ApiOutcome<ProjectResponse>.Failed(ApiProblems.NotFound(
                 ApiErrorCodes.ProjectNotFound,
-                "Le projet demandé n’existe pas."));
+                "The requested project does not exist."));
         }
 
         var organization = Build(request);

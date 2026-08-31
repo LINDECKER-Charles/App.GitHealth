@@ -21,7 +21,7 @@ internal sealed class RepositoryValidator(
         {
             return ApiOutcome<RepositoryDescriptor>.Failed(ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidPath,
-                "Le chemin du dépôt est absent ou trop long."));
+                "The repository path is missing or too long."));
         }
 
         var accessFailure = CheckAccess(repositoryPath);
@@ -69,7 +69,7 @@ internal sealed class RepositoryValidator(
         {
             return IsAllowed(path) ? null : ApiProblems.BadRequest(
                 ApiErrorCodes.PathNotAllowed,
-                "Le dépôt se trouve hors de la racine autorisée.");
+                "The repository is outside the allowed root.");
         }
         catch (Exception exception) when (exception is ArgumentException
             or IOException or UnauthorizedAccessException)
@@ -100,7 +100,7 @@ internal sealed class RepositoryValidator(
             {
                 return failure with
                 {
-                    Detail = "Le dépôt ou ses métadonnées Git sortent de la racine autorisée.",
+                    Detail = "The repository or its Git metadata is outside the allowed root.",
                 };
             }
         }

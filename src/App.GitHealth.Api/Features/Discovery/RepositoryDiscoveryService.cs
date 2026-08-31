@@ -10,7 +10,8 @@ using Microsoft.Extensions.Options;
 namespace App.GitHealth.Api.Features.Discovery;
 
 /// <summary>
-/// Détecte les dépôts d'un dossier, les lit en lecture seule et signale ceux déjà enregistrés.
+/// Detects the repositories under a folder, reads them read only and flags the ones already
+/// registered.
 /// </summary>
 internal sealed class RepositoryDiscoveryService(
     RepositoryValidator validator,
@@ -51,7 +52,7 @@ internal sealed class RepositoryDiscoveryService(
         {
             return Failed(ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidDirectory,
-                "Le chemin du dossier est absent ou trop long."));
+                "The folder path is missing or too long."));
         }
 
         try
@@ -63,14 +64,14 @@ internal sealed class RepositoryDiscoveryService(
         {
             return Failed(ApiProblems.Forbidden(
                 ApiErrorCodes.DirectoryInaccessible,
-                "Le dossier demandé n’est pas accessible."));
+                "The requested folder is not accessible."));
         }
         catch (Exception exception) when (exception is ArgumentException
             or IOException or NotSupportedException)
         {
             return Failed(ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidDirectory,
-                "Le chemin du dossier est invalide."));
+                "The folder path is invalid."));
         }
     }
 
@@ -80,14 +81,14 @@ internal sealed class RepositoryDiscoveryService(
         {
             return Failed(ApiProblems.Forbidden(
                 ApiErrorCodes.DirectoryNotAllowed,
-                "Le dossier demandé se trouve hors de la racine autorisée."));
+                "The requested folder is outside the allowed root."));
         }
 
         return Directory.Exists(fullPath)
             ? ApiOutcome<string>.Success(fullPath)
             : Failed(ApiProblems.NotFound(
                 ApiErrorCodes.DirectoryNotFound,
-                "Le dossier demandé n’existe pas."));
+                "The requested folder does not exist."));
     }
 
     private async Task<IReadOnlyDictionary<string, Guid>> ReadTrackedPathsAsync(
@@ -104,8 +105,8 @@ internal sealed class RepositoryDiscoveryService(
     }
 
     /// <summary>
-    /// Chaque candidat est confirmé par une lecture Git : un dossier qui ressemble à un dépôt
-    /// sans en être un lisible est simplement écarté du résultat.
+    /// Every candidate is confirmed by a Git read: a folder that looks like a repository
+    /// without being a readable one is simply dropped from the result.
     /// </summary>
     private async Task<IReadOnlyList<DiscoveredRepositoryResponse>> InspectAsync(
         IReadOnlyList<string> paths,

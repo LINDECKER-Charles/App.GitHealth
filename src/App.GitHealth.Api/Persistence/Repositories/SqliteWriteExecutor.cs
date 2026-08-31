@@ -18,7 +18,7 @@ internal static class SqliteWriteExecutor
         {
             throw new PersistenceWriteException(
                 PersistenceErrorCode.DatabaseBusy,
-                "La base SQLite est occupée au-delà du délai d’écriture configuré.",
+                "The SQLite database stayed busy beyond the configured write timeout.",
                 exception);
         }
     }

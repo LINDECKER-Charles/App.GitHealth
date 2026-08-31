@@ -27,6 +27,6 @@ internal sealed partial class PersistenceExceptionHandler(
     [LoggerMessage(
         EventId = 1001,
         Level = LogLevel.Warning,
-        Message = "Une écriture SQLite a échoué.")]
+        Message = "A SQLite write failed.")]
     private static partial void LogWriteFailure(ILogger logger, Exception exception);
 }

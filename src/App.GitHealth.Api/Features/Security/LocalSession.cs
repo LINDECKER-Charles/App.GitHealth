@@ -30,13 +30,14 @@ internal static class LocalSession
             RequestTokenCookieOptions(context.Request.IsHttps));
     }
 
-    // HttpOnly = false est délibéré : XSRF-TOKEN porte la moitié publique du
-    // double-submit antiforgery, que le client Angular relit dans document.cookie
-    // (withXsrfConfiguration) pour la réémettre en en-tête X-XSRF-TOKEN. La moitié
-    // secrète reste le cookie GitHealth.Antiforgery, lui HttpOnly. Le passer en
-    // HttpOnly désactiverait la protection CSRF sans rien protéger : aucun secret de
-    // session ne transite ici. CodeQL cs/web/cookie-httponly-not-set le signale malgré
-    // tout, faute de distinguer cookie de session et request token — faux positif.
+    // HttpOnly = false is deliberate: XSRF-TOKEN carries the public half of the
+    // antiforgery double-submit, which the Angular client reads back from
+    // document.cookie (withXsrfConfiguration) to re-emit it in the X-XSRF-TOKEN
+    // header. The secret half stays in the GitHealth.Antiforgery cookie, which is
+    // HttpOnly. Turning this one HttpOnly would disable the CSRF protection while
+    // protecting nothing: no session secret travels here. CodeQL
+    // cs/web/cookie-httponly-not-set flags it all the same, for lack of telling a
+    // session cookie from a request token — false positive.
     private static CookieOptions RequestTokenCookieOptions(bool isSecure) => new()
     {
         HttpOnly = false,

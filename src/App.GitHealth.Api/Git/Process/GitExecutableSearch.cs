@@ -1,8 +1,8 @@
 namespace App.GitHealth.Api.Git.Process;
 
 /// <summary>
-/// Emplacements interrogés pour localiser Git, capturés depuis l'environnement afin que la
-/// résolution reste testable sans dépendre du poste qui exécute les tests.
+/// Locations queried to locate Git, captured from the environment so that resolution stays
+/// testable without depending on the machine that runs the tests.
 /// </summary>
 internal sealed record GitExecutableSearch
 {
@@ -19,7 +19,7 @@ internal sealed record GitExecutableSearch
 
     public required IReadOnlyList<string> StandardLocations { get; init; }
 
-    /// <summary>Sonde du système de fichiers, remplacée dans les tests.</summary>
+    /// <summary>File system probe, replaced in the tests.</summary>
     public Func<string, bool> FileExists { get; init; } = File.Exists;
 
     public static GitExecutableSearch Capture() => new()

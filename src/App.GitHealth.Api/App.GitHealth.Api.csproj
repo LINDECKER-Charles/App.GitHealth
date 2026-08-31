@@ -25,9 +25,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>githealth</AssemblyName>
     <!--
-      Sous-systeme fenetre : au double-clic, l'application ne doit pas trainer une
-      console a cote de sa fenetre, dont la fermeture l'arreterait. La sortie standard
-      reste lisible depuis un terminal, TerminalOutput l'y rebranche.
+      Window subsystem: on a double-click, the application must not drag a console
+      alongside its window, since closing that console would stop it. Standard output
+      stays readable from a terminal, TerminalOutput reconnects it there.
     -->
     <OutputType>WinExe</OutputType>
     <ApplicationIcon>githealth.ico</ApplicationIcon>
@@ -47,7 +47,7 @@
     <Exec WorkingDirectory="$(FrontendRoot)" Command="npm run build" />
 
     <Error Condition="!Exists('$(FrontendDist)/index.html')"
-           Text="Le build Angular n'a pas produit index.html." />
+           Text="The Angular build did not produce index.html." />
 
     <ItemGroup>
       <FrontendFiles Include="$(FrontendDist)/**/*" />

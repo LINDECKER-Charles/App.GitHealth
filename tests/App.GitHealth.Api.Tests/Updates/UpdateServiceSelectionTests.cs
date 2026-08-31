@@ -16,7 +16,7 @@ public sealed class UpdateServiceSelectionTests
             RuntimePlatform.MacOS));
     }
 
-    /// <summary>Un utilisateur Linux attend son gestionnaire de paquets, pas un bouton.</summary>
+    /// <summary>A Linux user expects their package manager, not a button.</summary>
     [Fact]
     public void LinuxNeverSupportsInAppUpdates()
     {
@@ -26,7 +26,7 @@ public sealed class UpdateServiceSelectionTests
     }
 
     /// <summary>
-    /// Hors lanceur natif — Docker, navigateur — il n'y a rien à mettre à jour.
+    /// Outside the native launcher — Docker, browser — there is nothing to update.
     /// </summary>
     [Fact]
     public void NonNativeLaunchNeverSupportsInAppUpdates()

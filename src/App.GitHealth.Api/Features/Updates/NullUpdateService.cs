@@ -1,8 +1,8 @@
 namespace App.GitHealth.Api.Features.Updates;
 
 /// <summary>
-/// Implémentation par défaut : aucune mise à jour in-app. Elle sert en Docker, en mode
-/// navigateur et sur Linux, où l'utilisateur attend son gestionnaire de paquets.
+/// Default implementation: no in-app update. It serves in Docker, in browser mode and
+/// on Linux, where the user expects their package manager.
 /// </summary>
 internal sealed class NullUpdateService : IUpdateService
 {
@@ -19,5 +19,5 @@ internal sealed class NullUpdateService : IUpdateService
     }
 
     public void ApplyAndRestart() => throw new NotSupportedException(
-        "Aucune mise à jour in-app n'est prise en charge dans ce mode d'exécution.");
+        "No in-app update is supported in this run mode.");
 }

@@ -46,7 +46,7 @@ public sealed class DatabaseMigrationTests
 
         await using var connection = database.CreateConnection();
         await connection.OpenAsync();
-        // Une seconde initialisation ne rejoue rien : l'historique reste celui du premier passage.
+        // A second initialisation replays nothing: the history stays that of the first run.
         Assert.True(applied > 0);
         Assert.Equal(applied, await ReadIntegerAsync(
             connection,

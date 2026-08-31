@@ -70,14 +70,14 @@ public sealed class PolicyEndpointTests
         Assert.True(protectedMatch.GetProperty("isExcluded").GetBoolean());
         Assert.True(protectedMatch.GetProperty("isProtected").GetBoolean());
         Assert.Equal(
-            "Protégée par le motif « refs/heads/feature/near-00 »",
+            "Protected by pattern \"refs/heads/feature/near-00\"",
             protectedMatch.GetProperty("reason").GetString());
 
         var excludedMatch = Find(matches, "refs/heads/feature/near-01");
         Assert.True(excludedMatch.GetProperty("isExcluded").GetBoolean());
         Assert.False(excludedMatch.GetProperty("isProtected").GetBoolean());
         Assert.Equal(
-            "Exclue par le motif « refs/heads/feature/near-* »",
+            "Excluded by pattern \"refs/heads/feature/near-*\"",
             excludedMatch.GetProperty("reason").GetString());
     }
 

@@ -4,8 +4,8 @@ internal sealed class DatabaseInUseException : Exception
 {
     public DatabaseInUseException(string databasePath, Exception innerException)
         : base(
-            $"La base SQLite « {databasePath} » est déjà utilisée par une autre instance "
-            + "de GitHealth. Fermez cette instance avant de réessayer.",
+            $"The SQLite database \"{databasePath}\" is already used by another GitHealth "
+            + "instance. Close that instance and try again.",
             innerException)
     {
         DatabasePath = databasePath;

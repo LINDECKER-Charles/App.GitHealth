@@ -11,21 +11,21 @@ internal sealed class GitScannerOptionsValidator : IValidateOptions<GitScannerOp
             or > GitScannerOptions.MaximumCommandTimeoutSeconds)
         {
             return ValidateOptionsResult.Fail(
-                "Le délai Git doit être compris entre 1 et 120 secondes.");
+                "The Git timeout must be between 1 and 120 seconds.");
         }
 
         if (options.MaximumOutputBytes is < GitScannerOptions.MinimumOutputBytes
             or > GitScannerOptions.MaximumOutputBytesLimit)
         {
             return ValidateOptionsResult.Fail(
-                "La sortie Git doit être limitée entre 1 Kio et 16 Mio.");
+                "The Git output must be limited to between 1 KiB and 16 MiB.");
         }
 
         return options.MaximumParallelCommands
                 is < GitScannerOptions.MinimumParallelCommands
                 or > GitScannerOptions.MaximumParallelCommandsLimit
             ? ValidateOptionsResult.Fail(
-                "La concurrence Git doit être comprise entre 1 et 8.")
+                "The Git concurrency must be between 1 and 8.")
             : ValidateOptionsResult.Success;
     }
 }

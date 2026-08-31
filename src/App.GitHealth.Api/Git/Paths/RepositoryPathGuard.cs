@@ -38,14 +38,14 @@ internal static class RepositoryPathGuard
 
         throw new GitProcessException(
             RepositoryErrorCode.PathNotAllowed,
-            "Le dépôt ou ses métadonnées Git sortent de la racine autorisée.");
+            "The repository or its Git metadata is outside the allowed root.");
     }
 
     public static string ResolvePhysicalPath(string path)
     {
         var fullPath = Path.GetFullPath(path);
         var root = Path.GetPathRoot(fullPath)
-            ?? throw new ArgumentException("Le chemin doit être absolu.", nameof(path));
+            ?? throw new ArgumentException("The path must be absolute.", nameof(path));
         var current = root;
         var relative = fullPath[root.Length..];
         foreach (var segment in Split(relative))

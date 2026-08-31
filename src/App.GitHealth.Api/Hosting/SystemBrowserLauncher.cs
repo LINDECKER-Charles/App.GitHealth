@@ -24,7 +24,7 @@ internal sealed class SystemBrowserLauncher
         ArgumentNullException.ThrowIfNull(address);
         if (!address.IsAbsoluteUri || !IsHttp(address))
         {
-            return "L’adresse de GitHealth ne peut pas être ouverte dans un navigateur.";
+            return "The GitHealth address cannot be opened in a browser.";
         }
 
         try
@@ -35,7 +35,7 @@ internal sealed class SystemBrowserLauncher
         catch (Exception exception) when (exception is Win32Exception
             or InvalidOperationException or NotSupportedException or SecurityException)
         {
-            return $"Le navigateur n’a pas pu être ouvert. Ouvrez {address} manuellement.";
+            return $"The browser could not be opened. Open {address} manually.";
         }
     }
 
@@ -50,6 +50,6 @@ internal sealed class SystemBrowserLauncher
     private static void StartProcess(ProcessStartInfo startInfo)
     {
         using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("Le navigateur n’a pas démarré.");
+            ?? throw new InvalidOperationException("The browser did not start.");
     }
 }
