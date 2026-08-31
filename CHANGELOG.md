@@ -3,6 +3,16 @@
 All notable changes to GitHealth are recorded in this file. The format follows Keep a
 Changelog and semantic versioning.
 
+## [Unreleased]
+
+### Changed
+
+- **the application now speaks English**: every screen label, empty state, toast and
+  error message, the launcher `--help` output and the whole documentation are written
+  in English, so the guides quote the exact wording shown on screen;
+- dates, numbers and byte sizes follow the locale declared by the interface instead of a
+  hard-coded French format, which prepares GitHealth for additional locales.
+
 ## [0.1.0] - 2026-08-30
 
 First public release. It is a `0.x`: the public contract is not frozen yet, and a later

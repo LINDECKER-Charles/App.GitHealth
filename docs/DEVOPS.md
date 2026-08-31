@@ -443,8 +443,8 @@ to be rejected — `GITHUB_TOKEN` is subject to branch protection like anyone el
 ### Going further
 
 To make `dev` green by construction rather than after the fact, add the required checks
-`Vérifier le socle` and `Auditer les dépendances`. Those contexts are the workflow job
-names, written in French in `.github/workflows/`, and must be copied exactly. Keep
+`Verify the baseline` and `Audit dependencies`. Those contexts are the workflow job
+names declared in `.github/workflows/`, and must be copied exactly. Keep
 `strict: false`: requiring an up-to-date branch before merging would be redundant, because
 CI replays on the merge commit anyway, and it is that run which gates the promotion.
 
@@ -452,7 +452,7 @@ Required checks impose the pull request on their own — a commit pushed directl
 result yet and gets refused. That is the trade-off to weigh: the branch can no longer be
 pushed to directly, for any change.
 
-Now that the repository is public, `Examiner les dépendances` and the two `CodeQL` jobs
+Now that the repository is public, `Review dependencies` and the two `CodeQL` jobs
 actually run and can be required as well. They stay skipped, and would therefore count as
 green, on a private repository without an Advanced Security licence.
 

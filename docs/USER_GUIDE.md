@@ -4,11 +4,6 @@ This guide covers version `0.1.0`. GitHealth runs on your machine,
 reads repositories that are already there, and keeps its results in a local SQLite
 database.
 
-> [!NOTE]
-> The application interface currently ships in French only. The labels quoted in this
-> guide are translated to English; look for the equivalent French wording on screen.
-> Translating the interface is planned, and tracked in the known limitations.
-
 ## Contents
 
 - [What GitHealth does, and never does](#what-githealth-does-and-never-does)

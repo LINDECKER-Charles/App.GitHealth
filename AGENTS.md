@@ -7,7 +7,7 @@ installed by `/b-hive-dev-convention`.
 ## commit
 
 Commit convention (maintained by /commit, initialised by /b-hive-init).
-- Style: Conventional Commits — language: fr
+- Style: Conventional Commits — language: en
 - Scopes (path → scope):
   - `src/App.GitHealth.Api/**` → `api`
   - `src/App.GitHealth.Core/**` → `core`

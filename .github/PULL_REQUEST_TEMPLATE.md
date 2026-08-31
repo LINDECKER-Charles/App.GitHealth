@@ -28,7 +28,7 @@
 
 ## Checks
 
-- [ ] Commits follow Conventional Commits in French, with the repository scope.
+- [ ] Commits follow Conventional Commits in English, with the repository scope.
 - [ ] The branch follows `type/short-description` and covers a single topic.
 - [ ] The feature or the fix is covered by tests, shipped here.
 - [ ] `dotnet format --verify-no-changes` and `prettier --check` pass.
