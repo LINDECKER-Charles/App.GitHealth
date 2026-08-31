@@ -1,4 +1,4 @@
-name: Publication
+name: Release
 
 on:
   workflow_dispatch:
@@ -37,34 +37,34 @@ jobs:
       DOTNET_NOLOGO: "1"
 
     steps:
-      - name: Récupérer le dépôt
+      - name: Check out the repository
         uses: actions/checkout@v7
 
-      - name: Installer .NET
+      - name: Install .NET
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
-      - name: Installer Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: src/App.GitHealth.Web/package-lock.json
 
-      # Chaque phase porte son propre délai. Un dépassement au niveau du job annule
-      # tout sans que le runner remonte ses journaux — la trace est alors perdue —
-      # alors qu'un dépassement d'étape échoue proprement et laisse tourner la
-      # collecte qui suit. Les phases sont séparées pour situer un blocage :
-      # --blame-hang ne s'arme qu'une fois l'hôte de test démarré, et reste donc
-      # muet si le figeage se produit pendant la restauration ou la compilation.
-      - name: Restaurer les tests d'intégration Git
+      # Each phase carries its own timeout. A timeout at the job level cancels
+      # everything without the runner reporting its logs — the trace is then lost —
+      # whereas a step timeout fails cleanly and lets the collection that follows
+      # run. The phases are split to locate a hang: --blame-hang only arms once the
+      # test host has started, and so stays silent if the freeze happens during the
+      # restore or the build.
+      - name: Restore the Git integration tests
         timeout-minutes: 6
         run: >-
           dotnet restore
           tests/App.GitHealth.Git.IntegrationTests/App.GitHealth.Git.IntegrationTests.csproj
 
-      - name: Compiler les tests d'intégration Git
+      - name: Build the Git integration tests
         timeout-minutes: 8
         run: >-
           dotnet build
@@ -72,7 +72,7 @@ jobs:
           --configuration Release
           --no-restore
 
-      - name: Tester les fixtures Git sur la plateforme
+      - name: Test the Git fixtures on the platform
         timeout-minutes: 10
         run: >-
           dotnet test
@@ -83,7 +83,7 @@ jobs:
           --blame-hang-timeout 3m
           --blame-hang-dump-type none
 
-      - name: Conserver la trace du test figé
+      - name: Keep the hung test trace
         if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -91,17 +91,17 @@ jobs:
           path: tests/App.GitHealth.Git.IntegrationTests/TestResults
           if-no-files-found: ignore
 
-      - name: Publier l’artefact autonome
+      - name: Publish the standalone artefact
         shell: pwsh
         run: ./eng/Publish-Native.ps1 -RuntimeIdentifier ${{ matrix.runtime }}
 
-      - name: Exécuter le smoke test natif
+      - name: Run the native smoke test
         shell: pwsh
         run: >-
           ./tests/Infrastructure/Invoke-NativeSmokeTest.ps1
           -PublishDirectory artifacts/publish/${{ matrix.runtime }}
 
-      - name: Générer le SBOM
+      - name: Generate the SBOM
         uses: anchore/sbom-action@v0.24.1
         with:
           path: artifacts/publish/${{ matrix.runtime }}
@@ -111,7 +111,7 @@ jobs:
           upload-artifact: false
           upload-release-assets: false
 
-      - name: Produire la somme SHA-256
+      - name: Produce the SHA-256 checksum
         id: release-files
         shell: pwsh
         run: |
@@ -119,7 +119,7 @@ jobs:
             Where-Object Name -Match '^githealth-${{ matrix.runtime }}\.(zip|tar\.gz)$' |
             Select-Object -First 1
           if ($null -eq $archive) {
-            throw "Archive ${{ matrix.runtime }} introuvable."
+            throw "Archive ${{ matrix.runtime }} not found."
           }
           $checksum = (Get-FileHash -LiteralPath $archive.FullName -Algorithm SHA256).Hash
           $checksumPath = "$($archive.FullName).sha256"
@@ -127,7 +127,7 @@ jobs:
             Set-Content -LiteralPath $checksumPath -Encoding utf8NoBOM
           "archive=$($archive.FullName)" >> $env:GITHUB_OUTPUT
 
-      - name: Produire l’installeur Velopack
+      - name: Produce the Velopack installer
         if: matrix.runtime != 'linux-x64' && github.event_name == 'release'
         shell: pwsh
         run: >-
@@ -137,7 +137,7 @@ jobs:
           -RuntimeIdentifier ${{ matrix.runtime }}
           -ReleaseDirectory artifacts/publish
 
-      - name: Produire les manifestes winget
+      - name: Produce the winget manifests
         if: matrix.runtime == 'win-x64' && github.event_name == 'release'
         shell: pwsh
         run: >-
@@ -146,7 +146,7 @@ jobs:
           -Version '${{ github.event.release.tag_name }}'
           -OutputDirectory artifacts/publish
 
-      - name: Produire le manifeste Scoop
+      - name: Produce the Scoop manifest
         if: matrix.runtime == 'win-x64' && github.event_name == 'release'
         shell: pwsh
         run: >-
@@ -154,7 +154,7 @@ jobs:
           -ArchivePath '${{ steps.release-files.outputs.archive }}'
           -Version '${{ github.event.release.tag_name }}'
 
-      - name: Attester la provenance
+      - name: Attest the provenance
         if: >-
           github.event_name == 'release' &&
           (github.event.repository.visibility == 'public' ||
@@ -163,7 +163,7 @@ jobs:
         with:
           subject-path: ${{ steps.release-files.outputs.archive }}
 
-      - name: Attester le SBOM
+      - name: Attest the SBOM
         if: >-
           github.event_name == 'release' &&
           (github.event.repository.visibility == 'public' ||
@@ -174,7 +174,7 @@ jobs:
           sbom-path: >-
             artifacts/publish/githealth-${{ matrix.runtime }}.spdx.json
 
-      - name: Charger l’artefact
+      - name: Upload the artefact
         uses: actions/upload-artifact@v7
         with:
           name: githealth-${{ matrix.runtime }}
@@ -192,15 +192,15 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Récupérer le dépôt
+      - name: Check out the repository
         uses: actions/checkout@v7
 
-      - name: Exécuter le smoke test Docker
+      - name: Run the Docker smoke test
         shell: pwsh
         run: ./tests/Infrastructure/Invoke-DockerSmokeTest.ps1
 
   publish-release:
-    name: Attacher les artefacts à la release
+    name: Attach the artefacts to the release
     if: github.event_name == 'release'
     needs:
       - native
@@ -210,14 +210,14 @@ jobs:
       contents: write
 
     steps:
-      - name: Télécharger les artefacts
+      - name: Download the artefacts
         uses: actions/download-artifact@v8
         with:
           pattern: githealth-*
           path: artifacts/release
           merge-multiple: true
 
-      - name: Attacher les artefacts à la release
+      - name: Attach the artefacts to the release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

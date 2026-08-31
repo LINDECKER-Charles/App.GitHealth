@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Vérifier le socle
+    name: Verify the baseline
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
@@ -26,15 +26,15 @@ jobs:
       DOTNET_NOLOGO: "1"
 
     steps:
-      - name: Récupérer le dépôt
+      - name: Check out the repository
         uses: actions/checkout@v7
 
-      - name: Installer .NET
+      - name: Install .NET
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
-      - name: Installer Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
@@ -43,41 +43,47 @@ jobs:
             src/App.GitHealth.Web/package-lock.json
             tests/App.GitHealth.E2E/package-lock.json
 
-      - name: Restaurer .NET
+      - name: Restore .NET
         run: dotnet restore App.GitHealth.sln
 
-      - name: Installer Angular
+      - name: Install Angular
         run: npm ci --prefix src/App.GitHealth.Web
 
-      - name: Installer les tests bout en bout
+      - name: Install the end-to-end tests
         run: npm ci --prefix tests/App.GitHealth.E2E
 
-      - name: Vérifier le format .NET
+      - name: Check the .NET formatting
         run: dotnet format App.GitHealth.sln --verify-no-changes --no-restore
 
-      - name: Vérifier le format Angular
+      - name: Check the Angular formatting
         run: npm run format:check --prefix src/App.GitHealth.Web
 
-      - name: Vérifier les types Playwright
+      - name: Check the Playwright types
         run: npm run typecheck --prefix tests/App.GitHealth.E2E
 
-      - name: Vérifier le format Playwright
+      - name: Check the Playwright formatting
         run: npm run format:check --prefix tests/App.GitHealth.E2E
 
-      - name: Compiler .NET
+      - name: Build .NET
         run: dotnet build App.GitHealth.sln --configuration Release --no-restore
 
-      - name: Tester Angular
+      - name: Test Angular
         run: npm run test:ci --prefix src/App.GitHealth.Web
 
-      - name: Tester .NET
+      - name: Verify the message catalog
+        run: npm run i18n:extract --prefix src/App.GitHealth.Web
+
+      - name: Check the message catalog drift
+        run: git diff --exit-code src/App.GitHealth.Web/src/locale/messages.json
+
+      - name: Test .NET
         run: >-
           dotnet test App.GitHealth.sln
           --configuration Release
           --no-build
           --no-restore
 
-      - name: Publier l’application intégrée
+      - name: Publish the integrated application
         run: >-
           dotnet publish src/App.GitHealth.Api/App.GitHealth.Api.csproj
           --configuration Release
@@ -85,20 +91,20 @@ jobs:
           --no-build
           --no-restore
 
-      - name: Vérifier le bundle publié
+      - name: Check the published bundle
         run: test -f artifacts/publish/wwwroot/index.html
 
-      - name: Installer Chromium
+      - name: Install Chromium
         working-directory: tests/App.GitHealth.E2E
         run: npx playwright install --with-deps chromium
 
-      - name: Tester le parcours bout en bout
+      - name: Test the end-to-end flow
         working-directory: tests/App.GitHealth.E2E
         env:
           GITHEALTH_E2E_PUBLISH: ${{ github.workspace }}/artifacts/publish
         run: npm run test:ci
 
-      - name: Conserver les traces Playwright en cas d'échec
+      - name: Keep the Playwright traces on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -108,19 +114,19 @@ jobs:
             tests/App.GitHealth.E2E/test-results
           if-no-files-found: ignore
 
-      - name: Vérifier les règles de ciblage des builds
+      - name: Check the build targeting rules
         shell: pwsh
         run: ./tests/Infrastructure/Invoke-BuildEnvironmentTests.ps1
 
-      - name: Vérifier Docker Compose
+      - name: Check Docker Compose
         shell: pwsh
         run: ./tests/Infrastructure/Assert-ComposeConfiguration.ps1
 
-      - name: Analyser le Dockerfile
+      - name: Analyse the Dockerfile
         run: docker buildx build --check .
 
   promote:
-    name: Promouvoir dev vers test
+    name: Promote dev to test
     needs: verify
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
@@ -130,28 +136,28 @@ jobs:
       contents: write
       actions: write
 
-    # Sérialise les promotions sans annuler celle qui est en cours : deux poussées
-    # rapprochées sur dev doivent avancer test dans l'ordre, jamais en parallèle.
+    # Serialises the promotions without cancelling the one in progress: two pushes
+    # close together on dev must move test forward in order, never in parallel.
     concurrency:
       group: promote-test
 
-    # Le job ne fait pas de checkout : gh ne peut pas déduire le dépôt d'un répertoire
-    # sans .git, GH_REPO le lui désigne explicitement.
+    # The job does no checkout: gh cannot infer the repository from a directory with
+    # no .git, so GH_REPO names it explicitly.
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
 
     steps:
-      # force=false exige un fast-forward strict : l'API refuse d'avancer test si le
-      # commit validé n'est pas un descendant direct de la référence.
-      - name: Avancer test sur le commit validé
+      # force=false requires a strict fast-forward: the API refuses to move test if the
+      # validated commit is not a direct descendant of the reference.
+      - name: Move test to the validated commit
         run: >-
           gh api --method PATCH
           repos/${{ github.repository }}/git/refs/heads/test
           -f sha=${{ github.sha }}
           -F force=false
 
-      # Une poussée faite avec le GITHUB_TOKEN ne déclenche aucun workflow : la matrice
-      # multiplateforme doit donc être appelée explicitement sur le commit promu.
-      - name: Déclencher la matrice multiplateforme
+      # A push made with the GITHUB_TOKEN triggers no workflow, so the cross-platform
+      # matrix has to be called explicitly on the promoted commit.
+      - name: Trigger the cross-platform matrix
         run: gh workflow run release.yml --ref test

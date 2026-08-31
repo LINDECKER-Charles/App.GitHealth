@@ -1,4 +1,4 @@
-name: Sécurité
+name: Security
 
 on:
   pull_request:
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   dependency-review:
-    name: Examiner les dépendances
+    name: Review dependencies
     if: >-
       github.event_name == 'pull_request' &&
       (github.event.repository.visibility == 'public' ||
@@ -27,10 +27,10 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Récupérer le dépôt
+      - name: Check out the repository
         uses: actions/checkout@v7
 
-      - name: Refuser les vulnérabilités introduites
+      - name: Reject introduced vulnerabilities
         uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: moderate
@@ -56,30 +56,30 @@ jobs:
             build-mode: none
 
     steps:
-      - name: Récupérer le dépôt
+      - name: Check out the repository
         uses: actions/checkout@v7
 
-      - name: Initialiser CodeQL
+      - name: Initialise CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
-      - name: Installer .NET
+      - name: Install .NET
         if: matrix.build-mode == 'manual'
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
-      - name: Compiler le code C#
+      - name: Build the C# code
         if: matrix.build-mode == 'manual'
         run: dotnet build App.GitHealth.sln --configuration Release
 
-      - name: Analyser avec CodeQL
+      - name: Analyse with CodeQL
         uses: github/codeql-action/analyze@v4
 
   vulnerability-audit:
-    name: Auditer les dépendances
+    name: Audit dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -87,23 +87,23 @@ jobs:
       DOTNET_NOLOGO: "1"
 
     steps:
-      - name: Récupérer le dépôt
+      - name: Check out the repository
         uses: actions/checkout@v7
 
-      - name: Installer .NET
+      - name: Install .NET
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
-      - name: Installer Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
 
-      - name: Restaurer .NET
+      - name: Restore .NET
         run: dotnet restore App.GitHealth.sln
 
-      - name: Auditer NuGet
+      - name: Audit NuGet
         run: |
           dotnet package list \
             --project App.GitHealth.sln \
@@ -115,13 +115,13 @@ jobs:
           jq -e '[.. | objects | select(has("vulnerabilities"))] | length == 0' \
             nuget-audit.json > /dev/null
 
-      - name: Auditer Angular
+      - name: Audit Angular
         working-directory: src/App.GitHealth.Web
         run: |
           npm ci
           npm audit --audit-level=high
 
-      - name: Auditer Playwright
+      - name: Audit Playwright
         working-directory: tests/App.GitHealth.E2E
         run: |
           npm ci

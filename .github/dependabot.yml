@@ -1,10 +1,9 @@
 version: 2
 
-# Les mises à jour ciblent `dev` : c'est la branche d'intégration, `main` ne
-# reçoit que des promotions. Conséquence assumée : `target-branch` désactive les
-# *security updates* automatiques de Dependabot (les *alertes* restent actives),
-# les correctifs de sécurité passent donc par les mises à jour de version
-# hebdomadaires ou par un déclenchement manuel.
+# The updates target `dev`: it is the integration branch, `main` only receives
+# promotions. Accepted consequence: `target-branch` disables Dependabot's automatic
+# *security updates* (the *alerts* stay active), so security fixes go through the
+# weekly version updates or through a manual trigger.
 updates:
   - package-ecosystem: github-actions
     directory: /
