@@ -3,9 +3,9 @@ using App.GitHealth.Core.Branches;
 namespace App.GitHealth.Core.Tests.Branches;
 
 /// <summary>
-/// Une branche sans commit propre — fusionnée ou au même sommet que la référence — ne
-/// détient plus rien que la référence n'ait déjà. Elle est donc mesurée sur une échelle
-/// réduite, et n'est jamais présentée comme étant à conserver une fois le délai passé.
+/// A branch with no own commits — merged, or at the same commit as the baseline — holds
+/// nothing the baseline does not already have. It is therefore measured on a shortened
+/// scale, and is never presented as one to keep once the deadline has passed.
 /// </summary>
 public sealed class MergedBranchScaleTests
 {
@@ -49,12 +49,12 @@ public sealed class MergedBranchScaleTests
         var result = ClassifyAged(BranchFactsBuilder.Create(0, 4, true), 45);
 
         Assert.NotEqual(RecommendationKind.Keep, result.Recommendation);
-        Assert.Contains("Aucun commit propre", result.Reason, StringComparison.Ordinal);
+        Assert.Contains("No own commits", result.Reason, StringComparison.Ordinal);
     }
 
     /// <summary>
-    /// « Conserver » signale qu'il y a quelque chose à préserver. Une branche sans commit
-    /// propre n'entre jamais dans cet état : elle est terminée, pas à protéger.
+    /// "Keep" signals that there is something to preserve. A branch with no own commits
+    /// never enters that state: it is done, not something to protect.
     /// </summary>
     [Theory]
     [InlineData(1)]

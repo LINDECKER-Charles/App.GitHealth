@@ -25,7 +25,7 @@ function branch(
     topology: 'Diverged',
     activity: 'Active',
     recommendation: 'Review',
-    reason: 'Historique divergent à examiner',
+    reason: 'Diverged history to review',
     isProtected: false,
     isExcluded: false,
     ...overrides,
@@ -69,32 +69,32 @@ describe('Dashboard', () => {
     return fixture;
   }
 
-  it('affiche une ligne par branche du snapshot', async () => {
+  it('renders one row per branch of the snapshot', async () => {
     const rows = (await render()).nativeElement.querySelectorAll('.dashboard-table tbody tr');
     expect(rows).toHaveLength(3);
   });
 
-  it('compte les recommandations dans les tuiles', async () => {
+  it('counts the recommendations in the tiles', async () => {
     const counts = Array.from(
       (await render()).nativeElement.querySelectorAll('.dashboard-tile-count'),
     ).map((node) => (node as HTMLElement).textContent?.trim());
     expect(counts).toEqual(['3', '1', '0', '1', '0', '1']);
   });
 
-  it('signale une branche exclue par une icône', async () => {
+  it('flags an excluded branch with an icon', async () => {
     const compiled = (await render()).nativeElement as HTMLElement;
     expect(compiled.querySelectorAll('.branch-flag')).toHaveLength(1);
   });
 
-  it('publie l’ordre affiché pour la navigation de la fiche', async () => {
+  it('publishes the displayed order for the card navigation', async () => {
     await render();
     expect(context.visibleBranchIds()).toHaveLength(3);
   });
 
-  it('vide le tableau et propose un état vide quand aucun filtre ne correspond', async () => {
+  it('empties the table and offers an empty state when no filter matches', async () => {
     const fixture = await render();
     const search = fixture.nativeElement.querySelector('.filter-search input') as HTMLInputElement;
-    search.value = 'introuvable';
+    search.value = 'no-such-branch';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
 
@@ -102,10 +102,10 @@ describe('Dashboard', () => {
     expect(fixture.nativeElement.querySelector('ds-empty-state')).not.toBeNull();
   });
 
-  it('propose la première analyse quand aucun snapshot n’existe', async () => {
+  it('offers the first analysis when no snapshot exists', async () => {
     context.latestSnapshot.set(null);
     const compiled = (await render()).nativeElement as HTMLElement;
     expect(compiled.querySelector('.dashboard-first-scan')).not.toBeNull();
-    expect(compiled.textContent).toContain("Ce dépôt n'a pas encore été mesuré");
+    expect(compiled.textContent).toContain('This repository has not been measured yet');
   });
 });

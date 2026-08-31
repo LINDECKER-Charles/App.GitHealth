@@ -13,7 +13,7 @@ import { DsButton } from './ds-button';
       [loading]="loading()"
       [disabled]="disabled()"
     >
-      Lancer une analyse
+      Run an analysis
     </button>
   `,
 })
@@ -33,16 +33,16 @@ describe('DsButton', () => {
     return fixture;
   }
 
-  it('habille le bouton natif sans élément enveloppant', async () => {
+  it('dresses the native button with no wrapping element', async () => {
     const fixture = await render();
     const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
     expect(button.classList.contains('etb-btn')).toBe(true);
     expect(button.classList.contains('etb-btn--primary')).toBe(true);
     expect(button.classList.contains('etb-btn--sm')).toBe(true);
-    expect(button.textContent?.trim()).toBe('Lancer une analyse');
+    expect(button.textContent?.trim()).toBe('Run an analysis');
   });
 
-  it('affiche l’icône de gauche, remplacée par le spinner en chargement', async () => {
+  it('shows the left icon, replaced by the spinner while loading', async () => {
     const fixture = await render();
     expect(fixture.nativeElement.querySelector('ds-icon')).not.toBeNull();
 
@@ -52,7 +52,7 @@ describe('DsButton', () => {
     expect(fixture.nativeElement.querySelector('ds-spinner')).not.toBeNull();
   });
 
-  it('désactive le bouton pendant le chargement', async () => {
+  it('disables the button while loading', async () => {
     const fixture = await render();
     fixture.componentInstance.loading.set(true);
     await fixture.whenStable();
@@ -61,7 +61,7 @@ describe('DsButton', () => {
     );
   });
 
-  it('change de variante et de taille avec ses entrées', async () => {
+  it('changes variant and size through its inputs', async () => {
     const fixture = await render();
     fixture.componentInstance.variant.set('ghost');
     fixture.componentInstance.size.set('lg');

@@ -20,9 +20,9 @@ const noResultCode = 'analysis.no_successful_result';
 const pollIntervalMs = 800;
 
 /**
- * État partagé d'un dépôt observé : le projet, sa dernière capture complète et l'analyse
- * en cours. Un seul dépôt est ouvert à la fois : `open()` réinitialise l'état. Quelle capture
- * les vues montrent ne se décide pas ici mais dans `CaptureStore`, qui s'appuie dessus.
+ * Shared state of an observed repository: the project, its last complete capture and the
+ * running analysis. Only one repository is open at a time: `open()` resets the state. Which
+ * capture the views show is not decided here but in `CaptureStore`, which builds on this.
  */
 @Injectable({ providedIn: 'root' })
 export class ProjectContext {
@@ -41,7 +41,7 @@ export class ProjectContext {
   readonly isLaunching = signal(false);
   readonly isSavingPolicy = signal(false);
 
-  /** Ordre courant des branches affichées : la fiche s'en sert pour « Suivante ». */
+  /** Current order of the displayed branches: the card uses it for "Next". */
   readonly visibleBranchIds = signal<readonly string[]>([]);
 
   readonly isRunning = computed(() => this.isLaunching() || this.analysis()?.status === 'Running');
@@ -77,7 +77,8 @@ export class ProjectContext {
       )
       .subscribe({
         next: (launch) => this.pollAnalysis(launch.analysisId),
-        error: (error: unknown) => this.fail(error, 'L’analyse n’a pas pu être lancée.'),
+        error: (error: unknown) =>
+          this.fail(error, $localize`:@@project.error.launch:The analysis could not be started.`),
       });
   }
 
@@ -97,7 +98,8 @@ export class ProjectContext {
           this.toast.show(message);
           onSaved?.();
         },
-        error: (error: unknown) => this.fail(error, 'La politique n’a pas pu être enregistrée.'),
+        error: (error: unknown) =>
+          this.fail(error, $localize`:@@project.error.savePolicy:The policy could not be saved.`),
       });
   }
 
@@ -109,11 +111,18 @@ export class ProjectContext {
       .subscribe({
         next: (project) => {
           this.applyProject(project);
-          this.toast.show('Chemin vérifié · référence et dernier commit retrouvés');
+          this.toast.show(
+            $localize`:@@project.toast.relocated:Path verified · baseline and last commit found`,
+          );
           onDone(true);
         },
         error: (error: unknown) => {
-          this.error.set(apiErrorMessage(error, 'Le dépôt n’a pas pu être relocalisé.'));
+          this.error.set(
+            apiErrorMessage(
+              error,
+              $localize`:@@project.error.relocate:The repository could not be relocated.`,
+            ),
+          );
           onDone(false);
         },
       });
@@ -138,7 +147,10 @@ export class ProjectContext {
         error: (error: unknown) => {
           this.latestSnapshot.set(null);
           if (!(error instanceof ApiError && error.code === noResultCode)) {
-            this.fail(error, 'Le dernier snapshot ne peut pas être lu.');
+            this.fail(
+              error,
+              $localize`:@@project.error.snapshot:The last snapshot cannot be read.`,
+            );
           }
         },
       });
@@ -150,7 +162,8 @@ export class ProjectContext {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (project) => this.applyProject(project),
-        error: (error: unknown) => this.fail(error, 'Ce dépôt ne peut pas être chargé.'),
+        error: (error: unknown) =>
+          this.fail(error, $localize`:@@project.error.load:This repository cannot be loaded.`),
       });
   }
 
@@ -163,7 +176,11 @@ export class ProjectContext {
       )
       .subscribe({
         next: (status) => this.handleStatus(status),
-        error: (error: unknown) => this.fail(error, 'Le suivi de l’analyse s’est interrompu.'),
+        error: (error: unknown) =>
+          this.fail(
+            error,
+            $localize`:@@project.error.tracking:Tracking of the analysis was interrupted.`,
+          ),
       });
   }
 
@@ -181,7 +198,7 @@ export class ProjectContext {
       return;
     }
 
-    this.toast.show('Analyse terminée · aucune écriture Git');
+    this.toast.show($localize`:@@project.toast.analysisDone:Analysis finished · no Git write`);
   }
 
   private applyProject(project: ProjectResponse): void {

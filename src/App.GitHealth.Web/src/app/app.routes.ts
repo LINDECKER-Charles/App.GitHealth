@@ -24,23 +24,23 @@ export const routes: Routes = [
             ({ Visualisation }) => Visualisation,
           ),
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'topologie' },
+          { path: '', pathMatch: 'full', redirectTo: 'topology' },
           {
-            path: 'topologie',
+            path: 'topology',
             loadComponent: () =>
               import('./features/visualisation/topology/topology-view').then(
                 ({ TopologyView }) => TopologyView,
               ),
           },
           {
-            path: 'registre',
+            path: 'register',
             loadComponent: () =>
               import('./features/visualisation/activity/activity-view').then(
                 ({ ActivityView }) => ActivityView,
               ),
           },
           {
-            path: 'ecart',
+            path: 'drift',
             loadComponent: () =>
               import('./features/visualisation/drift/drift-view').then(
                 ({ DriftView }) => DriftView,

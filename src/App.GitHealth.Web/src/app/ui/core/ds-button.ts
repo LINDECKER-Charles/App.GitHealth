@@ -10,8 +10,8 @@ const largeGlyphSize = 16;
 const defaultGlyphSize = 14;
 
 /**
- * S'applique directement sur un `<button>` : aucun élément enveloppant, donc les
- * grilles et les `flex` du système gardent leurs métriques exactes.
+ * Applies straight to a `<button>`: no wrapping element, so the grids and the `flex`
+ * layouts of the system keep their exact metrics.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

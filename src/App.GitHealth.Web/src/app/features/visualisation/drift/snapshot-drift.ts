@@ -4,27 +4,27 @@ import {
   recommendationLabels,
   recommendationTones,
 } from '../../../core/branches/branch-labels';
-import { plural } from '../../../core/workspace/plural';
+import { pluralMessage } from '../../../core/i18n/plural-message';
 import { Tone } from '../../../ui/icon-name';
 
-/** Six captures racontent déjà une dérive ; au-delà, chaque capture coûte toutes ses branches. */
+/** Six captures already tell a drift; beyond that, every capture costs all of its branches. */
 export const driftCaptureLimit = 6;
 
 export type DriftKind = 'worse' | 'better' | 'fresh' | 'gone' | 'same';
 
-/** Une capture réduite à ce que le journal en lit : ses branches indexées par nom de référence. */
+/** A capture reduced to what the journal reads of it: its branches indexed by reference name. */
 export interface DriftCapture {
   readonly analysisId: string;
   readonly short: string;
   readonly label: string;
   readonly branches: ReadonlyMap<string, BranchSnapshotResponse>;
-  /** Liste de branches coupée au plafond de lecture : le diff de cette capture est partiel. */
+  /** Branch list cut at the read cap: the drift of this capture is partial. */
   readonly isBranchListTruncated: boolean;
 }
 
 export interface DriftCell {
   readonly title: string;
-  /** `null` : la branche n'existait pas à cette capture, la case se dessine en pointillé. */
+  /** `null`: the branch did not exist at that capture, the cell is drawn dotted. */
   readonly tone: Tone | null;
   readonly isCompared: boolean;
 }
@@ -87,21 +87,41 @@ interface GroupDefinition {
 
 type Buckets = ReadonlyMap<DriftKind, readonly DriftRow[]>;
 
-/** Le journal ouvre sur ce qui demande une action ; le résumé, lui, ouvre sur la bonne nouvelle. */
+/** The journal opens on what demands an action; the summary opens on the good news. */
 const groupDefinitions: readonly GroupDefinition[] = [
-  { kind: 'worse', label: 'Dégradées', dot: 'danger', arrow: 'danger' },
-  { kind: 'better', label: 'Résolues', dot: 'success', arrow: 'success' },
-  { kind: 'fresh', label: 'Nouvelles', dot: 'info', arrow: 'info' },
-  { kind: 'gone', label: 'Supprimées du dépôt', dot: 'neutral', arrow: 'danger' },
-  { kind: 'same', label: 'Inchangées', dot: 'neutral', arrow: 'neutral' },
+  {
+    kind: 'worse',
+    label: $localize`:@@drift.group.worse:Degraded`,
+    dot: 'danger',
+    arrow: 'danger',
+  },
+  {
+    kind: 'better',
+    label: $localize`:@@drift.group.better:Resolved`,
+    dot: 'success',
+    arrow: 'success',
+  },
+  { kind: 'fresh', label: $localize`:@@drift.group.fresh:New`, dot: 'info', arrow: 'info' },
+  {
+    kind: 'gone',
+    label: $localize`:@@drift.group.gone:Removed from the repository`,
+    dot: 'neutral',
+    arrow: 'danger',
+  },
+  {
+    kind: 'same',
+    label: $localize`:@@drift.group.same:Unchanged`,
+    dot: 'neutral',
+    arrow: 'neutral',
+  },
 ];
 
 const statLabels: Readonly<Record<DriftKind, string>> = {
-  worse: 'dégradées',
-  better: 'résolues',
-  fresh: 'nouvelles branches',
-  gone: 'supprimées du dépôt',
-  same: 'inchangées',
+  worse: $localize`:@@drift.stat.worse:degraded`,
+  better: $localize`:@@drift.stat.better:resolved`,
+  fresh: $localize`:@@drift.stat.fresh:new branches`,
+  gone: $localize`:@@drift.stat.gone:removed from the repository`,
+  same: $localize`:@@drift.stat.same:unchanged`,
 };
 
 const recommendationRank: Partial<Record<RecommendationKind, number>> = {
@@ -112,17 +132,16 @@ const recommendationRank: Partial<Record<RecommendationKind, number>> = {
 
 const unrankedRecommendation = 9;
 const collapsibleKind: DriftKind = 'same';
-const absentLabel = 'absente';
-const removedLabel = 'supprimée';
-const freshNotePrefix = 'créée après la capture du';
-const legendTail = ' Les cases pâlies sont hors de la comparaison choisie.';
-const historyWindowNotice = ` Seules les ${driftCaptureLimit} dernières captures sont affichées.`;
+const absentLabel = $localize`:@@drift.verdict.absent:absent`;
+const removedLabel = $localize`:@@drift.verdict.removed:removed`;
+const legendTail = $localize`:@@drift.legend.pale:Pale cells are outside the chosen comparison.`;
+const historyWindowNotice = $localize`:@@drift.legend.window:Only the last ${driftCaptureLimit}:limit: captures are shown.`;
 const cellSize = 11;
 const cellGap = 4;
 const stripPadding = 10;
 const journalColumns = '212px 146px 20px 146px minmax(0, 1fr)';
 
-/** Le diff de deux captures, groupé par mouvement et résumé en une phrase. */
+/** The drift of two captures, grouped by movement and summed up in one sentence. */
 export function buildDrift(request: DriftRequest): Drift {
   const from = request.captures[request.fromIndex];
   const to = request.captures[request.toIndex];
@@ -144,9 +163,9 @@ export function buildDrift(request: DriftRequest): Drift {
 }
 
 /**
- * Deux bizarreries de la règle sont volontairement conservées : `Excluded` et `Merged` n'ont
- * pas de rang, donc `Merged → À examiner` compte comme une résolution et `Conserver → Exclue`
- * comme une dégradation. C'est la règle de la maquette, reproduite telle quelle.
+ * Two oddities of the rule are deliberately kept: `Excluded` and `Merged` have no rank, so
+ * `Merged → Review` counts as a resolution and `Keep → Excluded` as a degradation. That is
+ * the rule of the mock-up, reproduced as it stands.
  */
 function classify(
   before: RecommendationKind | null,
@@ -167,7 +186,7 @@ function classify(
   return after === 'Merged' || rankOf(after) < rankOf(before) ? 'better' : 'worse';
 }
 
-/** A reste strictement plus ancienne que B : le select laissé de côté est repoussé d'un cran. */
+/** A stays strictly older than B: the select left alone is pushed one notch away. */
 export function clampCaptureSelection(selection: CaptureSelection): CaptureRange {
   const last = selection.count - 1;
   if (last < 1) {
@@ -181,28 +200,35 @@ export function clampCaptureSelection(selection: CaptureSelection): CaptureRange
   return { fromIndex: Math.min(clamp(selection.fromIndex, 0, last), toIndex - 1), toIndex };
 }
 
-/** La bande d'historique mesure exactement ses cases : jamais une largeur figée. */
+/** The history strip measures exactly its cells: never a fixed width. */
 export function driftGridColumns(captureCount: number): string {
   const cells = Math.max(0, captureCount * cellSize + (captureCount - 1) * cellGap);
   return `${cells + stripPadding}px ${journalColumns}`;
 }
 
-/** Les dates viennent des captures chargées, et disent quand l'historique a été coupé. */
+/** The dates come from the loaded captures, and say when the history was cut. */
 export function driftLegend(captures: readonly DriftCapture[], isTruncated: boolean): string {
   if (captures.length === 0) {
     return '';
   }
-  const scope = isTruncated
-    ? `de la première chargée (${captures[0].short})`
-    : `de la plus ancienne (${captures[0].short})`;
+  const first = captures[0].short;
   const last = captures[captures.length - 1].short;
-  const notice = isTruncated ? historyWindowNotice : '';
-  return `Chaque case suit le verdict d’une capture, ${scope} à ${last}.${notice}${legendTail}`;
+  const scope = isTruncated ? truncatedScopeLabel(first, last) : fullScopeLabel(first, last);
+  const parts = isTruncated ? [scope, historyWindowNotice, legendTail] : [scope, legendTail];
+  return parts.join(' ');
 }
 
-/** Une seule capture coupée suffit à rendre le diff partiel : les cinq compteurs mentent alors. */
+/** A single cut capture is enough to make the drift partial: the five counters then lie. */
 export function hasTruncatedBranchList(captures: readonly DriftCapture[]): boolean {
   return captures.some((capture) => capture.isBranchListTruncated);
+}
+
+function fullScopeLabel(first: string, last: string): string {
+  return $localize`:@@drift.legend.full:Each cell follows the verdict of one capture, from the oldest (${first}:first:) to ${last}:last:.`;
+}
+
+function truncatedScopeLabel(first: string, last: string): string {
+  return $localize`:@@drift.legend.truncated:Each cell follows the verdict of one capture, from the first loaded (${first}:first:) to ${last}:last:.`;
 }
 
 function buildRow(request: DriftRequest, referenceName: string, kind: DriftKind): DriftRow {
@@ -222,7 +248,7 @@ function buildRow(request: DriftRequest, referenceName: string, kind: DriftKind)
   };
 }
 
-/** Une branche disparue n'a plus de raison en B : la sienne vient de la capture de départ. */
+/** A branch that is gone has no reason left in B: its own comes from the starting capture. */
 function buildNote(
   request: DriftRequest,
   kind: DriftKind,
@@ -232,7 +258,8 @@ function buildNote(
   if (kind !== 'fresh') {
     return reason;
   }
-  return `${freshNotePrefix} ${request.captures[request.fromIndex].short} — ${reason}`;
+  const capture = request.captures[request.fromIndex].short;
+  return $localize`:@@drift.note.fresh:created after the ${capture}:capture: capture — ${reason}:reason:`;
 }
 
 function buildCells(request: DriftRequest, referenceName: string): readonly DriftCell[] {
@@ -240,14 +267,18 @@ function buildCells(request: DriftRequest, referenceName: string): readonly Drif
     const found = capture.branches.get(referenceName)?.recommendation ?? null;
     const verdict = found === null ? absentLabel : recommendationLabels[found];
     return {
-      title: `${capture.short} : ${verdict}`,
+      title: cellTitle(capture.short, verdict),
       tone: found === null ? null : recommendationTones[found],
       isCompared: index === request.fromIndex || index === request.toIndex,
     };
   });
 }
 
-/** L'ordre de la capture de départ, puis les nouvelles venues : la lecture reste stable. */
+function cellTitle(capture: string, verdict: string): string {
+  return $localize`:@@drift.cell.title:${capture}:capture:: ${verdict}:verdict:`;
+}
+
+/** The order of the starting capture, then the newcomers: the reading stays stable. */
 function joinedNames(from: DriftCapture, to: DriftCapture): readonly string[] {
   const names = [...from.branches.keys()];
   for (const name of to.branches.keys()) {
@@ -273,7 +304,7 @@ function toGroups(buckets: Buckets): readonly DriftGroup[] {
     .filter((group) => group.count > 0);
 }
 
-/** Le panneau garde ses cinq lignes même à zéro : le journal montre, le panneau fait le bilan. */
+/** The panel keeps its five rows even at zero: the journal shows, the panel takes stock. */
 function toStats(buckets: Buckets): readonly DriftStat[] {
   return groupDefinitions.map(({ kind, dot }) => ({
     label: statLabels[kind],
@@ -284,12 +315,40 @@ function toStats(buckets: Buckets): readonly DriftStat[] {
 
 function toSummary(from: string, to: string, buckets: Buckets): string {
   const parts = [
-    plural(countOf(buckets, 'better'), 'résolution'),
-    plural(countOf(buckets, 'worse'), 'dégradation'),
-    plural(countOf(buckets, 'fresh'), 'nouvelle'),
-    plural(countOf(buckets, 'gone'), 'supprimée'),
-  ];
-  return `Entre ${from} et ${to} : ${parts.join(', ')}.`;
+    resolutionLabel(countOf(buckets, 'better')),
+    degradationLabel(countOf(buckets, 'worse')),
+    freshLabel(countOf(buckets, 'fresh')),
+    goneLabel(countOf(buckets, 'gone')),
+  ].join(', ');
+  return $localize`:@@drift.summary.sentence:Between ${from}:from: and ${to}:to:: ${parts}:parts:.`;
+}
+
+function resolutionLabel(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@drift.summary.resolutionOne:${count}:count: resolution`,
+    other: $localize`:@@drift.summary.resolutionMany:${count}:count: resolutions`,
+  });
+}
+
+function degradationLabel(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@drift.summary.degradationOne:${count}:count: degradation`,
+    other: $localize`:@@drift.summary.degradationMany:${count}:count: degradations`,
+  });
+}
+
+function freshLabel(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@drift.summary.freshOne:${count}:count: new branch`,
+    other: $localize`:@@drift.summary.freshMany:${count}:count: new branches`,
+  });
+}
+
+function goneLabel(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@drift.summary.goneOne:${count}:count: removed branch`,
+    other: $localize`:@@drift.summary.goneMany:${count}:count: removed branches`,
+  });
 }
 
 function countOf(buckets: Buckets, kind: DriftKind): number {

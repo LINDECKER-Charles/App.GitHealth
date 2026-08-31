@@ -1,18 +1,28 @@
 @if (snapshot(); as loaded) {
   @if (isHistorical()) {
     <div class="dashboard-notice">
-      <ds-callout tone="neutral" title="Snapshot historique">
-        Analyse {{ loaded.analysisId.slice(0, 8) }}, relue avec la politique capturée à l'époque.
-        Les motifs ne se modifient pas depuis cette vue.
+      <ds-callout
+        tone="neutral"
+        i18n-title="@@dashboard.historical.title"
+        title="Historical snapshot"
+        i18n="@@dashboard.historical.body"
+      >
+        Analysis {{ loaded.analysisId.slice(0, 8) }}, replayed with the policy captured at the time.
+        The patterns cannot be changed from this view.
       </ds-callout>
     </div>
   }
 
   @if (loaded.isTruncated) {
     <div class="dashboard-notice">
-      <ds-callout tone="warning" title="Lecture partielle">
-        Ce dépôt dépasse la limite de lecture d'une page : seules les
-        {{ loaded.branches.length }} premières branches sont affichées.
+      <ds-callout
+        tone="warning"
+        i18n-title="@@dashboard.truncated.title"
+        title="Partial read"
+        i18n="@@dashboard.truncated.body"
+      >
+        This repository exceeds the single-page read limit: only the first
+        {{ loaded.branches.length }} branches are shown.
       </ds-callout>
     </div>
   }
@@ -43,8 +53,10 @@
         size="sm"
         type="search"
         iconLeft="search"
-        placeholder="Nom de branche"
-        ariaLabel="Filtrer par nom de branche"
+        i18n-placeholder="@@dashboard.filter.placeholder"
+        placeholder="Branch name"
+        i18n-ariaLabel="@@dashboard.filter.aria"
+        ariaLabel="Filter by branch name"
         [value]="filters().search"
         (valueChange)="update({ search: $event })"
       />
@@ -52,7 +64,8 @@
     <div class="filter-topology">
       <ds-select
         size="sm"
-        ariaLabel="Topologie"
+        i18n-ariaLabel="@@dashboard.topologyFilter.aria"
+        ariaLabel="Topology"
         [options]="topologyOptions"
         [value]="filters().topology"
         (valueChange)="update({ topology: $any($event) })"
@@ -61,7 +74,8 @@
     <div class="filter-activity">
       <ds-select
         size="sm"
-        ariaLabel="Activité"
+        i18n-ariaLabel="@@dashboard.activityFilter.aria"
+        ariaLabel="Activity"
         [options]="activityOptions"
         [value]="filters().activity"
         (valueChange)="update({ activity: $any($event) })"
@@ -74,14 +88,19 @@
       iconLeft="funnel"
       (click)="showMoreFilters.set(!showMoreFilters())"
     >
-      {{ showMoreFilters() ? 'Moins de filtres' : 'Plus de filtres' }}
+      @if (showMoreFilters()) {
+        <ng-container i18n="@@dashboard.filters.fewer">Fewer filters</ng-container>
+      } @else {
+        <ng-container i18n="@@dashboard.filters.more">More filters</ng-container>
+      }
     </button>
     <span class="filter-spacer"></span>
-    <span class="filter-caption">Trier</span>
+    <span class="filter-caption" i18n="@@dashboard.sort.caption">Sort</span>
     <div class="filter-sort">
       <ds-select
         size="sm"
-        ariaLabel="Trier les branches"
+        i18n-ariaLabel="@@dashboard.sortFilter.aria"
+        ariaLabel="Sort the branches"
         [options]="sortOptions"
         [value]="filters().sort"
         (valueChange)="update({ sort: $any($event) })"
@@ -91,18 +110,20 @@
       dsIconButton
       size="sm"
       [icon]="filters().direction === 'desc' ? 'chevron-down' : 'chevron-up'"
-      label="Inverser l'ordre"
+      i18n-label="@@dashboard.direction.label"
+      label="Reverse the order"
       (click)="toggleDirection()"
     ></button>
   </div>
 
   @if (showMoreFilters()) {
     <div class="dashboard-filters dashboard-filters-more">
-      <span class="filter-caption">Relation Git</span>
+      <span class="filter-caption" i18n="@@dashboard.relationship.caption">Git relationship</span>
       <div class="filter-relationship">
         <ds-select
           size="sm"
-          ariaLabel="Relation Git"
+          i18n-ariaLabel="@@dashboard.relationshipFilter.aria"
+          ariaLabel="Git relationship"
           [options]="relationshipOptions"
           [value]="filters().relationship"
           (valueChange)="update({ relationship: $any($event) })"
@@ -110,23 +131,31 @@
       </div>
       <span class="filter-divider"></span>
       <ds-switch
-        ariaLabel="Ne montrer que les branches sans activité récente"
+        i18n-ariaLabel="@@dashboard.stale.aria"
+        ariaLabel="Show only branches with no recent activity"
         [checked]="filters().onlyStale"
         (checkedChange)="update({ onlyStale: $event })"
       />
-      <span class="filter-label">
-        Sans activité depuis plus de {{ loaded.policy.inactiveAfterDays }} jours
+      <span class="filter-label" i18n="@@dashboard.stale.label">
+        No activity for more than {{ loaded.policy.inactiveAfterDays }} days
       </span>
       <span class="filter-spacer"></span>
-      <button dsButton size="sm" variant="ghost" iconLeft="x" (click)="resetFilters()">
-        Tout réinitialiser
+      <button
+        dsButton
+        size="sm"
+        variant="ghost"
+        iconLeft="x"
+        i18n="@@dashboard.filters.reset"
+        (click)="resetFilters()"
+      >
+        Reset everything
       </button>
     </div>
   }
 
   @if (chips().length > 0) {
     <div class="dashboard-chips">
-      <span class="filter-caption">Filtres actifs</span>
+      <span class="filter-caption" i18n="@@dashboard.chips.caption">Active filters</span>
       @for (chip of chips(); track chip.label) {
         <ds-tag [removable]="true" (remove)="update(chip.patch)">{{ chip.label }}</ds-tag>
       }
@@ -134,21 +163,24 @@
   }
 
   <div class="dashboard-table" [attr.aria-busy]="isLoading()">
-    <table [attr.aria-label]="'Branches comparées à ' + loaded.referenceName">
+    <table [attr.aria-label]="tableLabel()">
       <thead>
         <tr>
           <th class="column-select">
             <ds-checkbox
-              ariaLabel="Tout sélectionner"
+              i18n-ariaLabel="@@dashboard.selectAll.aria"
+              ariaLabel="Select all"
               [checked]="areAllSelected()"
               (checkedChange)="toggleAll()"
             />
           </th>
-          <th>Branche</th>
-          <th class="column-gap">Écart</th>
-          <th class="column-topology">Topologie</th>
-          <th class="column-activity">Activité</th>
-          <th class="column-recommendation">Recommandation</th>
+          <th i18n="@@dashboard.column.branch">Branch</th>
+          <th class="column-gap" i18n="@@dashboard.column.difference">Difference</th>
+          <th class="column-topology" i18n="@@dashboard.column.topology">Topology</th>
+          <th class="column-activity" i18n="@@dashboard.column.activity">Activity</th>
+          <th class="column-recommendation" i18n="@@dashboard.column.recommendation">
+            Recommendation
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -160,7 +192,7 @@
           >
             <td class="column-select" (click)="$event.stopPropagation(); toggleSelection(row.id)">
               <ds-checkbox
-                [ariaLabel]="'Sélectionner ' + row.name"
+                [ariaLabel]="row.selectLabel"
                 [checked]="row.isSelected"
                 (checkedChange)="toggleSelection(row.id)"
               />
@@ -170,18 +202,22 @@
                 <button
                   class="branch-open"
                   type="button"
-                  [attr.aria-label]="'Expliquer ' + row.name"
+                  [attr.aria-label]="row.explainLabel"
                   (click)="$event.stopPropagation(); openBranch(row.id)"
                 >
                   {{ row.name }}
                 </button>
                 @if (row.isProtected) {
-                  <span class="branch-flag is-brand" title="Protégée">
+                  <span
+                    class="branch-flag is-brand"
+                    i18n-title="@@dashboard.flag.protected"
+                    title="Protected"
+                  >
                     <ds-icon name="lock" [size]="12" />
                   </span>
                 }
                 @if (row.isExcluded) {
-                  <span class="branch-flag" title="Exclue">
+                  <span class="branch-flag" i18n-title="@@dashboard.flag.excluded" title="Excluded">
                     <ds-icon name="eye-off" [size]="12" />
                   </span>
                 }
@@ -216,8 +252,10 @@
       <div class="dashboard-empty-rows">
         <ds-empty-state
           icon="funnel"
-          title="Aucune branche ne correspond"
-          description="Élargis la recherche ou repars de la vue Toutes."
+          i18n-title="@@dashboard.empty.title"
+          title="No branch matches"
+          i18n-description="@@dashboard.empty.description"
+          description="Widen the search or start again from the All view."
         />
       </div>
     }
@@ -227,11 +265,7 @@
     @if (selectedCount() > 0) {
       <div class="selection-bar">
         <ds-badge size="sm" tone="info" [solid]="true">{{ selectedCount() }}</ds-badge>
-        <span class="selection-label">
-          branche{{ selectedCount() > 1 ? 's' : '' }} sélectionnée{{
-            selectedCount() > 1 ? 's' : ''
-          }}
-        </span>
+        <span class="selection-label">{{ selectionLabel() }}</span>
         <span class="filter-divider"></span>
         @if (!isHistorical()) {
           <button
@@ -239,66 +273,87 @@
             size="sm"
             variant="secondary"
             iconLeft="lock"
+            i18n="@@dashboard.action.protect"
             (click)="addSelectionToPolicy('protected')"
           >
-            Protéger
+            Protect
           </button>
           <button
             dsButton
             size="sm"
             variant="secondary"
             iconLeft="eye-off"
+            i18n="@@dashboard.action.exclude"
             (click)="addSelectionToPolicy('excluded')"
           >
-            Exclure
+            Exclude
           </button>
         }
-        <button dsButton size="sm" variant="secondary" iconLeft="copy" (click)="copyCommands()">
-          Copier les commandes git
+        <button
+          dsButton
+          size="sm"
+          variant="secondary"
+          iconLeft="copy"
+          i18n="@@dashboard.action.copyCommands"
+          (click)="copyCommands()"
+        >
+          Copy the git commands
         </button>
         <button
           dsButton
           size="sm"
           variant="secondary"
           iconLeft="download"
+          i18n="@@dashboard.action.export"
           (click)="exportSelection()"
         >
-          Exporter la sélection
+          Export the selection
         </button>
         <span class="filter-spacer"></span>
-        <button dsButton size="sm" variant="ghost" (click)="toggleAll()">
-          Tout désélectionner
+        <button
+          dsButton
+          size="sm"
+          variant="ghost"
+          i18n="@@dashboard.action.clearSelection"
+          (click)="toggleAll()"
+        >
+          Clear the selection
         </button>
       </div>
     } @else {
       <div class="footer-summary">
         <span>{{ countLabel() }}</span>
         <span>·</span>
-        <span>Clique une ligne pour l'expliquer</span>
+        <span i18n="@@dashboard.footer.hint">Click a row to explain it</span>
       </div>
     }
   </div>
 } @else if (isLoading()) {
-  <p class="dashboard-state" role="status">Lecture de la capture…</p>
+  <p class="dashboard-state" role="status" i18n="@@dashboard.state.loading">Reading the capture…</p>
 } @else if (captures.error()) {
-  <!-- Le cadre du dépôt porte déjà le message : le répéter ne dirait rien de plus. -->
-  <p class="dashboard-state" role="status">Aucune branche à afficher pour cette capture.</p>
+  <!-- The repository frame already carries the message: repeating it would say nothing more. -->
+  <p class="dashboard-state" role="status" i18n="@@dashboard.state.emptyCapture">
+    No branch to show for this capture.
+  </p>
 } @else {
   <div class="dashboard-first-scan">
     <ds-empty-state
       icon="git-branch"
-      title="Ce dépôt n'a pas encore été mesuré"
-      description="Une analyse lit les références présentes sur ce poste et n'écrit rien : ni refs, ni index, ni worktree, ni reflog."
+      i18n-title="@@dashboard.firstScan.title"
+      title="This repository has not been measured yet"
+      i18n-description="@@dashboard.firstScan.description"
+      description="An analysis reads the references present on this machine and writes nothing: no refs, no index, no worktree, no reflog."
     >
       <button
         dsButton
         size="md"
         variant="primary"
         iconLeft="play"
+        i18n="@@dashboard.firstScan.action"
         [loading]="context.isRunning()"
         (click)="context.launchAnalysis()"
       >
-        Lancer la première analyse
+        Run the first analysis
       </button>
     </ds-empty-state>
   </div>

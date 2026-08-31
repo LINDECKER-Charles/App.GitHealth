@@ -100,7 +100,7 @@
   color: var(--text-muted);
 }
 
-/* La liste porte le défilement pour que la recherche et le pied restent atteignables. */
+/* The list carries the scrolling so the search and the footer stay reachable. */
 .picker-list {
   flex: 1;
   min-height: 0;

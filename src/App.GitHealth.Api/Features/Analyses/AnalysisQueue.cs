@@ -40,7 +40,7 @@ internal sealed class AnalysisQueue : IDisposable
 
     public TimeSpan Timeout => _timeout;
 
-    /// <summary>Nombre de lecteurs de la file, donc d'analyses menées de front.</summary>
+    /// <summary>Number of queue readers, and therefore of analyses run in parallel.</summary>
     public int MaximumParallelAnalyses { get; }
 
     public async Task<AnalysisEnqueueResult> EnqueueAsync(
@@ -203,12 +203,12 @@ internal sealed class AnalysisQueue : IDisposable
 
     private async Task FailQueueFullAsync(AnalysisWorkItem item)
     {
-        Update(item.AnalysisId, AnalysisPhase.Failed, "La file d’analyses est pleine.");
+        Update(item.AnalysisId, AnalysisPhase.Failed, "The analysis queue is full.");
         await using var scope = _scopeFactory.CreateAsyncScope();
         var repository = scope.ServiceProvider.GetRequiredService<IAnalysisRepository>();
         var failure = new AnalysisFailure(
             "analysis.queue_full",
-            "La file d’analyses est pleine.",
+            "The analysis queue is full.",
             _clock.UtcNow);
         await repository.FailAsync(item.AnalysisId, failure, CancellationToken.None);
     }

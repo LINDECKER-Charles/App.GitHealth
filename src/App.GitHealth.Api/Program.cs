@@ -14,15 +14,17 @@ using Velopack;
 namespace App.GitHealth.Api;
 
 /// <summary>
-/// Point d'entrée de GitHealth.
+/// GitHealth entry point.
 /// </summary>
 /// <remarks>
-/// L'entrée est explicite et marquée <see cref="STAThreadAttribute" /> : les instructions
-/// de haut niveau laissent le thread principal en apartment MTA, où WebView2 ne
-/// s'initialise jamais — la fenêtre s'ouvre mais reste vide, sans exception ni journal.
+/// The entry point is explicit and marked <see cref="STAThreadAttribute" />: top-level
+/// statements leave the main thread in an MTA apartment, where WebView2 never
+/// initialises — the window opens but stays empty, with no exception and no log.
 /// </remarks>
 public sealed partial class Program
 {
+    private const string EndpointNotFoundDetail = "The requested API route does not exist.";
+
     private Program()
     {
     }
@@ -30,12 +32,12 @@ public sealed partial class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        // Première instruction du programme, sans exception : Velopack y intercepte les
-        // hooks d'installation et de mise à jour. Placé plus bas, il ne les voit jamais.
+        // First statement of the program, without exception: Velopack intercepts the
+        // install and update hooks here. Placed any lower, it never sees them.
         VelopackApp.Build().Run();
 
-        // Avant toute écriture : l'exécutable est fenêtré, sans cela l'aide et les
-        // diagnostics de démarrage n'atteindraient aucun terminal.
+        // Before any write: the executable is windowed, and without this the help and
+        // the startup diagnostics would reach no terminal.
         TerminalOutput.AttachToCallingTerminal();
 
         var parseResult = LauncherOptionsParser.Parse(args);
@@ -161,13 +163,13 @@ public sealed partial class Program
         {
             app.MapFallback("/openapi/{**path}", () => ApiProblems.Result(ApiProblems.NotFound(
                 ApiErrorCodes.EndpointNotFound,
-                "La route API demandée n'existe pas.")));
+                EndpointNotFoundDetail)));
         }
 
         app.MapGitHealthApi();
         app.MapFallback("/api/{**path}", () => ApiProblems.Result(ApiProblems.NotFound(
             ApiErrorCodes.EndpointNotFound,
-            "La route API demandée n’existe pas.")));
+            EndpointNotFoundDetail)));
         app.MapFallbackToFile("index.html");
     }
 

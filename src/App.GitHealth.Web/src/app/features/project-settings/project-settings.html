@@ -1,36 +1,40 @@
 <div class="settings-grid">
   <div class="settings-column">
-    <ds-panel title="Seuils d'activité" icon="clock">
+    <ds-panel i18n-title="@@settings.thresholds.title" title="Activity thresholds" icon="clock">
       <div class="panel-content">
-        <p class="panel-intro">
-          Deux bornes, trois états. Les seuils changent l'interprétation, jamais les SHA ni les
-          compteurs déjà capturés.
+        <p class="panel-intro" i18n="@@settings.thresholds.intro">
+          Two bounds, three states. The thresholds change the interpretation, never the SHAs or the
+          counters already captured.
         </p>
 
         <div class="threshold-row">
           <div class="threshold-field">
-            <div class="field-label">Active jusqu'à</div>
+            <div class="field-label" i18n="@@settings.thresholds.activeLabel">Active until</div>
             <ds-input
               size="sm"
               type="number"
               inputMode="numeric"
               [min]="0"
               [mono]="true"
-              suffix="jours"
-              ariaLabel="Active jusqu'à, en jours"
+              i18n-suffix="@@settings.thresholds.activeSuffix"
+              suffix="days"
+              i18n-ariaLabel="@@settings.thresholds.activeAria"
+              ariaLabel="Active until, in days"
               [(value)]="activeUntilDays"
             />
           </div>
           <div class="threshold-field">
-            <div class="field-label">Inactive après</div>
+            <div class="field-label" i18n="@@settings.thresholds.inactiveLabel">Inactive after</div>
             <ds-input
               size="sm"
               type="number"
               inputMode="numeric"
               [min]="1"
               [mono]="true"
-              suffix="jours"
-              ariaLabel="Inactive après, en jours"
+              i18n-suffix="@@settings.thresholds.inactiveSuffix"
+              suffix="days"
+              i18n-ariaLabel="@@settings.thresholds.inactiveAria"
+              ariaLabel="Inactive after, in days"
               [invalid]="hasThresholdError()"
               [(value)]="inactiveAfterDays"
             />
@@ -45,43 +49,52 @@
             <span class="band-inactive"></span>
           </div>
           <div class="band-scale">
-            <span [style.width]="bands().active">0 j</span>
-            <span [style.width]="bands().aging">{{ draft().activeUntilDays }} j</span>
-            <span class="band-last">{{ draft().inactiveAfterDays }} j</span>
+            <span [style.width]="bands().active" i18n="@@settings.bands.zeroDays">0 d</span>
+            <span [style.width]="bands().aging" i18n="@@settings.bands.activeDays"
+              >{{ draft().activeUntilDays }} d</span
+            >
+            <span class="band-last" i18n="@@settings.bands.inactiveDays"
+              >{{ draft().inactiveAfterDays }} d</span
+            >
           </div>
           <div class="band-legend">
-            <span [style.width]="bands().active">Active</span>
-            <span [style.width]="bands().aging">Vieillissante</span>
-            <span class="band-last">Inactive</span>
+            <span [style.width]="bands().active" i18n="@@settings.bands.active">Active</span>
+            <span [style.width]="bands().aging" i18n="@@settings.bands.ageing">Ageing</span>
+            <span class="band-last" i18n="@@settings.bands.inactive">Inactive</span>
           </div>
         </div>
 
-        <p class="panel-footnote">
-          Ces bornes valent pour les branches qui portent des commits propres. Une branche
-          fusionnée, ou au même sommet que la référence, ne détient plus rien d'unique : elle suit
-          une échelle réduite, vieillissante après {{ mergedActiveUntilDays }} jours et inactive
-          après {{ mergedInactiveAfterDays }} jours.
+        <p class="panel-footnote" i18n="@@settings.thresholds.footnote">
+          These bounds apply to branches that carry their own commits. A branch that is merged, or
+          at the same commit as the baseline, holds nothing unique any more: it follows a shortened
+          scale, ageing after {{ mergedActiveUntilDays }} days and inactive after
+          {{ mergedInactiveAfterDays }} days.
         </p>
 
         @if (hasThresholdError()) {
           <div class="panel-alert">
-            <ds-callout tone="danger" title="Seuils incohérents">
-              Le seuil d'inactivité doit être supérieur au seuil d'activité.
+            <ds-callout
+              tone="danger"
+              i18n-title="@@settings.thresholds.errorTitle"
+              title="Inconsistent thresholds"
+              i18n="@@settings.thresholds.errorBody"
+            >
+              The inactivity threshold must be strictly greater than the activity threshold.
             </ds-callout>
           </div>
         }
       </div>
     </ds-panel>
 
-    <ds-panel title="Motifs de branche" icon="funnel">
+    <ds-panel i18n-title="@@settings.patterns.title" title="Branch patterns" icon="funnel">
       <div class="panel-content pattern-grid">
         <div>
           <div class="pattern-title">
             <span class="pattern-mark is-brand"><ds-icon name="lock" [size]="13" /></span>
-            <span>Branches protégées</span>
+            <span i18n="@@settings.patterns.protectedTitle">Protected branches</span>
           </div>
-          <p class="pattern-hint">
-            Retirées des recommandations d'action. La raison exacte reste lisible dans la fiche.
+          <p class="pattern-hint" i18n="@@settings.patterns.protectedHint">
+            Removed from action recommendations. The exact reason stays readable in the card.
           </p>
           <div class="pattern-tags">
             @for (pattern of protectedPatterns(); track pattern) {
@@ -93,10 +106,19 @@
               size="sm"
               [mono]="true"
               placeholder="refs/heads/release/*"
-              ariaLabel="Nouveau motif protégé"
+              i18n-ariaLabel="@@settings.patterns.protectedAria"
+              ariaLabel="New protected pattern"
               [(value)]="newProtected"
             />
-            <button dsButton size="sm" variant="secondary" type="submit">Ajouter</button>
+            <button
+              dsButton
+              size="sm"
+              variant="secondary"
+              type="submit"
+              i18n="@@settings.patterns.protectedAdd"
+            >
+              Add
+            </button>
             <button
               dsButton
               class="pattern-pick"
@@ -105,8 +127,9 @@
               iconLeft="git-branch"
               type="button"
               (click)="openPicker('protected')"
+              i18n="@@settings.patterns.protectedPick"
             >
-              Choisir…
+              Choose…
             </button>
           </form>
         </div>
@@ -114,10 +137,10 @@
         <div>
           <div class="pattern-title">
             <span class="pattern-mark"><ds-icon name="eye-off" [size]="13" /></span>
-            <span>Branches exclues</span>
+            <span i18n="@@settings.patterns.excludedTitle">Excluded branches</span>
           </div>
-          <p class="pattern-hint">
-            Conservées dans les faits, retirées des recommandations d'action.
+          <p class="pattern-hint" i18n="@@settings.patterns.excludedHint">
+            Kept in the facts, removed from action recommendations.
           </p>
           <div class="pattern-tags">
             @for (pattern of excludedPatterns(); track pattern) {
@@ -129,10 +152,19 @@
               size="sm"
               [mono]="true"
               placeholder="refs/remotes/origin/archive/*"
-              ariaLabel="Nouveau motif d'exclusion"
+              i18n-ariaLabel="@@settings.patterns.excludedAria"
+              ariaLabel="New excluded pattern"
               [(value)]="newExcluded"
             />
-            <button dsButton size="sm" variant="secondary" type="submit">Ajouter</button>
+            <button
+              dsButton
+              size="sm"
+              variant="secondary"
+              type="submit"
+              i18n="@@settings.patterns.excludedAdd"
+            >
+              Add
+            </button>
             <button
               dsButton
               class="pattern-pick"
@@ -141,26 +173,28 @@
               iconLeft="git-branch"
               type="button"
               (click)="openPicker('excluded')"
+              i18n="@@settings.patterns.excludedPick"
             >
-              Choisir…
+              Choose…
             </button>
           </form>
         </div>
       </div>
     </ds-panel>
 
-    <ds-panel title="Relocaliser le dépôt" icon="folder">
+    <ds-panel i18n-title="@@settings.relocation.title" title="Relocate repository" icon="folder">
       <div class="panel-content">
-        <p class="panel-intro">
-          Rattache ce projet à un nouveau chemin sans perdre ses analyses. Le dépôt doit contenir la
-          référence et le dernier commit connus.
+        <p class="panel-intro" i18n="@@settings.relocation.intro">
+          Attach this project to a new path without losing its analyses. The repository must contain
+          the known baseline and last commit.
         </p>
         <form class="relocation-form" (submit)="$event.preventDefault(); relocate()">
           <ds-input
             size="sm"
             [mono]="true"
             [placeholder]="context.project()?.repositoryPath ?? ''"
-            ariaLabel="Nouveau chemin du dépôt"
+            i18n-ariaLabel="@@settings.relocation.pathAria"
+            ariaLabel="New repository path"
             [(value)]="relocationPath"
           />
           <button
@@ -170,8 +204,9 @@
             iconLeft="folder"
             type="submit"
             [loading]="isRelocating()"
+            i18n="@@settings.relocation.action"
           >
-            Relocaliser
+            Relocate
           </button>
         </form>
       </div>
@@ -179,8 +214,15 @@
 
     <div class="settings-actions">
       <span class="settings-dirty">{{ dirtyLabel() }}</span>
-      <button dsButton size="md" variant="ghost" [disabled]="!isDirty()" (click)="reset()">
-        Annuler
+      <button
+        dsButton
+        size="md"
+        variant="ghost"
+        [disabled]="!isDirty()"
+        (click)="reset()"
+        i18n="@@settings.actions.cancel"
+      >
+        Cancel
       </button>
       <button
         dsButton
@@ -190,18 +232,19 @@
         [disabled]="hasThresholdError() || !isDirty()"
         [loading]="context.isSavingPolicy()"
         (click)="save()"
+        i18n="@@settings.actions.save"
       >
-        Enregistrer la politique
+        Save the policy
       </button>
     </div>
   </div>
 
   <div class="settings-preview">
-    <ds-panel title="Effet sur le dernier snapshot" icon="eye">
+    <ds-panel i18n-title="@@settings.preview.title" title="Effect on the last snapshot" icon="eye">
       <div class="panel-content">
         @if (branches().length === 0) {
-          <p class="panel-intro">
-            Aucun snapshot enregistré : lance une analyse pour projeter l'effet de cette politique.
+          <p class="panel-intro" i18n="@@settings.preview.empty">
+            No snapshot saved: run an analysis to project the effect of this policy.
           </p>
         } @else {
           <div class="preview-stats">
@@ -217,9 +260,13 @@
             }
           </div>
 
-          <div class="field-label">Branches touchées par les motifs</div>
+          <div class="field-label" i18n="@@settings.preview.matchesLabel">
+            Branches touched by the patterns
+          </div>
           @if (matches().length === 0) {
-            <p class="preview-empty">Aucun motif ne cible une branche de ce snapshot.</p>
+            <p class="preview-empty" i18n="@@settings.preview.noMatches">
+              No pattern targets a branch of this snapshot.
+            </p>
           } @else {
             <div class="preview-matches">
               @for (match of matches(); track match.referenceName) {
@@ -231,8 +278,8 @@
             </div>
           }
 
-          <p class="preview-note">
-            Projection calculée sur les faits déjà capturés. Aucune commande Git n'est lancée.
+          <p class="preview-note" i18n="@@settings.preview.note">
+            Projection computed on the facts already captured. No Git command is run.
           </p>
         }
       </div>

@@ -49,11 +49,11 @@ internal static class ApiProblems
 
     internal static string TitleFor(int statusCode) => statusCode switch
     {
-        StatusCodes.Status400BadRequest => "Requête invalide",
-        StatusCodes.Status403Forbidden => "Accès refusé",
-        StatusCodes.Status404NotFound => "Ressource introuvable",
-        StatusCodes.Status409Conflict => "Conflit",
-        StatusCodes.Status503ServiceUnavailable => "Service indisponible",
-        _ => "Erreur",
+        StatusCodes.Status400BadRequest => "Bad request",
+        StatusCodes.Status403Forbidden => "Access denied",
+        StatusCodes.Status404NotFound => "Not found",
+        StatusCodes.Status409Conflict => "Conflict",
+        StatusCodes.Status503ServiceUnavailable => "Service unavailable",
+        _ => "Error",
     };
 }

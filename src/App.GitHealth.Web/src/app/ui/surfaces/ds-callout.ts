@@ -14,7 +14,7 @@ const toneIcons: Readonly<Record<CalloutTone, IconName>> = {
 
 const calloutGlyphSize = 15;
 
-/** Un Callout a un fond teinté et une bordure complète : jamais une simple barre latérale colorée. */
+/** A callout has a tinted background and a full border: never a coloured side bar alone. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

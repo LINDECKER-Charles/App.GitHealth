@@ -1,10 +1,17 @@
 <div class="branch-page">
   <div class="branch-page-head">
-    <button dsButton size="sm" variant="ghost" iconLeft="chevron-left" (click)="goBack()">
-      Retour
+    <button
+      dsButton
+      size="sm"
+      variant="ghost"
+      iconLeft="chevron-left"
+      (click)="goBack()"
+      i18n="@@branchDetails.back"
+    >
+      Back
     </button>
   </div>
   @if (snapshotId().length > 0) {
-    <app-branch-fiche class="branch-page-fiche" [snapshotId]="snapshotId()" (closed)="goBack()" />
+    <app-branch-card class="branch-page-card" [snapshotId]="snapshotId()" (closed)="goBack()" />
   }
 </div>

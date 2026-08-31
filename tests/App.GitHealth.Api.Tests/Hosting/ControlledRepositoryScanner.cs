@@ -21,12 +21,12 @@ public sealed class ControlledRepositoryScanner(
 
     public Task Started => _started.Task;
 
-    /// <summary>Nombre maximal d'analyses observées en même temps depuis le démarrage.</summary>
+    /// <summary>Highest number of analyses observed at the same time since startup.</summary>
     public int PeakConcurrency => Volatile.Read(ref _peakScans);
 
     public IReadOnlyCollection<RepositoryScanRequest> Requests => _requests.ToArray();
 
-    /// <summary>Se termine dès que le nombre demandé d'analyses est mené de front.</summary>
+    /// <summary>Completes as soon as the requested number of analyses runs at once.</summary>
     public Task ReachedConcurrency(int scanCount)
     {
         var signal = _concurrency.GetOrAdd(scanCount, _ => CreateSignal());

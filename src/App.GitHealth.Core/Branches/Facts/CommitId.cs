@@ -9,7 +9,7 @@ public sealed record CommitId
         if (!value.All(char.IsAsciiHexDigit))
         {
             throw new ArgumentException(
-                "Un identifiant Git doit être une valeur hexadécimale.",
+                "A Git identifier must be a hexadecimal value.",
                 nameof(value));
         }
 

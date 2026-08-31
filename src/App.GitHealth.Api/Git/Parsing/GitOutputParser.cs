@@ -27,7 +27,7 @@ internal static class GitOutputParser
             result.Add(reference.Reference.FullName, reference);
         }
 
-        EnsureComplete(fields, index, "La liste des références Git est incomplète.");
+        EnsureComplete(fields, index, "The Git reference list is incomplete.");
         return result;
     }
 
@@ -52,7 +52,7 @@ internal static class GitOutputParser
             result[name] = (new CommitId(objectId), ahead, behind);
         }
 
-        EnsureComplete(fields, index, "La sortie Git ahead/behind est incomplète.");
+        EnsureComplete(fields, index, "The Git ahead/behind output is incomplete.");
         return result;
     }
 
@@ -75,7 +75,7 @@ internal static class GitOutputParser
         }
         catch (Exception exception) when (exception is ArgumentException or FormatException)
         {
-            throw Malformed("La liste des références Git est malformée.", exception);
+            throw Malformed("The Git reference list is malformed.", exception);
         }
     }
 
@@ -86,7 +86,7 @@ internal static class GitOutputParser
             || !int.TryParse(values[0], CultureInfo.InvariantCulture, out var ahead)
             || !int.TryParse(values[1], CultureInfo.InvariantCulture, out var behind))
         {
-            throw Malformed("Les compteurs Git ahead/behind sont malformés.");
+            throw Malformed("The Git ahead/behind counters are malformed.");
         }
 
         return (ahead, behind);
@@ -99,7 +99,7 @@ internal static class GitOutputParser
             || !int.TryParse(values[0], CultureInfo.InvariantCulture, out var behind)
             || !int.TryParse(values[1], CultureInfo.InvariantCulture, out var ahead))
         {
-            throw Malformed("Les compteurs Git rev-list sont malformés.");
+            throw Malformed("The Git rev-list counters are malformed.");
         }
 
         return (ahead, behind);
@@ -113,7 +113,7 @@ internal static class GitOutputParser
         {
             if (index + 1 >= fields.Length)
             {
-                throw Malformed("La liste des contributeurs Git est incomplète.");
+                throw Malformed("The Git contributor list is incomplete.");
             }
 
             var name = TrimRecordSeparator(fields[index]);
@@ -139,7 +139,7 @@ internal static class GitOutputParser
 
         if (!long.TryParse(value, CultureInfo.InvariantCulture, out var unixTime))
         {
-            throw new FormatException("Horodatage Git invalide.");
+            throw new FormatException("Invalid Git timestamp.");
         }
 
         return DateTimeOffset.FromUnixTimeSeconds(unixTime);

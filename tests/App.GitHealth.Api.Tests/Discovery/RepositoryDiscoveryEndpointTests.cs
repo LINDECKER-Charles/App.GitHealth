@@ -140,8 +140,8 @@ public sealed class RepositoryDiscoveryEndpointTests
         .ToArray();
 
     /// <summary>
-    /// Le chemin renvoyé est celui que Git canonicalise : sur macOS il traverse le lien
-    /// <c>/var</c>, donc seule la fin du chemin est comparable au dossier de test.
+    /// The returned path is the one Git canonicalises: on macOS it goes through the
+    /// <c>/var</c> link, so only the end of the path is comparable to the test folder.
     /// </summary>
     private static string CanonicalPath(JsonElement repository) =>
         repository.GetProperty("canonicalPath").GetString()!;

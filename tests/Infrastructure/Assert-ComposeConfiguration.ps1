@@ -5,7 +5,7 @@ function Assert-Equal {
     param($Expected, $Actual, [string]$Message)
 
     if ($Expected -ne $Actual) {
-        throw "$Message Attendu : '$Expected'. Reçu : '$Actual'."
+        throw "$Message Expected: '$Expected'. Got: '$Actual'."
     }
 }
 
@@ -32,77 +32,77 @@ $env:GITHEALTH_REPOSITORIES_ROOT = $repositoryRoot
 Push-Location $repositoryRoot
 try {
     $composeOutput = & docker compose --file compose.yaml config --format json 2>$null
-    Assert-Equal 0 $LASTEXITCODE "La configuration Compose doit être valide."
+    Assert-Equal 0 $LASTEXITCODE "The Compose configuration must be valid."
 
     $configuration = ($composeOutput -join "`n") | ConvertFrom-Json
     $serviceProperties = @($configuration.services.PSObject.Properties)
-    Assert-Equal 1 $serviceProperties.Count "Compose doit définir un seul service."
+    Assert-Equal 1 $serviceProperties.Count "Compose must define a single service."
 
     $service = $configuration.services.githealth
-    Assert-True ($null -ne $service) "Le service githealth doit exister."
+    Assert-True ($null -ne $service) "The githealth service must exist."
     Assert-True (
         $service.read_only
-    ) "Le système de fichiers du conteneur doit être en lecture seule."
-    Assert-Equal 128 $service.pids_limit "Le nombre de processus doit être plafonné."
+    ) "The container file system must be read only."
+    Assert-Equal 128 $service.pids_limit "The process count must be capped."
     Assert-True (
         @($service.cap_drop) -contains "ALL"
-    ) "Toutes les capabilities Linux doivent être retirées."
+    ) "All Linux capabilities must be dropped."
 
     $ports = @($service.ports)
-    Assert-Equal 1 $ports.Count "Un seul port doit être publié."
-    Assert-Equal "127.0.0.1" $ports[0].host_ip "Le port doit rester sur loopback."
-    Assert-Equal 8080 $ports[0].target "Le conteneur doit écouter sur le port 8080."
+    Assert-Equal 1 $ports.Count "A single port must be published."
+    Assert-Equal "127.0.0.1" $ports[0].host_ip "The port must stay on loopback."
+    Assert-Equal 8080 $ports[0].target "The container must listen on port 8080."
 
     $mounts = @($service.volumes)
     $dataMount = @($mounts | Where-Object target -eq "/data")
     $repositoriesMount = @($mounts | Where-Object target -eq "/repositories")
-    Assert-Equal 1 $dataMount.Count "/data doit avoir un seul montage."
-    Assert-Equal 1 $repositoriesMount.Count "/repositories doit avoir un seul montage."
+    Assert-Equal 1 $dataMount.Count "/data must have a single mount."
+    Assert-Equal 1 $repositoriesMount.Count "/repositories must have a single mount."
     $dataMount = $dataMount[0]
     $repositoriesMount = $repositoriesMount[0]
-    Assert-Equal "volume" $dataMount.type "/data doit utiliser un volume nommé."
-    Assert-Equal "bind" $repositoriesMount.type "/repositories doit utiliser un bind mount."
-    Assert-True $repositoriesMount.read_only "/repositories doit être en lecture seule."
+    Assert-Equal "volume" $dataMount.type "/data must use a named volume."
+    Assert-Equal "bind" $repositoriesMount.type "/repositories must use a bind mount."
+    Assert-True $repositoriesMount.read_only "/repositories must be read only."
 
     $dockerfile = Get-Content -LiteralPath "Dockerfile" -Raw
     $normalizedDockerfile = $dockerfile.Replace("'", "").Replace('"', "")
     Assert-True (
         $dockerfile.Contains('USER $APP_UID')
-    ) "L'image doit utiliser un UID non privilégié."
+    ) "The image must use an unprivileged UID."
     Assert-True (
         $normalizedDockerfile -notmatch 'safe\.directory\s+\*(\s|$)'
-    ) "Git ne doit jamais autoriser safe.directory=* globalement."
+    ) "Git must never allow safe.directory=* globally."
     Assert-True (
         $dockerfile.Contains("http://127.0.0.1:8080/health")
-    ) "Le healthcheck Docker doit cibler explicitement le loopback."
+    ) "The Docker healthcheck must explicitly target the loopback."
     Assert-True (
         $dockerfile.Contains("STOPSIGNAL SIGTERM")
-    ) "L'image doit déclarer le signal d'arrêt gracieux."
+    ) "The image must declare the graceful shutdown signal."
     Assert-True (
         $dockerfile.Contains('ENTRYPOINT ["dotnet", "githealth.dll"]')
-    ) "L'image doit lancer l'assembly produit par le lanceur GitHealth."
+    ) "The image must start the assembly produced by the GitHealth launcher."
     Assert-True (
         $dockerfile.Contains("GitHealth__DataDirectory=/data")
-    ) "L'image doit utiliser /data même lorsqu'elle démarre hors Compose."
+    ) "The image must use /data even when it starts outside Compose."
 
-    # nvm et actions/setup-node acceptent aussi la forme « v24.20.0 » : la comparaison porte
-    # sur le numéro seul. Le motif tolère les drapeaux de FROM (--platform notamment), sans
-    # quoi un stage node y échapperait sans jamais être confronté à .nvmrc.
+    # nvm and actions/setup-node also accept the "v24.20.0" form: the comparison uses
+    # the number alone. The pattern tolerates FROM flags (--platform in particular),
+    # without which a node stage would escape it and never be checked against .nvmrc.
     $pinnedNodeVersion = (Get-Content -LiteralPath ".nvmrc" -Raw).Trim() -replace '^[vV]', ''
     $nodeImages = @([regex]::Matches(
         $dockerfile,
         '(?im)^FROM\s+(?:--\S+\s+)*node:(?<tag>\S+)'))
     Assert-True (
         $nodeImages.Count -gt 0
-    ) "Le Dockerfile doit construire le front depuis une image node officielle étiquetée."
+    ) "The Dockerfile must build the front end from an official tagged node image."
     foreach ($nodeImage in $nodeImages) {
         $imageVersion = ($nodeImage.Groups["tag"].Value -split "-", 2)[0]
         Assert-Equal $pinnedNodeVersion $imageVersion (
-            "L'image Node du Dockerfile doit rester alignée sur .nvmrc."
+            "The Dockerfile's Node image must stay aligned with .nvmrc."
         )
     }
 
-    Write-Output "Configuration Docker Compose vérifiée."
+    Write-Output "Docker Compose configuration verified."
 }
 finally {
     $env:DOCKER_CONFIG = $previousDockerConfig

@@ -1,6 +1,6 @@
 /**
- * Identité affichée dans la barre supérieure. La version suit celle de
- * `package.json` et du `CHANGELOG.md` : les trois se mettent à jour ensemble.
+ * Identity shown in the top bar. The version follows the one in
+ * `package.json` and `CHANGELOG.md`: the three are updated together.
  */
 export const appVersion = '0.1.0';
 

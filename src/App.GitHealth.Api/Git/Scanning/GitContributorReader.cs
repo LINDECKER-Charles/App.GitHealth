@@ -48,7 +48,7 @@ internal sealed class GitContributorReader(IGitProcessRunner runner)
         {
             throw new GitProcessException(
                 RepositoryErrorCode.ProcessFailed,
-                "Git n’a pas pu lire les contributeurs de la branche.");
+                "Git could not read the branch contributors.");
         }
     }
 

@@ -15,7 +15,7 @@ public sealed record RepositoryScanRequest
         if (branchPattern.Length > Projects.ProjectSettings.MaximumBranchNamespaceLength)
         {
             throw new ArgumentException(
-                "Le périmètre de branches est trop long.",
+                "The branch scope is too long.",
                 nameof(branchPattern));
         }
 

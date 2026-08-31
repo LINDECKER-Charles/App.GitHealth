@@ -35,7 +35,7 @@ public sealed class LauncherOptionsParserTests
             "--environment", "Development",
             "--port=5187",
             "--data-dir", "D:/données GitHealth",
-            "--git-path", "D:/outils/Git/cmd/git.exe",
+            "--git-path", "D:/tools/Git/cmd/git.exe",
             "--no-browser",
         };
 
@@ -45,7 +45,7 @@ public sealed class LauncherOptionsParserTests
         Assert.Equal("D:/dépôts/produit", options.RepositoryPath);
         Assert.Equal(5187, options.Port);
         Assert.Equal("D:/données GitHealth", options.DataDirectory);
-        Assert.Equal("D:/outils/Git/cmd/git.exe", options.GitExecutablePath);
+        Assert.Equal("D:/tools/Git/cmd/git.exe", options.GitExecutablePath);
         Assert.False(options.ShouldOpenBrowser);
         Assert.Equal(["--environment", "Development"], options.HostArguments);
     }
@@ -96,7 +96,7 @@ public sealed class LauncherOptionsParserTests
         var result = LauncherOptionsParser.Parse(["--port", "5187", "--port=5188"]);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("qu’une fois", result.ErrorMessage, StringComparison.Ordinal);
+        Assert.Contains("only be supplied once", result.ErrorMessage, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -234,7 +234,7 @@ public sealed class LocalRequestSecurityTests(ApiApplicationFactory factory)
             "frame-ancestors 'none'",
             response.Headers.GetValues("Content-Security-Policy").Single());
 
-        // Angular déclare <base href="/"> : 'none' rendrait toute adresse profonde illisible.
+        // Angular declares <base href="/">: 'none' would make every deep address unreadable.
         Assert.Contains(
             "base-uri 'self'",
             response.Headers.GetValues("Content-Security-Policy").Single());

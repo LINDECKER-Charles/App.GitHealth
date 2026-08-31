@@ -31,8 +31,8 @@ interface BootTile {
 const tileOrder: readonly RecommendationKind[] = ['Keep', 'Review', 'CleanupCandidate', 'Excluded'];
 
 /**
- * Séquence d'ouverture. Elle décrit les étapes réelles de l'analyse et n'affiche
- * que des chiffres mesurés : les compteurs montent vers ceux du snapshot chargé derrière.
+ * Opening sequence. It describes the real steps of the analysis and shows only measured
+ * figures: the counters climb towards those of the snapshot loading behind it.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,10 +46,10 @@ export class BootIntro {
   private frame = 0;
   private timer?: ReturnType<typeof setTimeout>;
 
-  /** Fin naturelle de la séquence. */
+  /** Natural end of the sequence. */
   readonly done = output<void>();
 
-  /** L'utilisateur a coupé court : on ne rejouera pas la séquence dans cette session. */
+  /** The user cut it short: the sequence will not play again in this session. */
   readonly skipped = output<void>();
 
   protected readonly steps = bootSteps;
@@ -59,7 +59,7 @@ export class BootIntro {
   protected readonly referenceLabel = computed(() => {
     const snapshot = this.context.latestSnapshot();
     return snapshot === null
-      ? 'la référence de comparaison'
+      ? $localize`:@@boot.reference.fallback:the baseline`
       : displayReference(snapshot.referenceName);
   });
 
@@ -68,7 +68,7 @@ export class BootIntro {
   );
 
   protected readonly totalTile = computed<BootTile>(() => ({
-    label: 'Toutes',
+    label: $localize`:@@boot.tile.all:All`,
     tone: 'info',
     count: this.scaled(this.branchCount()),
     share: this.progress(),

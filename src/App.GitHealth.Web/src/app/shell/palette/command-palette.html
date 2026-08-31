@@ -3,7 +3,8 @@
     class="palette"
     role="dialog"
     aria-modal="true"
-    aria-label="Palette de commandes"
+    i18n-aria-label="@@palette.dialog.aria"
+    aria-label="Command palette"
     (click)="$event.stopPropagation()"
   >
     <div class="palette-search">
@@ -14,8 +15,10 @@
         type="text"
         autocomplete="off"
         spellcheck="false"
-        placeholder="Branche, dépôt ou action…"
-        aria-label="Rechercher une branche, un dépôt ou une action"
+        i18n-placeholder="@@palette.search.placeholder"
+        placeholder="Branch, repository or action…"
+        i18n-aria-label="@@palette.search.aria"
+        aria-label="Search for a branch, a repository or an action"
         [value]="query()"
         (input)="onQuery(search.value)"
         (keydown.arrowdown)="$event.preventDefault(); move(1)"
@@ -42,7 +45,7 @@
         }
       }
       @if (isEmpty()) {
-        <div class="palette-empty">Rien ne correspond à cette saisie.</div>
+        <div class="palette-empty" i18n="@@palette.empty.text">Nothing matches this input.</div>
       }
     </div>
   </div>

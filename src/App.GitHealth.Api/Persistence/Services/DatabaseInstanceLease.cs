@@ -43,7 +43,7 @@ internal sealed class DatabaseInstanceLease(
     private void EnsureLockDirectory()
     {
         var directory = Path.GetDirectoryName(LockPath)
-            ?? throw new InvalidOperationException("Le dossier SQLite est introuvable.");
+            ?? throw new InvalidOperationException("The SQLite folder cannot be found.");
         PrivateFilePermissions.EnsureDirectory(directory);
     }
 

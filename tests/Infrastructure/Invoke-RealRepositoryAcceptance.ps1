@@ -40,7 +40,7 @@ function Wait-ForHealth {
         }
     }
 
-    throw "GitHealth n'est pas devenu sain sur $BaseAddress."
+    throw "GitHealth did not become healthy on $BaseAddress."
 }
 
 function New-LocalSession {
@@ -64,7 +64,7 @@ function Get-SecurityHeaders {
         Where-Object Name -EQ "XSRF-TOKEN" |
         Select-Object -ExpandProperty Value -First 1
     if ([string]::IsNullOrWhiteSpace($token)) {
-        throw "Le jeton anti-forgery local est absent."
+        throw "The local anti-forgery token is missing."
     }
 
     return @{
@@ -109,7 +109,7 @@ function Invoke-GitRead {
         Pop-ReadOnlyGitEnvironment $environment
     }
     if ($exitCode -ne 0 -and -not $AllowFailure) {
-        throw "La lecture Git a échoué avec le code $exitCode."
+        throw "The Git read failed with exit code $exitCode."
     }
     return @($output)
 }
@@ -125,7 +125,7 @@ function Get-RepositoryConfiguration {
         "refs/remotes/origin/main", "refs/remotes/origin/master"
     ) | Where-Object { $references -contains $_ } | Select-Object -First 1
     if ([string]::IsNullOrWhiteSpace($reference)) {
-        throw "Aucune référence de comparaison exploitable."
+        throw "No usable baseline."
     }
     $localCount = @($references | Where-Object { $_ -like "refs/heads/*" }).Count
     $remoteCount = @($references | Where-Object {
@@ -193,12 +193,12 @@ function Wait-ForAnalysis {
             return
         }
         if ($status.status -in @("Failed", "Cancelled")) {
-            throw "Analyse réelle interrompue : $($status.failureCode)."
+            throw "Real analysis interrupted: $($status.failureCode)."
         }
         Start-Sleep -Milliseconds 250
     }
 
-    throw "L'analyse réelle a dépassé dix minutes."
+    throw "The real analysis exceeded ten minutes."
 }
 
 function Remove-AcceptanceDirectory {
@@ -208,7 +208,7 @@ function Remove-AcceptanceDirectory {
     $temp = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
     if (-not $resolved.StartsWith($temp, [StringComparison]::OrdinalIgnoreCase) `
         -or [IO.Path]::GetFileName($resolved) -notlike "githealth-acceptance-*") {
-        throw "Le répertoire temporaire de recette est invalide."
+        throw "The temporary acceptance directory is invalid."
     }
     if (Test-Path -LiteralPath $resolved) {
         Remove-Item -LiteralPath $resolved -Recurse -Force
@@ -260,7 +260,7 @@ try {
         $unchanged = $after -eq $recipes[$index].Before
         $recipes[$index].Evidence.repositoryUnchanged = $unchanged
         if (-not $unchanged) {
-            throw "Le dépôt réel $($index + 1) a changé pendant la recette."
+            throw "Real repository $($index + 1) changed during the acceptance run."
         }
     }
 
@@ -281,7 +281,7 @@ try {
         $resolvedReport,
         $reportJson,
         [Text.UTF8Encoding]::new($false))
-    Write-Output "Recette réelle validée : $resolvedReport"
+    Write-Output "Real-repository acceptance passed: $resolvedReport"
 }
 finally {
     if ($null -ne $process) {

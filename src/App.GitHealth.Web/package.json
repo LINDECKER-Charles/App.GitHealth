@@ -1,12 +1,13 @@
 {
   "name": "app-git-health-web",
   "version": "0.1.0",
-  "description": "Interface locale de diagnostic des branches Git",
+  "description": "Local diagnostic interface for Git branches",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "format:check": "prettier --check .",
+    "i18n:extract": "ng extract-i18n",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:ci": "ng test --watch=false --no-progress"
@@ -27,6 +28,7 @@
     "@angular/compiler": "^22.1.0",
     "@angular/core": "^22.1.0",
     "@angular/forms": "^22.1.0",
+    "@angular/localize": "^22.1.0",
     "@angular/platform-browser": "^22.1.0",
     "@angular/router": "^22.1.0",
     "rxjs": "~7.8.0",

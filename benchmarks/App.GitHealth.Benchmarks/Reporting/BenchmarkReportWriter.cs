@@ -15,7 +15,7 @@ internal static class BenchmarkReportWriter
     public static async Task WriteAsync(BenchmarkReport report, string outputPath)
     {
         var directory = Path.GetDirectoryName(outputPath)
-            ?? throw new InvalidOperationException("Chemin de rapport invalide.");
+            ?? throw new InvalidOperationException("Invalid report path.");
         Directory.CreateDirectory(directory);
         await using var stream = File.Create(outputPath);
         await JsonSerializer.SerializeAsync(stream, report, SerializerOptions);
@@ -28,7 +28,7 @@ internal static class BenchmarkConsoleWriter
     public static void Write(BenchmarkReport report, string outputPath)
     {
         Console.WriteLine();
-        Console.WriteLine("Branches | Phase         | Médiane (ms) | P95 (ms) | Budget");
+        Console.WriteLine("Branches | Phase         | Median (ms)  | P95 (ms) | Budget");
         Console.WriteLine("---------+---------------+--------------+----------+--------");
         foreach (var scenario in report.Scenarios)
         {
@@ -42,13 +42,13 @@ internal static class BenchmarkConsoleWriter
         }
 
         Console.WriteLine();
-        Console.WriteLine($"Rapport écrit dans {outputPath}");
+        Console.WriteLine($"Report written to {outputPath}");
     }
 
     private static string BudgetLabel(BenchmarkPhaseResult phase) => phase.BudgetStatus switch
     {
-        BudgetStatus.NotConfigured => "non configuré",
+        BudgetStatus.NotConfigured => "not configured",
         BudgetStatus.WithinBudget => $"OK <= {phase.MaximumP95Milliseconds:F0} ms",
-        _ => $"DÉPASSÉ > {phase.MaximumP95Milliseconds:F0} ms",
+        _ => $"EXCEEDED > {phase.MaximumP95Milliseconds:F0} ms",
     };
 }

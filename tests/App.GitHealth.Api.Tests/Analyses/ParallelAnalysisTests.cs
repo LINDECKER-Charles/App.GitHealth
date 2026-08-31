@@ -41,7 +41,7 @@ public sealed class ParallelAnalysisTests
 
         var analyses = await LaunchAllAsync(client, projects);
         await scanner.ReachedConcurrency(1).WaitAsync(TestTimeout);
-        // La seconde analyse reste en file tant que la première n'est pas relâchée.
+        // The second analysis stays queued while the first one is not released.
         await Task.Delay(SequentialObservation);
         var observedWhileBlocked = scanner.PeakConcurrency;
         scanner.Release();

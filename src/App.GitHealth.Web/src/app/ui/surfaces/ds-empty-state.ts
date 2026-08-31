@@ -4,7 +4,7 @@ import { DsIcon } from '../core/ds-icon';
 
 const emptyGlyphSize = 18;
 
-/** Un fait, puis la règle qui le remplit. */
+/** A fact, then the rule that fills it. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'etb-empty' },

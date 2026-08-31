@@ -6,14 +6,16 @@
       ><ds-badge size="sm" [mono]="true">{{ version }}</ds-badge></span
     >
     <span class="boot-spacer"></span>
-    <span class="boot-promise">tout est local · rien n'est envoyé</span>
+    <span class="boot-promise" i18n="@@boot.brand.promise"
+      >everything is local · nothing is sent</span
+    >
   </div>
 
   <div class="boot-rule"></div>
 
   <div class="boot-columns">
     <div>
-      <div class="boot-label">Séquence de démarrage</div>
+      <div class="boot-label" i18n="@@boot.steps.title">Opening sequence</div>
       @for (step of steps; track step.label) {
         <div class="boot-step" [style.animation-delay.ms]="step.revealDelayMs">
           <span class="boot-step-dot">
@@ -25,7 +27,9 @@
           </span>
           <span class="boot-step-label">
             @if ($index === 2) {
-              Résolution de <code>{{ referenceLabel() }}</code>
+              <span i18n="@@boot.steps.resolving"
+                >Resolving <code>{{ referenceLabel() }}</code></span
+              >
             } @else {
               {{ step.label }}
             }
@@ -35,7 +39,7 @@
     </div>
 
     <div>
-      <div class="boot-label">Topologie lue</div>
+      <div class="boot-label" i18n="@@boot.topology.title">Topology read</div>
       <svg viewBox="0 0 320 200" width="320" height="200" aria-hidden="true" class="boot-graph">
         <path class="boot-trunk" d="M28,20 L28,180" pathLength="1"></path>
         <path
@@ -114,8 +118,8 @@
         ></circle>
         <text class="boot-graph-label boot-graph-trunk" x="40" y="176">{{ referenceLabel() }}</text>
       </svg>
-      <p class="boot-graph-note">
-        Références lues en place. Ni fetch, ni écriture, ni reflog touché.
+      <p class="boot-graph-note" i18n="@@boot.topology.note">
+        References read in place. No fetch, no write, no reflog touched.
       </p>
     </div>
   </div>
@@ -147,14 +151,14 @@
 
   <div class="boot-status">
     <span class="boot-status-dot"><ds-status-dot tone="success" [size]="7" /></span>
-    <span class="boot-status-text">
-      {{ branchCount() }} branche{{ branchCount() > 1 ? 's' : '' }} lue{{
-        branchCount() > 1 ? 's' : ''
-      }}
-      · aucune écriture Git
+    <span class="boot-status-text" i18n="@@boot.status.text">
+      {branchCount(), plural,
+        =1 {1 branch read · no Git write}
+        other {{{ branchCount() }} branches read · no Git write}
+      }
     </span>
     <span class="boot-spacer"></span>
-    <span class="boot-ready">prêt</span>
+    <span class="boot-ready" i18n="@@boot.status.ready">ready</span>
     <span class="boot-caret"></span>
   </div>
 
@@ -162,6 +166,6 @@
 </div>
 
 <button class="boot-skip" type="button" (click)="skip()">
-  <span>Passer l'introduction</span>
+  <span i18n="@@boot.skip.label">Skip the intro</span>
   <kbd class="etb-kbd">esc</kbd>
 </button>

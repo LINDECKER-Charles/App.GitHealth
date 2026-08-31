@@ -36,19 +36,19 @@ internal static class AnalysisEndpoints
         {
             return ApiProblems.Result(ApiProblems.NotFound(
                 ApiErrorCodes.ProjectNotFound,
-                "Le projet demandé n’existe pas."));
+                "The requested project does not exist."));
         }
 
         if (kind == AnalysisEnqueueKind.ProjectBusy)
         {
             return ApiProblems.Result(ApiProblems.Conflict(
                 ApiErrorCodes.ProjectBusy,
-                "Le projet est réservé par une relocalisation en cours."));
+                "The project is reserved by a relocation in progress."));
         }
 
         return ApiProblems.Result(ApiProblems.Unavailable(
             ApiErrorCodes.QueueFull,
-            "La file d’analyses est pleine."));
+            "The analysis queue is full."));
     }
 
     private static IResult Accepted(AnalysisEnqueueResult result)

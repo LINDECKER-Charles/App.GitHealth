@@ -21,7 +21,7 @@ internal static class GitRepositoryReader
         {
             throw new GitProcessException(
                 RepositoryErrorCode.PathNotFound,
-                "Le chemin du dépôt n’existe pas.");
+                "The repository path does not exist.");
         }
 
         EnsureInputAllowed(request.RepositoriesRoot, request.RepositoryPath);
@@ -42,7 +42,7 @@ internal static class GitRepositoryReader
         {
             throw new GitProcessException(
                 RepositoryErrorCode.PathNotAllowed,
-                "Le dépôt se trouve hors de la racine autorisée.");
+                "The repository is outside the allowed root.");
         }
     }
 
@@ -61,7 +61,7 @@ internal static class GitRepositoryReader
         {
             throw new GitProcessException(
                 RepositoryErrorCode.NotARepository,
-                "Le chemin ne correspond pas à un dépôt Git lisible.");
+                "The path is not a readable Git repository.");
         }
 
         var (metadataPaths, isBare) = ParseLocation(result.StandardOutput);
@@ -95,7 +95,7 @@ internal static class GitRepositoryReader
         {
             throw new GitProcessException(
                 RepositoryErrorCode.MalformedOutput,
-                "Git a retourné une localisation de dépôt invalide.");
+                "Git returned an invalid repository location.");
         }
 
         var metadataPaths = new GitRepositoryMetadataPaths(lines[0], lines[1], lines[2]);
@@ -112,7 +112,7 @@ internal static class GitRepositoryReader
             ["-C", fullPath, "rev-parse", "--show-toplevel"],
             fullPath,
             cancellationToken);
-        EnsureSuccess(rootResult, "Impossible de déterminer le worktree Git.");
+        EnsureSuccess(rootResult, "The Git worktree could not be determined.");
         return Path.GetFullPath(rootResult.StandardOutput.Trim());
     }
 
@@ -121,7 +121,7 @@ internal static class GitRepositoryReader
         CancellationToken cancellationToken)
     {
         var result = await RunAsync(runner, ["--version"], cancellationToken);
-        EnsureSuccess(result, "Git ne répond pas à la détection de version.");
+        EnsureSuccess(result, "Git does not answer the version probe.");
         return result.StandardOutput.Trim();
     }
 
@@ -146,7 +146,7 @@ internal static class GitRepositoryReader
             arguments,
             context.InvocationPath,
             cancellationToken);
-        EnsureSuccess(result, "Impossible de lire les références Git.");
+        EnsureSuccess(result, "The Git references could not be read.");
         return GitOutputParser.ParseReferences(result.StandardOutput);
     }
 

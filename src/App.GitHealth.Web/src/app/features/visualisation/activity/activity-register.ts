@@ -21,13 +21,13 @@ import {
 } from '../../../core/branches/branch-policy';
 import { IconName, Tone } from '../../../ui/icon-name';
 
-/** Domaine plancher : il reproduit exactement l'axe de la politique par défaut (30 / 90 j). */
+/** Floor domain: it reproduces exactly the axis of the default policy (30 / 90 d). */
 const minimumTimelineDays = 120;
 const timelineStepDays = 30;
 const timelineHeadroomNumerator = 4;
 const timelineHeadroomDenominator = 3;
 
-/** Écart minimal entre les deux seuils : en deçà, la bande « vieillissante » n'est plus lisible. */
+/** Minimum gap between the two thresholds: below it, the ageing band stops being readable. */
 const minimumThresholdGapDays = 8;
 const minimumActiveUntilDays = 1;
 const minimumInactiveAfterDays = minimumActiveUntilDays + minimumThresholdGapDays;
@@ -35,11 +35,11 @@ const minimumInactiveAfterDays = minimumActiveUntilDays + minimumThresholdGapDay
 const fullTrackPercent = 100;
 const axisTickCount = 5;
 const clampMarker = '▸';
-const unknownActivityLabel = 'activité inconnue';
-const protectedFlagLabel = 'motif protégé';
-const excludedFlagLabel = 'motif exclu';
+const unknownActivityLabel = $localize`:@@activity.register.unknownActivity:unknown activity`;
+const protectedFlagLabel = $localize`:@@activity.register.flag.protected:protected pattern`;
+const excludedFlagLabel = $localize`:@@activity.register.flag.excluded:exclusion pattern`;
 
-/** En deçà, l'étiquette d'une règle sortirait de la piste : elle bascule à gauche du trait. */
+/** Below this, a rule label would leave the track: it flips to the left of the line. */
 const labelFlipEdgePercent = 10;
 
 export type MovedThreshold = 'active' | 'inactive';
@@ -69,7 +69,7 @@ export interface PatternFlag {
   readonly label: string;
 }
 
-/** Ligne prête à afficher : le gabarit ne fait plus que poser les pourcentages. */
+/** Row ready to display: the template does no more than lay out the percentages. */
 export interface ActivityRow {
   readonly id: string;
   readonly name: string;
@@ -83,7 +83,7 @@ export interface ActivityRow {
   readonly verdictLabel: string;
   readonly verdictTone: Tone;
   readonly flag: PatternFlag | null;
-  /** Vrai quand la branche se mesure sur une échelle plus courte que celle des zones. */
+  /** True when the branch is measured on a shorter scale than the one the bands draw. */
   readonly isReduced: boolean;
   readonly scaleLabel: string | null;
   readonly trackLabel: string;
@@ -119,8 +119,8 @@ export interface ActivityRegisterRequest {
 }
 
 /**
- * Le domaine se déduit de la politique enregistrée et jamais du brouillon : l'axe
- * doit rester immobile pendant qu'on tire les curseurs.
+ * The domain follows the saved policy and never the draft: the axis has to stay still
+ * while the sliders are being dragged.
  */
 export function timelineDaysFor(savedInactiveAfterDays: number): number {
   const wanted = (savedInactiveAfterDays * timelineHeadroomNumerator) / timelineHeadroomDenominator;
@@ -128,7 +128,7 @@ export function timelineDaysFor(savedInactiveAfterDays: number): number {
   return Math.max(minimumTimelineDays, stepped);
 }
 
-/** Les planchers cèdent devant la politique enregistrée : un seuil plus bas reste atteignable. */
+/** The floors give way to the saved policy: a lower threshold stays reachable. */
 export function thresholdBounds(request: ThresholdBoundsRequest): ThresholdBounds {
   const { saved, timelineDays } = request;
   return {
@@ -139,7 +139,7 @@ export function thresholdBounds(request: ThresholdBoundsRequest): ThresholdBound
   };
 }
 
-/** Le brouillon naît dans les bornes du curseur : le pouce démarre où son étiquette l'annonce. */
+/** The draft is born inside the slider bounds: the thumb starts where its label says. */
 export function seedDraft(saved: ThresholdDraft, bounds: ThresholdBounds): ThresholdDraft {
   return {
     activeUntilDays: clamp(saved.activeUntilDays, bounds.activeMin, bounds.activeMax),
@@ -147,7 +147,7 @@ export function seedDraft(saved: ThresholdDraft, bounds: ThresholdBounds): Thres
   };
 }
 
-/** L'écart minimal se tient en écrêtant le seul curseur déplacé : l'autre ne bouge jamais. */
+/** The minimum gap holds by clamping the moved slider only: the other one never budges. */
 export function clampThresholds(
   draft: ThresholdDraft,
   moved: MovedThreshold,
@@ -175,8 +175,8 @@ export function buildPolicyBands(policy: PolicySnapshot, timelineDays: number): 
     activeEdgePercent,
     inactiveEdgePercent,
     agingWidthPercent: Math.max(0, inactiveEdgePercent - activeEdgePercent),
-    activeLabel: `${policy.activeUntilDays} j`,
-    inactiveLabel: `${policy.inactiveAfterDays} j`,
+    activeLabel: dayCountLabel(policy.activeUntilDays),
+    inactiveLabel: dayCountLabel(policy.inactiveAfterDays),
     isActiveLabelTrailing: activeEdgePercent < labelFlipEdgePercent,
     isInactiveLabelTrailing: inactiveEdgePercent < labelFlipEdgePercent,
   };
@@ -229,7 +229,7 @@ function toActivityRow(
     offsetPercent: offset,
     barWidthPercent: offset,
     ageLabel: relativeAge(branch.lastActivityAtUtc),
-    clampLabel: days !== null && days > timelineDays ? `${days} j ${clampMarker}` : null,
+    clampLabel: days !== null && days > timelineDays ? clampedAgeLabel(days) : null,
     verdictLabel: recommendationLabels[recommendation],
     verdictTone: recommendationTones[recommendation],
     flag: patternFlag(branch, policy),
@@ -239,12 +239,21 @@ function toActivityRow(
   };
 }
 
-/** La ligne dit elle-même son échelle : les zones, elles, tracent la politique entière. */
-function reducedScaleLabel({ activeUntilDays, inactiveAfterDays }: AppliedThresholds): string {
-  return `échelle réduite · active ≤ ${activeUntilDays} j · inactive > ${inactiveAfterDays} j`;
+function dayCountLabel(days: number): string {
+  return $localize`:@@activity.register.dayCount:${days}:days: d`;
 }
 
-/** Au-delà du domaine la marque se colle au bord gauche : c'est l'étiquette qui dit le vrai âge. */
+/** Past the domain the label alone carries the real age, so it takes the clamp marker. */
+function clampedAgeLabel(days: number): string {
+  return `${dayCountLabel(days)} ${clampMarker}`;
+}
+
+/** The row states its own scale: the bands, for their part, draw the whole policy. */
+function reducedScaleLabel({ activeUntilDays, inactiveAfterDays }: AppliedThresholds): string {
+  return $localize`:@@activity.register.reducedScale:shortened scale · active ≤ ${activeUntilDays}:active: d · inactive > ${inactiveAfterDays}:inactive: d`;
+}
+
+/** Past the domain the mark sticks to the left edge: the label is what tells the real age. */
 function offsetPercent(days: number, timelineDays: number): number {
   if (timelineDays <= 0) {
     return 0;
@@ -275,16 +284,19 @@ function trackLabel(name: string, lastActivity: string | null, activity: Activit
   }
 
   const state = activityLabels[activity].toLowerCase();
-  return `${name} · dernière activité ${relativeAge(lastActivity)} · ${state}`;
+  const age = relativeAge(lastActivity);
+  return $localize`:@@activity.register.trackAria:${name}:name: · last activity ${age}:age: · ${state}:state:`;
 }
 
 function axisTickLabel(timelineDays: number, ratio: number): string {
   const days = Math.round(timelineDays * (1 - ratio));
   if (days === 0) {
-    return "aujourd'hui";
+    return $localize`:@@activity.register.axis.today:today`;
   }
 
-  return ratio === 0 ? `il y a ${days} j` : `${days} j`;
+  return ratio === 0
+    ? $localize`:@@activity.register.axis.ago:${days}:days: d ago`
+    : dayCountLabel(days);
 }
 
 function tickAnchor(index: number, lastIndex: number): TickAnchor {

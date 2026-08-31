@@ -8,16 +8,30 @@
   >
     <header class="dialog-heading">
       <span class="dialog-heading-mark"><ds-icon name="folder-open" [size]="16" /></span>
-      <span id="project-group-title" class="dialog-heading-title">Ranger dans un groupe</span>
-      <button dsIconButton icon="x" label="Fermer" size="sm" (click)="close.emit()"></button>
+      <span id="project-group-title" class="dialog-heading-title" i18n="@@projectGroup.dialog.title"
+        >Move to a group</span
+      >
+      <button
+        dsIconButton
+        icon="x"
+        i18n-label="@@projectGroup.dialog.close"
+        label="Close"
+        size="sm"
+        (click)="close.emit()"
+      ></button>
     </header>
 
     <div class="dialog-body">
       @if (project(); as target) {
         <p class="dialog-lead">{{ target.displayName }}</p>
 
-        <div class="field-label">Groupe</div>
-        <div class="group-list" role="radiogroup" aria-label="Groupe du dépôt">
+        <div class="field-label" i18n="@@projectGroup.group.label">Group</div>
+        <div
+          class="group-list"
+          role="radiogroup"
+          i18n-aria-label="@@projectGroup.group.aria"
+          aria-label="Repository group"
+        >
           <button
             class="group-option"
             type="button"
@@ -27,7 +41,7 @@
             (click)="pick(null)"
           >
             <ds-icon name="minus" [size]="14" />
-            <span class="group-option-name">Sans groupe</span>
+            <span class="group-option-name" i18n="@@projectGroup.group.ungrouped">Ungrouped</span>
           </button>
 
           @for (name of groups(); track name) {
@@ -46,12 +60,16 @@
           }
         </div>
 
-        <div class="field-label group-create-label">Nouveau groupe</div>
+        <div class="field-label group-create-label" i18n="@@projectGroup.create.label">
+          New group
+        </div>
         <div class="group-create">
           <ds-input
             size="sm"
-            placeholder="Ex. Back-office"
-            ariaLabel="Nom du nouveau groupe"
+            i18n-placeholder="@@projectGroup.create.placeholder"
+            placeholder="e.g. Back-office"
+            i18n-ariaLabel="@@projectGroup.create.aria"
+            ariaLabel="New group name"
             [(value)]="newGroup"
             (submit)="createGroup()"
           />
@@ -61,32 +79,46 @@
             variant="secondary"
             iconLeft="plus"
             [disabled]="!canCreate()"
+            i18n="@@projectGroup.create.submit"
             (click)="createGroup()"
           >
-            Créer
+            Create
           </button>
         </div>
-        <p class="field-hint">
-          Un groupe se replie dans le rail. {{ maximumGroupNameLength }} caractères au plus ; un
-          groupe vidé de ses dépôts disparaît de lui-même.
+        <p class="field-hint" i18n="@@projectGroup.create.hint">
+          A group folds away in the rail. {{ maximumGroupNameLength }} characters at most; a group
+          emptied of its repositories disappears on its own.
         </p>
       } @else {
-        <p class="field-hint">Ce dépôt n’est plus dans la liste observée.</p>
+        <p class="field-hint" i18n="@@projectGroup.missing.note">
+          This repository is no longer in the observed list.
+        </p>
       }
     </div>
 
     <footer class="dialog-footer">
-      <span>Le rangement ne touche ni le dépôt ni ses analyses.</span>
-      <button dsButton size="md" variant="ghost" (click)="close.emit()">Annuler</button>
+      <span i18n="@@projectGroup.footer.note"
+        >Moving a repository touches neither the repository nor its analyses.</span
+      >
+      <button
+        dsButton
+        size="md"
+        variant="ghost"
+        i18n="@@projectGroup.footer.cancel"
+        (click)="close.emit()"
+      >
+        Cancel
+      </button>
       <button
         dsButton
         size="md"
         variant="primary"
         iconLeft="check"
         [disabled]="!isDirty()"
+        i18n="@@projectGroup.footer.submit"
         (click)="save()"
       >
-        Ranger
+        Move
       </button>
     </footer>
   </div>

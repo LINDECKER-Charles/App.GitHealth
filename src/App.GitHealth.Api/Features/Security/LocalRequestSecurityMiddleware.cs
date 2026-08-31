@@ -37,19 +37,19 @@ internal sealed class LocalRequestSecurityMiddleware(
         {
             return ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidHost,
-                "L'hôte HTTP doit être loopback.");
+                "The HTTP host must be loopback.");
         }
 
         return IsApiRequest(request) && !HasTrustedBrowserContext(request)
             ? ApiProblems.Forbidden(
                 ApiErrorCodes.CrossSiteRequest,
-                "La requête provient d'une origine non autorisée.")
+                "The request comes from an unauthorised origin.")
             : null;
     }
 
     private static ApiFailure AntiforgeryFailure() => ApiProblems.Forbidden(
         ApiErrorCodes.InvalidAntiforgeryToken,
-        "Une navigation locale est requise avant toute modification.");
+        "A local navigation is required before any modification.");
 
     private bool HasTrustedBrowserContext(HttpRequest request) =>
         validator.HasValidOrigin(request)

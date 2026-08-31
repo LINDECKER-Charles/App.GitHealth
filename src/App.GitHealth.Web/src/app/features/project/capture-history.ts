@@ -1,20 +1,21 @@
 import { AnalysisHistoryItem } from '../../core/api/api.models';
+import { sourceLocale } from '../../core/i18n/locale';
 
-/** Le maximum accepté par l'API pour l'historique ; au-delà elle rejette la requête. */
+/** The maximum the API accepts for the history; beyond it the request is rejected. */
 export const captureHistoryPageSize = 100;
 
-/** La capture regardée vit dans l'URL : elle se partage, se recharge et survit au retour arrière. */
+/** The capture being read lives in the URL: it is shareable, reloadable and survives a back. */
 export const captureQueryParam = 'capture';
 
 const shortCommitLength = 8;
 const separator = ' · ';
-const latestMarker = 'dernière';
-/** Apostrophe droite : c'est celle de `relativeAge`, et les deux se lisent dans le même onglet. */
-const todayLabel = "aujourd'hui";
-const shortDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
-const shortTime = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' });
+const latestMarker = $localize`:@@capture.option.latestMarker:latest`;
+/** Same word as `relativeAge` uses: the two are read in the same tab. */
+const todayLabel = $localize`:@@capture.date.today:today`;
+const shortDate = new Intl.DateTimeFormat(sourceLocale, { day: 'numeric', month: 'short' });
+const shortTime = new Intl.DateTimeFormat(sourceLocale, { hour: '2-digit', minute: '2-digit' });
 
-/** Une capture exploitable : le serveur exige ces deux champs pour relire ses branches. */
+/** A usable capture: the server requires both fields to read its branches back. */
 export type CompletedAnalysis = AnalysisHistoryItem & {
   readonly capturedAtUtc: string;
   readonly referenceCommit: string;
@@ -27,7 +28,7 @@ export interface CaptureOption {
   readonly isLatest: boolean;
 }
 
-/** Ordre chronologique : toutes les vues supposent la plus ancienne en tête. */
+/** Chronological order: every view assumes the oldest capture comes first. */
 export function comparableAnalyses(
   items: readonly AnalysisHistoryItem[],
 ): readonly CompletedAnalysis[] {
@@ -38,8 +39,8 @@ export function comparableAnalyses(
 }
 
 /**
- * Jour puis heure : plusieurs analyses par jour sont la norme, et sans l'heure elles
- * s'affichent toutes pareil. Le jour même se dit en toutes lettres.
+ * Day then time: several analyses a day are the norm, and without the time they would all
+ * read the same. The current day is spelled out instead of dated.
  */
 export function shortCaptureDate(capturedAtUtc: string, now: Date): string {
   const captured = new Date(capturedAtUtc);
@@ -47,7 +48,7 @@ export function shortCaptureDate(capturedAtUtc: string, now: Date): string {
     captured.getFullYear() === now.getFullYear() &&
     captured.getMonth() === now.getMonth() &&
     captured.getDate() === now.getDate();
-  const day = isToday ? todayLabel : shortDate.format(captured).replace(/\.$/, '');
+  const day = isToday ? todayLabel : shortDate.format(captured);
   return `${day} ${shortTime.format(captured)}`;
 }
 
@@ -56,8 +57,8 @@ export function captureLabel(short: string, referenceCommit: string): string {
 }
 
 /**
- * La plus récente porte son rang dans son libellé : sans cela, seule sa position dans la
- * liste le dirait, et rien ne distinguerait « la dernière » d'une capture du même jour.
+ * The most recent capture carries its rank in its label: without it, only its position in
+ * the list would say so, and nothing would tell it apart from a capture of the same day.
  */
 export function toCaptureOptions(
   analyses: readonly CompletedAnalysis[],

@@ -31,7 +31,7 @@ function project(
 }
 
 describe('buildProjectSections', () => {
-  it('range les favoris en tête, puis les groupes, puis le reste', () => {
+  it('puts the favourites first, then the groups, then the rest', () => {
     const sections = buildProjectSections(
       [
         project('zeta'),
@@ -50,7 +50,7 @@ describe('buildProjectSections', () => {
     ]);
   });
 
-  it('ne montre un favori que dans « Favoris », jamais aussi dans son groupe', () => {
+  it('shows a favourite only under "Favourites", never also in its group', () => {
     const sections = buildProjectSections(
       [project('beta', { isFavorite: true, groupName: 'Back-office' }), project('alpha')],
       '',
@@ -61,14 +61,14 @@ describe('buildProjectSections', () => {
     expect(sections.some((section) => section.key === groupSectionKey('Back-office'))).toBe(false);
   });
 
-  it('trie les dépôts d’une section par nom et laisse tomber les sections vides', () => {
+  it('sorts the repositories of a section by name and drops the empty sections', () => {
     const sections = buildProjectSections([project('zeta'), project('alpha')], '');
 
     expect(sections).toHaveLength(1);
     expect(sections[0].projects.map((entry) => entry.displayName)).toEqual(['alpha', 'zeta']);
   });
 
-  it('applique le filtre avant de constituer les sections', () => {
+  it('applies the filter before building the sections', () => {
     const sections = buildProjectSections(
       [project('alpha', { isFavorite: true }), project('beta', { groupName: 'Api' })],
       'bet',
@@ -79,7 +79,7 @@ describe('buildProjectSections', () => {
 });
 
 describe('knownGroupNames', () => {
-  it('dédoublonne et trie les groupes existants', () => {
+  it('deduplicates and sorts the existing groups', () => {
     const names = knownGroupNames([
       project('alpha', { groupName: 'Web' }),
       project('beta', { groupName: 'Api' }),

@@ -10,12 +10,12 @@ internal sealed record RuntimeInfoResponse
 
     public required string Mode { get; init; }
 
-    /// <summary>Git répond au démarrage. Faux, aucune analyse ne peut aboutir.</summary>
+    /// <summary>Git answers at startup. False, no analysis can succeed.</summary>
     public required bool IsGitAvailable { get; init; }
 
-    /// <summary>Exécutable Git retenu, ou <see langword="null" /> s'il est introuvable.</summary>
+    /// <summary>Git executable selected, or <see langword="null" /> if none was found.</summary>
     public string? GitExecutablePath { get; init; }
 
-    /// <summary>Version de Git, ou la raison de son indisponibilité.</summary>
+    /// <summary>Git version, or the reason it is unavailable.</summary>
     public required string GitDiagnostic { get; init; }
 }

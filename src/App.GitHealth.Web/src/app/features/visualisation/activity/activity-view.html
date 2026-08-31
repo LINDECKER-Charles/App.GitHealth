@@ -2,22 +2,25 @@
   <section class="viz-card">
     <header class="viz-card-head">
       <div class="viz-card-identity">
-        <div class="viz-card-title">Registre d'activité</div>
-        <div class="viz-card-subtitle">
-          la barre mesure le silence depuis le dernier commit · le point marque la dernière activité
-          · les zones viennent de la politique
+        <div class="viz-card-title" i18n="@@activity.view.title">Activity register</div>
+        <div class="viz-card-subtitle" i18n="@@activity.view.subtitle">
+          the bar measures the silence since the last commit · the dot marks the last activity · the
+          bands come from the policy
         </div>
       </div>
       <div class="viz-card-spacer"></div>
       <div class="reg-slider">
         <div class="reg-slider-head">
-          <span>active jusqu'à</span>
-          <span class="reg-slider-value">{{ activeValue() }} j</span>
+          <span i18n="@@activity.view.activeUntil">active until</span>
+          <span class="reg-slider-value" i18n="@@activity.view.activeDays"
+            >{{ activeValue() }} d</span
+          >
         </div>
         <input
           class="reg-slider-input"
           type="range"
-          aria-label="Seuil d'activité, en jours"
+          i18n-aria-label="@@activity.view.activeAria"
+          aria-label="Activity threshold, in days"
           [attr.aria-valuetext]="activeValueText()"
           [attr.min]="bounds().activeMin"
           [attr.max]="bounds().activeMax"
@@ -27,13 +30,16 @@
       </div>
       <div class="reg-slider">
         <div class="reg-slider-head">
-          <span>inactive après</span>
-          <span class="reg-slider-value">{{ inactiveValue() }} j</span>
+          <span i18n="@@activity.view.inactiveAfter">inactive after</span>
+          <span class="reg-slider-value" i18n="@@activity.view.inactiveDays"
+            >{{ inactiveValue() }} d</span
+          >
         </div>
         <input
           class="reg-slider-input"
           type="range"
-          aria-label="Seuil d'inactivité, en jours"
+          i18n-aria-label="@@activity.view.inactiveAria"
+          aria-label="Inactivity threshold, in days"
           [attr.aria-valuetext]="inactiveValueText()"
           [attr.min]="bounds().inactiveMin"
           [attr.max]="bounds().inactiveMax"
@@ -50,21 +56,39 @@
 
     @if (isDirty()) {
       <div class="reg-draft" role="status">
-        <span class="reg-draft-note">
-          Seuils explorés ici seulement · la politique enregistrée reste {{ savedLabel() }}
+        <span class="reg-draft-note" i18n="@@activity.view.draftNote">
+          Thresholds explored here only · the saved policy stays {{ savedLabel() }}
         </span>
-        <button dsButton size="sm" variant="ghost" (click)="reset()">Réinitialiser</button>
-        <a class="reg-draft-link" [routerLink]="['/projects', projectId(), 'settings']">
-          Enregistrer dans les politiques
+        <button dsButton size="sm" variant="ghost" (click)="reset()" i18n="@@activity.view.reset">
+          Reset
+        </button>
+        <a
+          class="reg-draft-link"
+          [routerLink]="['/projects', projectId(), 'settings']"
+          i18n="@@activity.view.saveInPolicies"
+        >
+          Save in the Policies tab
         </a>
       </div>
     }
 
     <div class="viz-card-body">
-      <div class="reg-table" role="table" aria-label="Registre d'activité des branches">
+      <div
+        class="reg-table"
+        role="table"
+        i18n-aria-label="@@activity.view.tableAria"
+        aria-label="Activity register of the branches"
+      >
         <div class="reg-head" role="row">
-          <span class="viz-column-label" role="columnheader">Branche</span>
-          <div class="reg-axis" role="columnheader" aria-label="Temps depuis la dernière activité">
+          <span class="viz-column-label" role="columnheader" i18n="@@activity.view.columnBranch">
+            Branch
+          </span>
+          <div
+            class="reg-axis"
+            role="columnheader"
+            i18n-aria-label="@@activity.view.axisAria"
+            aria-label="Time since the last activity"
+          >
             @for (tick of axisTicks(); track tick.leftPercent) {
               <span
                 class="reg-axis-tick"
@@ -74,8 +98,12 @@
               >
             }
           </div>
-          <span class="viz-column-label reg-head-verdict" role="columnheader">
-            Verdict recalculé
+          <span
+            class="viz-column-label reg-head-verdict"
+            role="columnheader"
+            i18n="@@activity.view.columnVerdict"
+          >
+            Recalculated verdict
           </span>
         </div>
 
@@ -163,33 +191,36 @@
       </div>
     </div>
 
-    <footer class="viz-card-foot">
-      Règle appliquée : un motif protégé ou exclu prime sur tout et classe la branche « Exclue ».
-      Sinon une branche qui détient encore des commits propres reste « Conserver », et passe « À
-      examiner » dès qu'elle est inactive ou qu'elle diverge. Une branche fusionnée ou synchronisée
-      ne détient plus de commit propre : son échelle se réduit à
-      {{ mergedActiveUntilDays }} j / {{ mergedInactiveAfterDays }} j, et elle se lit « Terminée »,
-      « À examiner », puis « Nettoyage possible ». Les zones colorées tracent la politique entière :
-      une ligne marquée d'une horloge se lit sur son échelle réduite, pas sur la zone qu'elle
-      traverse.
+    <footer class="viz-card-foot" i18n="@@activity.view.rule">
+      Rule applied: a protected or excluded pattern beats everything and classes the branch as
+      "Excluded". Otherwise a branch that still holds its own commits stays "Keep", and moves to
+      "Review" as soon as it is inactive or diverges. A merged or in-sync branch holds no own commit
+      any more: its scale shortens to {{ mergedActiveUntilDays }} d / {{ mergedInactiveAfterDays }}
+      d, and it reads "Done", "Review", then "Cleanup possible". The coloured bands trace the whole
+      policy: a row marked with a clock reads on its own shortened scale, not on the band it
+      crosses.
     </footer>
   </section>
 } @else if (captures.isLoading()) {
-  <p class="reg-state" role="status">Lecture du dernier snapshot…</p>
+  <p class="reg-state" role="status" i18n="@@activity.view.loading">Reading the last capture…</p>
 } @else if (hasSnapshot()) {
   <div class="viz-empty">
     <ds-empty-state
       icon="git-branch"
-      title="Aucune branche à inscrire au registre"
-      description="Ce snapshot ne retient aucune référence : il n'y a rien à situer sur l'axe du temps."
+      i18n-title="@@activity.view.emptyRows.title"
+      title="No branch to enter in the register"
+      i18n-description="@@activity.view.emptyRows.description"
+      description="This capture keeps no reference: there is nothing to place on the time axis."
     />
   </div>
 } @else {
   <div class="viz-empty">
     <ds-empty-state
       icon="clock"
-      title="Ce dépôt n'a pas encore été mesuré"
-      description="Lance une analyse depuis le Diagnostic : le registre situera ensuite chaque branche sur l'axe du temps."
+      i18n-title="@@activity.view.emptySnapshot.title"
+      title="This repository has not been measured yet"
+      i18n-description="@@activity.view.emptySnapshot.description"
+      description="Run an analysis from the Diagnostic: the register will then place every branch on the time axis."
     />
   </div>
 }

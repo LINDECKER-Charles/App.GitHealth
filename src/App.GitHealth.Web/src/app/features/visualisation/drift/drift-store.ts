@@ -22,12 +22,12 @@ interface CaptureHistory {
   readonly isTruncated: boolean;
 }
 
-const historyFailure = 'L’historique des captures ne peut pas être lu.';
+const historyFailure = $localize`:@@drift.store.historyFailure:The capture history cannot be read.`;
 
 /**
- * Charge les captures comparables et leurs branches. Les deux côtés du diff passent par
- * `getAnalysisSnapshots` : `latest` reclasserait avec la politique et l'horloge d'aujourd'hui,
- * ce qui fabriquerait des changements de verdict qui n'ont jamais eu lieu.
+ * Loads the comparable captures and their branches. Both sides of the drift go through
+ * `getAnalysisSnapshots`: `latest` would reclassify with today's policy and today's clock,
+ * which would manufacture verdict changes that never happened.
  */
 @Injectable()
 export class DriftStore {
@@ -37,13 +37,13 @@ export class DriftStore {
 
   readonly captures = signal<readonly DriftCapture[]>([]);
   readonly isLoading = signal(true);
-  /** L'historique est borné aux captures récentes ; sans rapport avec la coupe ci-dessous. */
+  /** The history is bounded to the recent captures; unrelated to the cut below. */
   readonly isTruncated = signal(false);
-  /** Au moins une capture a plus de branches que le plafond de lecture : l'écart est incomplet. */
+  /** At least one capture has more branches than the read cap: the drift is incomplete. */
   readonly isBranchListTruncated = computed(() => hasTruncatedBranchList(this.captures()));
   readonly error = signal<string | null>(null);
 
-  /** Le contexte projet change d'identité à chaque analyse : la chaîne en vol devient obsolète. */
+  /** The project context changes identity at every analysis: the chain in flight goes stale. */
   load(projectId: string): void {
     this.loading?.unsubscribe();
     this.isLoading.set(true);
@@ -88,7 +88,7 @@ export class DriftStore {
   }
 }
 
-/** Indexées par nom de référence : l'identifiant de snapshot change à chaque analyse. */
+/** Indexed by reference name: the snapshot identifier changes at every analysis. */
 function toCapture(analysis: CompletedAnalysis, snapshot: LoadedSnapshot): DriftCapture {
   const short = shortCaptureDate(analysis.capturedAtUtc, new Date());
   return {

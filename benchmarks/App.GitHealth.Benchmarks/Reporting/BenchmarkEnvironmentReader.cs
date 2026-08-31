@@ -39,5 +39,5 @@ internal static class BenchmarkEnvironmentReader
     private static string ReadProcessorDescription() =>
         Environment.GetEnvironmentVariable("PROCESSOR_IDENTIFIER")
         ?? Environment.GetEnvironmentVariable("HOSTTYPE")
-        ?? "non renseigné";
+        ?? "not reported";
 }

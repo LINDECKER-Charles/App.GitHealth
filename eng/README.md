@@ -47,8 +47,8 @@ eng\build.cmd check
 ```
 
 The command prints a table of the tools it found. Everything must show `OK`, except
-possibly Node.js showing `Écart` ("mismatch") — winget ships the second-to-last patch of
-the expected version, which is **harmless** for building locally.
+possibly Node.js showing `Mismatch` — winget ships the second-to-last patch of the
+expected version, which is **harmless** for building locally.
 
 ### 4. Build the application
 
@@ -127,8 +127,8 @@ source ~/.zprofile
 ./eng/build.sh check
 ```
 
-The tools table must show `OK` everywhere. An `Écart` ("mismatch") on Node.js signals a
-patch-level difference from the pinned version: harmless locally.
+The tools table must show `OK` everywhere. A `Mismatch` on Node.js signals a patch-level
+difference from the pinned version: harmless locally.
 
 ### 5. Build the application
 
@@ -201,8 +201,8 @@ source ~/.bashrc
 ./eng/build.sh check
 ```
 
-The tools table must show `OK` everywhere. An `Écart` ("mismatch") on Node.js signals a
-patch-level difference from the pinned version: harmless locally.
+The tools table must show `OK` everywhere. A `Mismatch` on Node.js signals a patch-level
+difference from the pinned version: harmless locally.
 
 ### 5. Build the application
 
@@ -295,17 +295,14 @@ published — the full journey is described in
 | `git` / `dotnet` / `node`: command not found | the terminal was opened before the install | close the terminal, open a fresh one |
 | `pwsh: command not found` | PowerShell missing on macOS or Linux | redo step 1 of your section |
 | `permission denied: ./eng/build.sh` | execute bit lost on copy | `chmod +x eng/build.sh` |
-| `Dépendances absentes` (missing dependencies) | npm dependencies not installed | `npm ci --prefix src/App.GitHealth.Web` |
-| `Aucune publication <target>` (no publication) | `run` or `installer` before `publish` | run `publish` first |
+| `Missing dependencies` | npm dependencies not installed | `npm ci --prefix src/App.GitHealth.Web` |
+| `No <target> publication` | `run` or `installer` before `publish` | run `publish` first |
 | `There is a release ... equal or greater` | version already packaged by Velopack | run again with `-Version 0.1.1` |
-| Node.js showing `Écart` (mismatch) | patch level differs from the pinned version | nothing, it has no local effect |
-| .NET SDK showing `Écart` (mismatch) | major version differs from `global.json` | reinstall through the ".NET SDK" step |
-| Unreadable accents in the messages | the UTF-8 byte order mark was stripped from a `.ps1` | restore it, see below |
+| Node.js showing `Mismatch` | patch level differs from the pinned version | nothing, it has no local effect |
+| .NET SDK showing `Mismatch` | major version differs from `global.json` | reinstall through the ".NET SDK" step |
+| Mangled characters in the messages | the UTF-8 byte order mark was stripped from a `.ps1` | restore it, see below |
 
 The `check` table stays the first reflex: it says what is missing before the build fails.
-
-> The build scripts print their messages in French. The quoted strings above are what
-> appears on screen; the English in brackets is only there to help.
 
 ---
 
@@ -326,8 +323,8 @@ Two things to know before touching them:
   `.github/workflows/release.yml` runs. A local build therefore follows the path of a
   release build. On Windows, PowerShell 5.1 is enough; elsewhere, PowerShell 7 is required.
 - The `.ps1` files carry a **UTF-8 byte order mark**. Without it, PowerShell 5.1 reads them
-  in the machine's ANSI code page and renders accents unreadable. Keep it when rewriting
-  them.
+  in the machine's ANSI code page and mangles every non-ASCII character. Keep it when
+  rewriting them.
 
 The cross-building rules are covered by
 `tests/Infrastructure/Invoke-BuildEnvironmentTests.ps1`, run on every pull request. The

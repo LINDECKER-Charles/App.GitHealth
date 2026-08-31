@@ -12,27 +12,27 @@ function displayNames(patterns: readonly string[] = [], query = ''): readonly st
 }
 
 describe('buildBranchOptions', () => {
-  it('rend toutes les références, dédupliquées, quand la requête est vide', () => {
+  it('renders every reference, deduplicated, when the query is empty', () => {
     expect(displayNames()).toEqual(['main', 'origin/feature/export', 'release/2024.1']);
   });
 
-  it('filtre sur le nom affiché sans tenir compte de la casse', () => {
+  it('filters on the display name regardless of case', () => {
     expect(displayNames([], 'RELEASE')).toEqual(['release/2024.1']);
   });
 
-  it('filtre aussi sur le nom de référence complet', () => {
+  it('filters on the full reference name as well', () => {
     expect(displayNames([], 'refs/remotes')).toEqual(['origin/feature/export']);
   });
 
-  it('ignore les espaces qui entourent la requête', () => {
+  it('ignores the whitespace around the query', () => {
     expect(displayNames([], '  main  ')).toEqual(['main']);
   });
 
-  it('renvoie une liste vide quand rien ne correspond', () => {
+  it('returns an empty list when nothing matches', () => {
     expect(displayNames([], 'hotfix')).toEqual([]);
   });
 
-  it('nomme le motif qui couvre déjà une référence', () => {
+  it('names the pattern that already covers a reference', () => {
     const options = buildBranchOptions(references, ['refs/heads/release/*'], 'release');
 
     expect(options).toEqual([
@@ -44,13 +44,13 @@ describe('buildBranchOptions', () => {
     ]);
   });
 
-  it('laisse à null la couverture d’une référence qu’aucun motif ne capture', () => {
+  it('leaves the coverage null for a reference no pattern catches', () => {
     const options = buildBranchOptions(references, ['refs/heads/release/*'], 'main');
 
     expect(options[0]?.coveredBy).toBeNull();
   });
 
-  it('place les références cochables avant celles déjà couvertes', () => {
+  it('puts the tickable references before the ones already covered', () => {
     expect(displayNames(['refs/heads/main', 'refs/remotes/*'])).toEqual([
       'release/2024.1',
       'main',

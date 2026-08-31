@@ -32,18 +32,16 @@ const rowArrowSize = 13;
 const dotSize = 7;
 const flagSize = 12;
 const spinnerSize = 20;
-const loadingSubtitle = 'Lecture de l’historique…';
-const errorSubtitle = 'L’historique des captures n’a pas pu être lu.';
-const noCaptureSubtitle = 'Aucune capture terminée : il n’y a encore rien à comparer.';
-const shortHistorySubtitle = 'Une seule capture enregistrée : rien à comparer pour l’instant.';
-const noCaptureDescription =
-  'Ce dépôt n’a encore aucune capture terminée. Une analyse lit les références présentes sur ce ' +
-  'poste, n’écrit rien, et posera le premier point de comparaison.';
-const shortHistoryDescription =
-  'Ce dépôt n’a qu’une seule capture terminée. Une nouvelle analyse lit les références présentes ' +
-  'sur ce poste, n’écrit rien, et donnera le second point de comparaison.';
+const loadingSubtitle = $localize`:@@drift.subtitle.loading:Reading the history…`;
+const errorSubtitle = $localize`:@@drift.subtitle.error:The capture history could not be read.`;
+const noCaptureSubtitle = $localize`:@@drift.subtitle.noCapture:No completed capture: there is nothing to compare yet.`;
+const shortHistorySubtitle = $localize`:@@drift.subtitle.shortHistory:Only one capture saved: nothing to compare for now.`;
+const noCaptureDescription = $localize`:@@drift.empty.noCapture:This repository has no completed capture yet. An analysis reads the references present on this machine, writes nothing, and will set the first point of comparison.`;
+const shortHistoryDescription = $localize`:@@drift.empty.shortHistory:This repository has only one completed capture. A new analysis reads the references present on this machine, writes nothing, and will give the second point of comparison.`;
+const collapseLabel = $localize`:@@drift.toggle.collapse:collapse`;
+const expandLabel = $localize`:@@drift.toggle.expand:show`;
 
-/** Journal des mouvements entre deux captures, chaque branche lue « avant → après ». */
+/** Journal of what moved between two captures, every branch read "before → after". */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DsBadge, DsButton, DsCallout, DsEmptyState, DsIcon, DsSelect, DsSpinner, DsStatusDot],
@@ -64,7 +62,7 @@ export class DriftView {
 
   private readonly moved = signal<'from' | 'to' | null>(null);
   private readonly picked = signal<CaptureRange | null>(null);
-  /** `null` tant que le lecteur n'a pas tranché : le repli suit alors la règle automatique. */
+  /** `null` until the reader decides: the collapse then follows the automatic rule. */
   private readonly unchangedOverride = signal<boolean | null>(null);
 
   protected readonly range = computed<CaptureRange>(() => this.clampedRange());
@@ -80,7 +78,7 @@ export class DriftView {
     this.hasComparison() ? buildDrift({ captures: this.store.captures(), ...this.range() }) : null,
   );
 
-  /** Zéro capture n'est pas « une seule capture » : les deux cas ne se disent pas pareil. */
+  /** Zero captures is not "a single capture": the two cases are not said the same way. */
   private readonly hasNoCapture = computed(() => this.store.captures().length === 0);
 
   protected readonly emptyDescription = computed(() =>
@@ -111,13 +109,13 @@ export class DriftView {
     return groups.length === 1 && groups[0].kind === 'same';
   });
 
-  /** Replier « Inchangées » alors qu'il est le seul groupe peuplé laisserait un écran blanc. */
+  /** Collapsing "Unchanged" while it is the only populated group would leave a blank screen. */
   protected readonly isUnchangedOpen = computed(
     () => this.unchangedOverride() ?? this.isOnlyUnchanged(),
   );
 
   protected readonly toggleLabel = computed(() =>
-    this.isUnchangedOpen() ? 'réduire' : 'afficher',
+    this.isUnchangedOpen() ? collapseLabel : expandLabel,
   );
 
   protected readonly groups = computed<readonly DriftGroup[]>(() => {
@@ -161,7 +159,7 @@ export class DriftView {
     });
   }
 
-  /** Par défaut on compare l'avant-dernière capture à la dernière, pas la première à la dernière. */
+  /** By default the last but one capture is compared to the last, not the first to the last. */
   private clampedRange(): CaptureRange {
     const count = this.store.captures().length;
     const picked = this.picked();

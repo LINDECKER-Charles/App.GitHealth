@@ -16,7 +16,7 @@ const runtimeWithoutGit: RuntimeInfo = {
   canBrowseDirectories: true,
   isGitAvailable: false,
   gitExecutablePath: null,
-  gitDiagnostic: 'Git est introuvable. Emplacements testés : le PATH.',
+  gitDiagnostic: 'Git cannot be found. Locations tried: the PATH.',
 };
 
 describe('App', () => {
@@ -36,21 +36,21 @@ describe('App', () => {
     return fixture;
   }
 
-  it('monte la coquille : barre supérieure, rail et zone routée', async () => {
+  it('mounts the shell: top bar, rail and routed area', async () => {
     const compiled = (await render()).nativeElement as HTMLElement;
     expect(compiled.querySelector('.topbar')).not.toBeNull();
     expect(compiled.querySelector('app-project-rail')).not.toBeNull();
     expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
 
-  it('expose la sauvegarde locale de la base', async () => {
+  it('exposes the local database backup', async () => {
     const compiled = (await render()).nativeElement as HTMLElement;
     const link = compiled.querySelector('.backup-action') as HTMLAnchorElement;
     expect(link.getAttribute('href')).toBe(databaseBackupUrl);
     expect(link.hasAttribute('download')).toBe(true);
   });
 
-  it('ouvre la palette au clic sur le champ de recherche', async () => {
+  it('opens the palette when the search field is clicked', async () => {
     const fixture = await render();
     const dialogs = TestBed.inject(WorkspaceDialogs);
     expect(dialogs.isPaletteOpen()).toBe(false);
@@ -61,7 +61,7 @@ describe('App', () => {
     expect(fixture.nativeElement.querySelector('app-command-palette')).not.toBeNull();
   });
 
-  it('ouvre et ferme la palette au clavier', async () => {
+  it('opens and closes the palette from the keyboard', async () => {
     const fixture = await render();
     const dialogs = TestBed.inject(WorkspaceDialogs);
 
@@ -74,7 +74,7 @@ describe('App', () => {
     expect(dialogs.isPaletteOpen()).toBe(false);
   });
 
-  it('annonce l’indisponibilité de Git avant le premier scan', async () => {
+  it('announces that Git is unavailable before the first scan', async () => {
     const fixture = await render();
     expect(fixture.nativeElement.querySelector('.workspace-alert')).toBeNull();
 
@@ -85,7 +85,7 @@ describe('App', () => {
     expect(alert.textContent).toContain(runtimeWithoutGit.gitDiagnostic);
   });
 
-  it('propose la mise à jour seulement quand elle est publiée', async () => {
+  it('offers the update only when it is published', async () => {
     const fixture = await render();
     expect(fixture.nativeElement.querySelector('.update-action')).toBeNull();
 
@@ -97,10 +97,10 @@ describe('App', () => {
     await fixture.whenStable();
 
     const action = fixture.nativeElement.querySelector('.update-action') as HTMLButtonElement;
-    expect(action.textContent).toContain('Mettre à jour');
+    expect(action.textContent?.trim()).toBe('Update');
   });
 
-  it('ne rejoue pas l’introduction une fois passée dans la session', async () => {
+  it('does not replay the intro once it has been skipped in the session', async () => {
     const fixture = await render();
     expect(fixture.nativeElement.querySelector('app-boot-intro')).toBeNull();
   });

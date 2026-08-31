@@ -11,7 +11,7 @@ import {
   topologyTones,
 } from '../../../core/branches/branch-labels';
 import { matchPattern } from '../../../core/branches/branch-policy';
-import { plural } from '../../../core/workspace/plural';
+import { pluralMessage } from '../../../core/i18n/plural-message';
 import { DsBadge } from '../../../ui/core/ds-badge';
 import { DsSpinner } from '../../../ui/core/ds-spinner';
 import { DsStatusDot } from '../../../ui/core/ds-status-dot';
@@ -22,7 +22,7 @@ import { DsSegmentedControl } from '../../../ui/surfaces/ds-segmented-control';
 import { IconName, Tone } from '../../../ui/icon-name';
 import { CaptureStore } from '../../project/capture-store';
 import { TopologyFilter, isVisibleUnder } from './topology-layout';
-import { TopologyMap, TopologyNode, buildTopologyMap } from './topology-map';
+import { TopologyCounts, TopologyMap, TopologyNode, buildTopologyMap } from './topology-map';
 
 interface LegendEntry {
   readonly label: string;
@@ -43,18 +43,18 @@ interface TopologyCard {
 }
 
 const filterOptions: readonly SelectOption[] = [
-  { value: 'all', label: 'Toutes' },
-  { value: 'open', label: 'Ouvertes' },
-  { value: 'merged', label: 'Fusionnées' },
+  { value: 'all', label: $localize`:@@topology.filter.all:All` },
+  { value: 'open', label: $localize`:@@topology.filter.open:Open` },
+  { value: 'merged', label: $localize`:@@topology.filter.merged:Merged` },
 ];
 
-/** Les tons viennent de `topologyTones` : la carte et le Diagnostic ne peuvent pas diverger. */
+/** The tones come from `topologyTones`: the map and the Diagnostic cannot diverge. */
 const legend: readonly LegendEntry[] = [
-  { label: 'en avance', tone: topologyTones.Ahead },
-  { label: 'divergente', tone: topologyTones.Diverged },
-  { label: 'fusionnée', tone: topologyTones.Merged },
-  { label: 'synchronisée', tone: topologyTones.Synchronized },
-  { label: 'sans base', tone: topologyTones.Unrelated },
+  { label: $localize`:@@topology.legend.ahead:ahead`, tone: topologyTones.Ahead },
+  { label: $localize`:@@topology.legend.diverged:diverged`, tone: topologyTones.Diverged },
+  { label: $localize`:@@topology.legend.merged:merged`, tone: topologyTones.Merged },
+  { label: $localize`:@@topology.legend.synchronized:in sync`, tone: topologyTones.Synchronized },
+  { label: $localize`:@@topology.legend.unrelated:no merge base`, tone: topologyTones.Unrelated },
 ];
 
 const legendDotSize = 7;
@@ -65,11 +65,11 @@ const junctionRadius = 3;
 const spinnerSize = 20;
 const shortShaLength = 8;
 
-const pinnedHint = 'Re-clique la branche pour libérer la fiche.';
-const unpinnedHint = 'Clique la branche pour épingler la fiche.';
-const unknownAuthor = 'auteur inconnu';
+const pinnedHint = $localize`:@@topology.hint.pinned:Click the branch again to release the card.`;
+const unpinnedHint = $localize`:@@topology.hint.unpinned:Click the branch to pin the card.`;
+const unknownAuthor = $localize`:@@topology.detail.unknownAuthor:unknown author`;
 
-/** Carte du dépôt : le tronc est la référence, chaque forme encode l'avance et le retard. */
+/** Map of the repository: the trunk is the baseline, each shape encodes ahead and behind. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DsBadge, DsEmptyState, DsKeyValueList, DsSegmentedControl, DsSpinner, DsStatusDot],
@@ -88,12 +88,12 @@ export class TopologyView {
   protected readonly junctionRadius = junctionRadius;
   protected readonly spinnerSize = spinnerSize;
 
-  /** Focus tenu par nom de référence : une analyse rejouée renumérote les lignes du snapshot. */
+  /** Focus held by reference name: a replayed analysis renumbers the rows of the snapshot. */
   private readonly hoveredId = signal<string | null>(null);
   protected readonly pinnedId = signal<string | null>(null);
   protected readonly filter = signal<TopologyFilter>('all');
 
-  /** L'épingle gagne toujours sur le survol : une fiche lue ne se dérobe pas. */
+  /** The pin always beats hover: a card being read never slips away. */
   private readonly focusedId = computed(() => this.pinnedId() ?? this.hoveredId());
 
   private readonly branches = computed(() => this.captures.snapshot()?.branches ?? []);
@@ -117,26 +117,19 @@ export class TopologyView {
 
   protected readonly referenceNote = computed(() => {
     const analysisId = this.captures.snapshot()?.analysisId ?? '';
-    return `référence · analyse ${analysisId.slice(0, shortShaLength)}`;
+    const shortId = analysisId.slice(0, shortShaLength);
+    return $localize`:@@topology.head.note:baseline · analysis ${shortId}:analysisId:`;
   });
 
-  /** Décrit tout le snapshot, pas le filtre actif : la phrase parle du dépôt, pas de la vue. */
+  /** Describes the whole snapshot, not the active filter: it speaks of the repository. */
   protected readonly overview = computed(() => {
     const counts = this.map()?.counts;
-    if (counts === undefined) {
-      return '';
-    }
-
-    return (
-      `${plural(counts.total, 'branche')} face à la référence : ` +
-      `${plural(counts.open, 'ouverte')} au-dessus du tronc, ` +
-      `${plural(counts.merged, 'fusionnée')} en pont, ` +
-      `${plural(counts.synchronized, 'synchronisée')} au même sommet, ` +
-      `${plural(counts.unrelated, 'isolée')} sans base commune.`
-    );
+    return counts === undefined ? '' : overviewMessage(counts);
   });
 
-  protected readonly summary = computed(() => `Plan de topologie · ${this.overview()}`);
+  protected readonly summary = computed(
+    () => $localize`:@@topology.summary:Topology map · ${this.overview()}:overview:`,
+  );
 
   private readonly focusedNode = computed(() => {
     const focused = this.focusedId();
@@ -183,7 +176,7 @@ export class TopologyView {
     this.pinnedId.set(null);
   }
 
-  /** Changer de filtre reconstruit la carte : un focus devenu invisible doit tomber. */
+  /** Changing the filter rebuilds the map: a focus that became invisible has to drop. */
   protected changeFilter(value: string): void {
     const filter = value as TopologyFilter;
     this.filter.set(filter);
@@ -197,28 +190,52 @@ export class TopologyView {
   }
 }
 
+/** One whole sentence per plural category: the counts are placed by the translation, never glued. */
+function overviewMessage(counts: TopologyCounts): string {
+  const { total, open, merged, synchronized, unrelated } = counts;
+  return pluralMessage(total, {
+    one: $localize`:@@topology.overview.one:${total}:total: branch against the baseline: ${open}:open: open above the trunk, ${merged}:merged: merged as bridges, ${synchronized}:synchronized: in sync at the same commit, ${unrelated}:unrelated: isolated with no common ancestor.`,
+    other: $localize`:@@topology.overview.many:${total}:total: branches against the baseline: ${open}:open: open above the trunk, ${merged}:merged: merged as bridges, ${synchronized}:synchronized: in sync at the same commit, ${unrelated}:unrelated: isolated with no common ancestor.`,
+  });
+}
+
 function detailsOf(node: TopologyNode, policy: PolicySnapshot): readonly KeyValueItem[] {
   const branch = node.branch;
   const author = branch.tipAuthor ?? unknownAuthor;
+  const age = relativeAge(branch.lastActivityAtUtc);
   return [
-    { label: 'écart', value: `${node.gap} commits` },
-    { label: 'dernier commit', value: `${relativeAge(branch.lastActivityAtUtc)} — ${author}` },
-    { label: 'relation', value: relationshipLabels[branch.relationship] },
-    { label: 'politique', value: policyLine(policy, branch.referenceName) },
+    {
+      label: $localize`:@@topology.detail.difference:difference`,
+      value: $localize`:@@topology.detail.differenceValue:${node.gap}:gap: commits`,
+    },
+    {
+      label: $localize`:@@topology.detail.lastCommit:last commit`,
+      value: $localize`:@@topology.detail.lastCommitValue:${age}:age: — ${author}:author:`,
+    },
+    {
+      label: $localize`:@@topology.detail.relationship:relationship`,
+      value: relationshipLabels[branch.relationship],
+    },
+    {
+      label: $localize`:@@topology.detail.policy:policy`,
+      value: policyLine(policy, branch.referenceName),
+    },
   ];
 }
 
-/** Un motif l'emporte sur les seuils : c'est lui qui décide du sort de la branche. */
+/** A pattern beats the thresholds: it is the pattern that decides the fate of the branch. */
 function policyLine(policy: PolicySnapshot, referenceName: string): string {
   const protectedBy = matchPattern(policy.protectedPatterns, referenceName);
   if (protectedBy !== null) {
-    return `motif protégé ${protectedBy}`;
+    return $localize`:@@topology.detail.policyProtected:protected pattern ${protectedBy}:pattern:`;
   }
 
   const excludedBy = matchPattern(policy.excludedPatterns, referenceName);
   if (excludedBy !== null) {
-    return `motif exclu ${excludedBy}`;
+    return $localize`:@@topology.detail.policyExcluded:excluded pattern ${excludedBy}:pattern:`;
   }
 
-  return `active ≤ ${policy.activeUntilDays} j · inactive > ${policy.inactiveAfterDays} j`;
+  const activeUntilDays = policy.activeUntilDays;
+  const inactiveAfterDays = policy.inactiveAfterDays;
+  return $localize`:@@topology.detail.policyThresholds:active ≤ ${activeUntilDays}:activeUntilDays: d · inactive > ${inactiveAfterDays}:inactiveAfterDays: d`;
 }

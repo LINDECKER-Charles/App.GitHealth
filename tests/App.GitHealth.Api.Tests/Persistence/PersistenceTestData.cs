@@ -18,7 +18,7 @@ internal static class PersistenceTestData
             Thresholds = ActivityThresholds.Create(14, 60),
             Policy = BranchPolicy.Create(["refs/heads/tmp/*"], ["refs/heads/release/*"]),
         };
-        return Project.Create("Dépôt de test", repositoryPath) with { Settings = settings };
+        return Project.Create("Test repository", repositoryPath) with { Settings = settings };
     }
 
     public static RepositoryScan CreateScan(

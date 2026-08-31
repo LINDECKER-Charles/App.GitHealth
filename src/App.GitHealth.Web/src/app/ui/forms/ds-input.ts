@@ -5,7 +5,7 @@ import { ControlSize } from '../core/ds-button';
 
 const affixGlyphSize = 14;
 
-/** Champ texte du système : il s'enfonce (ombre interne) là où les boutons ressortent. */
+/** Text field of the system: it sinks in (inner shadow) where the buttons stand out. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

@@ -19,7 +19,7 @@ internal static class DirectoryBrowser
             {
                 return Failure(ApiProblems.Forbidden(
                     ApiErrorCodes.DirectoryNotAllowed,
-                    "Le dossier demandé se trouve hors de la racine autorisée."));
+                    "The requested folder is outside the allowed root."));
             }
 
             var directory = new DirectoryInfo(resolvedPath);
@@ -27,7 +27,7 @@ internal static class DirectoryBrowser
             {
                 return Failure(ApiProblems.NotFound(
                     ApiErrorCodes.DirectoryNotFound,
-                    "Le dossier demandé n’existe pas."));
+                    "The requested folder does not exist."));
             }
 
             return ApiOutcome<DirectoryListingResponse>.Success(
@@ -37,13 +37,13 @@ internal static class DirectoryBrowser
         {
             return Failure(ApiProblems.Forbidden(
                 ApiErrorCodes.DirectoryInaccessible,
-                "Le dossier demandé n’est pas accessible."));
+                "The requested folder is not accessible."));
         }
         catch (Exception exception) when (IsInvalidPathFailure(exception))
         {
             return Failure(ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidDirectory,
-                "Le chemin du dossier est invalide."));
+                "The folder path is invalid."));
         }
     }
 

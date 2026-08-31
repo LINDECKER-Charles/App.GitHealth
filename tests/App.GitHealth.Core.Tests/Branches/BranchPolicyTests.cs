@@ -55,7 +55,7 @@ public sealed class BranchPolicyTests
 
         Assert.True(result.IsExcluded);
         Assert.True(result.IsProtected);
-        Assert.StartsWith("Protégée", result.Reason, StringComparison.Ordinal);
+        Assert.StartsWith("Protected", result.Reason, StringComparison.Ordinal);
     }
 
     private static BranchComparison ClassifyInactive(BranchFacts facts, BranchPolicy policy)

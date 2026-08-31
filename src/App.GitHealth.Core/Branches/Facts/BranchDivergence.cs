@@ -44,7 +44,7 @@ public sealed record BranchDivergence
         if (!isValid)
         {
             throw new ArgumentException(
-                "La relation Git est incompatible avec les compteurs d’avance et de retard.",
+                "The Git relationship is inconsistent with the ahead and behind counters.",
                 nameof(relationship));
         }
     }

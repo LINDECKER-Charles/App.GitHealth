@@ -1,16 +1,17 @@
 <div class="viz-card">
   <div class="viz-card-head">
     <div class="viz-card-identity">
-      <div class="viz-card-title">Écart entre deux captures</div>
+      <div class="viz-card-title" i18n="@@drift.title">Drift between two captures</div>
       <div class="viz-card-subtitle">{{ subtitle() }}</div>
     </div>
     <span class="viz-card-spacer"></span>
     @if (hasComparison()) {
-      <span class="drift-compare-label">Comparer</span>
+      <span class="drift-compare-label" i18n="@@drift.compare">Compare</span>
       <ds-select
         class="drift-select"
         size="sm"
-        ariaLabel="Capture de départ"
+        i18n-ariaLabel="@@drift.select.from"
+        ariaLabel="Start capture"
         [options]="fromOptions()"
         [value]="fromValue()"
         (valueChange)="selectFrom($event)"
@@ -19,7 +20,8 @@
       <ds-select
         class="drift-select"
         size="sm"
-        ariaLabel="Capture d’arrivée"
+        i18n-ariaLabel="@@drift.select.to"
+        ariaLabel="End capture"
         [options]="toOptions()"
         [value]="toValue()"
         (valueChange)="selectTo($event)"
@@ -31,20 +33,31 @@
     @if (store.isLoading()) {
       <div class="drift-fill">
         <div class="viz-empty">
-          <ds-spinner [size]="spinnerSize" label="Lecture des captures" />
+          <ds-spinner
+            i18n-label="@@drift.loading.label"
+            label="Reading the captures"
+            [size]="spinnerSize"
+          />
         </div>
       </div>
     } @else if (store.error(); as message) {
       <div class="drift-notice">
-        <ds-callout tone="danger" title="Historique illisible">{{ message }}</ds-callout>
+        <ds-callout tone="danger" i18n-title="@@drift.error.title" title="Unreadable history">{{
+          message
+        }}</ds-callout>
       </div>
     } @else if (drift(); as journal) {
       <div class="drift-content">
         @if (store.isBranchListTruncated()) {
           <div class="drift-notice">
-            <ds-callout tone="warning" title="Comparaison partielle">
-              Au moins une capture dépasse la limite de lecture : les branches situées au-delà du
-              plafond n’ont pas été relues, l’écart et ses compteurs sont donc incomplets.
+            <ds-callout
+              tone="warning"
+              i18n-title="@@drift.partial.title"
+              title="Partial comparison"
+              i18n="@@drift.partial.body"
+            >
+              At least one capture exceeds the read limit: the branches beyond the cap were not read
+              back, so the drift and its counters are incomplete.
             </ds-callout>
           </div>
         }
@@ -52,12 +65,12 @@
         <div class="drift-layout">
           <div class="drift-journal">
             <div class="drift-head" [style.gridTemplateColumns]="gridColumns()">
-              <span class="viz-column-label">Captures</span>
-              <span class="viz-column-label">Branche</span>
+              <span class="viz-column-label" i18n="@@drift.column.captures">Captures</span>
+              <span class="viz-column-label" i18n="@@drift.column.branch">Branch</span>
               <span class="viz-column-label drift-head-from">{{ fromShort() }}</span>
               <span></span>
               <span class="viz-column-label">{{ toShort() }}</span>
-              <span class="viz-column-label">Pourquoi</span>
+              <span class="viz-column-label" i18n="@@drift.column.why">Why</span>
             </div>
 
             @for (group of groups(); track group.kind) {
@@ -98,14 +111,16 @@
                         <ds-icon
                           class="drift-flag-protected"
                           name="lock"
-                          label="Branche protégée"
+                          i18n-label="@@drift.flag.protected"
+                          label="Protected branch"
                           [size]="flagSize"
                         />
                       } @else if (row.isExcluded) {
                         <ds-icon
                           class="drift-flag-excluded"
                           name="eye-off"
-                          label="Branche exclue"
+                          i18n-label="@@drift.flag.excluded"
+                          label="Excluded branch"
                           [size]="flagSize"
                         />
                       }
@@ -138,7 +153,7 @@
           </div>
 
           <aside class="drift-side">
-            <div class="drift-side-title">En un coup d’œil</div>
+            <div class="drift-side-title" i18n="@@drift.side.title">At a glance</div>
             <div class="drift-stats">
               @for (stat of journal.stats; track stat.label) {
                 <div class="drift-stat">
@@ -157,7 +172,8 @@
         <div class="viz-empty">
           <ds-empty-state
             icon="clock"
-            title="Il faut deux captures pour mesurer un écart"
+            i18n-title="@@drift.empty.title"
+            title="Measuring drift takes two captures"
             [description]="emptyDescription()"
           >
             <button
@@ -167,8 +183,9 @@
               iconLeft="play"
               [disabled]="context.isRunning()"
               (click)="launch()"
+              i18n="@@drift.empty.action"
             >
-              Lancer une analyse
+              Run an analysis
             </button>
           </ds-empty-state>
         </div>

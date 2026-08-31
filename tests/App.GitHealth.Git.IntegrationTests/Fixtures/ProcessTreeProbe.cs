@@ -93,6 +93,6 @@ internal sealed class ProcessTreeProbe : IDisposable
             await Task.Delay(50);
         }
 
-        throw new Xunit.Sdk.XunitException($"Le processus {processId} est encore actif.");
+        throw new Xunit.Sdk.XunitException($"Process {processId} is still running.");
     }
 }

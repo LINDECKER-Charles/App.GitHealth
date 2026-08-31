@@ -13,18 +13,18 @@ internal sealed record LauncherOptions
     public string? DataDirectory { get; init; }
 
     /// <summary>
-    /// Chemin explicite de l'exécutable Git, quand il n'est pas sur le <c>PATH</c>.
+    /// Explicit path to the Git executable, when it is not on the <c>PATH</c>.
     /// </summary>
     public string? GitExecutablePath { get; init; }
 
     /// <summary>
-    /// Faux sur <c>--no-browser</c>, qui vaut « aucune interface » et couvre donc aussi
-    /// la fenêtre. L'interprétation appartient à <c>DesktopDisplayModeResolver</c>.
+    /// False on <c>--no-browser</c>, which means "no interface" and therefore also
+    /// covers the window. The interpretation belongs to <c>DesktopDisplayModeResolver</c>.
     /// </summary>
     public bool ShouldOpenBrowser { get; init; } = true;
 
     /// <summary>
-    /// Faux sur <c>--no-window</c> : l'interface repasse par le navigateur système.
+    /// False on <c>--no-window</c>: the interface goes back through the system browser.
     /// </summary>
     public bool ShouldOpenWindow { get; init; } = true;
 

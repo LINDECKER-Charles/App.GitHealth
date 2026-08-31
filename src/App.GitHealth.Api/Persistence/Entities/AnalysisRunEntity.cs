@@ -50,7 +50,7 @@ internal sealed class AnalysisRunEntity
         ArgumentNullException.ThrowIfNull(project);
         UtcDate.Require(startedAtUtc, nameof(startedAtUtc));
         var referenceName = project.ReferenceName
-            ?? throw new InvalidOperationException("Le projet ne possède pas de référence Git.");
+            ?? throw new InvalidOperationException("The project has no Git baseline.");
         return new AnalysisRunEntity
         {
             Id = Guid.NewGuid(),
@@ -107,7 +107,7 @@ internal sealed class AnalysisRunEntity
     {
         if (Status != AnalysisRunStatus.Running)
         {
-            throw new InvalidOperationException("Seule une analyse en cours peut être terminée.");
+            throw new InvalidOperationException("Only a running analysis can be completed.");
         }
     }
 }

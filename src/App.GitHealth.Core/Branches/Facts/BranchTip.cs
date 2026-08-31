@@ -9,7 +9,7 @@ public sealed record BranchTip
         if (lastActivityAt is { Offset: var offset } && offset != TimeSpan.Zero)
         {
             throw new ArgumentException(
-                "La date d’activité doit être en UTC.",
+                "The activity date must be in UTC.",
                 nameof(lastActivityAt));
         }
 

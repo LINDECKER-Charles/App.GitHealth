@@ -69,24 +69,36 @@ export class App {
   protected readonly isIntroVisible = signal(false);
   protected readonly themeIcon = computed<IconName>(() => (this.theme.isDark() ? 'sun' : 'moon'));
 
+  protected readonly updateLabel = computed(() =>
+    this.updates.isApplying()
+      ? $localize`:@@app.update.applying:Updating…`
+      : $localize`:@@app.update.action:Update`,
+  );
+
   /**
-   * Une seule alerte à la fois, la plus bloquante d'abord : sans Git aucune analyse
-   * n'aboutit, alors qu'une mise à jour ratée laisse l'application utilisable.
+   * One alert at a time, the most blocking first: without Git no analysis succeeds,
+   * whereas a failed update leaves the application usable.
    */
   protected readonly alert = computed<WorkspaceAlert | null>(() => {
     const runtime = this.store.runtime();
     if (runtime !== null && !runtime.isGitAvailable) {
       return {
         tone: 'danger',
-        title: 'Git est indisponible',
+        title: $localize`:@@app.alert.gitUnavailable:Git is unavailable`,
         message: runtime.gitDiagnostic,
       };
     }
 
     const failure = this.updates.error();
-    return failure === null
-      ? null
-      : { tone: 'warning', title: 'Mise à jour impossible', message: failure };
+    if (failure === null) {
+      return null;
+    }
+
+    return {
+      tone: 'warning',
+      title: $localize`:@@app.alert.updateFailed:Update failed`,
+      message: failure,
+    };
   });
 
   constructor() {
@@ -112,7 +124,7 @@ export class App {
       event.preventDefault();
     }
 
-    // Pendant la séquence d'ouverture, les deux raccourcis servent d'abord à la couper.
+    // During the opening sequence, both shortcuts serve first to interrupt it.
     if (this.isIntroVisible()) {
       this.dismissIntro(true);
       return;
@@ -126,7 +138,7 @@ export class App {
     this.dialogs.closeAll();
   }
 
-  /** L'introduction est jouée une fois par session, et jamais en mouvement réduit. */
+  /** The intro plays once per session, and never under reduced motion. */
   private shouldPlayIntro(): boolean {
     const view = this.document.defaultView;
     if (view?.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true) {
@@ -144,7 +156,7 @@ export class App {
     try {
       this.document.defaultView?.sessionStorage.setItem(key, value);
     } catch {
-      // Sans stockage de session, l'introduction rejouera au prochain chargement.
+      // Without session storage, the intro plays again on the next load.
     }
   }
 }

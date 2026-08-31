@@ -14,7 +14,7 @@ internal sealed class AnalysisQueueOptions
     public int TimeoutSeconds { get; set; } = 300;
 
     /// <summary>
-    /// Nombre d'analyses menées de front. À 1, la file redevient strictement séquentielle.
+    /// Number of analyses run in parallel. At 1, the queue becomes strictly sequential again.
     /// </summary>
     public int MaximumParallelAnalyses { get; set; } = 4;
 }

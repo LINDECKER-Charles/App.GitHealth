@@ -27,7 +27,7 @@ function Assert-GitMetrics {
     param([string]$Repository, [string]$Reference, [object[]]$Items)
 
     if ($Items.Count -eq 0) {
-        throw "La recette réelle n'a produit aucune branche."
+        throw "The real acceptance run produced no branch."
     }
     $checked = 0
     foreach ($item in $Items | Select-Object -First 5) {
@@ -38,7 +38,7 @@ function Assert-GitMetrics {
         $counts = $countLine -split "\s+"
         if ([int]$counts[0] -ne $item.behindCount `
             -or [int]$counts[1] -ne $item.aheadCount) {
-            throw "Les métriques Git ne correspondent pas au snapshot."
+            throw "The Git metrics do not match the snapshot."
         }
         $checked++
     }
@@ -60,7 +60,7 @@ function Add-RealProject {
         Method = "Post"
         Path = "/api/projects"
         Body = @{
-            displayName = "Recette réelle $($Recipe.Index)"
+            displayName = "Real acceptance $($Recipe.Index)"
             repositoryPath = $Repository
             settings = $settings
         }
@@ -146,13 +146,13 @@ function Assert-RealRepositoryCoverage {
         ForEach-Object topologies | ForEach-Object name)
     foreach ($required in @("Merged", "Diverged")) {
         if ($topologies -notcontains $required) {
-            throw "La topologie réelle '$required' n'a pas été exercée."
+            throw "The real topology '$required' was not exercised."
         }
     }
     $activities = @($Recipes | ForEach-Object Evidence |
         ForEach-Object activities | ForEach-Object name)
     if ($activities -notcontains "Inactive") {
-        throw "Aucune branche réelle inactive n'a été exercée."
+        throw "No real inactive branch was exercised."
     }
 }
 
@@ -163,13 +163,13 @@ function Assert-RestartedSnapshots {
         -WebSession $Context.Session
     foreach ($recipe in $Recipes) {
         if ($projects.id -notcontains $recipe.ProjectId) {
-            throw "Un projet réel a disparu après redémarrage."
+            throw "A real project disappeared after restart."
         }
         $uri = "$($Context.BaseAddress)/api/projects/$($recipe.ProjectId)" +
             "/analyses/latest/branches?pageSize=1"
         $page = Invoke-RestMethod $uri -WebSession $Context.Session
         if ($page.analysisId -ne $recipe.AnalysisId -or $page.items.Count -eq 0) {
-            throw "Le dernier snapshot réel a disparu après redémarrage."
+            throw "The last real snapshot disappeared after restart."
         }
     }
 }

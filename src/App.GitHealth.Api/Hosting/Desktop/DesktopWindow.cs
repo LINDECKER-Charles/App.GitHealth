@@ -3,18 +3,18 @@ using Photino.NET;
 namespace App.GitHealth.Api.Hosting.Desktop;
 
 /// <summary>
-/// Fenêtre de bureau adossée au moteur de rendu du système. À ouvrir depuis le thread
-/// principal du processus : WebView2 ne s'initialise pas hors apartment STA, et macOS
-/// impose son thread principal pour la boucle d'évènements.
+/// Desktop window backed by the system rendering engine. To be opened from the process
+/// main thread: WebView2 does not initialise outside the STA apartment, and macOS
+/// requires its main thread for the event loop.
 /// </summary>
 internal static class DesktopWindow
 {
     private const string WindowTitle = "GitHealth";
 
     /// <summary>
-    /// Taille de restauration, en pixels physiques. Elle ne garantit pas la largeur CSS :
-    /// sur un écran à 150 %, 1360 pixels physiques ne font que 907 pixels CSS, sous le
-    /// <c>min-width: 1180px</c> de l'espace de travail. D'où l'ouverture maximisée.
+    /// Restored size, in physical pixels. It does not guarantee the CSS width: on a
+    /// screen at 150%, 1360 physical pixels are only 907 CSS pixels, below the
+    /// <c>min-width: 1180px</c> of the workspace. Hence opening maximised.
     /// </summary>
     private const int RestoredWidth = 1360;
     private const int RestoredHeight = 860;
@@ -23,18 +23,18 @@ internal static class DesktopWindow
     private const int MinimumHeight = 600;
 
     /// <summary>
-    /// Photino journalise sur la console à partir de 1 : l'hôte reste seul à parler.
+    /// Photino logs to the console from 1 upwards: the host stays the only voice.
     /// </summary>
     private const int SilentLogVerbosity = 0;
 
     private const string IconFileName = "githealth.ico";
 
     /// <summary>
-    /// Ouvre la fenêtre et rend la main à sa fermeture.
+    /// Opens the window and returns when it closes.
     /// </summary>
     /// <returns>
-    /// <see langword="null" /> après une fermeture normale, sinon la raison pour laquelle
-    /// aucune fenêtre n'a pu s'ouvrir — à l'appelant de basculer sur le navigateur.
+    /// <see langword="null" /> after a normal close, otherwise the reason why no
+    /// window could be opened — the caller then falls back to the browser.
     /// </returns>
     public static string? Open(Uri address)
     {
@@ -46,8 +46,8 @@ internal static class DesktopWindow
         }
         catch (Exception exception) when (IsEngineUnavailable(exception))
         {
-            return "Le moteur de rendu du système est indisponible : "
-                + $"{Describe(exception)} GitHealth bascule sur le navigateur.";
+            return "The system rendering engine is unavailable: "
+                + $"{Describe(exception)} GitHealth falls back to the browser.";
         }
     }
 
@@ -72,7 +72,7 @@ internal static class DesktopWindow
     }
 
     /// <summary>
-    /// Seul Windows consomme un <c>.ico</c> ; ailleurs l'icône vient de l'empaquetage.
+    /// Only Windows consumes a <c>.ico</c>; elsewhere the icon comes from the packaging.
     /// </summary>
     private static string? ResolveWindowsIconPath()
     {
@@ -86,10 +86,10 @@ internal static class DesktopWindow
     }
 
     /// <summary>
-    /// Photino réemballe toute panne d'initialisation native dans une
-    /// <see cref="ApplicationException" /> et signale des paramètres de départ invalides
-    /// par une <see cref="ArgumentException" />. Dans les deux cas, le navigateur reste
-    /// une issue préférable à l'arrêt de l'application.
+    /// Photino rewraps every native initialisation failure into an
+    /// <see cref="ApplicationException" /> and reports invalid start-up parameters
+    /// with an <see cref="ArgumentException" />. In both cases, the browser stays a
+    /// better way out than shutting the application down.
     /// </summary>
     private static bool IsEngineUnavailable(Exception exception) => exception switch
     {

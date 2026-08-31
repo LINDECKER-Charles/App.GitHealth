@@ -11,33 +11,35 @@ import {
 import { filter, map } from 'rxjs';
 import { displayReference } from '../../core/branches/branch-labels';
 import { SnapshotExporter } from '../../core/branches/snapshot-export';
+import { pluralMessage } from '../../core/i18n/plural-message';
 import { analysisPhases, phaseIndex, phaseLabel } from '../../core/workspace/analysis-phases';
 import { relativeTime } from '../../core/workspace/relative-time';
-import { plural } from '../../core/workspace/plural';
 import { DsBadge } from '../../ui/core/ds-badge';
 import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
 import { DsSpinner } from '../../ui/core/ds-spinner';
 import { DsSelect } from '../../ui/forms/ds-select';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
-import { BranchFiche } from '../branch-fiche/branch-fiche';
+import { BranchCard } from '../branch-card/branch-card';
 import { CaptureStore } from './capture-store';
 import { ProjectContext } from './project-context';
 
 type TabId = 'diagnostic' | 'visualisation' | 'history' | 'settings';
 
-/** Premier segment reconnu dans l'URL, sinon le diagnostic. L'ordre fixe la priorité. */
+const readingRepositoryLabel = $localize`:@@project.state.reading:Reading the repository…`;
+
+/** First segment recognised in the URL, otherwise the diagnostic. The order sets the priority. */
 const tabSegments: readonly (readonly [string, TabId])[] = [
   ['/visualisation', 'visualisation'],
   ['/history', 'history'],
   ['/settings', 'settings'],
 ];
 
-/** Cadre d'un dépôt : identité, actions, onglets et fiche de branche latérale. */
+/** Frame of a repository: identity, actions, tabs and the side branch card. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    BranchFiche,
+    BranchCard,
     DsBadge,
     DsButton,
     DsCallout,
@@ -60,6 +62,7 @@ export class ProjectShell {
   protected readonly context = inject(ProjectContext);
   protected readonly phases = analysisPhases;
   protected readonly phaseLabel = phaseLabel;
+  protected readonly readingRepository = readingRepositoryLabel;
 
   private readonly params = toSignal(this.route.paramMap, { requireSync: true });
   private readonly queryParams = toSignal(this.route.queryParamMap, { requireSync: true });
@@ -79,34 +82,43 @@ export class ProjectShell {
   protected readonly referenceLabel = computed(() => {
     const project = this.context.project();
     return project?.referenceName === null || project === null
-      ? 'référence à choisir'
+      ? $localize`:@@project.reference.unset:baseline still to choose`
       : displayReference(project.referenceName);
   });
 
-  /** Le sélecteur dit déjà quelle capture est lue : la ligne dit son âge et son volume. */
+  /** The selector already says which capture is read: this line says its age and its volume. */
   protected readonly meta = computed(() => {
     const snapshot = this.captures.snapshot();
     if (snapshot === null) {
       const project = this.context.project();
-      return project === null
-        ? 'Lecture du dépôt…'
-        : `Aucune analyse enregistrée · ajouté ${relativeTime(project.createdAtUtc)}`;
+      if (project === null) {
+        return readingRepositoryLabel;
+      }
+
+      const added = relativeTime(project.createdAtUtc);
+      return $localize`:@@project.meta.noAnalysis:No analysis saved · added ${added}`;
     }
 
-    return `${plural(snapshot.branches.length, 'branche')} · capturées ${relativeTime(snapshot.capturedAtUtc)}`;
+    const branches = branchCountLabel(snapshot.branches.length);
+    const at = relativeTime(snapshot.capturedAtUtc);
+    return $localize`:@@project.meta.capture:${branches}:branches: · captured ${at}:capturedAt:`;
   });
 
-  /** Identité stable : chaque onglet reconstruirait son lien à chaque cycle sinon. */
+  /** Stable identity: without it every tab would rebuild its link on each cycle. */
   protected readonly captureLink = computed<Params>(() => this.captures.captureLink());
 
-  /** Une capture archivée porte les verdicts de son époque : le dire évite de les croire d'aujourd'hui. */
+  /** An archived capture carries the verdicts of its time; saying so stops them reading as new. */
   protected readonly archivedNotice = computed(() => {
     const selected = this.captures.selected();
-    return selected === null ? 'verdicts figés' : `${selected.short} · verdicts figés à cette date`;
+    return selected === null
+      ? $localize`:@@project.capture.frozen:frozen verdicts`
+      : frozenCaptureNotice(selected.short);
   });
 
   protected readonly runLabel = computed(() =>
-    this.context.isRunning() ? 'Analyse en cours…' : 'Lancer une analyse',
+    this.context.isRunning()
+      ? $localize`:@@project.action.running:Analysis running…`
+      : $localize`:@@project.action.run:Run an analysis`,
   );
 
   protected readonly currentPhaseIndex = computed(() => {
@@ -114,20 +126,22 @@ export class ProjectShell {
     return phase === undefined ? 0 : Math.max(0, phaseIndex(phase));
   });
 
-  protected readonly progressStep = computed(
-    () => `étape ${this.currentPhaseIndex() + 1} sur ${this.phases.length}`,
-  );
+  protected readonly progressStep = computed(() => {
+    const step = this.currentPhaseIndex() + 1;
+    const total = this.phases.length;
+    return $localize`:@@project.progress.step:step ${step} of ${total}`;
+  });
 
   protected readonly currentPhaseLabel = computed(() => {
     const phase = this.context.analysis()?.phase;
-    return phase === undefined ? 'En attente' : phaseLabel(phase);
+    return phase === undefined ? $localize`:@@project.progress.waiting:Waiting` : phaseLabel(phase);
   });
 
   constructor() {
     effect(() => this.context.open(this.projectId()));
   }
 
-  /** Relancer, c'est vouloir le résultat suivant : rester sur une capture figée le cacherait. */
+  /** Running again means wanting the next result: staying on a frozen capture would hide it. */
   protected launchAnalysis(): void {
     this.captures.followLatest();
     this.context.launchAnalysis();
@@ -161,4 +175,15 @@ export class ProjectShell {
 
 function tabFromUrl(url: string): TabId {
   return tabSegments.find(([segment]) => url.includes(segment))?.[1] ?? 'diagnostic';
+}
+
+function frozenCaptureNotice(capture: string): string {
+  return $localize`:@@project.capture.frozenOn:${capture}:capture: · verdicts frozen at that date`;
+}
+
+function branchCountLabel(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@project.branches.one:${count}:count: branch`,
+    other: $localize`:@@project.branches.many:${count}:count: branches`,
+  });
 }

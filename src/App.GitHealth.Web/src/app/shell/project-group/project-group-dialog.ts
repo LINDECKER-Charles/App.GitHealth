@@ -15,7 +15,7 @@ import { DsIcon } from '../../ui/core/ds-icon';
 import { DsIconButton } from '../../ui/core/ds-icon-button';
 import { DsInput } from '../../ui/forms/ds-input';
 
-/** Doit rester aligné sur `ProjectOrganization.MaximumGroupNameLength` côté API. */
+/** Must stay aligned with `ProjectOrganization.MaximumGroupNameLength` on the API side. */
 export const maximumGroupNameLength = 60;
 
 @Component({
@@ -35,7 +35,7 @@ export class ProjectGroupDialog {
   protected readonly maximumGroupNameLength = maximumGroupNameLength;
   protected readonly newGroup = signal('');
 
-  /** Groupe retenu par la saisie en cours ; `undefined` tant que rien n'a été choisi. */
+  /** Group held by the current input; `undefined` until something has been chosen. */
   private readonly picked = signal<string | null | undefined>(undefined);
 
   protected readonly project = computed<ProjectResponse | null>(
@@ -47,7 +47,7 @@ export class ProjectGroupDialog {
     return picked === undefined ? (this.project()?.groupName ?? null) : picked;
   });
 
-  /** Les groupes connus, plus celui que la saisie vient de créer et qui n'est pas encore écrit. */
+  /** The known groups, plus the one the input just created and that is not yet written. */
   protected readonly groups = computed<readonly string[]>(() => {
     const known = this.organizer.groupNames();
     const selected = this.selected();

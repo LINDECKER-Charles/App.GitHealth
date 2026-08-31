@@ -12,10 +12,10 @@ import { Router } from '@angular/router';
 import { ProjectResponse } from '../../core/api/api.models';
 import { displayReference, recommendationLabels } from '../../core/branches/branch-labels';
 import { SnapshotExporter } from '../../core/branches/snapshot-export';
+import { pluralMessage } from '../../core/i18n/plural-message';
 import { ProjectOrganizer } from '../../core/organization/project-organizer';
 import { ProjectsStore } from '../../core/workspace/projects-store';
 import { ThemeService } from '../../core/workspace/theme';
-import { plural } from '../../core/workspace/plural';
 import { WorkspaceDialogs } from '../../core/workspace/workspace-dialogs';
 import { CaptureStore } from '../../features/project/capture-store';
 import { ProjectContext } from '../../features/project/project-context';
@@ -39,7 +39,7 @@ interface PaletteGroup {
 const maximumBranchResults = 6;
 const maximumProjectResults = 4;
 
-/** Une seule saisie pour aller à une branche, un dépôt ou une action. Tout est filtré localement. */
+/** One field to reach a branch, a repository or an action. Everything is filtered locally. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DsIcon, DsKbd],
@@ -63,9 +63,12 @@ export class CommandPalette {
 
   protected readonly groups = computed<readonly PaletteGroup[]>(() =>
     [
-      { title: 'Branches', items: this.branchItems() },
-      { title: 'Dépôts', items: this.projectItems() },
-      { title: 'Actions', items: this.actionItems() },
+      { title: $localize`:@@palette.group.branches:Branches`, items: this.branchItems() },
+      {
+        title: $localize`:@@palette.group.repositories:Repositories`,
+        items: this.projectItems(),
+      },
+      { title: $localize`:@@palette.group.actions:Actions`, items: this.actionItems() },
     ].filter((group) => group.items.length > 0),
   );
 
@@ -127,7 +130,10 @@ export class CommandPalette {
       .map((project) => ({
         icon: 'folder' as const,
         label: project.displayName,
-        meta: project.lastSuccessfulAnalysisId === null ? 'jamais analysé' : 'snapshot disponible',
+        meta:
+          project.lastSuccessfulAnalysisId === null
+            ? $localize`:@@palette.project.neverAnalysed:never analysed`
+            : $localize`:@@palette.project.hasSnapshot:snapshot available`,
         mono: false,
         run: () => this.go(['/projects', project.id], {}),
       }));
@@ -149,39 +155,41 @@ export class CommandPalette {
         : [
             action(
               'download',
-              'Exporter le snapshot en CSV',
+              $localize`:@@palette.action.exportCsv:Export the snapshot as CSV`,
               () => {
                 this.dialogs.closePalette();
                 this.exporter.export(project.displayName, snapshot.branches);
               },
-              plural(snapshot.branches.length, 'branche'),
+              branchCountMeta(snapshot.branches.length),
             ),
           ];
 
     return [
-      action('refresh-cw', 'Lancer une analyse', () => {
+      action('refresh-cw', $localize`:@@palette.action.analyse:Run an analysis`, () => {
         this.dialogs.closePalette();
         this.context.launchAnalysis();
       }),
       ...exportAction,
       ...this.organizationActions(project),
-      action('settings', 'Ouvrir les politiques', () =>
+      action('settings', $localize`:@@palette.action.policies:Open the policies`, () =>
         this.go(['/projects', project.id, 'settings'], {}),
       ),
-      action('clock', 'Ouvrir l’historique', () =>
+      action('clock', $localize`:@@palette.action.history:Open the history`, () =>
         this.go(['/projects', project.id, 'history'], {}),
       ),
     ];
   }
 
-  /** Le rangement se lit toujours sur la version en magasin : le rail vient peut-être de l'écrire. */
+  /** The grouping is always read from the stored version: the rail may have just written it. */
   private organizationActions(project: ProjectResponse): readonly PaletteItem[] {
     const current =
       this.store.projects().find((candidate) => candidate.id === project.id) ?? project;
     return [
       action(
         current.isFavorite ? 'star-filled' : 'star',
-        current.isFavorite ? 'Retirer des favoris' : 'Mettre en favori',
+        current.isFavorite
+          ? $localize`:@@palette.action.unfavourite:Remove from favourites`
+          : $localize`:@@palette.action.favourite:Add to favourites`,
         () => {
           this.dialogs.closePalette();
           this.organizer.toggleFavorite(current);
@@ -189,24 +197,28 @@ export class CommandPalette {
       ),
       action(
         'folder-open',
-        'Ranger dans un groupe',
+        $localize`:@@palette.action.moveToGroup:Move to a group`,
         () => this.dialogs.openProjectGroup(current.id),
-        current.groupName ?? 'sans groupe',
+        current.groupName ?? $localize`:@@palette.action.ungrouped:ungrouped`,
       ),
     ];
   }
 
   private globalActions(): readonly PaletteItem[] {
     return [
-      action(this.theme.isDark() ? 'sun' : 'moon', 'Basculer le thème', () => {
-        this.theme.toggle();
-        this.dialogs.closePalette();
-      }),
-      action('plus', 'Ajouter un dépôt', () => {
+      action(
+        this.theme.isDark() ? 'sun' : 'moon',
+        $localize`:@@palette.action.toggleTheme:Toggle the theme`,
+        () => {
+          this.theme.toggle();
+          this.dialogs.closePalette();
+        },
+      ),
+      action('plus', $localize`:@@palette.action.addRepository:Add a repository`, () => {
         this.dialogs.closePalette();
         this.dialogs.openAddRepository();
       }),
-      action('folder', 'Scanner un dossier', () => {
+      action('folder', $localize`:@@palette.action.scanFolder:Scan a folder`, () => {
         this.dialogs.closePalette();
         this.dialogs.openScanFolder();
       }),
@@ -225,4 +237,11 @@ function action(icon: IconName, label: string, run: () => void, meta = ''): Pale
 
 function matches(candidate: string, needle: string): boolean {
   return candidate.toLowerCase().includes(needle);
+}
+
+function branchCountMeta(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@palette.branches.one:${count}:count: branch`,
+    other: $localize`:@@palette.branches.many:${count}:count: branches`,
+  });
 }

@@ -9,9 +9,9 @@ describe('ApiError', () => {
       url: '/api/projects/missing',
       error: {
         type: 'https://tools.ietf.org/html/rfc9110#section-15.5.5',
-        title: 'Ressource introuvable',
+        title: 'Not found',
         status: 404,
-        detail: 'Le projet demandé n’existe pas.',
+        detail: 'The requested project does not exist.',
         instance: '/api/projects/missing',
         code: 'project.not_found',
         traceId: 'trace-42',
@@ -20,7 +20,7 @@ describe('ApiError', () => {
 
     const error = ApiError.from(source);
 
-    expect(error.message).toBe('Le projet demandé n’existe pas.');
+    expect(error.message).toBe('The requested project does not exist.');
     expect(error.status).toBe(404);
     expect(error.code).toBe('project.not_found');
     expect(error.traceId).toBe('trace-42');
@@ -45,7 +45,7 @@ describe('ApiError', () => {
   });
 
   it('normalizes unexpected client errors and preserves an existing ApiError', () => {
-    const source = new Error('Le navigateur a refusé la requête.');
+    const source = new Error('The browser refused the request.');
 
     const error = ApiError.from(source);
 

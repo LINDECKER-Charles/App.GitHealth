@@ -30,16 +30,16 @@ const minusSign = '−';
 const separator = ' · ';
 const originPrefix = 'origin/';
 
-/** Position d'une étiquette HTML, en pourcentage du cadre : l'overlay ne recalcule rien. */
+/** Position of an HTML label, as a percentage of the frame: the overlay recomputes nothing. */
 export interface TopologyLabelPosition {
   readonly left: string;
   readonly top: string;
-  /** Passé le seuil d'ancrage, l'étiquette bascule à gauche du repère pour rester dans le cadre. */
+  /** Past the anchor threshold, the label flips left of the marker to stay inside the frame. */
   readonly isTrailing: boolean;
 }
 
 export interface TopologyNode {
-  /** Identité stable d'une analyse à l'autre : le nom de référence, jamais l'id de ligne. */
+  /** Identity that is stable from one analysis to the next: the reference name, never the row id. */
   readonly id: string;
   readonly branch: BranchSnapshotResponse;
   readonly name: string;
@@ -85,7 +85,7 @@ export interface TopologyMap {
   readonly counts: TopologyCounts;
 }
 
-/** Assemble la géométrie et l'état de focus en un plan que le gabarit se contente de poser. */
+/** Assembles the geometry and the focus state into a plan the template only has to lay out. */
 export function buildTopologyMap(request: TopologyMapRequest): TopologyMap {
   const { placed, trunkY, height } = layoutBranches(request.branches, request.filter);
   const focusedId = resolveFocus(placed, request.focusedId);
@@ -103,7 +103,7 @@ export function buildTopologyMap(request: TopologyMapRequest): TopologyMap {
   };
 }
 
-/** Un focus sans nœud correspondant — filtre changé, analyse rejouée — n'estompe personne. */
+/** A focus with no matching node — filter changed, analysis replayed — dims nobody. */
 function resolveFocus(placed: readonly NodeGeometry[], focusedId: string | null): string | null {
   const isPlaced = placed.some((geometry) => geometry.branch.referenceName === focusedId);
   return isPlaced ? focusedId : null;
@@ -135,7 +135,7 @@ function toNode(geometry: NodeGeometry, focusedId: string | null, height: number
   };
 }
 
-/** Comptes du dépôt entier : la phrase de la fiche vide parle du dépôt, pas du filtre. */
+/** Counts for the whole repository: the empty card speaks of the repository, not the filter. */
 function countBranches(branches: readonly BranchSnapshotResponse[]): TopologyCounts {
   const count = (matches: (branch: BranchSnapshotResponse) => boolean) =>
     branches.filter(matches).length;

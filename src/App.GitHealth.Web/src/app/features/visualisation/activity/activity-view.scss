@@ -1,7 +1,7 @@
 /*
- * Les largeurs de colonnes sont déclarées une seule fois : l'en-tête, les lignes et le
- * calque des zones partagent la même grille, sinon les seuils ne tombent pas sur les
- * points du même âge.
+ * The column widths are declared only once: the header, the rows and the band layer
+ * share the same grid, otherwise the thresholds do not land on the dots of the same
+ * age.
  */
 :host {
   --reg-name-width: 236px;
@@ -77,7 +77,7 @@
   text-decoration: underline;
 }
 
-/* L'en-tête colle en haut du corps : l'axe reste lisible quand la liste défile. */
+/* The header sticks to the top of the body: the axis stays readable as the list scrolls. */
 .reg-head {
   position: sticky;
   top: 0;
@@ -185,7 +185,7 @@
   font: var(--weight-medium) var(--text-2xs) / var(--lh-2xs) var(--font-mono);
 }
 
-/* Collée au bord droit, la règle passe son étiquette à gauche : rien ne déborde sur le verdict. */
+/* Hugging the right edge, the rule flips its label to the left: nothing spills over the verdict. */
 .reg-rule-label.is-trailing {
   left: auto;
   right: 4px;
@@ -228,7 +228,7 @@
   color: var(--text-brand);
 }
 
-/* Positionnée, la piste passe au-dessus des zones : le point ne doit jamais être noyé. */
+/* Positioned, the track sits above the bands: the dot must never be drowned out. */
 .reg-track {
   position: relative;
   background: linear-gradient(var(--border-subtle), var(--border-subtle)) no-repeat center;

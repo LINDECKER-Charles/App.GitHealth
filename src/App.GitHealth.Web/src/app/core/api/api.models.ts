@@ -31,19 +31,19 @@ export interface RuntimeInfo {
   readonly initialRepositoryPath: string | null;
   readonly repositoriesRoot: string | null;
   readonly canBrowseDirectories: boolean;
-  /** Git répond au démarrage ; faux, aucune analyse ne peut aboutir. */
+  /** Git answers at startup; false, and no analysis can succeed. */
   readonly isGitAvailable: boolean;
-  /** Exécutable Git retenu, ou `null` s'il est introuvable. */
+  /** Git executable selected, or `null` when it cannot be found. */
   readonly gitExecutablePath: string | null;
-  /** Version de Git, ou la raison de son indisponibilité. */
+  /** Git version, or the reason it is unavailable. */
   readonly gitDiagnostic: string;
 }
 
 export interface UpdateStatus {
   readonly availability: UpdateAvailability;
-  /** Version installée, ou `null` hors installation gérée. */
+  /** Installed version, or `null` outside a managed installation. */
   readonly currentVersion: string | null;
-  /** Version publiée plus récente, renseignée seulement si elle existe. */
+  /** More recent published version, filled in only when one exists. */
   readonly availableVersion: string | null;
 }
 
@@ -77,7 +77,7 @@ export interface DiscoveredRepository {
   readonly suggestedReference: string | null;
   readonly referenceCount: number;
   readonly isBare: boolean;
-  /** Projet déjà enregistré sur ce dépôt, ou `null` s'il reste à ajouter. */
+  /** Project already saved on this repository, or `null` when it remains to be added. */
   readonly trackedProjectId: Uuid | null;
 }
 
@@ -118,7 +118,7 @@ export interface PolicyPreviewResponse {
 
 export interface ProjectOrganizationRequest {
   readonly isFavorite: boolean;
-  /** Groupe d'appartenance ; `null` range le dépôt hors groupe. */
+  /** Owning group; `null` moves the repository out of any group. */
   readonly groupName: string | null;
 }
 

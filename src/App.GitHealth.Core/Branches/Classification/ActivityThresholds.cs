@@ -6,9 +6,9 @@ public sealed record ActivityThresholds
     public const int DefaultInactiveAfterDays = 90;
 
     /// <summary>
-    /// Échelle réduite des branches sans commit propre. Leur travail est déjà dans la
-    /// référence : le compte à rebours peut courir plus vite que pour une branche
-    /// dont des commits n'existent nulle part ailleurs.
+    /// Shortened scale for branches with no own commits. Their work is already in the
+    /// baseline: the countdown can run faster than for a branch whose commits exist
+    /// nowhere else.
     /// </summary>
     public const int MergedActiveUntilDays = 7;
     public const int MergedInactiveAfterDays = 30;
@@ -37,15 +37,15 @@ public sealed record ActivityThresholds
         {
             throw new ArgumentOutOfRangeException(
                 nameof(inactiveAfterDays),
-                "Le seuil d’inactivité doit être supérieur au seuil d’activité.");
+                "The inactivity threshold must be strictly greater than the activity threshold.");
         }
 
         return new ActivityThresholds(activeUntilDays, inactiveAfterDays);
     }
 
     /// <summary>
-    /// La plus courte des deux échelles, borne par borne. Un projet qui resserre
-    /// lui-même ses seuils n'est donc jamais rallongé par une échelle intégrée.
+    /// The shorter of the two scales, bound by bound. A project that tightens its own
+    /// thresholds is therefore never lengthened by a built-in scale.
     /// </summary>
     public ActivityThresholds ShortenTo(ActivityThresholds other)
     {

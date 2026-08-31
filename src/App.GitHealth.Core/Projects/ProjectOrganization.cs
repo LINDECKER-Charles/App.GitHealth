@@ -1,8 +1,8 @@
 namespace App.GitHealth.Core.Projects;
 
 /// <summary>
-/// Rangement d'un projet dans l'espace de travail : mise en favori et groupe d'appartenance.
-/// Ce classement n'entre jamais dans le calcul d'une analyse, il n'organise que la navigation.
+/// How a project is filed in the workspace: favourite flag and group membership.
+/// This filing never enters the computation of an analysis, it only organises navigation.
 /// </summary>
 public sealed record ProjectOrganization
 {
@@ -10,12 +10,12 @@ public sealed record ProjectOrganization
 
     private readonly string? _groupName;
 
-    /// <summary>Projet non favori et rangé nulle part.</summary>
+    /// <summary>Project that is not a favourite and is filed nowhere.</summary>
     public static ProjectOrganization None { get; } = new();
 
     public bool IsFavorite { get; init; }
 
-    /// <summary>Nom du groupe, normalisé : un libellé vide ou blanc vaut « sans groupe ».</summary>
+    /// <summary>Group name, normalised: an empty or blank label means "ungrouped".</summary>
     public string? GroupName
     {
         get => _groupName;
@@ -33,7 +33,7 @@ public sealed record ProjectOrganization
         if (name.Length > MaximumGroupNameLength)
         {
             throw new ArgumentException(
-                $"Le nom d’un groupe ne peut pas dépasser {MaximumGroupNameLength} caractères.",
+                $"A group name cannot exceed {MaximumGroupNameLength} characters.",
                 nameof(value));
         }
 

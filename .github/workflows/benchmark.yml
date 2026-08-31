@@ -26,7 +26,7 @@ on:
   workflow_dispatch:
     inputs:
       enforce_budgets:
-        description: Échouer si les budgets du runner de référence sont dépassés
+        description: Fail if the reference runner budgets are exceeded
         required: false
         type: boolean
         default: false
@@ -40,7 +40,7 @@ concurrency:
 
 jobs:
   benchmark:
-    name: Mesurer 100, 500 et 1 000 branches
+    name: Measure 100, 500 and 1,000 branches
     runs-on: windows-latest
     timeout-minutes: 45
     env:
@@ -49,15 +49,15 @@ jobs:
       ENFORCE_BENCHMARK_BUDGETS: ${{ inputs.enforce_budgets || false }}
 
     steps:
-      - name: Récupérer le dépôt
+      - name: Check out the repository
         uses: actions/checkout@v7
 
-      - name: Installer .NET
+      - name: Install .NET
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
-      - name: Exécuter la baseline
+      - name: Run the baseline
         run: |
           $budgetArguments = @()
           if ($env:ENFORCE_BENCHMARK_BUDGETS -eq "true") {
@@ -73,7 +73,7 @@ jobs:
             --output artifacts/benchmarks/latest.json `
             @budgetArguments
 
-      - name: Conserver les mesures
+      - name: Keep the measurements
         uses: actions/upload-artifact@v7
         with:
           name: benchmark-windows

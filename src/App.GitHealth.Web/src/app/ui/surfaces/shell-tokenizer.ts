@@ -1,4 +1,4 @@
-/** Jeton coloré d'une ligne de commande, prêt à être rendu sans `innerHTML`. */
+/** Coloured token of a command line, ready to be rendered without `innerHTML`. */
 export interface ShellToken {
   readonly text: string;
   readonly className: string;
@@ -14,7 +14,7 @@ const grammar: readonly (readonly [string, RegExp])[] = [
 
 const pattern = new RegExp(grammar.map(([, rule]) => `(${rule.source})`).join('|'), 'g');
 
-/** Reprend la grammaire `bash` du design system : mot-clé, chaîne, option, nombre, commentaire. */
+/** Reuses the `bash` grammar of the design system: keyword, string, option, number, comment. */
 export function tokenizeShell(code: string): readonly ShellToken[] {
   const tokens: ShellToken[] = [];
   let cursor = 0;

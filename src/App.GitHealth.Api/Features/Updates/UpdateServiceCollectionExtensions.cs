@@ -3,8 +3,8 @@ using App.GitHealth.Api.Hosting;
 namespace App.GitHealth.Api.Features.Updates;
 
 /// <summary>
-/// Choisit l'implémentation d'<see cref="IUpdateService" /> selon le mode d'exécution et
-/// la plateforme.
+/// Chooses the <see cref="IUpdateService" /> implementation according to the run mode
+/// and the platform.
 /// </summary>
 internal static class UpdateServiceCollectionExtensions
 {
@@ -25,8 +25,8 @@ internal static class UpdateServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Les mises à jour in-app supposent une installation gérée : hors du lanceur natif
-    /// il n'y en a pas, et sur Linux l'utilisateur attend son gestionnaire de paquets.
+    /// In-app updates assume a managed installation: outside the native launcher there is
+    /// none, and on Linux the user expects their package manager.
     /// </summary>
     public static bool SupportsInAppUpdates(bool useNativeLauncher, RuntimePlatform platform) =>
         useNativeLauncher && platform is RuntimePlatform.Windows or RuntimePlatform.MacOS;

@@ -4,11 +4,6 @@ This guide covers version `0.1.0`. GitHealth runs on your machine,
 reads repositories that are already there, and keeps its results in a local SQLite
 database.
 
-> [!NOTE]
-> The application interface currently ships in French only. The labels quoted in this
-> guide are translated to English; look for the equivalent French wording on screen.
-> Translating the interface is planned, and tracked in the known limitations.
-
 ## Contents
 
 - [What GitHealth does, and never does](#what-githealth-does-and-never-does)
@@ -180,8 +175,8 @@ The screen has three zones:
   the guide — plus **Update** when a newer version has been published;
 - the **rail** lists the observed repositories, their reachability and their path,
   arranged in collapsible sections;
-- the **central area** presents the current repository under three tabs: **Diagnostic**,
-  **History** and **Policies**.
+- the **central area** presents the current repository under four tabs: **Diagnostic**,
+  **Visualisation**, **History** and **Policies**.
 
 ## Keyboard shortcuts
 

@@ -5,20 +5,21 @@ import { filter, map } from 'rxjs';
 import { SelectOption } from '../../ui/forms/ds-select';
 import { DsSegmentedControl } from '../../ui/surfaces/ds-segmented-control';
 
-type SubViewId = 'topologie' | 'registre' | 'ecart';
+/** The members are URL segments, not prose: they stay exactly as the routes spell them. */
+type SubViewId = 'topology' | 'register' | 'drift';
 
 const subViews: readonly SelectOption[] = [
-  { value: 'topologie', label: 'Plan de topologie' },
-  { value: 'registre', label: "Registre d'activité" },
-  { value: 'ecart', label: 'Écart entre captures' },
+  { value: 'topology', label: $localize`:@@visualisation.subView.topology:Topology map` },
+  { value: 'register', label: $localize`:@@visualisation.subView.activity:Activity register` },
+  { value: 'drift', label: $localize`:@@visualisation.subView.drift:Drift between captures` },
 ];
 
-const defaultSubView: SubViewId = 'topologie';
+const defaultSubView: SubViewId = 'topology';
 
 /**
- * Cadre de l'onglet Visualisation : trois lectures d'une même capture, chacune adressable
- * par son URL, commutées par un segmented control. Quelle capture elles montrent se choisit
- * dans l'en-tête du dépôt, qui vaut pour tous les onglets.
+ * Frame of the Visualisation tab: three readings of one capture, each addressable by its own
+ * URL, switched by a segmented control. Which capture they show is chosen in the repository
+ * header, which holds for every tab.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

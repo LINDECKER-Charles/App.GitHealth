@@ -1,7 +1,7 @@
 /**
- * Glyphes Lucide copiés dans `public/ds/icons`. Le type ferme la liste : un nom
- * absent du dossier ne compile pas, donc aucune icône ne peut disparaître à l'exécution.
- * `star-filled` reprend le tracé de `star`, rempli : un favori se lit plein, pas seulement coloré.
+ * Lucide glyphs copied into `public/ds/icons`. The type closes the list: a name absent
+ * from the folder does not compile, so no icon can disappear at runtime.
+ * `star-filled` reuses the `star` outline, filled: a favourite reads solid, not just coloured.
  */
 export type IconName =
   | 'arrow-right'
@@ -41,5 +41,5 @@ export type IconName =
   | 'triangle-alert'
   | 'x';
 
-/** Tonalités sémantiques du système : un état est toujours un fond teinté avec sa bordure. */
+/** Semantic tones of the system: a state is always a tinted background with its border. */
 export type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'brand' | 'merged';

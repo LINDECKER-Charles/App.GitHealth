@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { Tone } from '../icon-name';
 
-/** Les lignes denses ne supportent pas un Badge : une puce suffit à porter l'état. */
+/** Dense rows cannot carry a badge: a dot is enough to hold the state. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

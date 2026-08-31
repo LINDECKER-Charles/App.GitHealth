@@ -14,7 +14,7 @@ function branch(overrides: Partial<BranchSnapshotResponse> = {}): BranchSnapshot
     topology: 'Ahead',
     activity: 'Active',
     recommendation: 'Keep',
-    reason: 'Aucune action recommandée',
+    reason: 'No action recommended',
     isProtected: false,
     isExcluded: false,
     ...overrides,
@@ -22,7 +22,7 @@ function branch(overrides: Partial<BranchSnapshotResponse> = {}): BranchSnapshot
 }
 
 describe('toSnapshotCsv', () => {
-  it('écrit l’en-tête attendu, cité et terminé en CRLF', () => {
+  it('writes the expected header, quoted and CRLF-terminated', () => {
     const csv = toSnapshotCsv([]);
     expect(csv.startsWith('﻿')).toBe(true);
     expect(csv.slice(1)).toBe(
@@ -32,22 +32,22 @@ describe('toSnapshotCsv', () => {
     );
   });
 
-  it('cite chaque cellule et double les guillemets', () => {
-    const csv = toSnapshotCsv([branch({ reason: 'Motif « a"b »' })]);
-    expect(csv).toContain('"Motif « a""b »"');
+  it('quotes every cell and doubles the quotation marks', () => {
+    const csv = toSnapshotCsv([branch({ reason: 'Pattern a"b' })]);
+    expect(csv).toContain('"Pattern a""b"');
   });
 
-  it('neutralise une cellule qui commence par un caractère de formule', () => {
+  it('neutralises a cell starting with a formula character', () => {
     const csv = toSnapshotCsv([branch({ tipAuthor: '=CMD()' })]);
     expect(csv).toContain('"\'=CMD()"');
   });
 
-  it('rend une cellule vide pour une valeur absente', () => {
+  it('renders an empty cell for a missing value', () => {
     const csv = toSnapshotCsv([branch({ tipAuthor: null, lastActivityAtUtc: null })]);
     expect(csv).toContain('"CommonAncestor","","",');
   });
 
-  it('mesure la taille en octets, accents compris', () => {
+  it('measures the size in bytes, accents included', () => {
     expect(csvByteLength('é')).toBe(2);
   });
 });

@@ -20,14 +20,14 @@ import {
   toCaptureOptions,
 } from './capture-history';
 
-const historyFailure = 'L’historique des captures ne peut pas être lu.';
-const captureFailure = 'Cette capture ne peut pas être relue.';
+const historyFailure = $localize`:@@capture.error.history:The capture history cannot be read.`;
+const captureFailure = $localize`:@@capture.error.replay:This capture cannot be replayed.`;
 
 /**
- * Quelle capture le dépôt montre, pour toutes ses vues à la fois. La plus récente réutilise
- * le snapshot déjà en mémoire — l'API la classe avec la politique et l'horloge du jour —
- * tandis qu'une capture passée est relue avec la politique et l'horloge figées à sa date.
- * C'est pourquoi les vues doivent dire laquelle des deux elles montrent.
+ * Which capture the repository shows, for all of its views at once. The most recent one
+ * reuses the snapshot already in memory — the API classifies it with today's policy and
+ * clock — while a past capture is read back with the policy and the clock frozen at its
+ * own date. That is why the views must say which of the two they are showing.
  */
 @Injectable({ providedIn: 'root' })
 export class CaptureStore {
@@ -49,18 +49,18 @@ export class CaptureStore {
     initialValue: this.router.routerState.root.snapshot.queryParams as Params,
   });
 
-  /** `null` désigne la plus récente : la vue suit alors les analyses suivantes. */
+  /** `null` means the most recent one: the view then follows the analyses that come after. */
   readonly requestedId = computed<string | null>(
     () => this.queryParams()[captureQueryParam] ?? null,
   );
 
   readonly latest = computed<CaptureOption | null>(() => this.captures().at(-1) ?? null);
-  /** Une seule capture se montre quand même : le lecteur doit savoir laquelle il regarde. */
+  /** A single capture is still shown: the reader has to know which one they are reading. */
   readonly hasCaptures = computed(() => this.captures().length > 0);
 
   /**
-   * L'historique et le contexte apprennent la dernière analyse chacun de leur côté : le
-   * premier des deux qui la connaît suffit à reconnaître un lien pointant déjà dessus.
+   * The history and the context each learn the last analysis on their own side: whichever
+   * of the two knows it first is enough to recognise a link already pointing at it.
    */
   private readonly latestId = computed<string | null>(
     () => this.latest()?.analysisId ?? this.context.latestSnapshot()?.analysisId ?? null,
@@ -106,18 +106,18 @@ export class CaptureStore {
     effect(() => this.reveal(this.requestedId()));
   }
 
-  /** Paramètres d'URL menant à la capture regardée, pour les liens qui doivent la garder. */
+  /** URL parameters leading to the capture being read, for the links that must keep it. */
   captureLink(): Params {
     const requested = this.requestedId();
     return requested === null ? {} : { [captureQueryParam]: requested };
   }
 
-  /** Revenir sur la plus récente relâche la sélection : elle doit suivre la prochaine analyse. */
+  /** Returning to the most recent one releases the selection: it must follow the next run. */
   select(analysisId: string): void {
     this.show(this.latest()?.analysisId === analysisId ? null : analysisId);
   }
 
-  /** Ce qu'on veut voir après avoir relancé une analyse : le présent, pas la capture figée. */
+  /** What we want to see after starting an analysis: the present, not the frozen capture. */
   followLatest(): void {
     this.show(null);
   }
@@ -133,7 +133,7 @@ export class CaptureStore {
     });
   }
 
-  /** Une analyse de plus allonge l'historique ; un autre dépôt le remplace entièrement. */
+  /** One more analysis extends the history; another repository replaces it entirely. */
   private follow(project: ProjectResponse | null): void {
     if (project === null) {
       return;
@@ -153,7 +153,7 @@ export class CaptureStore {
     this.loadHistory(project.id);
   }
 
-  /** La plus récente est déjà en mémoire ; les autres se relisent une seule fois. */
+  /** The most recent one is already in memory; the others are read back only once. */
   private reveal(analysisId: string | null): void {
     if (analysisId === null || analysisId === this.latestId()) {
       return;

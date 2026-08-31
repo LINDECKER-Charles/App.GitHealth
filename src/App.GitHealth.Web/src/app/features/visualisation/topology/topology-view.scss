@@ -10,7 +10,7 @@
   min-height: 100%;
 }
 
-/* Calé en haut : le cadre du tracé doit coïncider avec le SVG, que l'overlay repère en %. */
+/* Pinned to the top: the drawing frame must coincide with the SVG the overlay locates in %. */
 .topology-plot {
   position: relative;
   align-self: flex-start;
@@ -18,7 +18,7 @@
   min-width: 620px;
 }
 
-/* Le viewBox grandit avec le dépôt : la carte s'allonge, le corps de la carte défile. */
+/* The viewBox grows with the repository: the map lengthens, the card body scrolls on its own. */
 .topology-canvas {
   display: block;
   width: 100%;
@@ -102,7 +102,7 @@
   stroke: var(--status-danger-solid);
 }
 
-/* Les noms restent en HTML à taille fixe : ils ne rétrécissent pas avec le viewBox. */
+/* Names stay in HTML at a fixed size: they do not shrink with the viewBox. */
 .topology-labels {
   position: absolute;
   inset: 0;
@@ -136,13 +136,13 @@
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
-/* Trop près du bord droit, l'étiquette déborderait sur la fiche : elle bascule à gauche. */
+/* Too close to the right edge, the label would overflow onto the card: it flips left. */
 .topology-name.is-trailing,
 .topology-gap.is-trailing {
   transform: translate(-100%, -78%);
 }
 
-/* Elle se resserre avec la fenêtre plutôt que de passer sous un défilement horizontal. */
+/* It narrows with the window rather than slipping behind a horizontal scroll. */
 .topology-fiche {
   display: flex;
   flex-direction: column;

@@ -36,7 +36,7 @@ internal sealed class GitTopologyReader(
         {
             return IsUnsupportedAheadBehind(result.StandardError)
                 ? null
-                : throw ProcessFailure("Git n’a pas pu calculer la topologie.");
+                : throw ProcessFailure("Git could not compute the topology.");
         }
 
         var current = GitOutputParser.ParseAheadBehind(result.StandardOutput);
@@ -130,7 +130,7 @@ internal sealed class GitTopologyReader(
             cancellationToken);
         if (result.ExitCode != 0)
         {
-            throw ProcessFailure("Git n’a pas pu comparer deux commits capturés.");
+            throw ProcessFailure("Git could not compare two captured commits.");
         }
 
         var values = GitOutputParser.ParseRevListCounts(result.StandardOutput);
@@ -176,7 +176,7 @@ internal sealed class GitTopologyReader(
             return result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.StandardOutput);
         }
 
-        throw ProcessFailure("Git n’a pas pu déterminer la base commune.");
+        throw ProcessFailure("Git could not determine the merge base.");
     }
 
     private Task<GitCommandResult> RunAsync(

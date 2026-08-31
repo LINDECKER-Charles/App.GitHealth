@@ -5,7 +5,7 @@ import {
   mergedActiveUntilDays,
   mergedInactiveAfterDays,
 } from '../../../core/branches/branch-policy';
-import { plural } from '../../../core/workspace/plural';
+import { pluralMessage } from '../../../core/i18n/plural-message';
 import { DsBadge } from '../../../ui/core/ds-badge';
 import { DsButton } from '../../../ui/core/ds-button';
 import { DsIcon } from '../../../ui/core/ds-icon';
@@ -29,9 +29,8 @@ import {
 } from './activity-register';
 
 const flagIconSize = 12;
-const dayUnit = 'jour';
 
-/** Politique de repli : elle n'est lue que le temps que le projet remonte de l'API. */
+/** Fallback policy: it is only read for as long as the project takes to come back from the API. */
 const defaultPolicy: PolicySnapshot = {
   activeUntilDays: 30,
   inactiveAfterDays: 90,
@@ -45,8 +44,8 @@ interface CountBadge {
 }
 
 /**
- * Registre d'activité : les deux curseurs sont un bac à sable local — ils rejouent
- * la règle du serveur sur le snapshot courant sans jamais écrire la politique.
+ * Activity register: the two sliders are a local sandbox — they replay the server rule on the
+ * current snapshot without ever writing the policy.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,8 +63,8 @@ export class ActivityView {
   protected readonly mergedInactiveAfterDays = mergedInactiveAfterDays;
 
   /**
-   * Comparée par valeurs : chaque relecture du projet reconstruit l'objet, et sans cela
-   * le brouillon des curseurs serait remis à zéro après la moindre analyse.
+   * Compared by value: every reread of the project rebuilds the object, and without this the
+   * slider draft would be reset after the slightest analysis.
    */
   private readonly savedPolicy = computed<PolicySnapshot>(
     () => this.captures.snapshot()?.policy ?? defaultPolicy,
@@ -108,11 +107,9 @@ export class ActivityView {
   protected readonly countBadges = computed(() => toCountBadges(activityCounts(this.rows())));
   protected readonly activeValue = computed(() => String(this.draft().activeUntilDays));
   protected readonly inactiveValue = computed(() => String(this.draft().inactiveAfterDays));
-  protected readonly activeValueText = computed(() =>
-    plural(this.draft().activeUntilDays, dayUnit),
-  );
+  protected readonly activeValueText = computed(() => dayValueText(this.draft().activeUntilDays));
   protected readonly inactiveValueText = computed(() =>
-    plural(this.draft().inactiveAfterDays, dayUnit),
+    dayValueText(this.draft().inactiveAfterDays),
   );
 
   protected readonly isDirty = computed(() => {
@@ -125,8 +122,8 @@ export class ActivityView {
   });
 
   protected readonly savedLabel = computed(() => {
-    const saved = this.savedPolicy();
-    return `active ≤ ${saved.activeUntilDays} j · inactive > ${saved.inactiveAfterDays} j`;
+    const { activeUntilDays, inactiveAfterDays } = this.savedPolicy();
+    return $localize`:@@activity.view.savedPolicy:active ≤ ${activeUntilDays}:active: d · inactive > ${inactiveAfterDays}:inactive: d`;
   });
 
   protected changeActive(event: Event): void {
@@ -142,8 +139,8 @@ export class ActivityView {
   }
 
   /**
-   * L'écrêtage étant invisible pour le curseur natif, la valeur retenue lui est
-   * réécrite : sans cela le pouce continuerait au-delà de l'écart minimal.
+   * Clamping being invisible to the native slider, the value kept is written back to it:
+   * without that the thumb would carry on past the minimum gap.
    */
   private moveThreshold(event: Event, moved: MovedThreshold): void {
     const input = event.target as HTMLInputElement;
@@ -154,7 +151,7 @@ export class ActivityView {
   }
 }
 
-/** Deux politiques identiques champ à champ : l'identité de l'objet ne dit rien du contenu. */
+/** Two policies identical field by field: object identity says nothing about the content. */
 function isSamePolicy(left: PolicySnapshot, right: PolicySnapshot): boolean {
   return (
     left.activeUntilDays === right.activeUntilDays &&
@@ -174,14 +171,29 @@ function withThreshold(draft: ThresholdDraft, days: number, moved: MovedThreshol
     : { activeUntilDays: draft.activeUntilDays, inactiveAfterDays: days };
 }
 
+/** Spoken by the slider, so the unit is a whole word rather than the axis abbreviation. */
+function dayValueText(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@activity.view.dayValueOne:${count}:count: day`,
+    other: $localize`:@@activity.view.dayValueMany:${count}:count: days`,
+  });
+}
+
 function toCountBadges(counts: ActivityCounts): readonly CountBadge[] {
+  const { active, aging, inactive, unknown } = counts;
   const badges: CountBadge[] = [
-    { tone: 'success', label: plural(counts.active, 'active') },
-    { tone: 'warning', label: plural(counts.aging, 'vieillissante') },
-    { tone: 'danger', label: plural(counts.inactive, 'inactive') },
+    { tone: 'success', label: $localize`:@@activity.view.count.active:${active}:count: active` },
+    { tone: 'warning', label: $localize`:@@activity.view.count.ageing:${aging}:count: ageing` },
+    {
+      tone: 'danger',
+      label: $localize`:@@activity.view.count.inactive:${inactive}:count: inactive`,
+    },
   ];
-  if (counts.unknown > 0) {
-    badges.push({ tone: 'neutral', label: plural(counts.unknown, 'inconnue') });
+  if (unknown > 0) {
+    badges.push({
+      tone: 'neutral',
+      label: $localize`:@@activity.view.count.unknown:${unknown}:count: unknown`,
+    });
   }
 
   return badges;

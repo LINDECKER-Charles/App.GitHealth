@@ -67,7 +67,7 @@ internal sealed class LoopbackRequestValidator
         if (!TryNormalizeOrigin(origin, out var normalized))
         {
             throw new FormatException(
-                "L'origine configurée doit être une origine HTTP loopback.");
+                "The configured origin must be an HTTP loopback origin.");
         }
 
         return normalized;

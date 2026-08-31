@@ -1,7 +1,10 @@
 import { displayReference } from '../../../core/branches/branch-labels';
 import { matchPattern } from '../../../core/branches/branch-policy';
+import { sourceLocale } from '../../../core/i18n/locale';
 
-/** Les deux listes de motifs d'une politique, distinguées par le dialogue de sélection. */
+const nameCollator = new Intl.Collator(sourceLocale);
+
+/** The two pattern lists of a policy, told apart by the picker dialog. */
 export type BranchPatternKind = 'protected' | 'excluded';
 
 export interface BranchPickerOption {
@@ -11,8 +14,8 @@ export interface BranchPickerOption {
 }
 
 /**
- * Une référence déjà couverte reste visible mais passe en fin de liste : l'utilisateur lit
- * le motif qui la capture au lieu de la chercher en vain parmi les cases cochables.
+ * A reference already covered stays visible but moves to the end of the list: the reader
+ * sees the pattern that catches it instead of hunting for it among the tickable boxes.
  */
 export function buildBranchOptions(
   references: readonly string[],
@@ -34,7 +37,7 @@ function toOption(referenceName: string, patterns: readonly string[]): BranchPic
   };
 }
 
-/** Le nom court sert à chercher « release », le nom complet à chercher « refs/remotes ». */
+/** The short name searches for "release", the full name for "refs/remotes". */
 function retains(option: BranchPickerOption, needle: string): boolean {
   return (
     needle.length === 0 ||
@@ -47,6 +50,6 @@ function byAvailabilityThenName(left: BranchPickerOption, right: BranchPickerOpt
   const leftRank = left.coveredBy === null ? 0 : 1;
   const rightRank = right.coveredBy === null ? 0 : 1;
   return leftRank === rightRank
-    ? left.displayName.localeCompare(right.displayName)
+    ? nameCollator.compare(left.displayName, right.displayName)
     : leftRank - rightRank;
 }

@@ -16,7 +16,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { GitHealthApiClient } from '../../../core/api/git-health-api-client';
-import { plural } from '../../../core/workspace/plural';
+import { pluralMessage } from '../../../core/i18n/plural-message';
 import { DsBadge } from '../../../ui/core/ds-badge';
 import { DsButton } from '../../../ui/core/ds-button';
 import { DsIcon } from '../../../ui/core/ds-icon';
@@ -27,13 +27,13 @@ import { DsCallout } from '../../../ui/surfaces/ds-callout';
 import { BranchPatternKind, BranchPickerOption, buildBranchOptions } from './branch-picker-options';
 
 const kindSubtitles: Readonly<Record<BranchPatternKind, string>> = {
-  protected: 'Motif protégé',
-  excluded: 'Motif d’exclusion',
+  protected: $localize`:@@branchPicker.kind.protected:Protected pattern`,
+  excluded: $localize`:@@branchPicker.kind.excluded:Exclusion pattern`,
 };
 
 /**
- * Le choix n'alimente qu'un champ du formulaire de politiques : le dialogue reste local
- * plutôt que de traverser le service des surfaces globales pour réécrire un brouillon.
+ * The choice only feeds one field of the policy form: the dialog stays local rather than
+ * going through the global surface service to rewrite a draft.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,9 +69,7 @@ export class BranchPicker {
     buildBranchOptions(this.references(), this.patterns(), this.query()),
   );
   protected readonly selectedCount = computed(() => this.selection().size);
-  protected readonly confirmLabel = computed(
-    () => `Ajouter ${plural(this.selectedCount(), 'motif')}`,
-  );
+  protected readonly confirmLabel = computed(() => confirmMessage(this.selectedCount()));
 
   constructor() {
     afterNextRender(() => this.searchField().nativeElement.focus());
@@ -119,7 +117,7 @@ export class BranchPicker {
     }
   }
 
-  /** La liste peut compter des centaines de références : le curseur clavier doit rester visible. */
+  /** The list can hold hundreds of references: the keyboard cursor must stay visible. */
   private revealHighlighted(): void {
     this.rowElements()[this.highlighted()]?.nativeElement.scrollIntoView({ block: 'nearest' });
   }
@@ -137,11 +135,19 @@ export class BranchPicker {
       });
   }
 
-  /** Dépôt injoignable : la dernière capture reste utilisable, à condition de l'annoncer. */
+  /** Repository unreachable: the last capture stays usable, provided it is announced. */
   private useLastCapture(): void {
     this.isFromLastCapture.set(true);
     this.references.set(this.fallbackReferences());
   }
+}
+
+/** Each count carries its whole sentence: word order around a number is not universal. */
+function confirmMessage(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@branchPicker.confirmOne:Add ${count}:count: pattern`,
+    other: $localize`:@@branchPicker.confirmMany:Add ${count}:count: patterns`,
+  });
 }
 
 function applySelection(

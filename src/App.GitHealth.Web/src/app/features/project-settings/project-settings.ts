@@ -24,7 +24,7 @@ import { PolicyMatch, PolicyStat, projectMatches, projectStats } from './policy-
 const minimumBandDays = 120;
 const bandHeadroom = 1.6;
 
-/** Vue Politiques : seuils, motifs, relocalisation et projection sur le dernier snapshot. */
+/** Policies view: thresholds, patterns, relocation and projection on the last snapshot. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -86,8 +86,8 @@ export class ProjectSettings {
 
   protected readonly dirtyLabel = computed(() =>
     this.isDirty()
-      ? 'Modifications non enregistrées — l’aperçu est déjà à jour.'
-      : 'Politique à jour.',
+      ? $localize`:@@settings.dirty.pending:Unsaved changes — the preview is already up to date.`
+      : $localize`:@@settings.dirty.clean:Policy up to date.`,
   );
 
   protected readonly bands = computed(() => {
@@ -109,7 +109,7 @@ export class ProjectSettings {
 
   protected readonly repositoryPath = computed(() => this.context.project()?.repositoryPath ?? '');
 
-  /** Le dépôt peut être injoignable : la dernière capture reste une liste de références. */
+  /** The repository may be unreachable: the last capture is still a list of references. */
   protected readonly capturedReferences = computed<readonly string[]>(() =>
     this.branches().map((branch) => branch.referenceName),
   );
@@ -152,7 +152,7 @@ export class ProjectSettings {
     this.pickerKind.set(null);
   }
 
-  /** Une branche choisie devient un motif exact : le glob reste réservé à la saisie manuelle. */
+  /** A picked branch becomes an exact pattern: globs stay reserved for manual entry. */
   protected addPicked(references: readonly string[]): void {
     const kind = this.pickerKind();
     this.closePicker();
@@ -179,7 +179,7 @@ export class ProjectSettings {
 
     this.context.savePolicy(
       this.draft(),
-      'Politique enregistrée · les SHA et les compteurs sont inchangés',
+      $localize`:@@settings.toast.saved:Policy saved · the SHAs and the counters are unchanged`,
     );
   }
 

@@ -4,9 +4,9 @@ using App.GitHealth.Api.Git.Paths;
 namespace App.GitHealth.Api.Features.Discovery;
 
 /// <summary>
-/// Repère les dépôts Git contenus dans une arborescence. Le parcours s'arrête dès qu'un dépôt
-/// est reconnu : ses sous-modules et ses worktrees imbriqués ne sont donc jamais proposés
-/// séparément.
+/// Locates the Git repositories contained in a tree. The walk stops as soon as a repository
+/// is recognised: its nested submodules and worktrees are therefore never offered
+/// separately.
 /// </summary>
 internal static class RepositoryFinder
 {
@@ -20,7 +20,7 @@ internal static class RepositoryFinder
     private const string BareObjectsName = "objects";
     private const string BareReferencesName = "refs";
 
-    /// <summary>Dossiers profonds sans intérêt pour la détection, écartés avant descente.</summary>
+    /// <summary>Deep folders of no interest to the detection, skipped before descending.</summary>
     private static readonly string[] SkippedDirectoryNames =
     [
         "node_modules",
@@ -99,13 +99,13 @@ internal static class RepositoryFinder
         }
     }
 
-    /// <summary>Un dossier caché ou de build ne contient pas de dépôt à proposer.</summary>
+    /// <summary>A hidden or build folder contains no repository to offer.</summary>
     private static bool IsSkipped(string name) =>
         name.StartsWith('.') || SkippedDirectoryNames.Contains(name, StringComparer.Ordinal);
 
     private static bool IsRepository(string path)
     {
-        // Un worktree lié et un sous-module portent un fichier `.git`, pas un dossier.
+        // A linked worktree and a submodule carry a `.git` file, not a folder.
         var metadataPath = Path.Combine(path, GitMetadataName);
         return Directory.Exists(metadataPath)
             || File.Exists(metadataPath)

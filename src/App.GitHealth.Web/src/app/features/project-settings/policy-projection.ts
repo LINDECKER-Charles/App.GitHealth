@@ -29,8 +29,8 @@ const projectedKinds: readonly RecommendationKind[] = [
 ];
 
 /**
- * Compare la politique en cours d'édition aux recommandations déjà renvoyées par
- * l'API pour le même snapshot. La référence est donc la politique enregistrée.
+ * Compares the policy being edited to the recommendations the API already returned for
+ * the same snapshot. The baseline is therefore the saved policy.
  */
 export function projectStats(
   branches: readonly BranchSnapshotResponse[],
@@ -60,18 +60,23 @@ export function projectMatches(
 
 function toMatch(branch: BranchSnapshotResponse, policy: PolicySnapshot): PolicyMatch | null {
   if (matchPattern(policy.excludedPatterns, branch.referenceName) !== null) {
-    return { referenceName: branch.referenceName, flag: 'Exclue', tone: 'neutral' };
+    const flag = $localize`:@@settings.match.excluded:Excluded`;
+    return { referenceName: branch.referenceName, flag, tone: 'neutral' };
   }
 
-  return matchPattern(policy.protectedPatterns, branch.referenceName) === null
-    ? null
-    : { referenceName: branch.referenceName, flag: 'Protégée', tone: 'brand' };
+  if (matchPattern(policy.protectedPatterns, branch.referenceName) === null) {
+    return null;
+  }
+
+  const flag = $localize`:@@settings.match.protected:Protected`;
+  return { referenceName: branch.referenceName, flag, tone: 'brand' };
 }
 
 function formatDelta(delta: number): string {
   if (delta === 0) {
-    return 'inchangé';
+    return $localize`:@@settings.delta.unchanged:unchanged`;
   }
 
-  return `${delta > 0 ? '+' : '−'}${Math.abs(delta)} vs politique enregistrée`;
+  const value = `${delta > 0 ? '+' : '−'}${Math.abs(delta)}`;
+  return $localize`:@@settings.delta.vsSaved:${value} vs saved policy`;
 }

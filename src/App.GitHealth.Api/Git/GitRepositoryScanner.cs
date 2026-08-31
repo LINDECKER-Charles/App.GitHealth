@@ -190,7 +190,7 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
 
         throw new GitProcessException(
             RepositoryErrorCode.InvalidReference,
-            "La référence choisie n’existe pas dans le dépôt.");
+            "The chosen baseline does not exist in the repository.");
     }
 
     private static List<CapturedReference> SelectBranches(

@@ -14,7 +14,7 @@ const glyphs: Readonly<Record<string, string>> = {
   right: '→',
 };
 
-/** GitHealth se pilote au clavier : les raccourcis sont affichés, jamais cachés. */
+/** GitHealth is driven from the keyboard: the shortcuts are shown, never hidden. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'etb-kbd-group' },

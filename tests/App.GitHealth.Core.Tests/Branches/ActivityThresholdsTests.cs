@@ -7,8 +7,8 @@ public sealed class ActivityThresholdsTests
     private static readonly DateTimeOffset Now =
         new(2026, 8, 28, 12, 0, 0, TimeSpan.Zero);
 
-    // Ces bornes valent pour une branche qui porte des commits propres : elle seule
-    // est mesurée sur l'échelle du projet.
+    // These bounds apply to a branch that carries its own commits: it alone is
+    // measured on the project scale.
     [Theory]
     [InlineData(30, ActivityStatus.Active)]
     [InlineData(31, ActivityStatus.Aging)]

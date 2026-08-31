@@ -21,7 +21,7 @@ export class GitHealthApp {
 
   public async start(): Promise<void> {
     if (this.process !== undefined) {
-      throw new Error("GitHealth est déjà démarré.");
+      throw new Error("GitHealth is already running.");
     }
 
     const port = await availablePort();
@@ -70,7 +70,7 @@ function startProcess(
     process.env["GITHEALTH_E2E_PUBLISH"] ?? defaultPublishDirectory;
   const assemblyPath = resolve(publishDirectory, "githealth.dll");
   if (!existsSync(assemblyPath)) {
-    throw new Error(`Publication E2E introuvable : ${assemblyPath}`);
+    throw new Error(`E2E publication not found: ${assemblyPath}`);
   }
 
   return spawn(
@@ -93,7 +93,7 @@ async function availablePort(): Promise<number> {
   await once(server, "listening");
   const address = server.address();
   if (address === null || typeof address === "string") {
-    throw new Error("Aucun port loopback disponible.");
+    throw new Error("No loopback port available.");
   }
 
   server.close();
@@ -114,12 +114,12 @@ async function waitForHealth(
         return;
       }
     } catch {
-      // Le processus peut ne pas encore avoir ouvert son socket.
+      // The process may not have opened its socket yet.
     }
     await delay(200);
   }
 
-  throw new Error(`GitHealth n'a pas démarré.\n${logs()}`);
+  throw new Error(`GitHealth did not start.\n${logs()}`);
 }
 
 function delay(milliseconds: number): Promise<void> {

@@ -39,15 +39,24 @@ import { DsInput } from '../../ui/forms/ds-input';
 import { DsSelect, SelectOption } from '../../ui/forms/ds-select';
 import { DsSegmentedControl } from '../../ui/surfaces/ds-segmented-control';
 import { DirectoryBrowser } from './directory-browser';
-import { displayReference } from '../../core/branches/branch-labels';
+import {
+  displayReference,
+  referenceSource,
+  referenceSourceLabels,
+} from '../../core/branches/branch-labels';
 
 const validationDelayMs = 400;
 
 const scopeOptions: readonly SelectOption[] = [
-  { value: 'refs/*', label: 'Toutes' },
-  { value: localBranchNamespace, label: 'Locales' },
-  { value: remoteBranchNamespace, label: 'Suivi distant' },
+  { value: 'refs/*', label: $localize`:@@addRepository.scope.all:All` },
+  { value: localBranchNamespace, label: $localize`:@@addRepository.scope.local:Local` },
+  {
+    value: remoteBranchNamespace,
+    label: $localize`:@@addRepository.scope.remote:Remote-tracking`,
+  },
 ];
+
+const createdToastMessage = $localize`:@@addRepository.toast.created:Repository added · run the first analysis to measure it`;
 
 type Validation =
   | { readonly kind: 'idle' }
@@ -107,7 +116,7 @@ export class AddRepositoryDialog {
     () =>
       this.repository()?.references.map((reference) => ({
         value: reference,
-        label: `${displayReference(reference)} (${reference.startsWith('refs/remotes/') ? 'distante' : 'locale'})`,
+        label: referenceOptionLabel(reference),
       })) ?? [],
   );
 
@@ -134,7 +143,7 @@ export class AddRepositoryDialog {
       .subscribe((result) => this.applyValidation(result));
   }
 
-  /** Dialogue système quand la coque de bureau l'offre, navigateur de dossiers sinon. */
+  /** System dialog when the desktop shell offers one, folder browser otherwise. */
   protected browse(): void {
     if (!this.desktop.isAvailable) {
       this.isBrowsing.set(true);
@@ -179,12 +188,17 @@ export class AddRepositoryDialog {
         next: (project) => {
           this.store.upsert(project);
           this.close.emit();
-          this.toast.show('Dépôt ajouté · lance la première analyse pour le mesurer');
+          this.toast.show(createdToastMessage);
           void this.router.navigate(['/projects', project.id]);
         },
         error: (error: unknown) => {
           this.isCreating.set(false);
-          this.createError.set(apiErrorMessage(error, 'Le dépôt n’a pas pu être enregistré.'));
+          this.createError.set(
+            apiErrorMessage(
+              error,
+              $localize`:@@addRepository.error.create:The repository could not be saved.`,
+            ),
+          );
         },
       });
   }
@@ -201,7 +215,10 @@ export class AddRepositoryDialog {
       catchError((error: unknown) =>
         of<Validation>({
           kind: 'error',
-          message: apiErrorMessage(error, 'Ce chemin ne peut pas être lu comme un dépôt Git.'),
+          message: apiErrorMessage(
+            error,
+            $localize`:@@addRepository.error.path:This path cannot be read as a Git repository.`,
+          ),
         }),
       ),
     );
@@ -219,6 +236,11 @@ export class AddRepositoryDialog {
     this.referenceName.set(reference);
     this.scope.set(branchNamespaceFor(reference));
   }
+}
+
+function referenceOptionLabel(reference: string): string {
+  const source = referenceSourceLabels[referenceSource(reference)];
+  return `${displayReference(reference)} (${source})`;
 }
 
 function lastSegment(path: string): string {

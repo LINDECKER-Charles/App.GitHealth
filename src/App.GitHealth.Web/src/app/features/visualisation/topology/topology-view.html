@@ -1,10 +1,10 @@
 <section class="viz-card">
   <header class="viz-card-head">
     <div class="viz-card-identity">
-      <div class="viz-card-title">Plan de topologie</div>
-      <div class="viz-card-subtitle">
-        chaque branche part de {{ referenceLabel() }} et s’en écarte selon ses commits · survole
-        pour lire, clique pour épingler
+      <div class="viz-card-title" i18n="@@topology.card.title">Topology map</div>
+      <div class="viz-card-subtitle" i18n="@@topology.card.subtitle">
+        each branch starts from {{ referenceLabel() }} and moves away from it as its commits pile up
+        · hover to read, click to pin
       </div>
     </div>
     <span class="viz-card-spacer"></span>
@@ -18,7 +18,8 @@
     </div>
     <ds-segmented-control
       size="sm"
-      aria-label="Branches montrées par la carte"
+      i18n-aria-label="@@topology.filter.aria"
+      aria-label="Branches shown by the map"
       [options]="filterOptions"
       [value]="filter()"
       (valueChange)="changeFilter($event)"
@@ -28,15 +29,21 @@
   <div class="viz-card-body">
     @if (captures.isLoading()) {
       <div class="viz-empty">
-        <ds-spinner label="Lecture de la dernière capture" [size]="spinnerSize" />
+        <ds-spinner
+          i18n-label="@@topology.loading"
+          label="Reading the last capture"
+          [size]="spinnerSize"
+        />
       </div>
     } @else if (map(); as plan) {
       @if (plan.counts.total === 0) {
         <div class="viz-empty">
           <ds-empty-state
             icon="git-branch"
-            title="Aucune branche à cartographier"
-            description="La dernière capture ne contient aucune branche à comparer à la référence."
+            i18n-title="@@topology.empty.noBranch.title"
+            title="No branch to map"
+            i18n-description="@@topology.empty.noBranch.description"
+            description="The last capture contains no branch to compare to the baseline."
           />
         </div>
       } @else {
@@ -139,39 +146,43 @@
           </div>
 
           <aside class="topology-fiche">
-            @if (card(); as fiche) {
+            @if (card(); as focused) {
               <div class="topology-fiche-card">
                 <div class="topology-fiche-head">
-                  <span class="topology-fiche-name">{{ fiche.name }}</span>
-                  @if (fiche.isPinned) {
-                    <span class="topology-pin">épinglée</span>
+                  <span class="topology-fiche-name">{{ focused.name }}</span>
+                  @if (focused.isPinned) {
+                    <span class="topology-pin" i18n="@@topology.card.pinned">pinned</span>
                   }
                 </div>
                 <div class="topology-fiche-badges">
-                  <ds-badge size="sm" [tone]="fiche.topologyTone">{{
-                    fiche.topologyLabel
+                  <ds-badge size="sm" [tone]="focused.topologyTone">{{
+                    focused.topologyLabel
                   }}</ds-badge>
                   <ds-badge
                     size="sm"
-                    [tone]="fiche.recommendationTone"
-                    [icon]="fiche.recommendationIcon"
-                    >{{ fiche.recommendationLabel }}</ds-badge
+                    [tone]="focused.recommendationTone"
+                    [icon]="focused.recommendationIcon"
+                    >{{ focused.recommendationLabel }}</ds-badge
                   >
                 </div>
-                <ds-key-value-list [items]="fiche.details" />
+                <ds-key-value-list [items]="focused.details" />
                 <div class="topology-why">
-                  <div class="viz-column-label">Pourquoi</div>
-                  <p class="topology-why-body">{{ fiche.reason }}</p>
+                  <div class="viz-column-label" i18n="@@topology.card.whyTitle">Why</div>
+                  <p class="topology-why-body">{{ focused.reason }}</p>
                 </div>
-                <p class="topology-hint">{{ fiche.hint }}</p>
+                <p class="topology-hint">{{ focused.hint }}</p>
               </div>
             } @else {
-              <div class="viz-column-label">Ce que montre la carte</div>
+              <div class="viz-column-label" i18n="@@topology.overview.title">
+                What the map shows
+              </div>
               <p class="topology-lead">{{ overview() }}</p>
-              <p class="topology-lead">
-                La longueur suit l’écart de commits ; le point creux marque le sommet de la branche.
+              <p class="topology-lead" i18n="@@topology.overview.lengthNote">
+                The length follows the commit difference; the hollow dot marks the branch tip.
               </p>
-              <p class="topology-hint">Survole une branche pour ouvrir sa fiche.</p>
+              <p class="topology-hint" i18n="@@topology.overview.hint">
+                Hover a branch to open its card.
+              </p>
             }
           </aside>
         </div>
@@ -180,8 +191,10 @@
       <div class="viz-empty">
         <ds-empty-state
           icon="git-branch"
-          title="Aucune capture disponible"
-          description="Lance une analyse depuis l’en-tête du dépôt pour dessiner son plan de topologie."
+          i18n-title="@@topology.empty.noCapture.title"
+          title="No capture available"
+          i18n-description="@@topology.empty.noCapture.description"
+          description="Run an analysis from the repository header to draw its topology map."
         />
       </div>
     }

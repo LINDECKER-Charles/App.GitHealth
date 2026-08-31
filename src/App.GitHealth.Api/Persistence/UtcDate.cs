@@ -6,7 +6,7 @@ internal static class UtcDate
     {
         if (value.Offset != TimeSpan.Zero)
         {
-            throw new ArgumentException("La date doit être en UTC.", parameterName);
+            throw new ArgumentException("The date must be in UTC.", parameterName);
         }
     }
 }

@@ -6,16 +6,19 @@ import {
   recommendationLabels,
   recommendationTones,
   referenceSource,
+  referenceSourceLabels,
   relativeAge,
   topologyLabels,
   topologyTones,
 } from '../../core/branches/branch-labels';
 import { IconName, Tone } from '../../ui/icon-name';
 
-/** Ligne prête à afficher : le gabarit ne fait plus aucun calcul. */
+/** Row ready to display: the template performs no computation at all. */
 export interface BranchRow {
   readonly id: string;
   readonly name: string;
+  readonly selectLabel: string;
+  readonly explainLabel: string;
   readonly subtitle: string;
   readonly isProtected: boolean;
   readonly isExcluded: boolean;
@@ -32,10 +35,13 @@ export interface BranchRow {
 }
 
 export function toRow(branch: BranchSnapshotResponse, isSelected: boolean): BranchRow {
-  const source = referenceSource(branch.referenceName);
+  const source = referenceSourceLabels[referenceSource(branch.referenceName)];
+  const name = displayReference(branch.referenceName);
   return {
     id: branch.id,
-    name: displayReference(branch.referenceName),
+    name,
+    selectLabel: $localize`:@@dashboard.row.selectAria:Select ${name}:name:`,
+    explainLabel: $localize`:@@dashboard.row.explainAria:Explain ${name}:name:`,
     subtitle: branch.tipAuthor === null ? source : `${branch.tipAuthor} · ${source}`,
     isProtected: branch.isProtected,
     isExcluded: branch.isExcluded,

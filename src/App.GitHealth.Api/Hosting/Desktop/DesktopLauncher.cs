@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 namespace App.GitHealth.Api.Hosting.Desktop;
 
 /// <summary>
-/// Démarre l'hôte loopback puis ouvre l'interface demandée.
+/// Starts the loopback host, then opens the requested interface.
 /// </summary>
 /// <remarks>
-/// Tout reste sur le thread appelant, qui est le thread principal du processus : la
-/// fenêtre exige l'apartment STA sur Windows et la boucle principale sur macOS. Un
-/// <c>await</c> reprendrait sur un thread du pool, d'où l'attente explicite des tâches
-/// de l'hôte plutôt qu'une méthode asynchrone.
+/// Everything stays on the calling thread, which is the process main thread: the
+/// window requires the STA apartment on Windows and the main loop on macOS. An
+/// <c>await</c> would resume on a pool thread, hence the explicit wait on the host
+/// tasks rather than an asynchronous method.
 /// </remarks>
 internal static class DesktopLauncher
 {
@@ -20,7 +20,7 @@ internal static class DesktopLauncher
         ArgumentNullException.ThrowIfNull(options);
         app.StartAsync().GetAwaiter().GetResult();
         var address = LauncherOptions.CreateApplicationAddress(BoundPort(app));
-        Console.WriteLine($"GitHealth est disponible sur {address}");
+        Console.WriteLine($"GitHealth is available at {address}");
         if (OpenInterface(DesktopDisplayModeResolver.Resolve(options), address))
         {
             app.StopAsync().GetAwaiter().GetResult();
@@ -30,7 +30,7 @@ internal static class DesktopLauncher
         app.WaitForShutdownAsync().GetAwaiter().GetResult();
     }
 
-    /// <returns>Vrai quand une fenêtre a tenu la session et vient d'être fermée.</returns>
+    /// <returns>True when a window held the session and has just been closed.</returns>
     private static bool OpenInterface(DesktopDisplayMode mode, Uri address)
     {
         if (mode == DesktopDisplayMode.None)
@@ -74,6 +74,6 @@ internal static class DesktopLauncher
         var addresses = server.Features.Get<IServerAddressesFeature>()?.Addresses;
         var address = addresses?.Select(value => new Uri(value)).SingleOrDefault();
         return address?.Port
-            ?? throw new InvalidOperationException("Le port attribué est introuvable.");
+            ?? throw new InvalidOperationException("The assigned port cannot be found.");
     }
 }

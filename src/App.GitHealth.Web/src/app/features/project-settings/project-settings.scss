@@ -160,7 +160,7 @@
   gap: 6px;
 }
 
-/* La colonne des motifs est étroite : le choix de branche passe sous le champ. */
+/* The pattern column is narrow: the branch picker drops below the field. */
 .pattern-form {
   flex-wrap: wrap;
 }
@@ -179,7 +179,7 @@
   min-width: 140px;
 }
 
-/* Une fois passé à la ligne, le bouton occupe la largeur : le repli semble voulu. */
+/* Once wrapped, the button fills the width: the fold then looks intentional. */
 .pattern-pick {
   flex: 1;
 }

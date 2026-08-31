@@ -4,15 +4,13 @@ import { apiErrorMessage } from '../api/api-error';
 import { GitHealthApiClient } from '../api/git-health-api-client';
 import { UpdateStatus } from '../api/api.models';
 
-const applyFailureMessage = 'La mise à jour n’a pas pu être appliquée.';
+const applyFailureMessage = $localize`:@@apiError.update.apply:The update could not be applied.`;
 
-const notReadyMessage =
-  'Aucune mise à jour n’a pu être téléchargée. La source des releases est peut-être ' +
-  'injoignable.';
+const notReadyMessage = $localize`:@@apiError.update.notReady:No update could be downloaded. The release source may be unreachable.`;
 
 /**
- * État des mises à jour de l'application. Hors installation gérée — Docker, mode
- * navigateur, Linux — l'API répond « non pris en charge » et rien ne s'affiche.
+ * State of the application updates. Outside a managed installation — Docker, browser
+ * mode, Linux — the API answers "unsupported" and nothing is shown.
  */
 @Injectable({ providedIn: 'root' })
 export class UpdateStore {
@@ -32,7 +30,7 @@ export class UpdateStore {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (status) => this.status.set(status),
-        // Une mise à jour indisponible n'est pas une panne : le bouton reste absent.
+        // An unavailable update is not a failure: the button simply stays absent.
         error: () => this.status.set(null),
       });
   }
@@ -54,9 +52,9 @@ export class UpdateStore {
   }
 
   /**
-   * L'hôte accepte sans corps quand il va relancer l'application : cette page ne survit
-   * alors pas à l'appel. Un statut en réponse signifie l'inverse — rien n'était
-   * applicable, et il dit pourquoi.
+   * The host accepts with no body when it is about to restart the application: this page
+   * then does not survive the call. A status in the response means the opposite — nothing
+   * was applicable, and it says why.
    */
   private settle(status: UpdateStatus | null): void {
     if (status === null) {

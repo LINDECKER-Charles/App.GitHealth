@@ -8,18 +8,18 @@ internal sealed class PersistenceOptionsValidator : IValidateOptions<Persistence
     {
         if (string.IsNullOrWhiteSpace(options.DatabasePath))
         {
-            return ValidateOptionsResult.Fail("Le chemin de la base SQLite est obligatoire.");
+            return ValidateOptionsResult.Fail("The SQLite database path is required.");
         }
 
         if (options.WriteTimeoutSeconds is < PersistenceOptions.MinimumWriteTimeoutSeconds
             or > PersistenceOptions.MaximumWriteTimeoutSeconds)
         {
             return ValidateOptionsResult.Fail(
-                "Le délai d’écriture doit être compris entre 1 et 60 s.");
+                "The write timeout must be between 1 and 60 s.");
         }
 
         return options.RetentionDays is <= 0
-            ? ValidateOptionsResult.Fail("La rétention doit être positive ou désactivée.")
+            ? ValidateOptionsResult.Fail("The retention must be positive or disabled.")
             : ValidateOptionsResult.Success;
     }
 }

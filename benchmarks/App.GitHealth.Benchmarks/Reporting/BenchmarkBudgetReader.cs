@@ -33,7 +33,7 @@ internal sealed class BenchmarkBudgetReader
         if (document.SchemaVersion != 1)
         {
             throw new InvalidOperationException(
-                $"Version de budgets non prise en charge : {document.SchemaVersion}.");
+                $"Unsupported budgets version: {document.SchemaVersion}.");
         }
 
         return new BenchmarkBudgetReader(CreateLookup(document.Budgets), isLoaded: true);
@@ -48,7 +48,7 @@ internal sealed class BenchmarkBudgetReader
             stream,
             SerializerOptions,
             cancellationToken)
-            ?? throw new InvalidOperationException("Le fichier de budgets est vide.");
+            ?? throw new InvalidOperationException("The budgets file is empty.");
     }
 
     private static Dictionary<(int BranchCount, string Phase), double> CreateLookup(
@@ -62,7 +62,7 @@ internal sealed class BenchmarkBudgetReader
             if (!budgets.TryAdd(key, budget.MaximumP95Milliseconds))
             {
                 throw new InvalidOperationException(
-                    $"Budget dupliqué pour {budget.BranchCount}/{budget.Phase}.");
+                    $"Duplicate budget for {budget.BranchCount}/{budget.Phase}.");
             }
         }
 
@@ -84,7 +84,7 @@ internal sealed class BenchmarkBudgetReader
             || string.IsNullOrWhiteSpace(budget.Phase)
             || budget.MaximumP95Milliseconds <= 0)
         {
-            throw new InvalidOperationException("Une entrée de budget est invalide.");
+            throw new InvalidOperationException("A budget entry is invalid.");
         }
     }
 }

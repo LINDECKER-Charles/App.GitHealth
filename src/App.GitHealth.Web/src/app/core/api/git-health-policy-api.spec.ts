@@ -48,7 +48,7 @@ describe('GitHealthApiClient policy and history', () => {
           referenceName: 'refs/heads/release/1.0',
           isExcluded: false,
           isProtected: true,
-          reason: 'La branche correspond au motif protégé.',
+          reason: 'The branch matches the protected pattern.',
         },
       ],
     };

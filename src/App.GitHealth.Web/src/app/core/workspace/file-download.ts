@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 
-/** Déclenche un téléchargement local : rien ne transite par le réseau. */
+/** Triggers a local download: nothing travels over the network. */
 @Injectable({ providedIn: 'root' })
 export class FileDownloader {
   private readonly document = inject(DOCUMENT);

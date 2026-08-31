@@ -24,7 +24,7 @@ const removeGlyphSize = 10;
 })
 export class DsTag {
   readonly removable = input(false);
-  readonly removeLabel = input('Retirer');
+  readonly removeLabel = input($localize`:@@ui.tag.remove:Remove`);
   readonly remove = output<void>();
 
   protected readonly removeGlyphSize = removeGlyphSize;

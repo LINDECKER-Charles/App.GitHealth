@@ -5,16 +5,16 @@ using Photino.NET;
 namespace App.GitHealth.Api.Hosting.Desktop;
 
 /// <summary>
-/// Pont de messages entre la page et l'hôte, limité à l'ouverture du dialogue de dossier
-/// natif. Le navigateur de dossiers HTML reste servi par l'API : ce pont ne le remplace
-/// que lorsque la fenêtre existe.
+/// Message bridge between the page and the host, limited to opening the native folder
+/// dialog. The HTML folder browser stays served by the API: this bridge only replaces
+/// it when the window exists.
 /// </summary>
 internal static class DesktopFolderBridge
 {
-    /// <summary>Seul type de message accepté ; tout le reste est ignoré en silence.</summary>
+    /// <summary>Only message kind accepted; everything else is silently ignored.</summary>
     public const string PickFolderKind = "pickFolder";
 
-    private const string FolderDialogTitle = "Choisir un dossier";
+    private const string FolderDialogTitle = "Choose a folder";
 
     private static readonly JsonSerializerOptions MessageFormat = new()
     {
@@ -29,8 +29,8 @@ internal static class DesktopFolderBridge
     }
 
     /// <summary>
-    /// Appelé sur le thread de la fenêtre, celui-là même qui pompe la boucle
-    /// d'évènements : le dialogue natif s'ouvre donc sans marshalling ni interblocage.
+    /// Called on the window thread, the very one that pumps the event loop: the native
+    /// dialog therefore opens with no marshalling and no deadlock.
     /// </summary>
     private static void OnMessageReceived(object? sender, string message)
     {
@@ -49,9 +49,9 @@ internal static class DesktopFolderBridge
     }
 
     /// <summary>
-    /// Identifiant d'une demande exploitable — identifiée et reconnue —, sinon
-    /// <see langword="null" />. Un message illisible n'est pas une erreur : la page peut
-    /// en émettre d'autres, et l'hôte n'a pas à en juger.
+    /// Id of a usable request — identified and recognised — otherwise
+    /// <see langword="null" />. An unreadable message is not an error: the page may
+    /// emit others, and the host has no business judging them.
     /// </summary>
     private static string? ReadRequestId(string message)
     {
@@ -81,10 +81,10 @@ internal static class DesktopFolderBridge
         catch (Exception exception) when (exception is ExternalException
             or InvalidOperationException or NotSupportedException or IOException)
         {
-            // Une panne du dialogue ne doit pas tuer la fenêtre : la page reçoit une
-            // annulation et son navigateur de dossiers HTML reste disponible.
+            // A dialog failure must not kill the window: the page receives a
+            // cancellation and its HTML folder browser stays available.
             Console.Error.WriteLine(
-                $"Le dialogue de dossier natif a échoué : {exception.Message}");
+                $"The native folder dialog failed: {exception.Message}");
             return null;
         }
     }

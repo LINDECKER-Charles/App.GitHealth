@@ -8,8 +8,20 @@
   >
     <header class="dialog-heading">
       <span class="dialog-heading-mark"><ds-icon name="folder" [size]="16" /></span>
-      <span id="add-repository-title" class="dialog-heading-title">Ajouter un dépôt</span>
-      <button dsIconButton icon="x" label="Fermer" size="sm" (click)="close.emit()"></button>
+      <span
+        id="add-repository-title"
+        class="dialog-heading-title"
+        i18n="@@addRepository.dialog.title"
+        >Add a repository</span
+      >
+      <button
+        dsIconButton
+        icon="x"
+        i18n-label="@@addRepository.dialog.close"
+        label="Close"
+        size="sm"
+        (click)="close.emit()"
+      ></button>
     </header>
 
     <div class="dialog-body">
@@ -19,32 +31,42 @@
           (selected)="useDirectory($event)"
         />
       } @else {
-        <div class="field-label">Chemin du dépôt</div>
+        <div class="field-label" i18n="@@addRepository.path.label">Repository path</div>
         <div class="path-row">
           <ds-input
             size="md"
             [mono]="true"
             [placeholder]="
               store.runtime()?.mode === 'docker'
-                ? '/repositories/mon-depot'
-                : 'D:\\Projets\\mon-depot'
+                ? '/repositories/my-repository'
+                : 'D:\\Projects\\my-repository'
             "
-            ariaLabel="Chemin du dépôt"
+            i18n-ariaLabel="@@addRepository.path.aria"
+            ariaLabel="Repository path"
             [invalid]="errorMessage() !== null"
             [(value)]="path"
           />
           @if (store.runtime()?.canBrowseDirectories) {
-            <button dsButton size="md" variant="secondary" iconLeft="folder" (click)="browse()">
-              Parcourir
+            <button
+              dsButton
+              size="md"
+              variant="secondary"
+              iconLeft="folder"
+              i18n="@@addRepository.path.browse"
+              (click)="browse()"
+            >
+              Browse
             </button>
           }
         </div>
-        <p class="field-hint">
-          Dépôt standard, bare repository ou worktree lié. Le chemin est vérifié pendant la saisie.
+        <p class="field-hint" i18n="@@addRepository.path.hint">
+          Standard repository, bare repository or linked worktree. The path is checked as you type.
         </p>
 
         @if (isValidating()) {
-          <p class="validation-note" role="status">Lecture du dépôt…</p>
+          <p class="validation-note" role="status" i18n="@@addRepository.validation.loading">
+            Reading the repository…
+          </p>
         } @else if (errorMessage(); as message) {
           <p class="validation-note validation-error" role="alert">{{ message }}</p>
         }
@@ -54,24 +76,39 @@
             <div class="validated-strip">
               <ds-icon name="circle-check" [size]="14" />
               <span>
-                Dépôt reconnu · {{ validated.references.length }} référence{{
-                  validated.references.length > 1 ? 's' : ''
-                }}
-                candidate{{ validated.references.length > 1 ? 's' : '' }} ·
-                {{ validated.isBare ? 'bare repository' : 'dépôt standard' }}
+                <span i18n="@@addRepository.validated.recognised">Repository recognised</span> ·
+                <span
+                  i18n="@@addRepository.validated.referenceCount"
+                  >{validated.references.length, plural,
+                    =1 {1 candidate reference}
+                    other {{{ validated.references.length }} candidate references}
+                  }</span
+                >
+                ·
+                @if (validated.isBare) {
+                  <span i18n="@@addRepository.validated.bare">bare repository</span>
+                } @else {
+                  <span i18n="@@addRepository.validated.standard">standard repository</span>
+                }
               </span>
             </div>
 
             <div class="validated-grid">
               <div>
-                <div class="field-label">Nom affiché</div>
-                <ds-input size="sm" ariaLabel="Nom affiché" [(value)]="displayName" />
+                <div class="field-label" i18n="@@addRepository.displayName.label">Display name</div>
+                <ds-input
+                  size="sm"
+                  i18n-ariaLabel="@@addRepository.displayName.aria"
+                  ariaLabel="Display name"
+                  [(value)]="displayName"
+                />
               </div>
               <div>
-                <div class="field-label">Référence de comparaison</div>
+                <div class="field-label" i18n="@@addRepository.baseline.label">Baseline</div>
                 <ds-select
                   size="sm"
-                  ariaLabel="Référence de comparaison"
+                  i18n-ariaLabel="@@addRepository.baseline.aria"
+                  ariaLabel="Baseline"
                   [options]="referenceOptions()"
                   [(value)]="referenceName"
                 />
@@ -79,13 +116,13 @@
             </div>
 
             <div class="validated-scope">
-              <div class="field-label">Périmètre observé</div>
+              <div class="field-label" i18n="@@addRepository.scope.label">Branch scope</div>
               <ds-segmented-control size="sm" [options]="scopeOptions" [(value)]="scope" />
             </div>
 
-            <p class="field-hint">
-              Seuils initiaux : active jusqu'à {{ defaultActiveUntilDays }} jours, inactive après
-              {{ defaultInactiveAfterDays }} jours. Modifiables à tout moment depuis Politiques.
+            <p class="field-hint" i18n="@@addRepository.thresholds.hint">
+              Initial thresholds: active until {{ defaultActiveUntilDays }} days, inactive after
+              {{ defaultInactiveAfterDays }} days. Adjustable at any time from Policies.
             </p>
           </div>
         }
@@ -94,8 +131,18 @@
 
     @if (!isBrowsing()) {
       <footer class="dialog-footer">
-        <span>Lecture seule. Aucune écriture sur le dépôt.</span>
-        <button dsButton size="md" variant="ghost" (click)="close.emit()">Annuler</button>
+        <span i18n="@@addRepository.footer.note"
+          >Read only. Nothing is written to the repository.</span
+        >
+        <button
+          dsButton
+          size="md"
+          variant="ghost"
+          i18n="@@addRepository.footer.cancel"
+          (click)="close.emit()"
+        >
+          Cancel
+        </button>
         <button
           dsButton
           size="md"
@@ -103,9 +150,10 @@
           iconLeft="play"
           [disabled]="!canCreate()"
           [loading]="isCreating()"
+          i18n="@@addRepository.footer.submit"
           (click)="create()"
         >
-          Ajouter le dépôt
+          Add repository
         </button>
       </footer>
     }

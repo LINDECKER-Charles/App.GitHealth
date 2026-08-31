@@ -33,5 +33,3 @@
   startup. It does not protect against malware running with the same rights as the user.
 - Docker only sees the repositories placed under the `/repositories` mount. Host paths
   and container paths are not interchangeable.
-- The application interface is available in French only. The documentation is in English,
-  so the labels it quotes are translations of what is shown on screen.

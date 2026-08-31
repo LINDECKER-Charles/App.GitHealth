@@ -6,7 +6,7 @@ import { DsButton } from '../../ui/core/ds-button';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
 import { DsEmptyState } from '../../ui/surfaces/ds-empty-state';
 
-/** Écran d'accueil : il ouvre le premier dépôt observé, ou invite à en ajouter un. */
+/** Home screen: it opens the first observed repository, or invites you to add one. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DsButton, DsCallout, DsEmptyState],

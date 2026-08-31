@@ -123,7 +123,7 @@ internal static class LauncherOptionsParser
         if (hasNoValue
             || arguments[index + 1].StartsWith("--", StringComparison.Ordinal))
         {
-            throw new LauncherArgumentException($"L’option {optionName} attend une valeur.");
+            throw new LauncherArgumentException($"Option {optionName} expects a value.");
         }
 
         return arguments[index + 1];
@@ -134,7 +134,7 @@ internal static class LauncherOptionsParser
         if (argument.StartsWith($"{optionName}=", StringComparison.Ordinal))
         {
             throw new LauncherArgumentException(
-                $"L’option {optionName} n’accepte aucune valeur.");
+                $"Option {optionName} accepts no value.");
         }
     }
 
@@ -182,7 +182,7 @@ internal static class LauncherOptionsParser
             if (!_seenOptions.Add(option))
             {
                 throw new LauncherArgumentException(
-                    $"L’option {OptionName(option)} ne peut être fournie qu’une fois.");
+                    $"Option {OptionName(option)} can only be supplied once.");
             }
 
             switch (option)
@@ -209,7 +209,7 @@ internal static class LauncherOptionsParser
             if (_noBrowserSeen)
             {
                 throw new LauncherArgumentException(
-                    $"L’option {NoBrowserOption} ne peut être fournie qu’une fois.");
+                    $"Option {NoBrowserOption} can only be supplied once.");
             }
 
             _noBrowserSeen = true;
@@ -221,7 +221,7 @@ internal static class LauncherOptionsParser
             if (_noWindowSeen)
             {
                 throw new LauncherArgumentException(
-                    $"L’option {NoWindowOption} ne peut être fournie qu’une fois.");
+                    $"Option {NoWindowOption} can only be supplied once.");
             }
 
             _noWindowSeen = true;
@@ -250,7 +250,7 @@ internal static class LauncherOptionsParser
             if (!isNumber || port is < 1 or > ushort.MaxValue)
             {
                 throw new LauncherArgumentException(
-                    $"L’option {PortOption} doit être comprise entre 1 et 65535.");
+                    $"Option {PortOption} must be between 1 and 65535.");
             }
 
             return port;
@@ -260,7 +260,7 @@ internal static class LauncherOptionsParser
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                throw new LauncherArgumentException($"L’option {optionName} attend une valeur.");
+                throw new LauncherArgumentException($"Option {optionName} expects a value.");
             }
 
             return value;

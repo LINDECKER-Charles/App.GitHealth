@@ -30,7 +30,7 @@ internal sealed class DatabaseMigrationService(
             .ToListAsync(cancellationToken);
         var failure = new AnalysisFailure(
             "analysis.interrupted",
-            "L’analyse a été interrompue par l’arrêt de l’application.",
+            "The analysis was interrupted by the application shutting down.",
             clock.UtcNow,
             IsCancellation: true);
         foreach (var analysis in interrupted)
@@ -44,7 +44,7 @@ internal sealed class DatabaseMigrationService(
     private void EnsureDatabaseDirectory()
     {
         var directory = Path.GetDirectoryName(connectionFactory.DatabasePath)
-            ?? throw new InvalidOperationException("Le dossier SQLite est introuvable.");
+            ?? throw new InvalidOperationException("The SQLite folder cannot be found.");
         PrivateFilePermissions.EnsureDirectory(directory);
     }
 

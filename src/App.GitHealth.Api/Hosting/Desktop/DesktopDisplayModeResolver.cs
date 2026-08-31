@@ -1,9 +1,9 @@
 namespace App.GitHealth.Api.Hosting.Desktop;
 
 /// <summary>
-/// Traduit les options du lanceur en interface à ouvrir. <c>--no-browser</c> vaut
-/// « aucune interface » et implique <c>--no-window</c> : la CI lance le binaire avec ce
-/// drapeau et une fenêtre y resterait bloquée sur l'attente de fermeture.
+/// Turns the launcher options into the interface to open. <c>--no-browser</c> means
+/// "no interface" and implies <c>--no-window</c>: the CI runs the binary with that
+/// flag and a window would stay blocked there waiting to be closed.
 /// </summary>
 internal static class DesktopDisplayModeResolver
 {

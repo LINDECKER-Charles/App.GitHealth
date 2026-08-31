@@ -1,8 +1,8 @@
 namespace App.GitHealth.Api.Git.Process;
 
 /// <summary>
-/// Localise Git sans dépendre du <c>PATH</c> : chemin configuré, puis <c>PATH</c>, puis
-/// emplacements d'installation standards de la plateforme. Le premier trouvé gagne.
+/// Locates Git without depending on the <c>PATH</c>: configured path, then <c>PATH</c>, then
+/// the platform's standard installation locations. The first one found wins.
 /// </summary>
 internal sealed class GitExecutableResolver
 {
@@ -21,7 +21,7 @@ internal sealed class GitExecutableResolver
     }
 
     /// <summary>
-    /// Résolution effectuée une seule fois : le poste ne change pas en cours de session.
+    /// Resolution is performed only once: the machine does not change during a session.
     /// </summary>
     public GitExecutableLocation Location => _location.Value;
 

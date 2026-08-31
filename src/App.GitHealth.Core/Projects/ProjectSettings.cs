@@ -20,8 +20,8 @@ public sealed record ProjectSettings
             if (value.Length > MaximumBranchNamespaceLength)
             {
                 throw new ArgumentException(
-                    $"Le périmètre de branches ne peut pas dépasser "
-                    + $"{MaximumBranchNamespaceLength} caractères.",
+                    $"The branch scope cannot exceed "
+                    + $"{MaximumBranchNamespaceLength} characters.",
                     nameof(value));
             }
 

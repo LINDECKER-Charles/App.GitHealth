@@ -31,13 +31,13 @@ describe('CaptureStore', () => {
 
   afterEach(() => TestBed.resetTestingModule());
 
-  /** Le store ne navigue pas dans le rendu : on attend que le routeur ait fini son tour. */
+  /** The store does not navigate during rendering: wait for the router to finish its turn. */
   async function settled(): Promise<void> {
     await TestBed.inject(ApplicationRef).whenStable();
     TestBed.tick();
   }
 
-  /** Le contexte porte la dernière capture ; le store ne relit que les précédentes. */
+  /** The context carries the most recent capture; the store reads back only the earlier ones. */
   async function withHistory(): Promise<void> {
     context.project.set(aProject());
     TestBed.tick();
@@ -67,7 +67,7 @@ describe('CaptureStore', () => {
       });
   }
 
-  it('montre la dernière capture tant que l’URL n’en demande aucune', async () => {
+  it('shows the most recent capture as long as the URL asks for none', async () => {
     await withHistory();
 
     expect(store.hasCaptures()).toBe(true);
@@ -77,7 +77,7 @@ describe('CaptureStore', () => {
     http.verify();
   });
 
-  it('écrit la capture choisie dans l’URL et la relit avec sa politique d’époque', async () => {
+  it('writes the chosen capture into the URL and replays it with its own policy', async () => {
     await withHistory();
 
     store.select(olderId);
@@ -94,7 +94,7 @@ describe('CaptureStore', () => {
     http.verify();
   });
 
-  it('relâche la sélection dès qu’on revient sur la plus récente', async () => {
+  it('releases the selection as soon as the most recent capture is chosen again', async () => {
     await withHistory();
     store.select(olderId);
     await settled();
@@ -109,19 +109,19 @@ describe('CaptureStore', () => {
     http.verify();
   });
 
-  it('ne relit pas la dernière capture quand un lien la désigne explicitement', async () => {
+  it('does not read the most recent capture back when a link names it explicitly', async () => {
     await withHistory();
 
     await router.navigate([], { queryParams: { capture: latestId } });
     await settled();
 
-    // Aucune lecture d'archive : elle est déjà en mémoire, avec les verdicts du jour.
+    // No archive read: it is already in memory, with today's verdicts.
     expect(store.isLatestSelected()).toBe(true);
     expect(store.snapshot()?.analysisId).toBe(latestId);
     http.verify();
   });
 
-  it('garde la capture regardée dans les liens des onglets', async () => {
+  it('keeps the capture being read in the tab links', async () => {
     await withHistory();
     expect(store.captureLink()).toEqual({});
 

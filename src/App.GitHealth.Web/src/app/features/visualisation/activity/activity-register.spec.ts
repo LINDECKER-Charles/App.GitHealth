@@ -61,26 +61,26 @@ function singleRow(
   overrides: Partial<BranchSnapshotResponse>,
   policy: PolicySnapshot = savedPolicy,
 ): ActivityRow {
-  return rowsFor([branch('feat/registre', overrides)], policy)[0];
+  return rowsFor([branch('feat/register', overrides)], policy)[0];
 }
 
 describe('timelineDaysFor', () => {
-  it('reproduit l’axe de 120 j de la politique par défaut', () => {
+  it('reproduces the 120 d axis of the default policy', () => {
     expect(timelineDaysFor(90)).toBe(120);
   });
 
-  it('garde le plancher de 120 j pour une politique courte', () => {
+  it('keeps the 120 d floor for a short policy', () => {
     expect(timelineDaysFor(30)).toBe(120);
   });
 
-  it('s’étend au multiple de 30 j suivant pour une politique longue', () => {
+  it('extends to the next multiple of 30 d for a long policy', () => {
     expect(timelineDaysFor(200)).toBe(270);
     expect(timelineDaysFor(300)).toBe(420);
   });
 });
 
 describe('thresholdBounds', () => {
-  it('dérive les bornes des curseurs du domaine, en gardant l’écart minimal', () => {
+  it('derives the slider bounds from the domain, keeping the minimum gap', () => {
     expect(defaultBounds).toEqual({
       activeMin: 1,
       activeMax: 112,
@@ -89,7 +89,7 @@ describe('thresholdBounds', () => {
     });
   });
 
-  it('abaisse les planchers jusqu’à une politique enregistrée sous les minimums', () => {
+  it('lowers the floors down to a saved policy below the minimums', () => {
     const saved = { activeUntilDays: 0, inactiveAfterDays: 5 };
     expect(thresholdBounds({ saved, timelineDays })).toEqual({
       activeMin: 0,
@@ -101,13 +101,13 @@ describe('thresholdBounds', () => {
 });
 
 describe('seedDraft', () => {
-  it('laisse intacte une politique de 0 / 5 j, le pouce restant sous son étiquette', () => {
+  it('leaves a 0 / 5 d policy untouched, the thumb staying under its label', () => {
     const saved = { activeUntilDays: 0, inactiveAfterDays: 5 };
     const bounds = thresholdBounds({ saved, timelineDays });
     expect(seedDraft(saved, bounds)).toEqual(saved);
   });
 
-  it('ramène dans le domaine un seuil enregistré au-delà de l’axe', () => {
+  it('brings a saved threshold beyond the axis back into the domain', () => {
     const saved = { activeUntilDays: 200, inactiveAfterDays: 300 };
     expect(seedDraft(saved, defaultBounds)).toEqual({
       activeUntilDays: 112,
@@ -117,7 +117,7 @@ describe('seedDraft', () => {
 });
 
 describe('clampThresholds', () => {
-  it('écrête le curseur actif sans déplacer le curseur inactif', () => {
+  it('clamps the active slider without moving the inactive slider', () => {
     const draft = { activeUntilDays: 88, inactiveAfterDays: 90 };
     expect(clampThresholds(draft, 'active', defaultBounds)).toEqual({
       activeUntilDays: 82,
@@ -125,7 +125,7 @@ describe('clampThresholds', () => {
     });
   });
 
-  it('écrête le curseur inactif sans déplacer le curseur actif', () => {
+  it('clamps the inactive slider without moving the active slider', () => {
     const draft = { activeUntilDays: 30, inactiveAfterDays: 32 };
     expect(clampThresholds(draft, 'inactive', defaultBounds)).toEqual({
       activeUntilDays: 30,
@@ -133,12 +133,12 @@ describe('clampThresholds', () => {
     });
   });
 
-  it('laisse passer un brouillon qui respecte déjà l’écart', () => {
+  it('lets through a draft that already respects the gap', () => {
     const draft = { activeUntilDays: 30, inactiveAfterDays: 90 };
     expect(clampThresholds(draft, 'active', defaultBounds)).toEqual(draft);
   });
 
-  it('descend le curseur actif jusqu’au plancher abaissé par la politique', () => {
+  it('takes the active slider down to the floor lowered by the policy', () => {
     const saved = { activeUntilDays: 0, inactiveAfterDays: 5 };
     const bounds = thresholdBounds({ saved, timelineDays });
     const draft = { activeUntilDays: 0, inactiveAfterDays: 20 };
@@ -147,19 +147,19 @@ describe('clampThresholds', () => {
 });
 
 describe('buildPolicyBands', () => {
-  it('ancre les trois zones à droite, aux pourcentages des seuils', () => {
+  it('anchors the three bands to the right, at the threshold percentages', () => {
     expect(buildPolicyBands(savedPolicy, timelineDays)).toEqual({
       activeEdgePercent: 25,
       inactiveEdgePercent: 75,
       agingWidthPercent: 50,
-      activeLabel: '30 j',
-      inactiveLabel: '90 j',
+      activeLabel: '30 d',
+      inactiveLabel: '90 d',
       isActiveLabelTrailing: false,
       isInactiveLabelTrailing: false,
     });
   });
 
-  it('bascule l’étiquette à gauche du trait quand la règle colle au bord droit', () => {
+  it('flips the label to the left of the line when the rule hugs the right edge', () => {
     const policy: PolicySnapshot = { ...savedPolicy, activeUntilDays: 1, inactiveAfterDays: 9 };
     const bands = buildPolicyBands(policy, timelineDays);
     expect(bands.isActiveLabelTrailing).toBe(true);
@@ -168,15 +168,9 @@ describe('buildPolicyBands', () => {
 });
 
 describe('buildAxisTicks', () => {
-  it('gradue le domaine en cinq repères, le présent à droite', () => {
+  it('graduates the domain into five ticks, the present on the right', () => {
     const ticks = buildAxisTicks(timelineDays);
-    expect(ticks.map((tick) => tick.label)).toEqual([
-      'il y a 120 j',
-      '90 j',
-      '60 j',
-      '30 j',
-      "aujourd'hui",
-    ]);
+    expect(ticks.map((tick) => tick.label)).toEqual(['120 d ago', '90 d', '60 d', '30 d', 'today']);
     expect(ticks.map((tick) => tick.leftPercent)).toEqual([0, 25, 50, 75, 100]);
     expect(ticks.map((tick) => tick.anchor)).toEqual([
       'start',
@@ -189,77 +183,77 @@ describe('buildAxisTicks', () => {
 });
 
 describe('buildActivityRows', () => {
-  it('projette l’âge en décalage depuis la droite, la barre mesurant le silence', () => {
+  it('projects the age as an offset from the right, the bar measuring the silence', () => {
     const row = singleRow({ lastActivityAtUtc: daysAgo(30) });
     expect(row.offsetPercent).toBe(25);
     expect(row.barWidthPercent).toBe(25);
     expect(row.clampLabel).toBeNull();
   });
 
-  it('écrête au bord gauche au-delà du domaine et dit l’âge réel', () => {
+  it('clamps to the left edge beyond the domain and states the real age', () => {
     const row = singleRow({ lastActivityAtUtc: daysAgo(200) });
     expect(row.offsetPercent).toBe(100);
-    expect(row.clampLabel).toBe('200 j ▸');
+    expect(row.clampLabel).toBe('200 d ▸');
   });
 
-  it('ramène une date future au présent plutôt qu’à un décalage négatif', () => {
+  it('brings a future date back to the present rather than to a negative offset', () => {
     const row = singleRow({ lastActivityAtUtc: new Date(Date.now() + 5 * day).toISOString() });
     expect(row.offsetPercent).toBe(0);
-    expect(row.ageLabel).toBe("aujourd'hui");
+    expect(row.ageLabel).toBe('today');
   });
 
-  it('marque l’activité inconnue sans point ni barre', () => {
+  it('marks unknown activity with no dot and no bar', () => {
     const row = singleRow({ lastActivityAtUtc: null });
     expect(row.activity).toBe('Unknown');
     expect(row.hasMark).toBe(false);
     expect(row.tone).toBe('neutral');
-    expect(row.ageLabel).toBe('activité inconnue');
+    expect(row.ageLabel).toBe('unknown activity');
   });
 
-  it('fait suivre le verdict aux seuils du brouillon', () => {
+  it('makes the verdict follow the draft thresholds', () => {
     const overrides = { lastActivityAtUtc: daysAgo(20) };
-    expect(singleRow(overrides).verdictLabel).toBe('Conserver');
+    expect(singleRow(overrides).verdictLabel).toBe('Keep');
 
     const draft: PolicySnapshot = { ...savedPolicy, activeUntilDays: 10, inactiveAfterDays: 15 };
-    expect(singleRow(overrides, draft).verdictLabel).toBe('À examiner');
+    expect(singleRow(overrides, draft).verdictLabel).toBe('Review');
   });
 
-  it('classe « Exclue » aussi bien un motif protégé qu’un motif exclu', () => {
+  it('classes both a protected pattern and an excluded pattern as "Excluded"', () => {
     const rows = rowsFor([
       branch('release/0.1.0', { lastActivityAtUtc: daysAgo(5) }),
       branch('wip/lindecker', { lastActivityAtUtc: daysAgo(5) }),
     ]);
-    expect(rows.map((row) => row.verdictLabel)).toEqual(['Exclue', 'Exclue']);
+    expect(rows.map((row) => row.verdictLabel)).toEqual(['Excluded', 'Excluded']);
     expect(rows.map((row) => row.flag?.icon)).toEqual(['lock', 'eye-off']);
   });
 
-  it('applique l’échelle réduite à une branche fusionnée', () => {
+  it('applies the shortened scale to a merged branch', () => {
     const overrides = { lastActivityAtUtc: daysAgo(10), topology: 'Merged' as const };
     const merged = singleRow(overrides);
     expect(merged.activity).toBe('Aging');
-    expect(merged.verdictLabel).toBe('À examiner');
+    expect(merged.verdictLabel).toBe('Review');
     expect(singleRow({ ...overrides, topology: 'Ahead' }).activity).toBe('Active');
   });
 
-  it('signale l’échelle réduite, que la zone traversée ne dit pas', () => {
+  it('signals the shortened scale, which the band it crosses does not state', () => {
     const merged = singleRow({ lastActivityAtUtc: daysAgo(40), topology: 'Merged' });
     expect(merged.isReduced).toBe(true);
     expect(merged.activity).toBe('Inactive');
-    expect(merged.scaleLabel).toBe('échelle réduite · active ≤ 7 j · inactive > 30 j');
-    expect(merged.trackLabel).toContain('échelle réduite · active ≤ 7 j · inactive > 30 j');
+    expect(merged.scaleLabel).toBe('shortened scale · active ≤ 7 d · inactive > 30 d');
+    expect(merged.trackLabel).toContain('shortened scale · active ≤ 7 d · inactive > 30 d');
 
     const diverged = singleRow({ lastActivityAtUtc: daysAgo(40), topology: 'Diverged' });
     expect(diverged.isReduced).toBe(false);
     expect(diverged.scaleLabel).toBeNull();
   });
 
-  it('affiche le nom complet, préfixe distant compris', () => {
-    expect(singleRow({}).name).toBe('origin/feat/registre');
+  it('shows the full name, remote prefix included', () => {
+    expect(singleRow({}).name).toBe('origin/feat/register');
   });
 });
 
 describe('activityCounts', () => {
-  it('compte les branches par état recalculé, activité inconnue comprise', () => {
+  it('counts the branches by recalculated state, unknown activity included', () => {
     const rows = rowsFor([
       branch('a', { lastActivityAtUtc: daysAgo(2) }),
       branch('b', { lastActivityAtUtc: daysAgo(10) }),

@@ -29,13 +29,14 @@ startInfo.ArgumentList.Add(Assembly.GetExecutingAssembly().Location);
 startInfo.ArgumentList.Add("child");
 startInfo.ArgumentList.Add(args[2]);
 using var child = DiagnosticsProcess.Start(startInfo)
-    ?? throw new InvalidOperationException("Le processus enfant n’a pas démarré.");
+    ?? throw new InvalidOperationException("The child process did not start.");
 await child.WaitForExitAsync();
 return child.ExitCode;
 
-// La sonde attend l'apparition du fichier pour en lire le PID : une écriture directe le
-// rendrait visible avant d'être renseigné, exposant un contenu vide ou tronqué. Le PID est
-// donc écrit à côté puis publié par un renommage, atomique dans un même répertoire.
+// The probe waits for the file to appear before reading the PID from it: writing in place
+// would make the file visible before it is filled in, exposing empty or truncated content.
+// The PID is therefore written next to it, then published by a rename, which is atomic
+// within a single directory.
 static void PublishProcessId(string path)
 {
     var stagingPath = path + ".tmp";

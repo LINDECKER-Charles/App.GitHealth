@@ -7,7 +7,7 @@ internal sealed class GitRuntimeDiagnostic
     private readonly object _sync = new();
     private readonly GitExecutableResolver _resolver;
     private bool _isAvailable;
-    private string _message = "Détection de Git en attente.";
+    private string _message = "Git detection pending.";
 
     public GitRuntimeDiagnostic(GitExecutableResolver resolver)
     {
@@ -16,7 +16,7 @@ internal sealed class GitRuntimeDiagnostic
     }
 
     /// <summary>
-    /// Chemin de l'exécutable retenu, ou <see langword="null" /> s'il reste introuvable.
+    /// Path of the executable that was selected, or <see langword="null" /> if none was found.
     /// </summary>
     public string? ExecutablePath => _resolver.Location.ExecutablePath;
 

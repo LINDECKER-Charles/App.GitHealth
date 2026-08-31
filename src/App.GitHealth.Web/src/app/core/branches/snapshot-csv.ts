@@ -20,13 +20,13 @@ const formulaPrefixes = ['=', '+', '-', '@'];
 const byteOrderMark = '﻿';
 const rowSeparator = '\r\n';
 
-/** Même format que l'export serveur : toutes les cellules citées, CRLF, BOM UTF-8. */
+/** Same format as the server export: every cell quoted, CRLF, UTF-8 BOM. */
 export function toSnapshotCsv(branches: readonly BranchSnapshotResponse[]): string {
   const rows = [columns, ...branches.map(cells)];
   return byteOrderMark + rows.map(formatRow).join('');
 }
 
-/** Nombre d'octets du fichier produit, pour l'annoncer dans le message de confirmation. */
+/** Byte count of the produced file, to state it in the confirmation message. */
 export function csvByteLength(csv: string): number {
   return new TextEncoder().encode(csv).length;
 }
@@ -57,7 +57,7 @@ function formatCell(value: string | null): string {
   return `"${neutralize(value).replace(/"/g, '""')}"`;
 }
 
-/** Une cellule qui commence par `=`, `+`, `-` ou `@` serait interprétée comme une formule. */
+/** A cell starting with `=`, `+`, `-` or `@` would be read as a formula. */
 function neutralize(value: string | null): string {
   if (value === null || value.length === 0) {
     return '';

@@ -97,8 +97,8 @@ public sealed class AnalysisQueueEndpointTests
     }
 
     /// <summary>
-    /// Saturation et arrêt s'observent sur une file strictement séquentielle : un seul lecteur
-    /// garantit qu'une analyse lancée reste en attente tant que la précédente n'est pas finie.
+    /// Saturation and shutdown are observed on a strictly sequential queue: a single reader
+    /// guarantees that a started analysis stays queued while the previous one is unfinished.
     /// </summary>
     private static ApiApplicationFactory CreateFactory(
         string repositoriesRoot,
@@ -211,7 +211,7 @@ public sealed class AnalysisQueueEndpointTests
             await Task.Delay(TimeSpan.FromMilliseconds(25));
         }
 
-        throw new TimeoutException("Les analyses n’ont pas été annulées à l’arrêt.");
+        throw new TimeoutException("The analyses were not cancelled at shutdown.");
     }
 
     private static async Task<IReadOnlyList<string>> ReadStatusesAsync(
@@ -237,6 +237,6 @@ public sealed class AnalysisQueueEndpointTests
         command.CommandText = "SELECT Status FROM AnalysisRuns WHERE Id = $id;";
         command.Parameters.AddWithValue("$id", analysisId);
         return (string)(await command.ExecuteScalarAsync()
-            ?? throw new InvalidOperationException("Analyse absente de SQLite."));
+            ?? throw new InvalidOperationException("Analysis missing from SQLite."));
     }
 }

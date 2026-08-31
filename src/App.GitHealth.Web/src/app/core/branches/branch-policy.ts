@@ -10,8 +10,8 @@ import { ageInDays } from './branch-labels';
 const regexSpecialCharacters = /[.+^${}()|[\]\\]/g;
 
 /**
- * Échelle réduite des branches sans commit propre. Reprend, en miroir, les constantes
- * de `ActivityThresholds` côté serveur : les deux doivent bouger ensemble.
+ * Shortened scale for branches with no own commits. Mirrors the `ActivityThresholds`
+ * constants on the server side: the two must move together.
  */
 export const mergedActiveUntilDays = 7;
 export const mergedInactiveAfterDays = 30;
@@ -23,16 +23,16 @@ export interface AppliedThresholds {
 }
 
 /**
- * Faux quand tous les commits de la branche sont déjà accessibles depuis la référence :
- * sommet identique, ou branche strictement ancêtre.
+ * False when every commit of the branch is already reachable from the baseline:
+ * same commit, or branch strictly an ancestor.
  */
 export function hasOwnCommits(topology: BranchTopology): boolean {
   return topology !== 'Merged' && topology !== 'Synchronized';
 }
 
 /**
- * Une branche sans commit propre ne détient plus rien que la référence n'ait déjà :
- * son compte à rebours court sur la plus courte des deux échelles.
+ * A branch with no own commits holds nothing the baseline does not already have:
+ * its countdown runs on the shorter of the two scales.
  */
 export function appliedThresholds(
   topology: BranchTopology,
@@ -57,9 +57,9 @@ export function appliedThresholds(
 }
 
 /**
- * Projection cliente des règles appliquées par `BranchClassifier` côté serveur.
- * Elle ne sert qu'à montrer l'effet d'une politique avant enregistrement : la
- * recommandation qui fait foi reste celle du snapshot renvoyé par l'API.
+ * Client-side projection of the rules applied by `BranchClassifier` on the server.
+ * It only shows the effect of a policy before it is saved: the authoritative
+ * recommendation stays the one from the snapshot returned by the API.
  */
 export function projectRecommendation(
   snapshot: BranchSnapshotResponse,
@@ -96,7 +96,7 @@ export function projectActivity(
   return days <= thresholds.inactiveAfterDays ? 'Aging' : 'Inactive';
 }
 
-/** Premier motif qui capture la référence, ou `null`. Reproduit les jokers `*` et `?`. */
+/** First pattern that captures the reference, or `null`. Reproduces the `*` and `?` wildcards. */
 export function matchPattern(patterns: readonly string[], referenceName: string): string | null {
   return patterns.find((pattern) => toRegExp(pattern).test(referenceName)) ?? null;
 }

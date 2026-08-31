@@ -301,7 +301,7 @@ In order of effort-to-benefit ratio.
 
 See `AGENTS.md`. The points that will bite on this work:
 
-- **Commits**: Conventional Commits in French, subject ≤ 72 characters, one commit = one
+- **Commits**: Conventional Commits in English, subject ≤ 72 characters, one commit = one
   coherent change. Scopes: `src/App.GitHealth.Api/**` → `api`,
   `src/App.GitHealth.Web/**` → `front`, `.github/**` → `ci`, `docs/**` → `docs`.
   `eng/**` is not mapped: attach it to `infra`.

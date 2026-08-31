@@ -1,6 +1,6 @@
 import { BranchSnapshotResponse, BranchTopology } from '../../../core/api/api.models';
 
-/** Repère de tracé : la largeur est figée, seule la hauteur suit le nombre de branches. */
+/** Drawing frame: the width is fixed, only the height follows the number of branches. */
 export const viewBoxWidth = 990;
 export const trunkStartX = 40;
 export const headX = 830;
@@ -50,7 +50,7 @@ export interface TopologyPoint {
   readonly y: number;
 }
 
-/** Une branche posée dans le repère, avant toute décoration liée au focus. */
+/** A branch laid out in the frame, before any decoration tied to the focus. */
 export interface NodeGeometry {
   readonly branch: BranchSnapshotResponse;
   readonly path: string;
@@ -85,7 +85,7 @@ interface Bridge {
   readonly y: number;
 }
 
-/** « Ouvertes » veut dire « non fusionnées » : les synchronisées et les isolées restent. */
+/** "Open" means "not merged": the in-sync and the isolated branches stay. */
 export function isVisibleUnder(filter: TopologyFilter, topology: BranchTopology): boolean {
   if (filter === 'merged') {
     return topology === 'Merged';
@@ -94,7 +94,7 @@ export function isVisibleUnder(filter: TopologyFilter, topology: BranchTopology)
   return filter !== 'open' || topology !== 'Merged';
 }
 
-/** Le tronc descend sous les branches ouvertes, et le cadre s'allonge avec le contenu. */
+/** The trunk sits below the open branches, and the frame grows with the content. */
 export function layoutBranches(branches: Branches, filter: TopologyFilter): BranchLayout {
   const visible = branches.filter((branch) => isVisibleUnder(filter, branch.topology));
   const select = (topology: BranchTopology) =>
@@ -138,8 +138,8 @@ function placeOpen(branches: Branches, frame: MapFrame): readonly NodeGeometry[]
 }
 
 /**
- * Dé-collision des forks depuis le plus à droite : on ne pousse jamais vers la droite,
- * et la butée de gauche reste prioritaire pour ne pas sortir du cadre.
+ * Forks are de-collided starting from the rightmost one: nothing is ever pushed right,
+ * and the left clamp keeps priority so the drawing never leaves the frame.
  */
 function spreadForks(branches: Branches, scale: number): readonly Fork[] {
   const forks: Fork[] = branches.map((branch) => ({
@@ -157,7 +157,7 @@ function spreadForks(branches: Branches, scale: number): readonly Fork[] {
   return forks;
 }
 
-/** Le pont garde une largeur constante : seul son départ porte une information. */
+/** The bridge keeps a constant width: only its start carries any information. */
 function placeMerged(branches: Branches, frame: MapFrame): readonly NodeGeometry[] {
   const top = frame.trunkY + mergedTopOffset;
   const step = mergedStep(branches.length);
@@ -178,7 +178,7 @@ function placeMerged(branches: Branches, frame: MapFrame): readonly NodeGeometry
   });
 }
 
-/** Boucles concentriques sur HEAD : toutes les branches au même sommet restent lisibles. */
+/** Concentric loops around HEAD: every branch on the same tip stays readable. */
 function placeSynchronized(branches: Branches, frame: MapFrame): readonly NodeGeometry[] {
   return branches.map((branch, index) => {
     const radius = syncRadius + index * syncRadiusStep;
@@ -198,7 +198,7 @@ function placeSynchronized(branches: Branches, frame: MapFrame): readonly NodeGe
   });
 }
 
-/** Bande détachée en bas : sans base commune, la longueur dit l'avance et non le retard. */
+/** Detached band at the bottom: with no common ancestor, the length says ahead, not behind. */
 function placeUnrelated(branches: Branches, scale: number, top: number): readonly NodeGeometry[] {
   return branches.map((branch, index) => {
     const y = round(top + index * branchStep);
@@ -225,7 +225,7 @@ function bridgePath(bridge: Bridge, trunkY: number): string {
   );
 }
 
-/** Les ponts s'aèrent tant qu'ils sont peu nombreux, sans jamais se tasser sous 44 px. */
+/** Bridges spread out while there are few of them, never packing tighter than 44 px. */
 function mergedStep(count: number): number {
   return count <= 1 ? 0 : clamp(mergedBudget / (count - 1), mergedStepMin, mergedStepMax);
 }

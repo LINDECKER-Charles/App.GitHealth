@@ -179,7 +179,7 @@ public sealed class AnalysisEndpointTests
             CancellationToken cancellationToken)
         {
             WasScanned = true;
-            throw new InvalidOperationException("Le scan ne doit pas être lancé.");
+            throw new InvalidOperationException("The scan must not be started.");
         }
     }
 }

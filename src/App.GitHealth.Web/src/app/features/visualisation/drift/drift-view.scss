@@ -30,7 +30,7 @@
   min-height: 100%;
 }
 
-/* En deçà de cette largeur le corps défile en entier : les colonnes du journal sont fixes. */
+/* Below this width the whole body scrolls: the journal columns are fixed. */
 .drift-content {
   display: flex;
   flex-direction: column;
@@ -125,7 +125,7 @@
   gap: 4px;
 }
 
-/* Une case par capture chargée ; pointillé quand la branche n'existait pas encore. */
+/* One cell per loaded capture; dotted when the branch did not exist yet. */
 .drift-cell {
   width: 11px;
   height: 11px;
@@ -199,7 +199,7 @@
   justify-content: flex-end;
 }
 
-/* Badge fantôme : une branche absente n'a pas de ton, elle a un contour vide. */
+/* Ghost badge: a missing branch has no tone, it has an empty outline. */
 .drift-ghost {
   display: inline-flex;
   align-items: center;

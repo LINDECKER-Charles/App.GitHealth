@@ -2,7 +2,7 @@
   <div class="project-heading">
     <div class="project-heading-row">
       <div class="project-identity">
-        <h1>{{ context.project()?.displayName ?? 'Lecture du dépôt…' }}</h1>
+        <h1>{{ context.project()?.displayName ?? readingRepository }}</h1>
         <div class="project-path">{{ context.project()?.repositoryPath }}</div>
       </div>
       <div class="project-actions">
@@ -13,8 +13,9 @@
           iconLeft="download"
           [disabled]="!captures.hasSnapshot()"
           (click)="exportSnapshot()"
+          i18n="@@project.action.exportCsv"
         >
-          Exporter en CSV
+          Export as CSV
         </button>
         <button
           dsButton
@@ -34,11 +35,14 @@
       </ds-badge>
       @if (captures.hasCaptures()) {
         <span class="project-capture">
-          <span class="project-capture-label" aria-hidden="true">Capture</span>
+          <span class="project-capture-label" aria-hidden="true" i18n="@@project.capture.label"
+            >Capture</span
+          >
           <ds-select
             class="project-capture-select"
             size="sm"
-            ariaLabel="Capture affichée"
+            i18n-ariaLabel="@@project.capture.aria"
+            ariaLabel="Displayed capture"
             [options]="captures.options()"
             [value]="captures.selectedId()"
             (valueChange)="captures.select($event)"
@@ -70,29 +74,42 @@
 
   @if (context.project()?.isRepositoryAccessible === false) {
     <div class="project-notice">
-      <ds-callout tone="warning" title="Dépôt inaccessible à ce chemin">
-        Le dernier résultat réussi reste consultable. Relocalise le dépôt depuis l'onglet Politiques
-        pour reprendre les analyses sans perdre l'historique.
+      <ds-callout
+        tone="warning"
+        i18n-title="@@project.unreachable.title"
+        title="Repository unreachable at this path"
+        i18n="@@project.unreachable.body"
+      >
+        The last successful result stays available. Relocate the repository from the Policies tab to
+        resume analyses without losing the history.
       </ds-callout>
     </div>
   }
 
   @if (context.error(); as message) {
     <div class="project-notice">
-      <ds-callout tone="danger" title="L'action n'a pas abouti">{{ message }}</ds-callout>
+      <ds-callout
+        tone="danger"
+        i18n-title="@@project.error.title"
+        title="The action did not complete"
+        >{{ message }}</ds-callout
+      >
     </div>
   }
 
   @if (captures.error(); as message) {
     <div class="project-notice">
-      <ds-callout tone="danger" title="La capture demandée n’a pas pu être lue">{{
-        message
-      }}</ds-callout>
+      <ds-callout
+        tone="danger"
+        i18n-title="@@project.captureError.title"
+        title="The requested capture could not be read"
+        >{{ message }}</ds-callout
+      >
     </div>
   }
 
   <div class="project-tabs">
-    <nav class="etb-tabs" aria-label="Vues du dépôt">
+    <nav class="etb-tabs" i18n-aria-label="@@project.tabs.aria" aria-label="Repository views">
       <a
         class="etb-tabs__tab"
         [class.etb-tabs__tab--on]="activeTab() === 'diagnostic'"
@@ -100,7 +117,7 @@
         [queryParams]="captureLink()"
       >
         <ds-icon name="list" [size]="14" />
-        Diagnostic
+        <ng-container i18n="@@project.tabs.diagnostic">Diagnostic</ng-container>
         @if (captures.snapshot(); as snapshot) {
           <span class="etb-tabs__count">{{ snapshot.branches.length }}</span>
         }
@@ -112,7 +129,7 @@
         [queryParams]="captureLink()"
       >
         <ds-icon name="eye" [size]="14" />
-        Visualisation
+        <ng-container i18n="@@project.tabs.visualisation">Visualisation</ng-container>
       </a>
       <a
         class="etb-tabs__tab"
@@ -121,7 +138,7 @@
         [queryParams]="captureLink()"
       >
         <ds-icon name="clock" [size]="14" />
-        Historique
+        <ng-container i18n="@@project.tabs.history">History</ng-container>
       </a>
       <a
         class="etb-tabs__tab"
@@ -130,7 +147,7 @@
         [queryParams]="captureLink()"
       >
         <ds-icon name="settings" [size]="14" />
-        Politiques
+        <ng-container i18n="@@project.tabs.settings">Policies</ng-container>
       </a>
     </nav>
   </div>
@@ -139,7 +156,7 @@
 </div>
 
 @if (branchId(); as snapshotId) {
-  <app-branch-fiche
+  <app-branch-card
     class="project-panel"
     [snapshotId]="snapshotId"
     (closed)="closeBranch()"

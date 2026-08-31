@@ -67,7 +67,7 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
             {
                 throw new GitProcessException(
                     RepositoryErrorCode.TimedOut,
-                    "La commande Git a dépassé le délai autorisé.");
+                    "The Git command exceeded the allowed timeout.");
             }
 
             throw;
@@ -119,8 +119,8 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
             process.Dispose();
             throw new GitProcessException(
                 RepositoryErrorCode.GitUnavailable,
-                $"Git ne peut pas être démarré depuis « {executablePath} ». Indiquez un autre "
-                + $"chemin avec {GitExecutableLocation.CommandLineOption} <chemin>.",
+                $"Git cannot be started from \"{executablePath}\". Point at another "
+                + $"path with {GitExecutableLocation.CommandLineOption} <path>.",
                 exception);
         }
     }
@@ -269,7 +269,7 @@ internal sealed class GitProcessRunner : IGitProcessRunner, IDisposable
 
             throw new GitProcessException(
                 RepositoryErrorCode.MalformedOutput,
-                "La sortie Git dépasse la limite autorisée.");
+                "The Git output exceeds the allowed limit.");
         }
     }
 }

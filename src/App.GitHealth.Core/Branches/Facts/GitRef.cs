@@ -13,7 +13,7 @@ public sealed record GitRef
             || HasInvalidCharacters(fullName))
         {
             throw new ArgumentException(
-                "La référence doit être une branche locale ou distante Git valide.",
+                "The reference must be a valid local or remote Git branch.",
                 nameof(fullName));
         }
 

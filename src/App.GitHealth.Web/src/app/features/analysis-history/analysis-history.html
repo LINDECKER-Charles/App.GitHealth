@@ -1,20 +1,30 @@
-<p class="history-intro">
-  Chaque passage conserve sa référence et ses règles. Un échec n'efface jamais la dernière lecture
-  réussie.
+<p class="history-intro" i18n="@@history.intro">
+  Every run keeps its baseline and its rules. A failure never erases the last successful read.
 </p>
 
 @if (isLoading()) {
-  <p class="history-state" role="status">Lecture du journal…</p>
+  <p class="history-state" role="status" i18n="@@history.state.loading">Reading the history…</p>
 } @else if (error(); as message) {
-  <ds-callout tone="danger" title="Historique indisponible">{{ message }}</ds-callout>
-  <button dsButton size="sm" variant="secondary" iconLeft="refresh-cw" (click)="load(projectId())">
-    Réessayer
+  <ds-callout tone="danger" i18n-title="@@history.error.title" title="History unavailable">{{
+    message
+  }}</ds-callout>
+  <button
+    dsButton
+    size="sm"
+    variant="secondary"
+    iconLeft="refresh-cw"
+    (click)="load(projectId())"
+    i18n="@@history.error.retry"
+  >
+    Retry
   </button>
 } @else if (runs().length === 0) {
   <ds-empty-state
     icon="clock"
-    title="Aucune analyse enregistrée"
-    description="Lance une analyse depuis le diagnostic pour créer le premier point de comparaison."
+    i18n-title="@@history.empty.title"
+    title="No analysis saved"
+    i18n-description="@@history.empty.description"
+    description="Run an analysis from the diagnostic to create the first point of comparison."
   />
 } @else {
   <div class="history-list">
@@ -22,9 +32,9 @@
       <article class="run-card">
         <header class="run-head">
           <ds-status-dot [tone]="run.tone" [size]="8" />
-          <span class="run-id">Analyse {{ run.shortId }}</span>
+          <span class="run-id" i18n="@@history.run.label">Analysis {{ run.shortId }}</span>
           <ds-badge size="sm" [tone]="run.tone">{{ run.statusLabel }}</ds-badge>
-          <span class="run-when">{{ run.startedAtUtc | date: 'dd/MM/yyyy, HH:mm:ss' }}</span>
+          <span class="run-when">{{ run.startedAtUtc | date: 'medium' }}</span>
           <span class="run-spacer"></span>
           <span class="run-duration">{{ run.duration }}</span>
           <button
@@ -34,44 +44,47 @@
             [iconLeft]="expandedId() === run.id ? 'chevron-up' : 'chevron-down'"
             (click)="toggle(run.id)"
           >
-            {{ expandedId() === run.id ? 'Masquer' : 'Politique' }}
+            {{ expandedId() === run.id ? hideLabel : policyLabel }}
           </button>
           @if (run.isOpenable) {
             <a
               class="etb-btn etb-btn--secondary etb-btn--sm"
               [routerLink]="['/projects', projectId()]"
               [queryParams]="run.captureParams"
+              i18n="@@history.run.open"
             >
-              Ouvrir ce snapshot
+              Open this snapshot
             </a>
           } @else {
-            <span class="run-unavailable">Aucun snapshot consultable</span>
+            <span class="run-unavailable" i18n="@@history.run.noSnapshot">No snapshot to open</span>
           }
         </header>
 
         <div class="run-facts">
           <div>
-            <div class="run-fact-label">Référence</div>
+            <div class="run-fact-label" i18n="@@history.run.baselineLabel">Baseline</div>
             <div class="run-fact-value">{{ run.reference }}</div>
           </div>
           <div>
-            <div class="run-fact-label">Branches lues</div>
+            <div class="run-fact-label" i18n="@@history.run.branchCountLabel">Branches read</div>
             <div class="run-fact-value">{{ run.branchCount }}</div>
           </div>
           <div>
-            <div class="run-fact-label">Seuils</div>
+            <div class="run-fact-label" i18n="@@history.run.thresholdsLabel">Thresholds</div>
             <div class="run-fact-value">{{ run.thresholds }}</div>
           </div>
           <div>
-            <div class="run-fact-label">Écart avec la veille</div>
+            <div class="run-fact-label" i18n="@@history.run.deltaLabel">
+              Difference from the previous run
+            </div>
             <div class="run-fact-value">{{ run.delta }}</div>
           </div>
         </div>
 
         @if (run.failureMessage !== null || run.failureCode !== null) {
           <div class="run-failure">
-            <ds-callout tone="danger" [title]="run.failureCode ?? 'Analyse interrompue'">
-              {{ run.failureMessage ?? 'Aucun détail supplémentaire.' }}
+            <ds-callout tone="danger" [title]="run.failureCode ?? interruptedTitle">
+              {{ run.failureMessage ?? noFailureDetail }}
             </ds-callout>
           </div>
         }
@@ -79,22 +92,28 @@
         @if (expandedId() === run.id) {
           <div class="run-policy">
             <div>
-              <div class="run-fact-label">Motifs protégés</div>
+              <div class="run-fact-label" i18n="@@history.run.protectedLabel">
+                Protected patterns
+              </div>
               <div class="run-patterns">
                 @for (pattern of run.protectedPatterns; track pattern) {
                   <ds-tag>{{ pattern }}</ds-tag>
                 } @empty {
-                  <span class="run-empty-patterns">Aucun motif</span>
+                  <span class="run-empty-patterns" i18n="@@history.run.noProtectedPattern"
+                    >No pattern</span
+                  >
                 }
               </div>
             </div>
             <div>
-              <div class="run-fact-label">Motifs exclus</div>
+              <div class="run-fact-label" i18n="@@history.run.excludedLabel">Excluded patterns</div>
               <div class="run-patterns">
                 @for (pattern of run.excludedPatterns; track pattern) {
                   <ds-tag>{{ pattern }}</ds-tag>
                 } @empty {
-                  <span class="run-empty-patterns">Aucun motif</span>
+                  <span class="run-empty-patterns" i18n="@@history.run.noExcludedPattern"
+                    >No pattern</span
+                  >
                 }
               </div>
             </div>
@@ -105,11 +124,12 @@
   </div>
 
   @if (hiddenCount() > 0) {
-    <p class="history-state">
-      {{ hiddenCount() }} analyse{{ hiddenCount() > 1 ? 's' : '' }} plus ancienne{{
-        hiddenCount() > 1 ? 's' : ''
-      }}
-      restent conservées et ne sont pas affichées ici.
+    <p class="history-state" i18n="@@history.hiddenCount">
+      {hiddenCount(), plural,
+        =1 {1 older analysis is}
+        other {{{ hiddenCount() }} older analyses are}
+      }
+      kept and not shown here.
     </p>
   }
 }

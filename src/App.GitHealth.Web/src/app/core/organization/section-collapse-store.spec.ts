@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { SectionCollapseStore } from './section-collapse-store';
 
-/** Le stockage du navigateur n'est pas garanti sous test : on fournit le nôtre. */
+/** Browser storage is not guaranteed under test: we supply our own. */
 class FakeStorage {
   private readonly entries = new Map<string, string>();
 
@@ -28,7 +28,7 @@ describe('SectionCollapseStore', () => {
     return TestBed.inject(SectionCollapseStore);
   }
 
-  it('replie puis déplie une section', () => {
+  it('collapses then expands a section', () => {
     const store = create();
 
     store.toggle('group:Api');
@@ -38,14 +38,14 @@ describe('SectionCollapseStore', () => {
     expect(store.isCollapsed('group:Api')).toBe(false);
   });
 
-  it('retrouve les sections repliées au chargement suivant', () => {
+  it('finds the collapsed sections again on the next load', () => {
     create().toggle('favorites');
 
     expect(create().isCollapsed('favorites')).toBe(true);
   });
 
-  it('ignore un contenu stocké illisible', () => {
-    localStorage.setItem('githealth.rail.collapsed', 'pas du JSON');
+  it('ignores unreadable stored content', () => {
+    localStorage.setItem('githealth.rail.collapsed', 'not JSON');
 
     expect(create().collapsedKeys().size).toBe(0);
   });

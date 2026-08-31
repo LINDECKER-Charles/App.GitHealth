@@ -242,18 +242,18 @@ type/short-description
 - **description**: `kebab-case`, without accents, two to five words stating what the branch
   is about.
 
-Examples: `feat/scan-dossier-parallele`, `fix/csp-base-uri`,
-`docs/guide-utilisateur-politiques`.
+Examples: `feat/parallel-folder-scan`, `fix/csp-base-uri`,
+`docs/user-guide-policies`.
 
 ## Commits
 
-The repository follows **Conventional Commits**, written **in French**:
+The repository follows **Conventional Commits**, written **in English**:
 
 ```
 type(scope): description
 ```
 
-- description in the infinitive, lowercase initial, no trailing period;
+- description in the imperative, lowercase initial, no trailing period;
 - subject of **72 characters maximum**;
 - optional body, reserved for the *why*;
 - a breaking change is signalled by a `BREAKING CHANGE:` footer;
@@ -277,9 +277,9 @@ The changelog entry is attached to the commit of the feature or the fix it docum
 Example:
 
 ```
-feat(front): ajouter la palette de commandes au clavier
-fix(api): rejeter la relocalisation pendant une analyse en cours
-docs(docs): documenter l'échelle réduite des branches fusionnées
+feat(front): add the keyboard command palette
+fix(api): reject relocation while an analysis is running
+docs(docs): document the shortened scale of merged branches
 ```
 
 ## Changelog

@@ -24,7 +24,7 @@ import { AnalysisRun, toRuns } from './analysis-run';
 
 const historyPageSize = 100;
 
-/** Journal des passages : chacun conserve sa référence et ses règles. */
+/** History of runs: each one keeps its baseline and its rules. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe, DsBadge, DsButton, DsCallout, DsEmptyState, DsStatusDot, DsTag, RouterLink],
@@ -44,6 +44,11 @@ export class AnalysisHistory {
   protected readonly isLoading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly expandedId = signal<string | null>(null);
+
+  protected readonly hideLabel = $localize`:@@history.run.hide:Hide`;
+  protected readonly policyLabel = $localize`:@@history.run.policy:Policy`;
+  protected readonly interruptedTitle = $localize`:@@history.run.interrupted:Analysis interrupted`;
+  protected readonly noFailureDetail = $localize`:@@history.run.noDetail:No further detail.`;
 
   protected readonly projectId = computed(() => this.params().get('projectId') ?? '');
   protected readonly runs = computed<readonly AnalysisRun[]>(() =>
@@ -79,7 +84,9 @@ export class AnalysisHistory {
       .subscribe({
         next: (history) => this.history.set(history),
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Le journal n’a pas pu être lu.')),
+          this.error.set(
+            apiErrorMessage(error, $localize`:@@history.error.read:The history could not be read.`),
+          ),
       });
   }
 }

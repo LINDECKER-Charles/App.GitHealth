@@ -1,7 +1,7 @@
 /*
- * Habillage commun aux trois sous-vues de l'onglet Visualisation : une carte qui
- * occupe la hauteur restante, un en-tête fixe, un corps qui défile seul.
- * Feuille partagée, listée dans les `styleUrls` de chaque sous-vue.
+ * Skin shared by the three sub-views of the Visualisation tab: a card that takes the
+ * remaining height, a fixed header, a body that scrolls on its own.
+ * Shared sheet, listed in the `styleUrls` of every sub-view.
  */
 .viz-card {
   display: flex;

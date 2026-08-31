@@ -5,10 +5,9 @@ import { apiErrorMessage } from '../api/api-error';
 import { GitHealthApiClient } from '../api/git-health-api-client';
 import { ProjectResponse, RuntimeInfo } from '../api/api.models';
 
-const loadFailureMessage =
-  'Impossible de charger les dépôts observés. Vérifie que GitHealth est démarré.';
+const loadFailureMessage = $localize`:@@apiError.projects.load:The observed repositories could not be loaded. Check that GitHealth is running.`;
 
-/** Source unique de la liste des dépôts : le rail, la palette et les vues lisent le même état. */
+/** Single source for the repository list: rail, palette and views read the same state. */
 @Injectable({ providedIn: 'root' })
 export class ProjectsStore {
   private readonly api = inject(GitHealthApiClient);
@@ -37,7 +36,7 @@ export class ProjectsStore {
       });
   }
 
-  /** Réinjecte un projet mis à jour sans relire toute la liste. */
+  /** Feeds an updated project back without re-reading the whole list. */
   upsert(project: ProjectResponse): void {
     const known = this.projects().some((candidate) => candidate.id === project.id);
     this.projects.update((projects) =>

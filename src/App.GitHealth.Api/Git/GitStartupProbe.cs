@@ -11,7 +11,7 @@ internal sealed class GitStartupProbe(
         LoggerMessage.Define<string>(
             LogLevel.Warning,
             new EventId(1, nameof(GitStartupProbe)),
-            "Git est indisponible au démarrage. Le diagnostic /health expose la cause : {Reason}");
+            "Git is unavailable at startup. The /health diagnostic exposes the cause: {Reason}");
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -25,7 +25,7 @@ internal sealed class GitStartupProbe(
                 return;
             }
 
-            ReportUnavailable("Git est installé mais son diagnostic a échoué.");
+            ReportUnavailable("Git is installed but its diagnostic failed.");
         }
         catch (GitProcessException exception)
         {
