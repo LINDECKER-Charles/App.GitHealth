@@ -21,7 +21,7 @@ function Reset-PublishDirectory {
         $rootPrefix,
         [StringComparison]::OrdinalIgnoreCase
     )) {
-        throw "Le répertoire de publication doit rester sous '$resolvedRoot'."
+        throw "The publication directory must stay under '$resolvedRoot'."
     }
 
     if ([System.IO.Directory]::Exists($resolvedDirectory)) {
@@ -39,7 +39,7 @@ $resolvedOutputRoot = [System.IO.Path]::GetFullPath($OutputRoot)
 foreach ($runtime in $RuntimeIdentifier) {
     $destination = Join-Path $resolvedOutputRoot $runtime
     Reset-PublishDirectory -DirectoryPath $destination -RootPath $resolvedOutputRoot
-    Write-Host "Publication autonome de GitHealth pour $runtime..."
+    Write-Host "Self-contained publication of GitHealth for $runtime..."
     & dotnet publish $project `
         --configuration Release `
         --runtime $runtime `
@@ -49,7 +49,7 @@ foreach ($runtime in $RuntimeIdentifier) {
         -p:PublishTrimmed=false `
         -p:UseAppHost=true
     if ($LASTEXITCODE -ne 0) {
-        throw "La publication $runtime a échoué."
+        throw "The $runtime publication failed."
     }
 
     $executable = if ($runtime -eq "win-x64") { "githealth.exe" } else { "githealth" }
@@ -59,7 +59,7 @@ foreach ($runtime in $RuntimeIdentifier) {
     )
     foreach ($requiredFile in $requiredFiles) {
         if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
-            throw "La publication $runtime ne contient pas '$requiredFile'."
+            throw "The $runtime publication does not contain '$requiredFile'."
         }
     }
 
@@ -71,15 +71,15 @@ foreach ($runtime in $RuntimeIdentifier) {
         $archive = Join-Path $resolvedOutputRoot "githealth-$runtime.tar.gz"
         & tar -czf $archive -C $destination .
         if ($LASTEXITCODE -ne 0) {
-            throw "L'archivage de la publication $runtime a échoué."
+            throw "Archiving the $runtime publication failed."
         }
     }
 
     $archiveInfo = Get-Item -LiteralPath $archive
     if ($archiveInfo.Length -eq 0) {
-        throw "L'archive de la publication $runtime est vide."
+        throw "The archive of the $runtime publication is empty."
     }
 
-    Write-Host "Artefact prêt : $destination"
-    Write-Host "Archive prête : $archive"
+    Write-Host "Artefact ready: $destination"
+    Write-Host "Archive ready: $archive"
 }

@@ -1,27 +1,26 @@
 ﻿<#
 .SYNOPSIS
-    Décrit la machine hôte et son outillage pour les builds locaux de GitHealth.
+    Describes the host machine and its toolchain for GitHealth's local builds.
 
 .DESCRIPTION
-    Destiné au dot-sourcing par eng/build.ps1. Il répond à deux questions sans en
-    tirer aucune conséquence — « pour quelle cible cette machine peut-elle
-    construire ? » et « qu'est-ce qui manque ? » ; les décisions restent au
-    dispatcher.
+    Meant to be dot-sourced by eng/build.ps1. It answers two questions without
+    drawing any conclusion from them — "which target can this machine build for?"
+    and "what is missing?" — the decisions stay in the dispatcher.
 
-    Compatible Windows PowerShell 5.1 et PowerShell 7. Les variables automatiques
-    $IsWindows / $IsMacOS / $IsLinux, l'opérateur ternaire et Join-Path à plus de
-    deux segments n'existent qu'à partir de PowerShell 6 : ce fichier les évite.
+    Compatible with Windows PowerShell 5.1 and PowerShell 7. The automatic variables
+    $IsWindows / $IsMacOS / $IsLinux, the ternary operator and Join-Path with more
+    than two segments only exist from PowerShell 6 on: this file avoids them.
 
-    Le fichier porte une nomenclature d'octets UTF-8. Sans elle, PowerShell 5.1 lit
-    les .ps1 dans la page de codes ANSI du poste et rend les accents illisibles.
+    The file carries a UTF-8 byte order mark. Without it, PowerShell 5.1 reads the
+    .ps1 files in the machine's ANSI code page and mangles every non-ASCII character.
 #>
 
 Set-StrictMode -Version Latest
 
-# Les cibles publiables par eng/Publish-Native.ps1, seule source de vérité.
+# The targets eng/Publish-Native.ps1 can publish, the single source of truth.
 $SupportedRuntimeIdentifiers = @("win-x64", "osx-x64", "osx-arm64", "linux-x64")
 
-# Version minimale documentée dans .github/CONTRIBUTING.md.
+# Minimum version documented in .github/CONTRIBUTING.md.
 $MinimumGitVersion = "2.38"
 
 function Get-RepositoryRoot {
@@ -43,7 +42,7 @@ function Get-HostOperatingSystem {
     if ($runtime::IsOSPlatform($platform::OSX)) { return "osx" }
     if ($runtime::IsOSPlatform($platform::Linux)) { return "linux" }
 
-    throw "Système hôte non reconnu : aucun identifiant de runtime ne lui correspond."
+    throw "Host system not recognised: no runtime identifier matches it."
 }
 
 function Get-HostArchitecture {
@@ -57,7 +56,7 @@ function Get-HostArchitecture {
 
 <#
 .SYNOPSIS
-    Compose un identifiant de runtime et le confronte aux cibles prises en charge.
+    Composes a runtime identifier and checks it against the supported targets.
 #>
 function New-RuntimeIdentifier {
     param(
@@ -72,10 +71,10 @@ function New-RuntimeIdentifier {
 
     $available = $SupportedRuntimeIdentifiers -join ", "
     throw @"
-Cible '$identifier' non prise en charge par GitHealth.
-Cibles disponibles : $available.
-Sur une machine hors de cette liste, désigner explicitement une cible proche —
-par exemple -Runtime win-x64 sur Windows ARM, qui s'exécute alors en émulation.
+Target '$identifier' is not supported by GitHealth.
+Available targets: $available.
+On a machine outside this list, name a close target explicitly — for example
+-Runtime win-x64 on Windows ARM, which then runs under emulation.
 "@
 }
 
@@ -93,18 +92,17 @@ function Get-RuntimeOperatingSystem {
 
 <#
 .SYNOPSIS
-    Vérifie qu'un installeur Velopack peut être produit ici, pour cette cible.
+    Checks that a Velopack installer can be produced here, for this target.
 
 .DESCRIPTION
-    Deux refus, pour deux raisons distinctes. Linux n'a pas d'installeur par
-    décision produit (docs/DESKTOP_PLAN.md) : la distribution y passe par l'archive
-    portable. Et vpk s'appuie sur l'outillage du système ciblé — un bundle .app se
-    construit sur macOS, un Setup.exe sur Windows. Échouer ici avec une phrase
-    claire vaut mieux que laisser vpk échouer plus loin, ou pire, produire un
-    paquet inutilisable.
+    Two refusals, for two distinct reasons. Linux has no installer by product
+    decision (docs/DESKTOP_PLAN.md): distribution there goes through the portable
+    archive. And vpk relies on the target system's toolchain — an .app bundle is
+    built on macOS, a Setup.exe on Windows. Failing here with a clear sentence
+    beats letting vpk fail further along, or worse, producing an unusable package.
 
-    L'hôte est un paramètre plutôt qu'une détection interne : la règle devient
-    vérifiable sans dépendre de la machine qui exécute le test.
+    The host is a parameter rather than an internal detection: the rule then becomes
+    verifiable without depending on the machine that runs the test.
 #>
 function Assert-InstallerSupported {
     param(
@@ -115,8 +113,8 @@ function Assert-InstallerSupported {
     $target = Get-RuntimeOperatingSystem $RuntimeIdentifier
     if ($target -eq "linux") {
         throw @"
-Linux n'a pas d'installeur : sa distribution est l'archive portable produite par
-'build publish'. Décision documentée dans docs/DESKTOP_PLAN.md, section 2.
+There is no installer on Linux: distribution there goes through the portable archive
+produced by 'build publish'. Decision documented in docs/DESKTOP_PLAN.md, section 2.
 "@
     }
 
@@ -125,16 +123,15 @@ Linux n'a pas d'installeur : sa distribution est l'archive portable produite par
     }
 
     throw @"
-Un installeur $RuntimeIdentifier ne peut pas être produit depuis un hôte
-'$HostOperatingSystem' : Velopack s'appuie sur l'outillage du système ciblé.
-Passer par .github/workflows/release.yml, dont la matrice construit chaque cible
-sur son propre runner.
+A $RuntimeIdentifier installer cannot be produced from a '$HostOperatingSystem'
+host: Velopack relies on the target system's toolchain. Go through
+.github/workflows/release.yml, whose matrix builds each target on its own runner.
 "@
 }
 
 <#
 .SYNOPSIS
-    Lit les versions d'outillage épinglées par le dépôt.
+    Reads the tool versions pinned by the repository.
 #>
 function Get-PinnedToolVersions {
     $root = Get-RepositoryRoot
@@ -151,14 +148,14 @@ function Get-PinnedToolVersions {
 
 <#
 .SYNOPSIS
-    Lit la version du produit là où MSBuild la lit, pour ne pas en inventer une seconde.
+    Reads the product version where MSBuild reads it, so a second one is never invented.
 #>
 function Get-RepositoryVersion {
     $propsPath = Join-Path (Get-RepositoryRoot) "Directory.Build.props"
     [xml]$props = Get-Content -LiteralPath $propsPath -Raw
     $prefix = $props.SelectSingleNode("/Project/PropertyGroup/VersionPrefix")
     if ($null -eq $prefix) {
-        throw "VersionPrefix est absent de '$propsPath'."
+        throw "VersionPrefix is missing from '$propsPath'."
     }
 
     $suffix = $props.SelectSingleNode("/Project/PropertyGroup/VersionSuffix")
@@ -171,7 +168,7 @@ function Get-RepositoryVersion {
 
 <#
 .SYNOPSIS
-    Renvoie la version d'un outil du PATH, ou $null s'il est absent ou muet.
+    Returns the version of a tool on the PATH, or $null if it is missing or silent.
 #>
 function Get-InstalledToolVersion {
     param(
@@ -195,7 +192,7 @@ function Get-InstalledToolVersion {
         return $null
     }
 
-    # « git version 2.51.0 » et « v24.20.0 » portent la version au milieu du texte.
+    # "git version 2.51.0" and "v24.20.0" carry the version in the middle of the text.
     $version = [regex]::Match([string]$firstLine, '\d+\.\d+\.\d+[0-9A-Za-z.+-]*')
     if ($version.Success) {
         return $version.Value
@@ -205,30 +202,30 @@ function Get-InstalledToolVersion {
 }
 
 $PrerequisiteStatusOk = "OK"
-$PrerequisiteStatusMismatch = "Écart"
-$PrerequisiteStatusMissing = "Absent"
+$PrerequisiteStatusMismatch = "Mismatch"
+$PrerequisiteStatusMissing = "Missing"
 
 <#
 .SYNOPSIS
-    Décrit l'outillage attendu par un build local.
+    Describes the toolchain a local build expects.
 
 .DESCRIPTION
-    VersionArguments à $null signale un outil qui ne sait pas dire sa version : seule
-    sa présence est constatée. IsPinned distingue une version verrouillée par le
-    dépôt, dont tout écart mérite un signalement, d'un simple minimum indicatif.
+    VersionArguments set to $null marks a tool that cannot report its version: only
+    its presence is checked. IsPinned separates a version locked by the repository,
+    where any difference deserves a signal, from a plain indicative minimum.
 #>
 function Get-PrerequisiteDefinitions {
     $pinned = Get-PinnedToolVersions
     return @(
-        @{ Label = "SDK .NET"; Command = "dotnet"; Expected = $pinned.Dotnet
+        @{ Label = ".NET SDK"; Command = "dotnet"; Expected = $pinned.Dotnet
             VersionArguments = @("--version"); IsRequired = $true; IsPinned = $true }
         @{ Label = "Node.js"; Command = "node"; Expected = $pinned.Node
             VersionArguments = @("--version"); IsRequired = $true; IsPinned = $true }
         @{ Label = "npm"; Command = "npm"; Expected = "—"
             VersionArguments = @("--version"); IsRequired = $true; IsPinned = $false }
-        @{ Label = "Git"; Command = "git"; Expected = "$($pinned.Git) ou plus récent"
+        @{ Label = "Git"; Command = "git"; Expected = "$($pinned.Git) or newer"
             VersionArguments = @("--version"); IsRequired = $true; IsPinned = $false }
-        @{ Label = "Velopack (vpk)"; Command = "vpk"; Expected = "installé à la demande"
+        @{ Label = "Velopack (vpk)"; Command = "vpk"; Expected = "installed on demand"
             VersionArguments = $null; IsRequired = $false; IsPinned = $false }
     )
 }
@@ -244,7 +241,7 @@ function Get-ToolPresence {
         return $null
     }
 
-    return "présent"
+    return "present"
 }
 
 function New-PrerequisiteRow {
@@ -261,11 +258,11 @@ function New-PrerequisiteRow {
     }
 
     return [pscustomobject]@{
-        Outil = $Tool.Label
-        Attendu = $Tool.Expected
-        Trouvé = $installed
-        Statut = $status
-        Requis = $Tool.IsRequired
+        Tool = $Tool.Label
+        Expected = $Tool.Expected
+        Found = $installed
+        Status = $status
+        Required = $Tool.IsRequired
     }
 }
 
@@ -276,5 +273,5 @@ function Get-PrerequisiteReport {
 function Get-MissingRequiredTools {
     param([Parameter(Mandatory)][object[]]$Report)
 
-    return @($Report | Where-Object { $_.Requis -and $_.Statut -eq $PrerequisiteStatusMissing })
+    return @($Report | Where-Object { $_.Required -and $_.Status -eq $PrerequisiteStatusMissing })
 }

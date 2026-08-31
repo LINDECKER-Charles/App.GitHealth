@@ -1,12 +1,12 @@
 ﻿<#
 .SYNOPSIS
-    Produit les manifestes winget de GitHealth a partir de l'installeur publie.
+    Produces GitHealth's winget manifests from the published installer.
 
 .DESCRIPTION
-    winget attend trois manifestes YAML portant la version et la somme SHA-256 de
-    l'installeur exact. Ils sont generes a la publication puis joints a la release :
-    la soumission a microsoft/winget-pkgs reste une action humaine, mais elle se
-    reduit alors a copier ces fichiers.
+    winget expects three YAML manifests carrying the version and the SHA-256 sum of
+    the exact installer. They are generated at publication time then attached to the
+    release: submitting to microsoft/winget-pkgs stays a human action, but it then
+    comes down to copying these files.
 #>
 [CmdletBinding()]
 param(
@@ -28,7 +28,7 @@ $templateDirectory = Join-Path $PSScriptRoot "winget"
 $resolvedInstaller = (Resolve-Path -LiteralPath $InstallerPath).Path
 $normalizedVersion = $Version.TrimStart("v")
 if ($normalizedVersion -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') {
-    throw "Version '$Version' inattendue : winget attend une version semantique."
+    throw "Unexpected version '$Version': winget expects a semantic version."
 }
 
 $hash = (Get-FileHash -LiteralPath $resolvedInstaller -Algorithm SHA256).Hash.ToUpperInvariant()
@@ -38,7 +38,7 @@ $utf8 = [System.Text.UTF8Encoding]::new($false)
 
 $templates = Get-ChildItem -LiteralPath $templateDirectory -Filter "*.yaml" -File
 if ($templates.Count -eq 0) {
-    throw "Aucun modele de manifeste winget dans '$templateDirectory'."
+    throw "No winget manifest template in '$templateDirectory'."
 }
 
 foreach ($template in $templates) {
@@ -47,12 +47,12 @@ foreach ($template in $templates) {
         Replace("__RELEASE_DATE__", $ReleaseDate).
         Replace("__HASH__", $hash)
     if ($manifest -match "__[A-Z_]+__") {
-        throw "Le manifeste '$($template.Name)' porte encore un marqueur non substitue."
+        throw "Manifest '$($template.Name)' still carries an unsubstituted marker."
     }
 
     $destination = Join-Path $resolvedOutput $template.Name
     [System.IO.File]::WriteAllText($destination, $manifest, $utf8)
-    Write-Host "Manifeste winget pret : $($template.Name)"
+    Write-Host "winget manifest ready: $($template.Name)"
 }
 
-Write-Host "Manifestes winget dans $resolvedOutput (version $normalizedVersion)"
+Write-Host "winget manifests in $resolvedOutput (version $normalizedVersion)"

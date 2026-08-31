@@ -1,6 +1,6 @@
 @echo off
-rem Passerelle vers build.ps1, l unique implementation des builds locaux.
-rem Voir README.md pour les prerequis et les niveaux disponibles.
+rem Gateway to build.ps1, the single implementation of local builds.
+rem See README.md for the prerequisites and the available levels.
 setlocal
 
 where pwsh >nul 2>&1

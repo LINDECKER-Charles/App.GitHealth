@@ -1,28 +1,28 @@
 ﻿<#
 .SYNOPSIS
-    Point d'entrée unique des builds locaux de GitHealth, sur Windows, macOS et Linux.
+    Single entry point for GitHealth's local builds, on Windows, macOS and Linux.
 
 .DESCRIPTION
-    Un niveau par intention, du plus court au plus complet :
+    One level per intent, from the shortest to the most complete:
 
-      check      constate l'outillage du poste et la cible qu'il sait produire
-      dev        API et interface Angular en direct, rechargement compris
-      publish    exécutable autonome, tel qu'il est distribué
-      run        lance le résultat de « publish »
-      installer  installeur Velopack et flux de mise à jour
+      check      reports the machine's toolchain and the target it can produce
+      dev        API and Angular interface live, reloading included
+      publish    self-contained executable, as it is distributed
+      run        runs the result of "publish"
+      installer  Velopack installer and update feed
 
-    Le script n'implémente aucune étape de publication : il délègue à
-    eng/Publish-Native.ps1 et eng/New-VelopackRelease.ps1, que la CI appelle
-    aussi. Un build local et un build de release suivent donc le même chemin.
+    The script implements no publication step of its own: it delegates to
+    eng/Publish-Native.ps1 and eng/New-VelopackRelease.ps1, which CI calls too.
+    A local build and a release build therefore follow the same path.
 
-    Compatible Windows PowerShell 5.1 et PowerShell 7 ; voir eng/README.md.
+    Compatible with Windows PowerShell 5.1 and PowerShell 7; see eng/README.md.
 
 .EXAMPLE
     ./eng/build.sh check
 
 .EXAMPLE
     ./eng/build.sh publish
-    ./eng/build.sh run --repo ~/Dev/MonDepot
+    ./eng/build.sh run --repo ~/Dev/MyRepository
 
 .EXAMPLE
     eng\build.cmd installer
@@ -33,16 +33,16 @@ param(
     [ValidateSet("check", "dev", "publish", "run", "installer")]
     [string]$Level = "check",
 
-    # Vide : la cible de la machine hôte.
+    # Empty: the host machine's target.
     [ValidateSet("win-x64", "osx-x64", "osx-arm64", "linux-x64")]
     [string]$Runtime,
 
-    # Vide : la version portée par Directory.Build.props.
+    # Empty: the version carried by Directory.Build.props.
     [string]$Version,
 
-    # Tout ce qui n'est pas reconnu ci-dessus part au niveau « run », vers
-    # l'application. PowerShell -File ne connaît pas le séparateur « -- » : ne pas
-    # l'employer, les arguments suivent le niveau directement.
+    # Anything not recognised above goes to the "run" level, on to the application.
+    # PowerShell -File does not know the "--" separator: do not use it, the arguments
+    # follow the level directly.
     [Parameter(ValueFromRemainingArguments)]
     [string[]]$ApplicationArguments = @()
 )
@@ -82,7 +82,7 @@ function Get-PublishedExecutable {
 
     $path = Join-Path (Get-PublishDirectory -RuntimeIdentifier $RuntimeIdentifier) $name
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
-        throw "Aucune publication $RuntimeIdentifier. Lancer d'abord : build publish."
+        throw "No $RuntimeIdentifier publication. Run build publish first."
     }
 
     return $path
@@ -90,29 +90,29 @@ function Get-PublishedExecutable {
 
 function Invoke-Check {
     $report = Get-PrerequisiteReport
-    $report | Format-Table -Property Outil, Attendu, Trouvé, Statut -AutoSize | Out-Host
+    $report | Format-Table -Property Tool, Expected, Found, Status -AutoSize | Out-Host
 
-    # PowerShell déballe un tableau vide renvoyé par une fonction : sans @(), $missing
-    # vaudrait $null et le mode strict refuserait d'en lire le nombre d'éléments.
+    # PowerShell unwraps an empty array returned by a function: without @(), $missing
+    # would be $null and strict mode would refuse to read its element count.
     $missing = @(Get-MissingRequiredTools -Report $report)
     if ($missing.Count -gt 0) {
-        throw "Outils requis absents : $(($missing | ForEach-Object { $_.Outil }) -join ', ')."
+        throw "Required tools missing: $(($missing | ForEach-Object { $_.Tool }) -join ', ')."
     }
 
     $target = Get-HostRuntimeIdentifier
-    Write-Host "Cible native de ce poste : $target"
+    Write-Host "Native target of this machine: $target"
     try {
         Assert-InstallerSupported -RuntimeIdentifier $target
-        Write-Host "Installeur Velopack : constructible ici."
+        Write-Host "Velopack installer: can be built here."
     }
     catch {
-        Write-Host "Installeur Velopack : indisponible ici. $($_.Exception.Message)"
+        Write-Host "Velopack installer: unavailable here. $($_.Exception.Message)"
     }
 }
 
 <#
 .SYNOPSIS
-    Lit le port de l'API là où le front le déclare, pour ne pas l'inventer une seconde fois.
+    Reads the API port where the front end declares it, so it is never invented twice.
 #>
 function Get-FrontendProxyPort {
     $path = Join-Path (Join-Path (Get-RepositoryRoot) $FrontendProjectPath) "proxy.conf.json"
@@ -122,18 +122,18 @@ function Get-FrontendProxyPort {
 
 <#
 .SYNOPSIS
-    Démarre « ng serve » sans passer par npm.
+    Starts "ng serve" without going through npm.
 
 .DESCRIPTION
-    L'entrée de la CLI Angular est appelée directement : npm interposerait un
-    processus supplémentaire, que l'arrêt du script ne saurait plus atteindre.
+    The Angular CLI entry point is called directly: npm would interpose an extra
+    process that stopping the script could no longer reach.
 #>
 function Start-FrontendDevServer {
     param([Parameter(Mandatory)][string]$FrontendRoot)
 
     $cli = Join-Path $FrontendRoot $AngularCliEntryPoint
     if (-not (Test-Path -LiteralPath $cli -PathType Leaf)) {
-        throw "Dépendances absentes. Lancer : npm ci --prefix $FrontendProjectPath"
+        throw "Missing dependencies. Run: npm ci --prefix $FrontendProjectPath"
     }
 
     return Start-Process -FilePath "node" -ArgumentList @($cli, "serve") `
@@ -152,16 +152,16 @@ function Stop-FrontendDevServer {
 
 <#
 .DESCRIPTION
-    Les deux drapeaux ne sont pas décoratifs. Sans --port, le lanceur natif prend un
-    port libre au hasard et le proxy Angular ne trouve plus l'API ; sans --no-browser,
-    il ouvre une fenêtre Photino sur un wwwroot vide, que seul « publish » remplit.
+    Neither flag is decorative. Without --port, the native launcher takes a random
+    free port and the Angular proxy no longer finds the API; without --no-browser, it
+    opens a Photino window on an empty wwwroot that only "publish" fills.
 #>
 function Invoke-Dev {
     $root = Get-RepositoryRoot
     $server = Start-FrontendDevServer -FrontendRoot (Join-Path $root $FrontendProjectPath)
     try {
         $port = Get-FrontendProxyPort
-        Write-Host "API sur http://localhost:$port — interface annoncée ci-dessous par Angular."
+        Write-Host "API on http://localhost:$port — the interface is announced below by Angular."
         & dotnet run --project (Join-Path $root $ApiProjectPath) -- `
             --no-browser --port $port
     }
@@ -178,10 +178,10 @@ function Write-CrossBuildWarning {
     }
 
     Write-Warning @"
-Publication croisée vers $RuntimeIdentifier : elle vérifie la compilation, elle ne
-produit pas un artefact distribuable. Depuis Windows, l'archive perd le bit
-d'exécution des binaires Unix, et aucun smoke test ne peut s'exécuter ici.
-Pour un artefact publiable, passer par .github/workflows/release.yml.
+Cross publication to $RuntimeIdentifier checks the compilation, it does not produce
+a distributable artefact. From Windows, the archive loses the execute bit of Unix
+binaries, and no smoke test can run here.
+For a publishable artefact, go through .github/workflows/release.yml.
 "@
 }
 
@@ -196,11 +196,11 @@ function Invoke-Run {
     param([Parameter(Mandatory)][string]$RuntimeIdentifier)
 
     if ((Get-RuntimeOperatingSystem $RuntimeIdentifier) -ne (Get-HostOperatingSystem)) {
-        throw "Une publication $RuntimeIdentifier ne s'exécute pas sur ce système."
+        throw "A $RuntimeIdentifier publication does not run on this system."
     }
 
-    # L'exécutable est fenêtré. L'opérateur d'appel rendrait la main aussitôt, sans
-    # attendre la fermeture de l'application ni relever son code de sortie.
+    # The executable is windowed. The call operator would hand back control at once,
+    # without waiting for the application to close or picking up its exit code.
     $process = @{
         FilePath = Get-PublishedExecutable -RuntimeIdentifier $RuntimeIdentifier
         Wait = $true
@@ -250,8 +250,8 @@ function Invoke-Level {
     }
 }
 
-# Ces scripts s'adressent à quelqu'un qui construit l'application, pas à quelqu'un qui
-# débogue PowerShell : un refus attendu sort comme une phrase, sans trace d'exception.
+# These scripts address someone building the application, not someone debugging
+# PowerShell: an expected refusal comes out as a sentence, with no exception trace.
 try {
     Invoke-Level
 }

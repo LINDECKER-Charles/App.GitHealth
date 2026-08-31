@@ -1,6 +1,6 @@
 {
   "version": "__VERSION__",
-  "description": "Diagnostic local des branches Git : ce qui est fusionné, ce qui diverge, ce qui dort.",
+  "description": "Local diagnostic of Git branches: what is merged, what has diverged, what is dormant.",
   "homepage": "https://github.com/LINDECKER-Charles/App.GitHealth",
   "license": "MIT",
   "architecture": {
@@ -26,7 +26,7 @@
     }
   },
   "notes": [
-    "Les données vivent dans %LOCALAPPDATA%\\GitHealth : elles survivent aux mises à jour et à la désinstallation.",
-    "GitHealth a besoin de Git. Hors du PATH, indiquez son chemin avec --git-path <chemin>."
+    "The data lives in %LOCALAPPDATA%\\GitHealth: it survives both updates and uninstallation.",
+    "GitHealth needs Git. Outside the PATH, point at it with --git-path <path>."
   ]
 }
