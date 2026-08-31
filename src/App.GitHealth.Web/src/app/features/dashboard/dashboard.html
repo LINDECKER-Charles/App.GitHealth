@@ -329,15 +329,12 @@
     }
   </div>
 } @else if (isLoading()) {
-  <p class="dashboard-state" role="status" i18n="@@dashboard.state.loading">
-    Reading the last snapshot…
+  <p class="dashboard-state" role="status" i18n="@@dashboard.state.loading">Reading the capture…</p>
+} @else if (captures.error()) {
+  <!-- The repository frame already carries the message: repeating it would say nothing more. -->
+  <p class="dashboard-state" role="status" i18n="@@dashboard.state.emptyCapture">
+    No branch to show for this capture.
   </p>
-} @else if (error(); as message) {
-  <div class="dashboard-notice">
-    <ds-callout tone="danger" i18n-title="@@dashboard.error.title" title="Unreadable snapshot">{{
-      message
-    }}</ds-callout>
-  </div>
 } @else {
   <div class="dashboard-first-scan">
     <ds-empty-state

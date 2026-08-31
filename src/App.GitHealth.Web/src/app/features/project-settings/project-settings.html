@@ -119,6 +119,18 @@
             >
               Add
             </button>
+            <button
+              dsButton
+              class="pattern-pick"
+              size="sm"
+              variant="secondary"
+              iconLeft="git-branch"
+              type="button"
+              (click)="openPicker('protected')"
+              i18n="@@settings.patterns.protectedPick"
+            >
+              Choose…
+            </button>
           </form>
         </div>
 
@@ -152,6 +164,18 @@
               i18n="@@settings.patterns.excludedAdd"
             >
               Add
+            </button>
+            <button
+              dsButton
+              class="pattern-pick"
+              size="sm"
+              variant="secondary"
+              iconLeft="git-branch"
+              type="button"
+              (click)="openPicker('excluded')"
+              i18n="@@settings.patterns.excludedPick"
+            >
+              Choose…
             </button>
           </form>
         </div>
@@ -262,3 +286,14 @@
     </ds-panel>
   </div>
 </div>
+
+@if (pickerKind(); as kind) {
+  <app-branch-picker
+    [kind]="kind"
+    [patterns]="pickerPatterns()"
+    [repositoryPath]="repositoryPath()"
+    [fallbackReferences]="capturedReferences()"
+    (close)="closePicker()"
+    (confirm)="addPicked($event)"
+  />
+}

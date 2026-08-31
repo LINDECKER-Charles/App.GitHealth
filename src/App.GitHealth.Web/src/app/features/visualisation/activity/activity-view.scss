@@ -1,0 +1,299 @@
+/*
+ * The column widths are declared only once: the header, the rows and the band layer
+ * share the same grid, otherwise the thresholds do not land on the dots of the same
+ * age.
+ */
+:host {
+  --reg-name-width: 236px;
+  --reg-verdict-width: 168px;
+  --reg-gutter: 16px;
+  --reg-row-height: 31px;
+  --reg-columns: var(--reg-name-width) minmax(0, 1fr) var(--reg-verdict-width);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.reg-slider {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  width: 190px;
+}
+
+.reg-slider-head {
+  display: flex;
+  justify-content: space-between;
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  color: var(--text-muted);
+}
+
+.reg-slider-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.reg-slider-input {
+  width: 100%;
+  height: 18px;
+  accent-color: var(--primary-bg);
+  cursor: pointer;
+}
+
+.reg-counts {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.reg-draft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  padding: 6px var(--reg-gutter);
+  background: var(--surface-sunken);
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  color: var(--text-secondary);
+}
+
+.reg-draft-note {
+  flex: 1;
+  min-width: 0;
+}
+
+.reg-draft-link {
+  flex: none;
+  font-weight: var(--weight-medium);
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+.reg-draft-link:hover {
+  text-decoration: underline;
+}
+
+/* The header sticks to the top of the body: the axis stays readable as the list scrolls. */
+.reg-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--reg-columns);
+  align-items: center;
+  margin: 0 var(--reg-gutter);
+  padding: 10px 0 4px;
+  background: var(--surface);
+}
+
+.reg-head-verdict {
+  text-align: right;
+}
+
+.reg-axis {
+  position: relative;
+  height: 16px;
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-mono);
+  color: var(--text-muted);
+}
+
+.reg-axis-tick {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.reg-axis-tick[data-anchor='center'] {
+  transform: translateX(-50%);
+}
+
+.reg-axis-tick[data-anchor='end'] {
+  transform: translateX(-100%);
+}
+
+.reg-rows {
+  position: relative;
+  margin: 0 var(--reg-gutter) 4px;
+}
+
+.reg-bands-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: var(--reg-columns);
+  pointer-events: none;
+}
+
+.reg-bands {
+  position: relative;
+  grid-column: 2;
+}
+
+.reg-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transition: all var(--dur-base) var(--ease-out);
+}
+
+.reg-band[data-band='active'] {
+  right: 0;
+  border-radius: var(--radius-sm);
+  background: var(--status-success-bg);
+  opacity: 0.55;
+}
+
+.reg-band[data-band='aging'] {
+  background: var(--status-warning-bg);
+  opacity: 0.5;
+}
+
+.reg-band[data-band='inactive'] {
+  left: 0;
+  border-radius: var(--radius-sm);
+  background: var(--status-danger-bg);
+  opacity: 0.42;
+}
+
+.reg-rule {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transition: right var(--dur-base) var(--ease-out);
+}
+
+.reg-rule[data-rule='active'] {
+  background: var(--status-warning-solid);
+  color: var(--status-warning-fg);
+}
+
+.reg-rule[data-rule='inactive'] {
+  background: var(--status-danger-solid);
+  color: var(--status-danger-fg);
+}
+
+.reg-rule-label {
+  position: absolute;
+  top: -2px;
+  left: 4px;
+  white-space: nowrap;
+  font: var(--weight-medium) var(--text-2xs) / var(--lh-2xs) var(--font-mono);
+}
+
+/* Hugging the right edge, the rule flips its label to the left: nothing spills over the verdict. */
+.reg-rule-label.is-trailing {
+  left: auto;
+  right: 4px;
+}
+
+.reg-row {
+  display: grid;
+  grid-template-columns: var(--reg-columns);
+  height: var(--reg-row-height);
+  border-radius: var(--radius-sm);
+}
+
+.reg-row:hover {
+  background: var(--surface-hover);
+}
+
+.reg-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-right: 12px;
+}
+
+.reg-name-text {
+  flex: 1;
+  min-width: 0;
+  font: var(--type-code-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reg-name ds-icon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.reg-name ds-icon[data-flag='protected'] {
+  color: var(--text-brand);
+}
+
+/* Positioned, the track sits above the bands: the dot must never be drowned out. */
+.reg-track {
+  position: relative;
+  background: linear-gradient(var(--border-subtle), var(--border-subtle)) no-repeat center;
+  background-size: 100% 1px;
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+.reg-track[data-tone='success'] {
+  color: var(--status-success-solid);
+}
+
+.reg-track[data-tone='warning'] {
+  color: var(--status-warning-solid);
+}
+
+.reg-track[data-tone='danger'] {
+  color: var(--status-danger-solid);
+}
+
+.reg-span {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 1px;
+  background: currentcolor;
+  opacity: 0.35;
+}
+
+.reg-dot {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  margin-right: -4.5px;
+  border-radius: 50%;
+  background: currentcolor;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.reg-clamp {
+  position: absolute;
+  left: 2px;
+  top: 1px;
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-mono);
+  color: var(--status-danger-fg);
+}
+
+.reg-verdict {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.reg-age {
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.reg-state {
+  padding: 24px 20px;
+  font: var(--type-small);
+  color: var(--text-secondary);
+}

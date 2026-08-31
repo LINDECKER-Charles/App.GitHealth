@@ -18,6 +18,37 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard').then(({ Dashboard }) => Dashboard),
       },
       {
+        path: 'visualisation',
+        loadComponent: () =>
+          import('./features/visualisation/visualisation').then(
+            ({ Visualisation }) => Visualisation,
+          ),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'topology' },
+          {
+            path: 'topology',
+            loadComponent: () =>
+              import('./features/visualisation/topology/topology-view').then(
+                ({ TopologyView }) => TopologyView,
+              ),
+          },
+          {
+            path: 'register',
+            loadComponent: () =>
+              import('./features/visualisation/activity/activity-view').then(
+                ({ ActivityView }) => ActivityView,
+              ),
+          },
+          {
+            path: 'drift',
+            loadComponent: () =>
+              import('./features/visualisation/drift/drift-view').then(
+                ({ DriftView }) => DriftView,
+              ),
+          },
+        ],
+      },
+      {
         path: 'history',
         loadComponent: () =>
           import('./features/analysis-history/analysis-history').then(
@@ -30,11 +61,6 @@ export const routes: Routes = [
           import('./features/project-settings/project-settings').then(
             ({ ProjectSettings }) => ProjectSettings,
           ),
-      },
-      {
-        path: 'analyses/:analysisId',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard').then(({ Dashboard }) => Dashboard),
       },
     ],
   },

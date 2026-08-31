@@ -1,25 +1,16 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   computed,
   effect,
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
-import { apiErrorMessage } from '../../core/api/api-error';
-import { GitHealthApiClient } from '../../core/api/git-health-api-client';
 import { BranchSnapshotResponse, RecommendationKind } from '../../core/api/api.models';
 import { deleteCommand, recommendationLabels } from '../../core/branches/branch-labels';
 import { SnapshotExporter } from '../../core/branches/snapshot-export';
-import {
-  LoadedSnapshot,
-  loadEntireSnapshot,
-  snapshotPageSize,
-} from '../../core/branches/snapshot-loader';
 import { pluralMessage } from '../../core/i18n/plural-message';
 import { ToastService } from '../../core/workspace/toast';
 import { DsBadge } from '../../ui/core/ds-badge';
@@ -35,6 +26,7 @@ import { DsSelect } from '../../ui/forms/ds-select';
 import { DsSwitch } from '../../ui/forms/ds-switch';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
 import { DsEmptyState } from '../../ui/surfaces/ds-empty-state';
+import { CaptureStore } from '../project/capture-store';
 import { ProjectContext } from '../project/project-context';
 import { DashboardChip, buildChips } from './dashboard-chips';
 import { BranchRow, toRow } from './dashboard-row';
@@ -58,8 +50,6 @@ interface Tile {
   readonly count: number;
   readonly share: string;
 }
-
-const replayError = $localize`:@@dashboard.error.replay:This snapshot cannot be replayed.`;
 
 const tileDefinitions: readonly { id: RecommendationView; label: string; tone: Tone }[] = [
   { id: 'all', label: $localize`:@@dashboard.tile.all:All`, tone: 'info' },
@@ -92,41 +82,29 @@ const tileDefinitions: readonly { id: RecommendationView; label: string; tone: T
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
-  private readonly api = inject(GitHealthApiClient);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly exporter = inject(SnapshotExporter);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
+  protected readonly captures = inject(CaptureStore);
   protected readonly context = inject(ProjectContext);
   protected readonly topologyOptions = topologyOptions;
   protected readonly activityOptions = activityOptions;
   protected readonly relationshipOptions = relationshipOptions;
   protected readonly sortOptions = sortOptions;
 
-  private readonly params = toSignal(this.route.paramMap, { requireSync: true });
   private readonly queryParams = toSignal(this.route.queryParamMap, { requireSync: true });
-  private readonly historical = signal<LoadedSnapshot | null>(null);
-  private readonly isLoadingHistorical = signal(false);
-  private readonly historicalError = signal<string | null>(null);
 
-  protected readonly analysisId = computed(() => this.params().get('analysisId'));
   protected readonly openBranchId = computed(() => this.queryParams().get('branch'));
-  protected readonly isHistorical = computed(() => this.analysisId() !== null);
+  /** A past capture is replayed as it was: its patterns can no longer be edited from here. */
+  protected readonly isHistorical = computed(() => !this.captures.isLatestSelected());
   protected readonly filters = signal<BranchFilters>(defaultFilters);
   protected readonly showMoreFilters = signal(false);
   protected readonly selection = signal<ReadonlySet<string>>(new Set());
 
-  protected readonly snapshot = computed(() =>
-    this.isHistorical() ? this.historical() : this.context.snapshot(),
-  );
-
-  protected readonly isLoading = computed(() =>
-    this.isHistorical() ? this.isLoadingHistorical() : this.context.isLoadingSnapshot(),
-  );
-
-  protected readonly error = computed(() => this.historicalError());
+  protected readonly snapshot = this.captures.snapshot;
+  protected readonly isLoading = this.captures.isLoading;
   protected readonly branches = computed(() => this.snapshot()?.branches ?? []);
   protected readonly counts = computed(() => countByRecommendation(this.branches()));
 
@@ -181,7 +159,6 @@ export class Dashboard {
   });
 
   constructor() {
-    effect(() => this.loadHistorical(this.analysisId()));
     effect(() => this.context.visibleBranchIds.set(this.rows().map((row) => row.id)));
   }
 
@@ -270,30 +247,6 @@ export class Dashboard {
   private selectedBranches(): readonly BranchSnapshotResponse[] {
     const selection = this.selection();
     return this.visible().filter((branch) => selection.has(branch.id));
-  }
-
-  private loadHistorical(analysisId: string | null): void {
-    if (analysisId === null) {
-      this.historical.set(null);
-      return;
-    }
-
-    this.isLoadingHistorical.set(true);
-    this.historicalError.set(null);
-    loadEntireSnapshot((cursor) =>
-      this.api.getAnalysisSnapshots(analysisId, {
-        cursor: cursor ?? undefined,
-        pageSize: snapshotPageSize,
-      }),
-    )
-      .pipe(
-        finalize(() => this.isLoadingHistorical.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe({
-        next: (snapshot) => this.historical.set(snapshot),
-        error: (error: unknown) => this.historicalError.set(apiErrorMessage(error, replayError)),
-      });
   }
 }
 

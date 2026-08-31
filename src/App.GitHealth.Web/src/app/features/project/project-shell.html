@@ -11,7 +11,7 @@
           size="sm"
           variant="ghost"
           iconLeft="download"
-          [disabled]="!context.hasSnapshot()"
+          [disabled]="!captures.hasSnapshot()"
           (click)="exportSnapshot()"
           i18n="@@project.action.exportCsv"
         >
@@ -23,7 +23,7 @@
           variant="primary"
           iconLeft="refresh-cw"
           [loading]="context.isRunning()"
-          (click)="context.launchAnalysis()"
+          (click)="launchAnalysis()"
         >
           {{ runLabel() }}
         </button>
@@ -33,6 +33,25 @@
       <ds-badge size="sm" tone="info" icon="git-branch" [mono]="true">
         {{ referenceLabel() }}
       </ds-badge>
+      @if (captures.hasCaptures()) {
+        <span class="project-capture">
+          <span class="project-capture-label" aria-hidden="true" i18n="@@project.capture.label"
+            >Capture</span
+          >
+          <ds-select
+            class="project-capture-select"
+            size="sm"
+            i18n-ariaLabel="@@project.capture.aria"
+            ariaLabel="Displayed capture"
+            [options]="captures.options()"
+            [value]="captures.selectedId()"
+            (valueChange)="captures.select($event)"
+          />
+        </span>
+        @if (!captures.isLatestSelected()) {
+          <ds-badge size="sm" tone="warning" icon="info">{{ archivedNotice() }}</ds-badge>
+        }
+      }
       <span>{{ meta() }}</span>
     </div>
   </div>
@@ -78,23 +97,45 @@
     </div>
   }
 
+  @if (captures.error(); as message) {
+    <div class="project-notice">
+      <ds-callout
+        tone="danger"
+        i18n-title="@@project.captureError.title"
+        title="The requested capture could not be read"
+        >{{ message }}</ds-callout
+      >
+    </div>
+  }
+
   <div class="project-tabs">
     <nav class="etb-tabs" i18n-aria-label="@@project.tabs.aria" aria-label="Repository views">
       <a
         class="etb-tabs__tab"
         [class.etb-tabs__tab--on]="activeTab() === 'diagnostic'"
         [routerLink]="['/projects', projectId()]"
+        [queryParams]="captureLink()"
       >
         <ds-icon name="list" [size]="14" />
         <ng-container i18n="@@project.tabs.diagnostic">Diagnostic</ng-container>
-        @if (context.snapshot(); as snapshot) {
+        @if (captures.snapshot(); as snapshot) {
           <span class="etb-tabs__count">{{ snapshot.branches.length }}</span>
         }
       </a>
       <a
         class="etb-tabs__tab"
+        [class.etb-tabs__tab--on]="activeTab() === 'visualisation'"
+        [routerLink]="['/projects', projectId(), 'visualisation']"
+        [queryParams]="captureLink()"
+      >
+        <ds-icon name="eye" [size]="14" />
+        <ng-container i18n="@@project.tabs.visualisation">Visualisation</ng-container>
+      </a>
+      <a
+        class="etb-tabs__tab"
         [class.etb-tabs__tab--on]="activeTab() === 'history'"
         [routerLink]="['/projects', projectId(), 'history']"
+        [queryParams]="captureLink()"
       >
         <ds-icon name="clock" [size]="14" />
         <ng-container i18n="@@project.tabs.history">History</ng-container>
@@ -103,6 +144,7 @@
         class="etb-tabs__tab"
         [class.etb-tabs__tab--on]="activeTab() === 'settings'"
         [routerLink]="['/projects', projectId(), 'settings']"
+        [queryParams]="captureLink()"
       >
         <ds-icon name="settings" [size]="14" />
         <ng-container i18n="@@project.tabs.settings">Policies</ng-container>

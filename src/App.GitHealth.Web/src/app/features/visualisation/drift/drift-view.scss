@@ -1,0 +1,292 @@
+:host {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.drift-compare-label {
+  flex: none;
+  font: var(--weight-regular) var(--text-xs) / var(--lh-xs) var(--font-sans);
+  color: var(--text-muted);
+}
+
+.drift-select {
+  width: 172px;
+  flex: none;
+}
+
+.drift-compare-arrow {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.drift-notice {
+  padding: 16px 20px;
+}
+
+.drift-fill {
+  display: flex;
+  min-height: 100%;
+}
+
+/* Below this width the whole body scrolls: the journal columns are fixed. */
+.drift-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 980px;
+  min-height: 100%;
+  animation: gh-fade var(--dur-base) var(--ease-out) both;
+}
+
+.drift-layout {
+  display: flex;
+  flex: 1;
+}
+
+.drift-journal {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 16px 16px;
+}
+
+.drift-head {
+  display: grid;
+  align-items: center;
+  gap: 0 10px;
+  padding: 6px 6px 7px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.drift-head-from {
+  text-align: right;
+}
+
+.drift-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 13px 6px 5px;
+}
+
+.drift-group-label {
+  font: var(--weight-semibold) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.drift-group-count {
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-mono);
+  color: var(--text-muted);
+}
+
+.drift-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  margin-left: 2px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font: var(--weight-medium) var(--text-2xs) / 1 var(--font-sans);
+  cursor: pointer;
+  transition: var(--transition-control);
+}
+
+.drift-toggle:hover {
+  background: var(--ghost-bg-hover);
+  color: var(--text-primary);
+}
+
+.drift-toggle:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--ring-focus);
+}
+
+.drift-row {
+  display: grid;
+  align-items: center;
+  gap: 0 10px;
+  height: 37px;
+  padding: 0 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.drift-row:hover {
+  background: var(--surface-hover);
+}
+
+.drift-strip {
+  display: flex;
+  gap: 4px;
+}
+
+/* One cell per loaded capture; dotted when the branch did not exist yet. */
+.drift-cell {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border: 1px dashed var(--border-strong);
+  border-radius: 2.5px;
+  background: transparent;
+  opacity: 0.28;
+}
+
+.drift-cell.is-compared {
+  opacity: 1;
+}
+
+.drift-cell[data-tone] {
+  border-color: transparent;
+  border-style: solid;
+}
+
+.drift-cell[data-tone='success'] {
+  background: var(--status-success-solid);
+}
+
+.drift-cell[data-tone='warning'] {
+  background: var(--status-warning-solid);
+}
+
+.drift-cell[data-tone='danger'] {
+  background: var(--status-danger-solid);
+}
+
+.drift-cell[data-tone='neutral'] {
+  background: var(--status-neutral-solid);
+}
+
+.drift-cell[data-tone='merged'] {
+  background: var(--status-merged-solid);
+}
+
+.drift-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.drift-name-text {
+  min-width: 0;
+  font: var(--weight-regular) var(--text-xs) / var(--lh-xs) var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drift-flag-protected {
+  flex: none;
+  color: var(--text-brand);
+}
+
+.drift-flag-excluded {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.drift-verdict {
+  display: flex;
+  min-width: 0;
+}
+
+.drift-verdict-from {
+  justify-content: flex-end;
+}
+
+/* Ghost badge: a missing branch has no tone, it has an empty outline. */
+.drift-ghost {
+  display: inline-flex;
+  align-items: center;
+  height: 17px;
+  flex: none;
+  padding: 0 5px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: var(--weight-medium) var(--text-2xs) / 1 var(--font-sans);
+  white-space: nowrap;
+}
+
+.drift-arrow {
+  flex: none;
+  color: var(--border-strong);
+}
+
+.drift-arrow[data-tone='danger'] {
+  color: var(--status-danger-fg);
+}
+
+.drift-arrow[data-tone='success'] {
+  color: var(--status-success-fg);
+}
+
+.drift-arrow[data-tone='info'] {
+  color: var(--status-info-fg);
+}
+
+.drift-note {
+  min-width: 0;
+  font: var(--weight-regular) var(--text-2xs) / 15px var(--font-sans);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drift-side {
+  display: flex;
+  width: 300px;
+  flex: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-left: 1px solid var(--divider);
+}
+
+.drift-side-title {
+  font: var(--weight-semibold) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.drift-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drift-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.drift-stat-label {
+  flex: 1;
+  font: var(--weight-regular) var(--text-sm) / 17px var(--font-sans);
+  color: var(--text-secondary);
+}
+
+.drift-stat-count {
+  font: var(--weight-semibold) var(--text-base) / 17px var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.drift-legend {
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  color: var(--text-muted);
+}

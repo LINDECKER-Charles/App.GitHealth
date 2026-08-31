@@ -1,0 +1,89 @@
+/*
+ * Skin shared by the three sub-views of the Visualisation tab: a card that takes the
+ * remaining height, a fixed header, a body that scrolls on its own.
+ * Shared sheet, listed in the `styleUrls` of every sub-view.
+ */
+.viz-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0 20px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+
+.viz-card-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.viz-card-identity {
+  min-width: 0;
+}
+
+.viz-card-title {
+  font: var(--weight-semibold) var(--text-md) / var(--lh-md) var(--font-sans);
+}
+
+.viz-card-subtitle {
+  font: var(--weight-regular) var(--text-xs) / var(--lh-xs) var(--font-sans);
+  color: var(--text-muted);
+}
+
+.viz-card-spacer {
+  flex: 1;
+}
+
+.viz-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.viz-card-foot {
+  flex: none;
+  padding: 8px 18px 14px;
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  color: var(--text-muted);
+}
+
+.viz-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: var(--weight-regular) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  color: var(--text-muted);
+}
+
+.viz-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.viz-column-label {
+  font: var(--weight-semibold) var(--text-2xs) / var(--lh-2xs) var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.viz-empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.viz-empty ds-empty-state {
+  width: 520px;
+}

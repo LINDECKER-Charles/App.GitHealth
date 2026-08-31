@@ -160,6 +160,11 @@
   gap: 6px;
 }
 
+/* The pattern column is narrow: the branch picker drops below the field. */
+.pattern-form {
+  flex-wrap: wrap;
+}
+
 .relocation-form {
   max-width: 560px;
 }
@@ -168,6 +173,15 @@
 .relocation-form ds-input {
   flex: 1;
   min-width: 0;
+}
+
+.pattern-form ds-input {
+  min-width: 140px;
+}
+
+/* Once wrapped, the button fills the width: the fold then looks intentional. */
+.pattern-pick {
+  flex: 1;
 }
 
 .settings-actions {

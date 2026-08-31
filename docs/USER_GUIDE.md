@@ -175,8 +175,8 @@ The screen has three zones:
   the guide — plus **Update** when a newer version has been published;
 - the **rail** lists the observed repositories, their reachability and their path,
   arranged in collapsible sections;
-- the **central area** presents the current repository under three tabs: **Diagnostic**,
-  **History** and **Policies**.
+- the **central area** presents the current repository under four tabs: **Diagnostic**,
+  **Visualisation**, **History** and **Policies**.
 
 ## Keyboard shortcuts
 

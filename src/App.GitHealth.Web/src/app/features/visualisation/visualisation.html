@@ -1,0 +1,11 @@
+<div class="viz-switch">
+  <ds-segmented-control
+    i18n-aria-label="@@visualisation.switch.aria"
+    aria-label="Repository reading"
+    [options]="subViews"
+    [value]="active()"
+    (valueChange)="open($event)"
+  />
+</div>
+
+<router-outlet />

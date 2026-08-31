@@ -1,0 +1,226 @@
+@if (hasRows()) {
+  <section class="viz-card">
+    <header class="viz-card-head">
+      <div class="viz-card-identity">
+        <div class="viz-card-title" i18n="@@activity.view.title">Activity register</div>
+        <div class="viz-card-subtitle" i18n="@@activity.view.subtitle">
+          the bar measures the silence since the last commit · the dot marks the last activity · the
+          bands come from the policy
+        </div>
+      </div>
+      <div class="viz-card-spacer"></div>
+      <div class="reg-slider">
+        <div class="reg-slider-head">
+          <span i18n="@@activity.view.activeUntil">active until</span>
+          <span class="reg-slider-value" i18n="@@activity.view.activeDays"
+            >{{ activeValue() }} d</span
+          >
+        </div>
+        <input
+          class="reg-slider-input"
+          type="range"
+          i18n-aria-label="@@activity.view.activeAria"
+          aria-label="Activity threshold, in days"
+          [attr.aria-valuetext]="activeValueText()"
+          [attr.min]="bounds().activeMin"
+          [attr.max]="bounds().activeMax"
+          [value]="activeValue()"
+          (input)="changeActive($event)"
+        />
+      </div>
+      <div class="reg-slider">
+        <div class="reg-slider-head">
+          <span i18n="@@activity.view.inactiveAfter">inactive after</span>
+          <span class="reg-slider-value" i18n="@@activity.view.inactiveDays"
+            >{{ inactiveValue() }} d</span
+          >
+        </div>
+        <input
+          class="reg-slider-input"
+          type="range"
+          i18n-aria-label="@@activity.view.inactiveAria"
+          aria-label="Inactivity threshold, in days"
+          [attr.aria-valuetext]="inactiveValueText()"
+          [attr.min]="bounds().inactiveMin"
+          [attr.max]="bounds().inactiveMax"
+          [value]="inactiveValue()"
+          (input)="changeInactive($event)"
+        />
+      </div>
+      <div class="reg-counts">
+        @for (badge of countBadges(); track badge.tone) {
+          <ds-badge size="sm" [tone]="badge.tone">{{ badge.label }}</ds-badge>
+        }
+      </div>
+    </header>
+
+    @if (isDirty()) {
+      <div class="reg-draft" role="status">
+        <span class="reg-draft-note" i18n="@@activity.view.draftNote">
+          Thresholds explored here only · the saved policy stays {{ savedLabel() }}
+        </span>
+        <button dsButton size="sm" variant="ghost" (click)="reset()" i18n="@@activity.view.reset">
+          Reset
+        </button>
+        <a
+          class="reg-draft-link"
+          [routerLink]="['/projects', projectId(), 'settings']"
+          i18n="@@activity.view.saveInPolicies"
+        >
+          Save in the Policies tab
+        </a>
+      </div>
+    }
+
+    <div class="viz-card-body">
+      <div
+        class="reg-table"
+        role="table"
+        i18n-aria-label="@@activity.view.tableAria"
+        aria-label="Activity register of the branches"
+      >
+        <div class="reg-head" role="row">
+          <span class="viz-column-label" role="columnheader" i18n="@@activity.view.columnBranch">
+            Branch
+          </span>
+          <div
+            class="reg-axis"
+            role="columnheader"
+            i18n-aria-label="@@activity.view.axisAria"
+            aria-label="Time since the last activity"
+          >
+            @for (tick of axisTicks(); track tick.leftPercent) {
+              <span
+                class="reg-axis-tick"
+                [attr.data-anchor]="tick.anchor"
+                [style.left.%]="tick.leftPercent"
+                >{{ tick.label }}</span
+              >
+            }
+          </div>
+          <span
+            class="viz-column-label reg-head-verdict"
+            role="columnheader"
+            i18n="@@activity.view.columnVerdict"
+          >
+            Recalculated verdict
+          </span>
+        </div>
+
+        <div class="reg-rows" role="rowgroup">
+          <div class="reg-bands-layer" aria-hidden="true">
+            <div class="reg-bands">
+              <span
+                class="reg-band"
+                data-band="active"
+                [style.width.%]="bands().activeEdgePercent"
+              ></span>
+              <span
+                class="reg-band"
+                data-band="aging"
+                [style.right.%]="bands().activeEdgePercent"
+                [style.width.%]="bands().agingWidthPercent"
+              ></span>
+              <span
+                class="reg-band"
+                data-band="inactive"
+                [style.right.%]="bands().inactiveEdgePercent"
+              ></span>
+              <span class="reg-rule" data-rule="active" [style.right.%]="bands().activeEdgePercent">
+                <span class="reg-rule-label" [class.is-trailing]="bands().isActiveLabelTrailing">{{
+                  bands().activeLabel
+                }}</span>
+              </span>
+              <span
+                class="reg-rule"
+                data-rule="inactive"
+                [style.right.%]="bands().inactiveEdgePercent"
+              >
+                <span
+                  class="reg-rule-label"
+                  [class.is-trailing]="bands().isInactiveLabelTrailing"
+                  >{{ bands().inactiveLabel }}</span
+                >
+              </span>
+            </div>
+          </div>
+
+          @for (row of rows(); track row.id) {
+            <div class="reg-row" role="row">
+              <div class="reg-name" role="cell">
+                <span class="reg-name-text">{{ row.name }}</span>
+                @if (row.flag; as flag) {
+                  <ds-icon
+                    [name]="flag.icon"
+                    [size]="flagIconSize"
+                    [label]="flag.label"
+                    [attr.data-flag]="flag.kind"
+                  />
+                }
+                @if (row.scaleLabel; as scale) {
+                  <ds-icon
+                    name="clock"
+                    data-flag="reduced"
+                    [size]="flagIconSize"
+                    [label]="scale"
+                    [attr.title]="scale"
+                  />
+                }
+              </div>
+              <div
+                class="reg-track"
+                role="cell"
+                [attr.data-tone]="row.tone"
+                [attr.aria-label]="row.trackLabel"
+              >
+                @if (row.hasMark) {
+                  <span class="reg-span" [style.width.%]="row.barWidthPercent"></span>
+                  <span class="reg-dot" [style.right.%]="row.offsetPercent"></span>
+                }
+                @if (row.clampLabel; as clamp) {
+                  <span class="reg-clamp">{{ clamp }}</span>
+                }
+              </div>
+              <div class="reg-verdict" role="cell">
+                <span class="reg-age">{{ row.ageLabel }}</span>
+                <ds-badge size="sm" [tone]="row.verdictTone">{{ row.verdictLabel }}</ds-badge>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <footer class="viz-card-foot" i18n="@@activity.view.rule">
+      Rule applied: a protected or excluded pattern beats everything and classes the branch as
+      "Excluded". Otherwise a branch that still holds its own commits stays "Keep", and moves to
+      "Review" as soon as it is inactive or diverges. A merged or in-sync branch holds no own commit
+      any more: its scale shortens to {{ mergedActiveUntilDays }} d / {{ mergedInactiveAfterDays }}
+      d, and it reads "Done", "Review", then "Cleanup possible". The coloured bands trace the whole
+      policy: a row marked with a clock reads on its own shortened scale, not on the band it
+      crosses.
+    </footer>
+  </section>
+} @else if (captures.isLoading()) {
+  <p class="reg-state" role="status" i18n="@@activity.view.loading">Reading the last capture…</p>
+} @else if (hasSnapshot()) {
+  <div class="viz-empty">
+    <ds-empty-state
+      icon="git-branch"
+      i18n-title="@@activity.view.emptyRows.title"
+      title="No branch to enter in the register"
+      i18n-description="@@activity.view.emptyRows.description"
+      description="This capture keeps no reference: there is nothing to place on the time axis."
+    />
+  </div>
+} @else {
+  <div class="viz-empty">
+    <ds-empty-state
+      icon="clock"
+      i18n-title="@@activity.view.emptySnapshot.title"
+      title="This repository has not been measured yet"
+      i18n-description="@@activity.view.emptySnapshot.description"
+      description="Run an analysis from the Diagnostic: the register will then place every branch on the time axis."
+    />
+  </div>
+}

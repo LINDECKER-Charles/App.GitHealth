@@ -30,7 +30,7 @@ internal static class Program
         }
         catch (Exception exception)
         {
-            Console.Error.WriteLine($"Benchmark interrompu : {exception.Message}");
+            Console.Error.WriteLine($"Benchmark interrupted: {exception.Message}");
             return 1;
         }
     }

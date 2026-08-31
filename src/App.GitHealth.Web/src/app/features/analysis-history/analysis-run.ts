@@ -1,8 +1,10 @@
+import { Params } from '@angular/router';
 import { AnalysisHistoryItem, AnalysisRunStatus } from '../../core/api/api.models';
 import { displayReference } from '../../core/branches/branch-labels';
 import { pluralMessage } from '../../core/i18n/plural-message';
 import { elapsedDuration } from '../../core/workspace/relative-time';
 import { Tone } from '../../ui/icon-name';
+import { captureQueryParam } from '../project/capture-history';
 
 /** Analysis run as the card shows it: every value comes from a recorded fact. */
 export interface AnalysisRun {
@@ -11,6 +13,8 @@ export interface AnalysisRun {
   readonly statusLabel: string;
   readonly tone: Tone;
   readonly isOpenable: boolean;
+  /** What to add to the repository URL so that it shows this capture. */
+  readonly captureParams: Params;
   readonly startedAtUtc: string;
   readonly duration: string;
   readonly reference: string;
@@ -55,6 +59,7 @@ function toRun(item: AnalysisHistoryItem, previous: AnalysisHistoryItem | undefi
     statusLabel: statusLabels[item.status],
     tone: statusTones[item.status],
     isOpenable: isCompleted,
+    captureParams: { [captureQueryParam]: item.analysisId },
     startedAtUtc: item.startedAtUtc,
     duration: elapsedDuration(item.startedAtUtc, item.completedAtUtc),
     reference: displayReference(item.referenceName),
