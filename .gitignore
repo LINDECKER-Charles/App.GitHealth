@@ -12,7 +12,7 @@ coverage/
 .idea/
 .vscode/
 
-# Instructions agent locales — miroir non versionné de AGENTS.md
+# Local agent instructions — untracked mirror of AGENTS.md
 CLAUDE.md
 
 # Angular / Node.js
@@ -37,7 +37,7 @@ data/
 .env.*
 !.env.example
 
-# Surcouches Compose propres à un poste
+# Compose overlays specific to one machine
 compose.override.yaml
 compose.override.yml
 *.pfx

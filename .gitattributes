@@ -1,10 +1,10 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-# Ressources binaires : aucune normalisation de fin de ligne, sur aucun système.
+# Binary assets: no end-of-line normalisation, on any system.
 *.ttf binary
 *.ico binary
 
-# Passerelles de build : le shebang exige des fins de ligne LF, cmd.exe des CRLF.
+# Build entry points: the shebang requires LF line endings, cmd.exe requires CRLF.
 *.sh text eol=lf
 *.cmd text eol=crlf

@@ -14,9 +14,9 @@
   </PropertyGroup>
 
   <!--
-    La licence MIT n'exige qu'une chose : que la mention de copyright suive le
-    logiciel. Ces propriétés l'inscrivent dans les métadonnées des assemblies, donc
-    dans les binaires distribués, et pas seulement dans le fichier LICENSE du dépôt.
+    The MIT license requires only one thing: that the copyright notice follows the
+    software. These properties write it into the assembly metadata, and therefore into
+    the distributed binaries, not only into the repository's LICENSE file.
   -->
   <PropertyGroup>
     <Product>GitHealth</Product>
