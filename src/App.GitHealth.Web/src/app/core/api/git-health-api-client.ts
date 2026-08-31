@@ -40,8 +40,8 @@ export class GitHealthApiClient {
   }
 
   /**
-   * Déclenche la mise à jour. Une réponse vide signifie que l'hôte relance
-   * l'application ; un statut signifie que rien n'était applicable.
+   * Triggers the update. An empty response means the host is restarting the
+   * application; a status means nothing was applicable.
    */
   applyUpdate(): Observable<UpdateStatus | null> {
     return this.request(this.http.post<UpdateStatus | null>(`${apiRoot}/updates/apply`, null));

@@ -26,19 +26,19 @@ import {
 } from './folder-scan.models';
 import { defaultProjectSettings } from './project-defaults';
 
-/** Cadence de relecture des analyses en cours, partagée avec les tests. */
+/** Re-read cadence for the running analyses, shared with the tests. */
 export const scanPollIntervalMs = 900;
 
 const queueFullCode = 'analysis.queue_full';
-const registerFailureMessage = 'Ce dépôt n’a pas pu être enregistré.';
-const launchFailureMessage = 'L’analyse n’a pas pu être lancée.';
-const queueSaturatedMessage = 'La file d’analyses est restée pleine.';
-const missingReferenceMessage = 'Aucune référence de comparaison lisible dans ce dépôt.';
+const registerFailureMessage = $localize`:@@apiError.scan.save:This repository could not be saved.`;
+const launchFailureMessage = $localize`:@@apiError.scan.launch:The analysis could not be started.`;
+const queueSaturatedMessage = $localize`:@@apiError.scan.queueFull:The analysis queue stayed full.`;
+const missingReferenceMessage = $localize`:@@apiError.scan.noBaseline:No readable baseline in this repository.`;
 
 /**
- * Scan groupé d'une sélection de dépôts : chacun est enregistré si besoin, puis mis en file.
- * Le parallélisme reste celui de l'hôte — la file accepte ce qu'elle peut, et les dépôts
- * refusés repartent dès qu'une analyse se termine. Le scan se poursuit dialogue fermé.
+ * Bulk scan of a selection of repositories: each one is saved if needed, then queued.
+ * The parallelism stays the host's — the queue accepts what it can, and the refused
+ * repositories go back as soon as an analysis finishes. The scan continues once closed.
  */
 @Injectable({ providedIn: 'root' })
 export class FolderScanStore {
@@ -108,7 +108,7 @@ export class FolderScanStore {
         tap((project) => {
           this.projects.upsert(project);
           this.patch(job.key, { projectId: project.id, state: 'pending' });
-          // Le dépôt part en analyse sans attendre l'enregistrement de toute la sélection.
+          // The repository is analysed without waiting for the whole selection to be saved.
           this.launchNext();
         }),
         catchError((error: unknown) => {
@@ -122,9 +122,9 @@ export class FolderScanStore {
   }
 
   /**
-   * Met en file un dépôt prêt après l'autre, jusqu'au refus : l'hôte reste maître du rythme.
-   * Une seule mise en file circule à la fois, sinon un enregistrement et un tour de suivi
-   * simultanés lanceraient deux fois le même dépôt.
+   * Queues one ready repository after another, until refusal: the host sets the pace.
+   * Only one queueing call is in flight at a time, otherwise a registration and a polling
+   * round happening together would launch the same repository twice.
    */
   private launchNext(): void {
     const next = this.jobs().find((job) => job.state === 'pending');
@@ -154,7 +154,7 @@ export class FolderScanStore {
 
   private failLaunch(job: FolderScanJob, error: unknown): void {
     if (isQueueFull(error) && this.summary().active > 0) {
-      // File saturée : ce dépôt repart dès qu'une analyse en cours libère sa place.
+      // Queue saturated: this repository goes back as soon as a running analysis frees a slot.
       this.ensurePolling();
       return;
     }
@@ -216,7 +216,7 @@ export class FolderScanStore {
     });
   }
 
-  /** Plus rien à suivre : la liste des dépôts reflète alors les nouveaux snapshots. */
+  /** Nothing left to follow: the repository list then reflects the new snapshots. */
   private refreshWhenIdle(): void {
     if (this.isRunning()) {
       return;

@@ -1,13 +1,13 @@
 import { Injectable, computed, signal } from '@angular/core';
 
-/** Ouverture des surfaces globales : la palette et l'ajout de dépôt sont joignables de partout. */
+/** Global surfaces: the palette and the add-repository dialog are reachable from anywhere. */
 @Injectable({ providedIn: 'root' })
 export class WorkspaceDialogs {
   readonly isPaletteOpen = signal(false);
   readonly isAddRepositoryOpen = signal(false);
   readonly isScanFolderOpen = signal(false);
 
-  /** Dépôt dont on choisit le groupe, ou `null` quand le dialogue est fermé. */
+  /** Repository whose group is being chosen, or `null` when the dialog is closed. */
   readonly projectGroupId = signal<string | null>(null);
   readonly isProjectGroupOpen = computed(() => this.projectGroupId() !== null);
 

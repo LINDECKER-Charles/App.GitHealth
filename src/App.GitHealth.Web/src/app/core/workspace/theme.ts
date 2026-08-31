@@ -6,7 +6,7 @@ export type Theme = 'light' | 'dark';
 const storageKey = 'githealth.theme';
 const themeAttribute = 'data-theme';
 
-/** Le thème sombre s'active par `data-theme="dark"` sur `<html>`, comme le prévoit le design system. */
+/** The dark theme switches on via `data-theme="dark"` on `<html>`, as the design system says. */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly document = inject(DOCUMENT);
@@ -29,7 +29,7 @@ export class ThemeService {
     try {
       this.document.defaultView?.localStorage.setItem(storageKey, theme);
     } catch {
-      // Un navigateur sans stockage persistant reste utilisable : le thème vaut pour la session.
+      // A browser with no persistent storage stays usable: the theme lasts for the session.
     }
   }
 

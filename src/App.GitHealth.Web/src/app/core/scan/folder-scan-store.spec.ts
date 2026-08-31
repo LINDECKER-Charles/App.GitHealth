@@ -25,7 +25,7 @@ describe('FolderScanStore', () => {
     vi.useRealTimers();
   });
 
-  it('enregistre les dépôts inconnus puis analyse toute la sélection', () => {
+  it('saves the unknown repositories then analyses the whole selection', () => {
     store.start([target('/repos/a', null), target('/repos/b', 'p-b')]);
 
     const creation = http.expectOne('/api/projects');
@@ -47,7 +47,7 @@ describe('FolderScanStore', () => {
     expect(store.isRunning()).toBe(false);
   });
 
-  it('analyse un dépôt dès son enregistrement, sans attendre les suivants', () => {
+  it('analyses a repository as soon as it is saved, without waiting for the next ones', () => {
     store.start([target('/repos/a', null), target('/repos/b', null)]);
 
     http.expectOne('/api/projects').flush(project('p-a', '/repos/a'));
@@ -67,7 +67,7 @@ describe('FolderScanStore', () => {
     expect(states(store)).toEqual(['done', 'done']);
   });
 
-  it('remet en attente un dépôt refusé par une file pleine, puis le relance', () => {
+  it('puts back a repository refused by a full queue, then relaunches it', () => {
     store.start([target('/repos/a', 'p-a'), target('/repos/b', 'p-b')]);
 
     launch(http, 'p-a', 'an-a');
@@ -85,13 +85,13 @@ describe('FolderScanStore', () => {
     expect(states(store)).toEqual(['done', 'done']);
   });
 
-  it('signale l’échec d’un enregistrement sans bloquer les autres dépôts', () => {
+  it('reports a failed registration without blocking the other repositories', () => {
     store.start([target('/repos/a', null), target('/repos/b', 'p-b')]);
 
     http
       .expectOne('/api/projects')
       .flush(
-        { detail: 'Un projet utilise déjà ce dépôt.', code: 'project.already_exists' },
+        { detail: 'Another project already uses this repository.', code: 'project.already_exists' },
         { status: 409, statusText: 'Conflict' },
       );
     launch(http, 'p-b', 'an-b');
@@ -100,7 +100,7 @@ describe('FolderScanStore', () => {
     flushProjectReload(http);
 
     expect(states(store)).toEqual(['failed', 'done']);
-    expect(store.jobs()[0].message).toBe('Un projet utilise déjà ce dépôt.');
+    expect(store.jobs()[0].message).toBe('Another project already uses this repository.');
     expect(store.summary()).toMatchObject({ done: 1, failed: 1 });
   });
 });
@@ -144,7 +144,7 @@ function rejectAsQueueFull(http: HttpTestingController, projectId: string): void
   http
     .expectOne(`/api/projects/${projectId}/analyses`)
     .flush(
-      { detail: 'La file d’analyses est pleine.', code: 'analysis.queue_full' },
+      { detail: 'The analysis queue is full.', code: 'analysis.queue_full' },
       { status: 503, statusText: 'Service Unavailable' },
     );
 }
@@ -162,7 +162,7 @@ function complete(http: HttpTestingController, analysisId: string): void {
   });
 }
 
-/** Le scan terminé relit la liste des dépôts : ces deux appels closent le scénario. */
+/** A finished scan re-reads the repository list: these two calls close the scenario. */
 function flushProjectReload(http: HttpTestingController): void {
   http.expectOne('/api/projects').flush([]);
   http.expectOne('/api/runtime').flush({

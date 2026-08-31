@@ -10,28 +10,28 @@ describe('relativeTime', () => {
 
   afterEach(() => vi.useRealTimers());
 
-  it('rend « à l’instant » sous la minute', () => {
-    expect(relativeTime('2026-08-29T11:59:30Z')).toBe("à l'instant");
+  it('renders "just now" under the minute', () => {
+    expect(relativeTime('2026-08-29T11:59:30Z')).toBe('just now');
   });
 
-  it('rend des minutes puis des heures puis des jours', () => {
-    expect(relativeTime('2026-08-29T11:48:00Z')).toBe('il y a 12 min');
-    expect(relativeTime('2026-08-29T09:00:00Z')).toBe('il y a 3 h');
-    expect(relativeTime('2026-08-27T12:00:00Z')).toBe('il y a 2 j');
+  it('renders minutes, then hours, then days', () => {
+    expect(relativeTime('2026-08-29T11:48:00Z')).toBe('12 min ago');
+    expect(relativeTime('2026-08-29T09:00:00Z')).toBe('3 h ago');
+    expect(relativeTime('2026-08-27T12:00:00Z')).toBe('2 d ago');
   });
 
-  it('reste lisible sans date', () => {
-    expect(relativeTime(null)).toBe('date inconnue');
-    expect(relativeTime('pas une date')).toBe('date inconnue');
+  it('stays readable with no date', () => {
+    expect(relativeTime(null)).toBe('unknown date');
+    expect(relativeTime('not a date')).toBe('unknown date');
   });
 });
 
 describe('elapsedDuration', () => {
-  it('rend des secondes à la virgule française', () => {
-    expect(elapsedDuration('2026-08-29T12:00:00.000Z', '2026-08-29T12:00:01.800Z')).toBe('1,8 s');
+  it('renders seconds with the locale decimal separator', () => {
+    expect(elapsedDuration('2026-08-29T12:00:00.000Z', '2026-08-29T12:00:01.800Z')).toBe('1.8 s');
   });
 
-  it('rend un tiret tant que l’analyse n’est pas terminée', () => {
+  it('renders a dash while the analysis is not finished', () => {
     expect(elapsedDuration('2026-08-29T12:00:00Z', null)).toBe('—');
   });
 });

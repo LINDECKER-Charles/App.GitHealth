@@ -1,26 +1,29 @@
 import { ProjectResponse } from '../api/api.models';
+import { sourceLocale } from '../i18n/locale';
 
 export type SectionKind = 'favorites' | 'group' | 'ungrouped';
 
 export interface ProjectSection {
-  /** Clé stable du repli : elle survit au renommage d'un autre groupe. */
+  /** Stable collapse key: it survives the renaming of another group. */
   readonly key: string;
   readonly kind: SectionKind;
   readonly title: string;
   readonly projects: readonly ProjectResponse[];
 }
 
+const labelCollator = new Intl.Collator(sourceLocale, { sensitivity: 'base' });
+
 export const favoritesSectionKey = 'favorites';
 export const ungroupedSectionKey = 'ungrouped';
 
-const favoritesTitle = 'Favoris';
-const ungroupedTitle = 'Sans groupe';
+const favoritesTitle = $localize`:@@ui.projectSection.favorites:Favourites`;
+const ungroupedTitle = $localize`:@@ui.projectSection.ungrouped:Ungrouped`;
 
 export function groupSectionKey(groupName: string): string {
   return `group:${groupName}`;
 }
 
-/** Noms de groupes existants, dédoublonnés et triés : de quoi proposer un rangement. */
+/** Existing group names, deduplicated and sorted: enough to offer a destination. */
 export function knownGroupNames(projects: readonly ProjectResponse[]): readonly string[] {
   const names = new Set<string>();
   for (const project of projects) {
@@ -33,9 +36,9 @@ export function knownGroupNames(projects: readonly ProjectResponse[]): readonly 
 }
 
 /**
- * Range les dépôts filtrés en sections : les favoris d'abord, puis les groupes par ordre
- * alphabétique, puis le reste. Un favori ne paraît que dans « Favoris » — le rail ne montre
- * jamais deux fois le même dépôt.
+ * Arranges the filtered repositories into sections: favourites first, then the groups in
+ * alphabetical order, then the rest. A favourite only appears under "Favourites" — the rail
+ * never shows the same repository twice.
  */
 export function buildProjectSections(
   projects: readonly ProjectResponse[],
@@ -86,5 +89,5 @@ function section(
 }
 
 function compareLabels(left: string, right: string): number {
-  return left.localeCompare(right, 'fr', { sensitivity: 'base' });
+  return labelCollator.compare(left, right);
 }

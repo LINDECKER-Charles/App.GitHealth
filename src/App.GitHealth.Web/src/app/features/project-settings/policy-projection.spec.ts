@@ -36,51 +36,51 @@ function branch(
 const branches = [branch('docs/guide'), branch('feature/export-csv')];
 
 describe('projectStats', () => {
-  it('annonce « inchangé » quand la politique éditée vaut la politique enregistrée', () => {
+  it('reports "unchanged" when the edited policy equals the saved policy', () => {
     const stats = projectStats(branches, savedPolicy);
     expect(stats.map((stat) => stat.label)).toEqual([
-      'Conserver',
-      'Terminée',
-      'À examiner',
-      'Nettoyage possible',
-      'Exclue',
+      'Keep',
+      'Done',
+      'Review',
+      'Cleanup possible',
+      'Excluded',
     ]);
-    expect(stats.every((stat) => stat.delta === 'inchangé')).toBe(true);
+    expect(stats.every((stat) => stat.delta === 'unchanged')).toBe(true);
     expect(stats[0].count).toBe(2);
   });
 
-  it('chiffre l’écart introduit par un nouveau motif', () => {
+  it('quantifies the difference a new pattern introduces', () => {
     const stats = projectStats(branches, {
       ...savedPolicy,
       excludedPatterns: ['refs/heads/feature/*'],
     });
-    const keep = stats.find((stat) => stat.label === 'Conserver');
-    const excluded = stats.find((stat) => stat.label === 'Exclue');
+    const keep = stats.find((stat) => stat.label === 'Keep');
+    const excluded = stats.find((stat) => stat.label === 'Excluded');
     expect(keep?.count).toBe(1);
-    expect(keep?.delta).toBe('−1 vs politique enregistrée');
+    expect(keep?.delta).toBe('−1 vs saved policy');
     expect(excluded?.count).toBe(1);
-    expect(excluded?.delta).toBe('+1 vs politique enregistrée');
+    expect(excluded?.delta).toBe('+1 vs saved policy');
   });
 });
 
 describe('projectMatches', () => {
-  it('ne liste que les branches capturées par un motif', () => {
+  it('lists only the branches captured by a pattern', () => {
     const matches = projectMatches(branches, {
       ...savedPolicy,
       protectedPatterns: ['refs/heads/docs/*'],
     });
     expect(matches).toEqual([
-      { referenceName: 'refs/heads/docs/guide', flag: 'Protégée', tone: 'brand' },
+      { referenceName: 'refs/heads/docs/guide', flag: 'Protected', tone: 'brand' },
     ]);
   });
 
-  it('donne la priorité à l’exclusion sur la protection', () => {
+  it('gives priority to exclusion over protection', () => {
     const matches = projectMatches(branches, {
       ...savedPolicy,
       protectedPatterns: ['refs/heads/*'],
       excludedPatterns: ['refs/heads/docs/*'],
     });
-    expect(matches[0].flag).toBe('Exclue');
-    expect(matches[1].flag).toBe('Protégée');
+    expect(matches[0].flag).toBe('Excluded');
+    expect(matches[1].flag).toBe('Protected');
   });
 });

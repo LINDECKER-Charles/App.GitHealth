@@ -14,7 +14,7 @@ import { DirectoryListing } from '../../core/api/api.models';
 import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
 
-/** Parcourt les dossiers lisibles par le serveur pour poser le chemin sans le saisir. */
+/** Browses the folders the server can read, so a path can be set without typing it. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DsButton, DsIcon],
@@ -49,7 +49,12 @@ export class DirectoryBrowser {
       .subscribe({
         next: (listing) => this.listing.set(listing),
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Ce dossier ne peut pas être parcouru.')),
+          this.error.set(
+            apiErrorMessage(
+              error,
+              $localize`:@@addRepository.browser.error:This folder cannot be browsed.`,
+            ),
+          ),
       });
   }
 

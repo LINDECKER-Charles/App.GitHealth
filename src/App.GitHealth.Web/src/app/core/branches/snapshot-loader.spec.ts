@@ -36,7 +36,7 @@ function page(index: number, nextCursor: string | null): SnapshotPageResponse {
 }
 
 describe('loadEntireSnapshot', () => {
-  it('suit les curseurs et concatène les branches', async () => {
+  it('follows the cursors and concatenates the branches', async () => {
     const cursors: (string | null)[] = [];
     const snapshot = await firstValueFrom(
       loadEntireSnapshot((cursor) => {
@@ -59,12 +59,12 @@ describe('loadEntireSnapshot', () => {
     expect(snapshot.referenceName).toBe('refs/heads/main');
   });
 
-  it('signale une lecture tronquée quand le garde-fou est atteint', async () => {
+  it('flags a truncated read when the guard rail is reached', async () => {
     let calls = 0;
     const snapshot = await firstValueFrom(
       loadEntireSnapshot(() => {
         calls += 1;
-        return of(page(calls, 'toujours-plus'));
+        return of(page(calls, 'always-more'));
       }),
     );
 

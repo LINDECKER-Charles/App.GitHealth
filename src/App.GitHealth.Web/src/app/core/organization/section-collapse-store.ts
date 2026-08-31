@@ -4,8 +4,8 @@ import { Injectable, inject, signal } from '@angular/core';
 const storageKey = 'githealth.rail.collapsed';
 
 /**
- * Sections repliées du rail. C'est un état de fenêtre, pas une donnée du dépôt : il reste
- * dans le navigateur, et un stockage indisponible se contente de valoir pour la session.
+ * Collapsed sections of the rail. This is window state, not repository data: it stays in
+ * the browser, and when storage is unavailable it simply lasts for the session.
  */
 @Injectable({ providedIn: 'root' })
 export class SectionCollapseStore {
@@ -32,7 +32,7 @@ export class SectionCollapseStore {
     try {
       this.document.defaultView?.localStorage.setItem(storageKey, JSON.stringify([...keys]));
     } catch {
-      // Sans stockage persistant, le repli vaut pour la session en cours.
+      // With no persistent storage, the collapse lasts for the current session.
     }
   }
 

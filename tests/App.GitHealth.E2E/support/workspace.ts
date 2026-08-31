@@ -4,8 +4,8 @@ const introStorageKey = "githealth.intro";
 const introSkippedValue = "skipped";
 
 /**
- * Ouvre l'espace de travail sans rejouer la séquence d'introduction : elle est
- * couverte par son propre test, et n'a pas à rythmer les autres parcours.
+ * Opens the workspace without replaying the opening sequence: it is covered
+ * by its own test, and must not pace the other flows.
  */
 export async function openWorkspace(
   page: Page,
@@ -19,19 +19,17 @@ export async function openWorkspace(
   await expect(page.locator(".topbar")).toBeVisible();
 }
 
-/** Renseigne le chemin, attend la validation en direct puis enregistre le dépôt. */
+/** Fills the path, waits for the live validation, then saves the repository. */
 export async function addRepository(
   page: Page,
   repositoryPath: string,
   displayName: string,
 ): Promise<void> {
-  await page.getByRole("button", { name: "Ajouter un dépôt" }).last().click();
-  await page.getByLabel("Chemin du dépôt").fill(repositoryPath);
-  await expect(page.getByText("Dépôt reconnu")).toBeVisible();
-  await page.getByLabel("Nom affiché").fill(displayName);
-  await page
-    .getByLabel("Référence de comparaison")
-    .selectOption("refs/heads/main");
-  await page.getByRole("button", { name: "Ajouter le dépôt" }).click();
+  await page.getByRole("button", { name: "Add a repository" }).last().click();
+  await page.getByLabel("Repository path").fill(repositoryPath);
+  await expect(page.getByText("Repository recognised")).toBeVisible();
+  await page.getByLabel("Display name").fill(displayName);
+  await page.getByLabel("Baseline").selectOption("refs/heads/main");
+  await page.getByRole("button", { name: "Add repository" }).click();
   await expect(page.getByRole("heading", { name: displayName })).toBeVisible();
 }

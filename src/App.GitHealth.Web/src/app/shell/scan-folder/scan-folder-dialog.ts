@@ -14,10 +14,10 @@ import { GitHealthApiClient } from '../../core/api/git-health-api-client';
 import { DiscoveredRepository, RepositoryDiscoveryResponse } from '../../core/api/api.models';
 import { displayReference } from '../../core/branches/branch-labels';
 import { DesktopBridge } from '../../core/desktop/desktop-bridge';
+import { pluralMessage } from '../../core/i18n/plural-message';
 import { scanJobDetail, scanStateTones } from '../../core/scan/folder-scan-labels';
 import { FolderScanStore } from '../../core/scan/folder-scan-store';
 import { FolderScanTarget } from '../../core/scan/folder-scan.models';
-import { plural } from '../../core/workspace/plural';
 import { ProjectsStore } from '../../core/workspace/projects-store';
 import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
@@ -31,14 +31,14 @@ import { DirectoryBrowser } from '../add-repository/directory-browser';
 const defaultDepth = '3';
 
 const depthOptions: readonly SelectOption[] = [
-  { value: '1', label: '1 niveau' },
-  { value: '2', label: '2 niveaux' },
-  { value: '3', label: '3 niveaux' },
-  { value: '4', label: '4 niveaux' },
-  { value: '5', label: '5 niveaux' },
+  { value: '1', label: $localize`:@@scanFolder.depth.level1:1 level` },
+  { value: '2', label: $localize`:@@scanFolder.depth.level2:2 levels` },
+  { value: '3', label: $localize`:@@scanFolder.depth.level3:3 levels` },
+  { value: '4', label: $localize`:@@scanFolder.depth.level4:4 levels` },
+  { value: '5', label: $localize`:@@scanFolder.depth.level5:5 levels` },
 ];
 
-/** Détecte les dépôts d'un dossier, puis lance une analyse sur la sélection retenue. */
+/** Detects the repositories in a folder, then runs an analysis on the kept selection. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -93,24 +93,19 @@ export class ScanFolderDialog {
     () => this.selectedCount() > 0 && !this.scan.isRunning() && !this.isDiscovering(),
   );
 
-  protected readonly resultsLabel = computed(() => {
-    const total = this.repositories().length;
-    return `${plural(total, 'dépôt')} détecté${total > 1 ? 's' : ''}`;
-  });
+  protected readonly resultsLabel = computed(() => detectedMessage(this.repositories().length));
 
-  protected readonly scanLabel = computed(
-    () => `Analyser ${plural(this.selectedCount(), 'dépôt')}`,
-  );
+  protected readonly scanLabel = computed(() => analyseMessage(this.selectedCount()));
 
   protected readonly summaryLabel = computed(() => {
     const summary = this.scan.summary();
-    const parts = [`${summary.done}/${summary.total} analysés`];
+    const parts = [analysedMessage(summary.done, summary.total)];
     if (summary.active > 0) {
-      parts.push(`${summary.active} en cours`);
+      parts.push(runningMessage(summary.active));
     }
 
     if (summary.failed > 0) {
-      parts.push(plural(summary.failed, 'échec'));
+      parts.push(failureMessage(summary.failed));
     }
 
     return parts.join(' · ');
@@ -135,11 +130,16 @@ export class ScanFolderDialog {
       .subscribe({
         next: (response) => this.applyDiscovery(response),
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Ce dossier ne peut pas être exploré.')),
+          this.error.set(
+            apiErrorMessage(
+              error,
+              $localize`:@@scanFolder.error.discover:This folder cannot be explored.`,
+            ),
+          ),
       });
   }
 
-  /** Dialogue système quand la coque de bureau l'offre, navigateur de dossiers sinon. */
+  /** System dialog when the desktop shell offers one, folder browser otherwise. */
   protected browse(): void {
     if (!this.desktop.isAvailable) {
       this.isBrowsing.set(true);
@@ -192,7 +192,7 @@ export class ScanFolderDialog {
     }
   }
 
-  /** Revenir à la sélection efface le suivi ; les analyses déjà lancées, elles, se terminent. */
+  /** Going back to the selection clears the tracking; analyses already started still finish. */
   protected backToSelection(): void {
     this.scan.reset();
   }
@@ -215,9 +215,39 @@ export class ScanFolderDialog {
   }
 }
 
-/** Un dépôt sans référence lisible ne peut être ni comparé ni enregistré. */
+/** A repository with no readable baseline can be neither compared nor saved. */
 function selectablePaths(repositories: readonly DiscoveredRepository[]): readonly string[] {
   return repositories
     .filter((repository) => repository.suggestedReference !== null)
     .map((repository) => repository.canonicalPath);
+}
+
+/** Each count carries its whole sentence: word order around a number is not universal. */
+function detectedMessage(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@scanFolder.results.detectedOne:${count}:count: repository detected`,
+    other: $localize`:@@scanFolder.results.detectedMany:${count}:count: repositories detected`,
+  });
+}
+
+function analyseMessage(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@scanFolder.action.analyseOne:Analyse ${count}:count: repository`,
+    other: $localize`:@@scanFolder.action.analyseMany:Analyse ${count}:count: repositories`,
+  });
+}
+
+function analysedMessage(done: number, total: number): string {
+  return $localize`:@@scanFolder.summary.analysed:${done}:done:/${total}:total: analysed`;
+}
+
+function runningMessage(count: number): string {
+  return $localize`:@@scanFolder.summary.running:${count}:count: running`;
+}
+
+function failureMessage(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@scanFolder.summary.failureOne:${count}:count: failure`,
+    other: $localize`:@@scanFolder.summary.failureMany:${count}:count: failures`,
+  });
 }

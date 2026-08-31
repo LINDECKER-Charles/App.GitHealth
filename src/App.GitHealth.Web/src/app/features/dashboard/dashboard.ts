@@ -20,8 +20,8 @@ import {
   loadEntireSnapshot,
   snapshotPageSize,
 } from '../../core/branches/snapshot-loader';
+import { pluralMessage } from '../../core/i18n/plural-message';
 import { ToastService } from '../../core/workspace/toast';
-import { plural } from '../../core/workspace/plural';
 import { DsBadge } from '../../ui/core/ds-badge';
 import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
@@ -59,8 +59,10 @@ interface Tile {
   readonly share: string;
 }
 
+const replayError = $localize`:@@dashboard.error.replay:This snapshot cannot be replayed.`;
+
 const tileDefinitions: readonly { id: RecommendationView; label: string; tone: Tone }[] = [
-  { id: 'all', label: 'Toutes', tone: 'info' },
+  { id: 'all', label: $localize`:@@dashboard.tile.all:All`, tone: 'info' },
   { id: 'Keep', label: recommendationLabels.Keep, tone: 'success' },
   { id: 'Merged', label: recommendationLabels.Merged, tone: 'merged' },
   { id: 'Review', label: recommendationLabels.Review, tone: 'warning' },
@@ -68,7 +70,7 @@ const tileDefinitions: readonly { id: RecommendationView; label: string; tone: T
   { id: 'Excluded', label: recommendationLabels.Excluded, tone: 'neutral' },
 ];
 
-/** Vue Diagnostic : tuiles, filtres et tableau des branches du snapshot chargé. */
+/** Diagnostic view: tiles, filters and table of the loaded snapshot's branches. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -161,10 +163,21 @@ export class Dashboard {
     () => this.rows().length > 0 && this.selectedCount() >= this.rows().length,
   );
 
+  protected readonly selectionLabel = computed(() =>
+    this.selectedCount() === 1
+      ? $localize`:@@dashboard.selection.one:branch selected`
+      : $localize`:@@dashboard.selection.many:branches selected`,
+  );
+
+  protected readonly tableLabel = computed(() => {
+    const reference = this.snapshot()?.referenceName ?? '';
+    return $localize`:@@dashboard.table.aria:Branches compared to ${reference}:reference:`;
+  });
+
   protected readonly countLabel = computed(() => {
     const total = this.counts().all;
     const shown = this.rows().length;
-    return shown === total ? plural(total, 'branche') : `${plural(shown, 'branche')} sur ${total}`;
+    return shown === total ? branchCountMessage(total) : shownOfTotalMessage(shown, total);
   });
 
   constructor() {
@@ -221,7 +234,10 @@ export class Dashboard {
   protected copyCommands(): void {
     const commands = this.selectedBranches().map(deleteCommand).join('\n');
     void navigator.clipboard?.writeText(commands);
-    this.toast.show(`${this.selectedCount()} commandes git copiées dans le presse-papier`);
+    const count = this.selectedCount();
+    this.toast.show(
+      $localize`:@@dashboard.toast.copied:${count}:count: git commands copied to the clipboard`,
+    );
   }
 
   protected addSelectionToPolicy(kind: 'protected' | 'excluded'): void {
@@ -231,6 +247,7 @@ export class Dashboard {
     }
 
     const references = this.selectedBranches().map((branch) => branch.referenceName);
+    const count = references.length;
     const isProtected = kind === 'protected';
     const merged = Array.from(
       new Set([
@@ -245,7 +262,7 @@ export class Dashboard {
         protectedPatterns: isProtected ? merged : project.protectedPatterns,
         excludedPatterns: isProtected ? project.excludedPatterns : merged,
       },
-      `${references.length} motif${references.length > 1 ? 's' : ''} ${isProtected ? 'protégé' : 'd’exclusion'}${references.length > 1 && isProtected ? 's' : ''} ajouté${references.length > 1 ? 's' : ''}`,
+      patternsAddedMessage(count, kind),
     );
     this.selection.set(new Set());
   }
@@ -275,8 +292,35 @@ export class Dashboard {
       )
       .subscribe({
         next: (snapshot) => this.historical.set(snapshot),
-        error: (error: unknown) =>
-          this.historicalError.set(apiErrorMessage(error, 'Ce snapshot ne peut pas être relu.')),
+        error: (error: unknown) => this.historicalError.set(apiErrorMessage(error, replayError)),
       });
   }
+}
+
+function branchCountMessage(count: number): string {
+  return pluralMessage(count, {
+    one: $localize`:@@dashboard.count.one:${count}:count: branch`,
+    other: $localize`:@@dashboard.count.many:${count}:count: branches`,
+  });
+}
+
+/** The filtered count carries its own sentence: "of" is not a suffix every locale appends. */
+function shownOfTotalMessage(shown: number, total: number): string {
+  return pluralMessage(shown, {
+    one: $localize`:@@dashboard.countOfTotal.one:${shown}:shown: branch of ${total}:total:`,
+    other: $localize`:@@dashboard.countOfTotal.many:${shown}:shown: branches of ${total}:total:`,
+  });
+}
+
+/** Full sentence per case: a translated message is never assembled from fragments. */
+function patternsAddedMessage(count: number, kind: 'protected' | 'excluded'): string {
+  if (kind === 'protected') {
+    return count === 1
+      ? $localize`:@@dashboard.toast.protectedOne:${count}:count: protected pattern added`
+      : $localize`:@@dashboard.toast.protectedMany:${count}:count: protected patterns added`;
+  }
+
+  return count === 1
+    ? $localize`:@@dashboard.toast.excludedOne:${count}:count: exclusion pattern added`
+    : $localize`:@@dashboard.toast.excludedMany:${count}:count: exclusion patterns added`;
 }

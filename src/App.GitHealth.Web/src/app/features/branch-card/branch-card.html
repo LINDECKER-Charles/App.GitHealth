@@ -1,0 +1,185 @@
+<div class="card-heading">
+  <div class="card-identity">
+    <div class="card-label" i18n="@@branch.card.label">Branch card</div>
+    <div class="card-name">{{ branchName() }}</div>
+    <div class="card-flags">
+      @if (detail()) {
+        <ds-badge size="sm" tone="neutral">{{ source() }}</ds-badge>
+      }
+      @for (flag of flags(); track flag.label) {
+        <ds-badge size="sm" [tone]="flag.tone">{{ flag.label }}</ds-badge>
+      }
+    </div>
+  </div>
+  <button
+    dsIconButton
+    icon="x"
+    i18n-label="@@branch.card.close"
+    label="Close the card"
+    size="sm"
+    (click)="closed.emit()"
+  ></button>
+</div>
+
+<div class="card-body">
+  @if (isLoading() && detail() === null) {
+    <p class="card-state" role="status" i18n="@@branch.card.loading">Reading the Git facts…</p>
+  } @else if (error(); as message) {
+    <p class="card-state card-state-error" role="alert">{{ message }}</p>
+  } @else if (detail(); as branch) {
+    <div class="card-reco" [attr.data-tone]="recommendationTone()">
+      <div class="card-reco-head">
+        <ds-icon [name]="recommendationIcons[branch.snapshot.recommendation]" [size]="15" />
+        <span>{{ recommendationLabels[branch.snapshot.recommendation] }}</span>
+      </div>
+      <p>{{ branch.snapshot.reason }}</p>
+    </div>
+
+    <section>
+      <div class="card-section-label" i18n="@@branch.card.traceTitle">Why this recommendation</div>
+      <div class="card-trace">
+        @for (line of trace(); track $index) {
+          <div class="card-trace-line">
+            <span class="card-trace-mark"><ds-icon [name]="line.icon" [size]="14" /></span>
+            <div>
+              <div class="card-trace-text">{{ line.text }}</div>
+              <div class="card-trace-rule">{{ line.rule }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section>
+      <div class="card-section-label" i18n="@@branch.card.divergenceTitle">
+        Difference from {{ displayReference(branch.referenceName) }}
+      </div>
+      <div class="card-divergence">
+        <div class="card-divergence-card">
+          <div class="card-caption" i18n="@@branch.card.ahead">Ahead</div>
+          <div class="card-count">+{{ branch.snapshot.aheadCount }}</div>
+          <div class="card-caption" i18n="@@branch.card.aheadCaption">
+            commits missing from the baseline
+          </div>
+        </div>
+        <div class="card-divergence-card">
+          <div class="card-caption" i18n="@@branch.card.behind">Behind</div>
+          <div class="card-count">−{{ branch.snapshot.behindCount }}</div>
+          <div class="card-caption" i18n="@@branch.card.behindCaption">
+            commits missing from the branch
+          </div>
+        </div>
+      </div>
+      <div class="card-divergence-bar">
+        <span class="is-ahead" [style.width]="divergenceShare().ahead"></span>
+        <span class="is-gap"></span>
+        <span class="is-behind" [style.width]="divergenceShare().behind"></span>
+      </div>
+    </section>
+
+    <section>
+      <div class="card-section-label" i18n="@@branch.card.coordinatesTitle">
+        Snapshot coordinates
+      </div>
+      <ds-key-value-list [items]="coordinates()" [bordered]="true" />
+    </section>
+
+    <section>
+      <div class="card-section-head">
+        <span class="card-section-label" i18n="@@branch.card.contributorsTitle">Contributors</span>
+        <span class="card-caption">
+          @if (branch.mailmapApplied) {
+            <ng-container i18n="@@branch.card.mailmapApplied">
+              identities normalised by .mailmap
+            </ng-container>
+          } @else {
+            <ng-container i18n="@@branch.card.mailmapMissing">no .mailmap applied</ng-container>
+          }
+        </span>
+      </div>
+
+      @if (branch.attributionStatus === 'UnavailableAfterMerge') {
+        <p class="card-note" i18n="@@branch.card.attributionUnavailable">
+          Attribution is impossible after a merge: the range between the baseline and the branch is
+          empty, so Git can no longer attach the commits to the branch they came from.
+        </p>
+      } @else {
+        @for (contributor of branch.contributors; track contributor.email) {
+          <div class="card-contributor">
+            <span class="card-contributor-rank">{{ $index + 1 }}</span>
+            <div class="card-contributor-identity">
+              <div class="card-contributor-name">{{ contributor.name }}</div>
+              <div class="card-contributor-email">{{ contributor.email }}</div>
+            </div>
+            <span class="card-contributor-count" i18n="@@branch.card.commitCount">
+              {contributor.commitCount, plural,
+                =1 {1 commit}
+                other {{{contributor.commitCount}} commits}
+              }
+            </span>
+          </div>
+        } @empty {
+          <p class="card-note" i18n="@@branch.card.noContributor">
+            No own commit can be attributed to this branch.
+          </p>
+        }
+      }
+    </section>
+
+    <section>
+      <div class="card-section-label" i18n="@@branch.card.deletionTitle">Manual deletion</div>
+      <ds-code-block size="sm" language="bash" [code]="command()" />
+      <p class="card-note" i18n="@@branch.card.deletionNote">
+        GitHealth never runs this command. Copy it if you decide to clean up.
+      </p>
+    </section>
+  }
+</div>
+
+@if (detail(); as branch) {
+  <div class="card-footer">
+    @if (canEditPolicy()) {
+      <button
+        dsButton
+        size="sm"
+        variant="secondary"
+        iconLeft="lock"
+        [disabled]="branch.snapshot.isProtected"
+        (click)="protect()"
+      >
+        @if (branch.snapshot.isProtected) {
+          <ng-container i18n="@@branch.card.protected">Protected</ng-container>
+        } @else {
+          <ng-container i18n="@@branch.card.protect">Protect</ng-container>
+        }
+      </button>
+      <button
+        dsButton
+        size="sm"
+        variant="secondary"
+        iconLeft="eye-off"
+        [disabled]="branch.snapshot.isExcluded"
+        (click)="exclude()"
+      >
+        @if (branch.snapshot.isExcluded) {
+          <ng-container i18n="@@branch.card.excluded">Excluded</ng-container>
+        } @else {
+          <ng-container i18n="@@branch.card.exclude">Exclude</ng-container>
+        }
+      </button>
+    }
+    <span class="card-footer-spacer"></span>
+    @if (hasNext()) {
+      <button
+        dsButton
+        size="sm"
+        variant="ghost"
+        iconLeft="chevron-down"
+        i18n="@@branch.card.next"
+        (click)="next()"
+      >
+        Next
+      </button>
+    }
+  </div>
+}

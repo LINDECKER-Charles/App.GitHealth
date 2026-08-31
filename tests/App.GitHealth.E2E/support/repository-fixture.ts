@@ -95,7 +95,9 @@ export function disposeRepositoryFixture(rootPath: string): void {
     !resolvedRoot.startsWith(temporaryRoot) ||
     !basename(resolvedRoot).startsWith(fixturePrefix)
   ) {
-    throw new Error(`Nettoyage hors périmètre refusé : ${resolvedRoot}`);
+    throw new Error(
+      `Refused to clean up outside the allowed scope: ${resolvedRoot}`,
+    );
   }
 
   rmSync(resolvedRoot, { force: true, recursive: true });
@@ -107,7 +109,7 @@ function initializeRepository(repositoryPath: string): void {
   git(repositoryPath, "config", "user.email", "githealth@example.invalid");
   writeFileSync(
     join(repositoryPath, "README.md"),
-    "# Fixture GitHealth\n",
+    "# GitHealth fixture\n",
     "utf8",
   );
   writeFileSync(
@@ -116,21 +118,21 @@ function initializeRepository(repositoryPath: string): void {
     "utf8",
   );
   git(repositoryPath, "add", "--", "README.md", ".mailmap");
-  git(repositoryPath, "commit", "-m", "initialiser la fixture");
+  git(repositoryPath, "commit", "-m", "initialise the fixture");
 }
 
 function createFeatureBranch(repositoryPath: string): void {
   git(repositoryPath, "switch", "-c", "feature/équipe");
   commitFile(repositoryPath, {
-    content: "fonctionnalité\n",
-    message: "ajouter une fonctionnalité",
+    content: "feature\n",
+    message: "add a feature",
     relativePath: "feature.txt",
   });
   git(repositoryPath, "config", "user.name", "Alias");
   git(repositoryPath, "config", "user.email", "alias@example.invalid");
   commitFile(repositoryPath, {
     content: "contribution\n",
-    message: "ajouter une contribution",
+    message: "add a contribution",
     relativePath: "alias.txt",
   });
   restoreIdentity(repositoryPath);
@@ -140,8 +142,8 @@ function createFeatureBranch(repositoryPath: string): void {
 function createMergedBranch(repositoryPath: string): void {
   git(repositoryPath, "switch", "-c", "maintenance/fusionnee");
   commitFile(repositoryPath, {
-    content: "fusionnée\n",
-    message: "préparer une fusion",
+    content: "merged\n",
+    message: "prepare a merge",
     relativePath: "merged.txt",
   });
   git(repositoryPath, "switch", "main");
@@ -151,7 +153,7 @@ function createMergedBranch(repositoryPath: string): void {
     "--no-ff",
     "maintenance/fusionnee",
     "-m",
-    "fusionner la branche",
+    "merge the branch",
   );
 }
 
@@ -165,13 +167,13 @@ function createDivergedBranch(repositoryPath: string): void {
   git(repositoryPath, "switch", "-c", "feature/divergente", rootCommit);
   commitFile(repositoryPath, {
     content: "divergence\n",
-    message: "diverger de la référence",
+    message: "diverge from the baseline",
     relativePath: "diverged.txt",
   });
   git(repositoryPath, "switch", "main");
   commitFile(repositoryPath, {
-    content: "référence\n",
-    message: "faire évoluer la référence",
+    content: "baseline\n",
+    message: "move the baseline forward",
     relativePath: "main.txt",
   });
 }

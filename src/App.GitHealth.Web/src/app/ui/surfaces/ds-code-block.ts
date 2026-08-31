@@ -20,7 +20,7 @@ const copiedFeedbackMs = 1400;
         dsIconButton
         size="sm"
         [icon]="copied() ? 'check' : 'copy'"
-        [label]="copied() ? 'Copié' : 'Copier'"
+        [label]="copied() ? copiedLabel : copyLabel"
         [style.color]="copied() ? 'var(--status-success-solid)' : null"
         (click)="copy()"
       ></button>
@@ -30,6 +30,9 @@ const copiedFeedbackMs = 1400;
   `,
 })
 export class DsCodeBlock {
+  protected readonly copyLabel = $localize`:@@ui.codeBlock.copy:Copy`;
+  protected readonly copiedLabel = $localize`:@@ui.codeBlock.copied:Copied`;
+
   readonly code = input.required<string>();
   readonly language = input('bash');
   readonly size = input<'sm' | 'md'>('md');

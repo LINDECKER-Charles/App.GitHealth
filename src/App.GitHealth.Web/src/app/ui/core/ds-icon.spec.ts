@@ -10,14 +10,14 @@ describe('DsIcon', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('masque le SVG servi localement et prend la couleur du parent', async () => {
+  it('masks the locally served SVG and takes the parent colour', async () => {
     const host = await render();
     expect(host.classList.contains('etb-icon')).toBe(true);
     expect(host.style.maskImage).toBe('url("/ds/icons/git-branch.svg")');
     expect(host.style.width).toBe('16px');
   });
 
-  it('reste décoratif tant qu’aucun libellé n’est fourni', async () => {
+  it('stays decorative while no label is supplied', async () => {
     const host = await render();
     expect(host.getAttribute('aria-hidden')).toBe('true');
     expect(host.getAttribute('role')).toBe('presentation');

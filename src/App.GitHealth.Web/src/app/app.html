@@ -1,4 +1,4 @@
-<a class="skip-link" href="#workspace-content">Aller au contenu</a>
+<a class="skip-link" href="#workspace-content" i18n="@@app.skipLink">Skip to content</a>
 
 <div class="workspace">
   <header class="topbar">
@@ -10,7 +10,9 @@
 
     <button class="topbar-search" type="button" (click)="dialogs.openPalette()">
       <span class="topbar-search-mark"><ds-icon name="search" [size]="14" /></span>
-      <span class="topbar-search-label">Aller à une branche, un dépôt, une action…</span>
+      <span class="topbar-search-label" i18n="@@app.search.label"
+        >Go to a branch, a repository, an action…</span
+      >
       <ds-kbd keys="cmd+k" />
     </button>
 
@@ -18,7 +20,7 @@
 
     <div class="topbar-promise">
       <ds-status-dot tone="success" [size]="6" />
-      <span>tout est local · lecture seule</span>
+      <span i18n="@@app.promise">everything is local · read only</span>
     </div>
 
     @if (updates.isAvailable()) {
@@ -31,22 +33,25 @@
         [disabled]="updates.isApplying()"
         (click)="updates.apply()"
       >
-        {{ updates.isApplying() ? 'Mise à jour…' : 'Mettre à jour' }}
+        {{ updateLabel() }}
       </button>
     }
 
     <button
       dsIconButton
       [icon]="themeIcon()"
-      label="Basculer le thème"
+      i18n-label="@@app.theme.toggle"
+      label="Toggle the theme"
       (click)="theme.toggle()"
     ></button>
     <a
       class="etb-iconbtn backup-action"
       [href]="backupUrl"
       download
-      title="Sauvegarder les données"
-      aria-label="Sauvegarder les données"
+      i18n-title="@@app.backup.title"
+      title="Back up the data"
+      i18n-aria-label="@@app.backup.ariaLabel"
+      aria-label="Back up the data"
     >
       <ds-icon name="download" [size]="16" />
     </a>
@@ -55,8 +60,10 @@
       [href]="guideUrl"
       target="_blank"
       rel="noreferrer"
-      title="Guide utilisateur"
-      aria-label="Guide utilisateur"
+      i18n-title="@@app.guide.title"
+      title="User guide"
+      i18n-aria-label="@@app.guide.ariaLabel"
+      aria-label="User guide"
     >
       <ds-icon name="book-open" [size]="16" />
     </a>

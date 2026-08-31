@@ -187,8 +187,8 @@
   padding: 0 20px 10px;
 }
 
-/* Ouverte, la fiche latérale rétrécit la colonne : la barre défile plutôt que de replier
-   une action hors d'atteinte. */
+/* When open, the side card narrows the column: the bar scrolls rather than folding
+   an action out of reach. */
 .dashboard-footer {
   display: flex;
   align-items: center;

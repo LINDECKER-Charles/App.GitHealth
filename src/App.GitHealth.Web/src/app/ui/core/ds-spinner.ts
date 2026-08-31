@@ -17,7 +17,7 @@ const thinStrokeMaximumSize = 14;
 })
 export class DsSpinner {
   readonly size = input(14);
-  readonly label = input('Chargement');
+  readonly label = input($localize`:@@ui.spinner.loading:Loading`);
 
   protected readonly strokeWidth = computed(() => (this.size() <= thinStrokeMaximumSize ? 2 : 2.5));
 }

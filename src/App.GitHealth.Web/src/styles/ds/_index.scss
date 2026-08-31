@@ -1,5 +1,5 @@
-/* Point d'entrée du design system Établi : tokens puis classes de composants.
-   L'ordre reproduit celui de `styles.css` livré avec le système. */
+/* Entry point of the Établi design system: tokens first, then component classes.
+   The order mirrors the `styles.css` shipped with the system. */
 @use 'tokens/fonts';
 @use 'tokens/colors';
 @use 'tokens/typography';

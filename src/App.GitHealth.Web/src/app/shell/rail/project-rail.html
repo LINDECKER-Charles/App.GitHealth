@@ -1,16 +1,18 @@
 <div class="rail-heading">
-  <span class="rail-title">Dépôts observés</span>
+  <span class="rail-title" i18n="@@rail.heading.title">Observed repositories</span>
   <button
     dsIconButton
     icon="folder"
-    label="Scanner un dossier"
+    i18n-label="@@rail.heading.scanFolder"
+    label="Scan a folder"
     size="sm"
     (click)="dialogs.openScanFolder()"
   ></button>
   <button
     dsIconButton
     icon="plus"
-    label="Ajouter un dépôt"
+    i18n-label="@@rail.heading.addRepository"
+    label="Add a repository"
     size="sm"
     (click)="dialogs.openAddRepository()"
   ></button>
@@ -21,8 +23,10 @@
     size="sm"
     type="search"
     iconLeft="search"
-    placeholder="Filtrer"
-    ariaLabel="Filtrer les dépôts observés"
+    i18n-placeholder="@@rail.filter.placeholder"
+    placeholder="Filter"
+    i18n-ariaLabel="@@rail.filter.aria"
+    ariaLabel="Filter the observed repositories"
     [(value)]="filter"
   />
 </div>
@@ -35,7 +39,7 @@
           class="rail-section-head"
           type="button"
           [attr.aria-expanded]="isExpanded(section)"
-          [title]="isExpanded(section) ? 'Réduire ' + section.title : 'Déplier ' + section.title"
+          [title]="sectionToggleLabel(section)"
           (click)="toggleSection(section.key)"
         >
           <ds-icon
@@ -60,7 +64,11 @@
                 <span class="rail-entry-name">{{ entry.project.displayName }}</span>
                 <span class="rail-entry-path">{{ entry.project.repositoryPath }}</span>
               </span>
-              <span class="rail-entry-count" title="Branches du dernier snapshot lu">
+              <span
+                class="rail-entry-count"
+                i18n-title="@@rail.entry.countTitle"
+                title="Branches of the last snapshot read"
+              >
                 {{ entry.branchCount }}
               </span>
             </a>
@@ -79,7 +87,8 @@
                 dsIconButton
                 size="sm"
                 icon="folder-open"
-                label="Ranger dans un groupe"
+                i18n-label="@@rail.entry.moveToGroup"
+                label="Move to a group"
                 (click)="dialogs.openProjectGroup(entry.project.id)"
               ></button>
             </span>
@@ -90,11 +99,11 @@
   }
 
   @if (store.isLoading()) {
-    <p class="rail-note">Lecture de la configuration locale…</p>
+    <p class="rail-note" i18n="@@rail.state.loading">Reading the local configuration…</p>
   } @else if (store.error(); as message) {
     <p class="rail-note rail-note-error" role="alert">{{ message }}</p>
   } @else if (isEmpty()) {
-    <p class="rail-note">Aucun dépôt ne correspond.</p>
+    <p class="rail-note" i18n="@@rail.state.empty">No repository matches.</p>
   }
 </div>
 
@@ -105,9 +114,10 @@
     variant="secondary"
     iconLeft="plus"
     [block]="true"
+    i18n="@@rail.footer.addRepository"
     (click)="dialogs.openAddRepository()"
   >
-    Ajouter un dépôt
+    Add a repository
   </button>
   <button
     dsButton
@@ -115,14 +125,17 @@
     variant="ghost"
     iconLeft="folder"
     [block]="true"
+    i18n="@@rail.footer.scanFolder"
     (click)="dialogs.openScanFolder()"
   >
-    Scanner un dossier
+    Scan a folder
   </button>
   @if (scan.hasJobs()) {
-    <p class="rail-scan" role="status">
-      Scan groupé · {{ scan.summary().done }}/{{ scan.summary().total }} analysés
+    <p class="rail-scan" role="status" i18n="@@rail.scan.progress">
+      Bulk scan · {{ scan.summary().done }}/{{ scan.summary().total }} analysed
     </p>
   }
-  <p>Aucun clone, aucun fetch, aucune écriture Git. Les identités restent sur ce poste.</p>
+  <p i18n="@@rail.footer.note">
+    No clone, no fetch, no Git write. Identities stay on this machine.
+  </p>
 </div>

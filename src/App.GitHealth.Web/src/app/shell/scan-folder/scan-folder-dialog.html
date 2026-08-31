@@ -8,8 +8,17 @@
   >
     <header class="dialog-heading">
       <span class="dialog-heading-mark"><ds-icon name="search" [size]="16" /></span>
-      <span id="scan-folder-title" class="dialog-heading-title">Scanner un dossier</span>
-      <button dsIconButton icon="x" label="Fermer" size="sm" (click)="close.emit()"></button>
+      <span id="scan-folder-title" class="dialog-heading-title" i18n="@@scanFolder.dialog.title"
+        >Scan a folder</span
+      >
+      <button
+        dsIconButton
+        icon="x"
+        i18n-label="@@scanFolder.dialog.close"
+        label="Close"
+        size="sm"
+        (click)="close.emit()"
+      ></button>
     </header>
 
     <div class="dialog-body">
@@ -35,30 +44,39 @@
           (selected)="useDirectory($event)"
         />
       } @else {
-        <div class="field-label">Dossier à explorer</div>
+        <div class="field-label" i18n="@@scanFolder.path.label">Folder to explore</div>
         <div class="path-row">
           <ds-input
             size="md"
             [mono]="true"
-            [placeholder]="projects.runtime()?.mode === 'docker' ? '/repositories' : 'D:\\Projets'"
-            ariaLabel="Dossier à explorer"
+            [placeholder]="projects.runtime()?.mode === 'docker' ? '/repositories' : 'D:\\Projects'"
+            i18n-ariaLabel="@@scanFolder.path.aria"
+            ariaLabel="Folder to explore"
             [invalid]="error() !== null"
             [(value)]="path"
             (submit)="discover()"
           />
           @if (projects.runtime()?.canBrowseDirectories) {
-            <button dsButton size="md" variant="secondary" iconLeft="folder" (click)="browse()">
-              Parcourir
+            <button
+              dsButton
+              size="md"
+              variant="secondary"
+              iconLeft="folder"
+              i18n="@@scanFolder.path.browse"
+              (click)="browse()"
+            >
+              Browse
             </button>
           }
         </div>
 
         <div class="detect-row">
           <div class="detect-depth">
-            <span class="field-label">Profondeur</span>
+            <span class="field-label" i18n="@@scanFolder.depth.label">Depth</span>
             <ds-select
               size="sm"
-              ariaLabel="Profondeur d’exploration"
+              i18n-ariaLabel="@@scanFolder.depth.aria"
+              ariaLabel="Exploration depth"
               [options]="depthOptions"
               [(value)]="depth"
             />
@@ -70,15 +88,16 @@
             iconLeft="search"
             [loading]="isDiscovering()"
             [disabled]="path().trim().length === 0"
+            i18n="@@scanFolder.detect.submit"
             (click)="discover()"
           >
-            Détecter les dépôts
+            Detect repositories
           </button>
         </div>
 
-        <p class="field-hint">
-          Chaque sous-dossier est inspecté jusqu’à la profondeur choisie. Un dépôt trouvé n’est pas
-          ouvert plus loin, et les dossiers cachés ou de build sont ignorés.
+        <p class="field-hint" i18n="@@scanFolder.detect.hint">
+          Every subfolder is inspected down to the chosen depth. A repository that is found is not
+          opened any further, and hidden or build folders are ignored.
         </p>
 
         @if (error(); as message) {
@@ -89,12 +108,15 @@
           <div class="results">
             <div class="results-head">
               <ds-checkbox
-                ariaLabel="Tout sélectionner"
+                i18n-ariaLabel="@@scanFolder.results.selectAllAria"
+                ariaLabel="Select all"
                 [checked]="isAllSelected()"
                 (checkedChange)="toggleAll()"
               />
               <span class="results-title">{{ resultsLabel() }}</span>
-              <span class="results-count">{{ selectedCount() }} retenus</span>
+              <span class="results-count" i18n="@@scanFolder.results.kept">
+                {{ selectedCount() }} kept
+              </span>
             </div>
 
             <div class="results-list">
@@ -115,10 +137,12 @@
                     <span class="result-name">
                       {{ repository.suggestedName }}
                       @if (repository.trackedProjectId !== null) {
-                        <em class="result-flag">déjà suivi</em>
+                        <em class="result-flag" i18n="@@scanFolder.result.tracked"
+                          >already tracked</em
+                        >
                       }
                       @if (repository.isBare) {
-                        <em class="result-flag">bare</em>
+                        <em class="result-flag" i18n="@@scanFolder.result.bare">bare</em>
                       }
                     </span>
                     <span class="result-path">{{ repository.canonicalPath }}</span>
@@ -127,22 +151,21 @@
                     @if (repository.suggestedReference; as reference) {
                       {{ displayReference(reference) }}
                     } @else {
-                      référence introuvable
+                      <span i18n="@@scanFolder.result.noReference">reference not found</span>
                     }
                   </span>
                 </div>
               } @empty {
-                <p class="results-note">
-                  Aucun dépôt Git sous ce dossier. Augmente la profondeur ou choisis un dossier
-                  parent.
+                <p class="results-note" i18n="@@scanFolder.results.empty">
+                  No Git repository under this folder. Increase the depth or choose a parent folder.
                 </p>
               }
             </div>
 
             @if (discovery()?.isTruncated) {
-              <p class="results-note">
-                Exploration interrompue à la limite de détection. Choisis un dossier plus précis
-                pour voir le reste.
+              <p class="results-note" i18n="@@scanFolder.results.truncated">
+                Exploration stopped at the detection limit. Choose a narrower folder to see the
+                rest.
               </p>
             }
           </div>
@@ -152,20 +175,39 @@
 
     @if (!isBrowsing()) {
       <footer class="dialog-footer">
-        <span>Lecture seule. Aucune écriture sur les dépôts.</span>
+        <span i18n="@@scanFolder.footer.note"
+          >Read only. Nothing is written to the repositories.</span
+        >
         @if (scan.hasJobs()) {
           <button
             dsButton
             size="md"
             variant="ghost"
             [disabled]="scan.isRunning()"
+            i18n="@@scanFolder.footer.newSelection"
             (click)="backToSelection()"
           >
-            Nouvelle sélection
+            New selection
           </button>
-          <button dsButton size="md" variant="primary" (click)="close.emit()">Fermer</button>
+          <button
+            dsButton
+            size="md"
+            variant="primary"
+            i18n="@@scanFolder.footer.close"
+            (click)="close.emit()"
+          >
+            Close
+          </button>
         } @else {
-          <button dsButton size="md" variant="ghost" (click)="close.emit()">Annuler</button>
+          <button
+            dsButton
+            size="md"
+            variant="ghost"
+            i18n="@@scanFolder.footer.cancel"
+            (click)="close.emit()"
+          >
+            Cancel
+          </button>
           <button
             dsButton
             size="md"

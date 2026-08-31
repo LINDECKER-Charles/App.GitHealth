@@ -23,7 +23,9 @@ import {
   recommendationLabels,
   recommendationTones,
   referenceSource,
+  referenceSourceLabels,
 } from '../../core/branches/branch-labels';
+import { sourceLocale } from '../../core/i18n/locale';
 import { DsBadge } from '../../ui/core/ds-badge';
 import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
@@ -36,15 +38,22 @@ import { TraceLine, buildTrace } from './branch-trace';
 
 const shortShaLength = 12;
 
-/** Fiche d'une branche : la recommandation, sa trace, les faits et la commande à copier. */
+const explainError = $localize`:@@branch.error.explain:This branch cannot be explained.`;
+
+const capturedAtFormat = new Intl.DateTimeFormat(sourceLocale, {
+  dateStyle: 'short',
+  timeStyle: 'medium',
+});
+
+/** Card of a branch: the recommendation, its trace, the facts and the command to copy. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DsBadge, DsButton, DsCodeBlock, DsIcon, DsIconButton, DsKeyValueList],
-  selector: 'app-branch-fiche',
-  styleUrl: './branch-fiche.scss',
-  templateUrl: './branch-fiche.html',
+  selector: 'app-branch-card',
+  styleUrl: './branch-card.scss',
+  templateUrl: './branch-card.html',
 })
-export class BranchFiche {
+export class BranchCard {
   private readonly api = inject(GitHealthApiClient);
   private readonly destroyRef = inject(DestroyRef);
   private readonly context = inject(ProjectContext);
@@ -71,7 +80,9 @@ export class BranchFiche {
 
   protected readonly source = computed(() => {
     const detail = this.detail();
-    return detail === null ? '' : referenceSource(detail.snapshot.referenceName);
+    return detail === null
+      ? ''
+      : referenceSourceLabels[referenceSource(detail.snapshot.referenceName)];
   });
 
   protected readonly flags = computed<readonly { tone: Tone; label: string }[]>(() => {
@@ -82,11 +93,11 @@ export class BranchFiche {
 
     const flags: { tone: Tone; label: string }[] = [];
     if (detail.snapshot.isProtected) {
-      flags.push({ tone: 'brand', label: 'Protégée' });
+      flags.push({ tone: 'brand', label: $localize`:@@branch.flag.protected:Protected` });
     }
 
     if (detail.snapshot.isExcluded) {
-      flags.push({ tone: 'neutral', label: 'Exclue' });
+      flags.push({ tone: 'neutral', label: $localize`:@@branch.flag.excluded:Excluded` });
     }
 
     flags.push({
@@ -126,11 +137,26 @@ export class BranchFiche {
     }
 
     return [
-      { label: 'Référence complète', value: detail.snapshot.referenceName },
-      { label: 'SHA de la branche', value: detail.snapshot.commitId.slice(0, shortShaLength) },
-      { label: 'SHA de la référence', value: detail.referenceCommit.slice(0, shortShaLength) },
-      { label: 'Comparée à', value: detail.referenceName },
-      { label: 'Capture', value: formatInstant(detail.capturedAtUtc) },
+      {
+        label: $localize`:@@branch.coordinate.fullReference:Full reference`,
+        value: detail.snapshot.referenceName,
+      },
+      {
+        label: $localize`:@@branch.coordinate.branchSha:Branch SHA`,
+        value: detail.snapshot.commitId.slice(0, shortShaLength),
+      },
+      {
+        label: $localize`:@@branch.coordinate.baselineSha:Baseline SHA`,
+        value: detail.referenceCommit.slice(0, shortShaLength),
+      },
+      {
+        label: $localize`:@@branch.coordinate.comparedTo:Compared to`,
+        value: detail.referenceName,
+      },
+      {
+        label: $localize`:@@branch.coordinate.capture:Capture`,
+        value: formatInstant(detail.capturedAtUtc),
+      },
     ];
   });
 
@@ -180,7 +206,7 @@ export class BranchFiche {
         protectedPatterns: isProtected ? [...current, reference] : project.protectedPatterns,
         excludedPatterns: isProtected ? project.excludedPatterns : [...current, reference],
       },
-      `${isProtected ? 'Motif protégé' : 'Motif d’exclusion'} ajouté : ${reference}`,
+      patternAddedMessage(reference, kind),
       () => this.load(this.snapshotId()),
     );
   }
@@ -198,13 +224,20 @@ export class BranchFiche {
         next: (detail) => this.detail.set(detail),
         error: (error: unknown) => {
           this.detail.set(null);
-          this.error.set(apiErrorMessage(error, 'Cette branche ne peut pas être expliquée.'));
+          this.error.set(apiErrorMessage(error, explainError));
         },
       });
   }
 }
 
+/** Full sentence per case: a translated message is never assembled from fragments. */
+function patternAddedMessage(reference: string, kind: 'protected' | 'excluded'): string {
+  return kind === 'protected'
+    ? $localize`:@@branch.toast.protectedAdded:Protected pattern added: ${reference}:reference:`
+    : $localize`:@@branch.toast.excludedAdded:Exclusion pattern added: ${reference}:reference:`;
+}
+
 function formatInstant(value: string): string {
   const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleString('fr-FR');
+  return Number.isNaN(parsed.getTime()) ? '—' : capturedAtFormat.format(parsed);
 }

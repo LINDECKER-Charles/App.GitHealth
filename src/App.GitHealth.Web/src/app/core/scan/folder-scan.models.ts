@@ -1,13 +1,13 @@
 import { AnalysisPhase, Uuid } from '../api/api.models';
 
 /**
- * Étapes d'un dépôt dans un scan groupé. `pending` couvre l'attente avant enregistrement
- * comme avant mise en file : c'est le seul état d'où le scan peut encore relancer le dépôt.
+ * Stages of a repository in a bulk scan. `pending` covers the wait before registering as
+ * well as before queueing: it is the only state from which the scan can still relaunch it.
  */
 export type FolderScanJobState =
   'pending' | 'registering' | 'queued' | 'running' | 'done' | 'failed';
 
-/** Un dépôt retenu dans la sélection, déjà enregistré (`projectId`) ou encore à ajouter. */
+/** A repository kept in the selection, already saved (`projectId`) or still to be added. */
 export interface FolderScanTarget {
   readonly canonicalPath: string;
   readonly name: string;
@@ -16,7 +16,7 @@ export interface FolderScanTarget {
 }
 
 export interface FolderScanJob {
-  /** Le chemin canonique identifie le dépôt avant même qu'il ait un projet. */
+  /** The canonical path identifies the repository even before it has a project. */
   readonly key: string;
   readonly name: string;
   readonly referenceName: string | null;

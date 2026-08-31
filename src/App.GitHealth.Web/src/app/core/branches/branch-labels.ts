@@ -13,11 +13,11 @@ const remoteHeadsPrefix = 'refs/remotes/';
 const remoteOriginPrefix = 'origin/';
 
 export const topologyLabels: Readonly<Record<BranchTopology, string>> = {
-  Synchronized: 'Synchronisée',
-  Ahead: 'En avance',
-  Merged: 'Fusionnée',
-  Diverged: 'Divergente',
-  Unrelated: 'Sans base',
+  Synchronized: $localize`:@@branchLabel.topology.synchronized:In sync`,
+  Ahead: $localize`:@@branchLabel.topology.ahead:Ahead`,
+  Merged: $localize`:@@branchLabel.topology.merged:Merged`,
+  Diverged: $localize`:@@branchLabel.topology.diverged:Diverged`,
+  Unrelated: $localize`:@@branchLabel.topology.unrelated:No merge base`,
 };
 
 export const topologyTones: Readonly<Record<BranchTopology, Tone>> = {
@@ -29,10 +29,10 @@ export const topologyTones: Readonly<Record<BranchTopology, Tone>> = {
 };
 
 export const activityLabels: Readonly<Record<ActivityStatus, string>> = {
-  Active: 'Active',
-  Aging: 'Vieillissante',
-  Inactive: 'Inactive',
-  Unknown: 'Inconnue',
+  Active: $localize`:@@activity.status.active:Active`,
+  Aging: $localize`:@@activity.status.aging:Ageing`,
+  Inactive: $localize`:@@activity.status.inactive:Inactive`,
+  Unknown: $localize`:@@activity.status.unknown:Unknown`,
 };
 
 export const activityTones: Readonly<Record<ActivityStatus, Tone>> = {
@@ -43,11 +43,11 @@ export const activityTones: Readonly<Record<ActivityStatus, Tone>> = {
 };
 
 export const recommendationLabels: Readonly<Record<RecommendationKind, string>> = {
-  Keep: 'Conserver',
-  Review: 'À examiner',
-  CleanupCandidate: 'Nettoyage possible',
-  Excluded: 'Exclue',
-  Merged: 'Terminée',
+  Keep: $localize`:@@recommendation.kind.keep:Keep`,
+  Review: $localize`:@@recommendation.kind.review:Review`,
+  CleanupCandidate: $localize`:@@recommendation.kind.cleanupCandidate:Cleanup possible`,
+  Excluded: $localize`:@@recommendation.kind.excluded:Excluded`,
+  Merged: $localize`:@@recommendation.kind.merged:Done`,
 };
 
 export const recommendationTones: Readonly<Record<RecommendationKind, Tone>> = {
@@ -67,21 +67,29 @@ export const recommendationIcons: Readonly<Record<RecommendationKind, IconName>>
 };
 
 export const relationshipLabels: Readonly<Record<BranchRelationship, string>> = {
-  SameCommit: 'Même sommet',
-  CommonAncestor: 'Ancêtre commun',
-  BranchIsAncestorOfReference: 'Fusionnées dans la référence',
-  NoCommonAncestor: 'Sans base commune',
+  SameCommit: $localize`:@@relationship.kind.sameCommit:Same commit`,
+  CommonAncestor: $localize`:@@relationship.kind.commonAncestor:Common ancestor`,
+  BranchIsAncestorOfReference: $localize`:@@relationship.kind.ancestor:Merged into the baseline`,
+  NoCommonAncestor: $localize`:@@relationship.kind.noCommonAncestor:No common ancestor`,
 };
 
 export function displayReference(referenceName: string): string {
   return referenceName.replace(localHeadsPrefix, '').replace(remoteHeadsPrefix, '');
 }
 
-export function referenceSource(referenceName: string): 'locale' | 'distante' {
-  return referenceName.startsWith(remoteHeadsPrefix) ? 'distante' : 'locale';
+export type ReferenceSource = 'local' | 'remote';
+
+/** Human label for a reference source; the union itself is a discriminant, never display text. */
+export const referenceSourceLabels: Readonly<Record<ReferenceSource, string>> = {
+  local: $localize`:@@branchLabel.referenceSource.local:local`,
+  remote: $localize`:@@branchLabel.referenceSource.remote:remote`,
+};
+
+export function referenceSource(referenceName: string): ReferenceSource {
+  return referenceName.startsWith(remoteHeadsPrefix) ? 'remote' : 'local';
 }
 
-/** Âge en jours pleins du dernier commit, borné à zéro pour absorber les horloges décalées. */
+/** Age of the last commit in whole days, clamped to zero to absorb skewed clocks. */
 export function ageInDays(lastActivityAtUtc: string | null): number | null {
   if (lastActivityAtUtc === null) {
     return null;
@@ -94,16 +102,18 @@ export function ageInDays(lastActivityAtUtc: string | null): number | null {
 export function relativeAge(lastActivityAtUtc: string | null): string {
   const days = ageInDays(lastActivityAtUtc);
   if (days === null) {
-    return 'activité inconnue';
+    return $localize`:@@branchLabel.age.unknown:unknown activity`;
   }
 
-  return days === 0 ? "aujourd'hui" : `il y a ${days} j`;
+  return days === 0
+    ? $localize`:@@branchLabel.age.today:today`
+    : $localize`:@@branchLabel.age.days:${days}:dayCount: d ago`;
 }
 
-/** La commande que l'utilisateur copiera s'il décide de nettoyer. GitHealth ne l'exécute jamais. */
+/** The command the user copies if they decide to clean up. GitHealth never runs it. */
 export function deleteCommand(snapshot: BranchSnapshotResponse): string {
   const shortName = displayReference(snapshot.referenceName);
-  return referenceSource(snapshot.referenceName) === 'distante'
+  return referenceSource(snapshot.referenceName) === 'remote'
     ? `git push origin --delete ${shortName.replace(remoteOriginPrefix, '')}`
     : `git branch -d ${shortName}`;
 }

@@ -1,6 +1,6 @@
 import { AnalysisPhase } from '../api/api.models';
 
-/** Les cinq étapes visibles d'une analyse réussie, dans l'ordre où l'API les traverse. */
+/** The five visible stages of a successful analysis, in the order the API goes through. */
 export const analysisPhases: readonly AnalysisPhase[] = [
   'Waiting',
   'Topology',
@@ -10,20 +10,20 @@ export const analysisPhases: readonly AnalysisPhase[] = [
 ];
 
 const phaseLabels: Readonly<Record<AnalysisPhase, string>> = {
-  Waiting: 'En attente',
-  Topology: 'Topologie',
-  Enrichment: 'Contributeurs',
-  Persistence: 'Enregistrement',
-  Finished: 'Terminée',
-  Failed: 'Échec',
-  Cancelled: 'Annulée',
+  Waiting: $localize`:@@phase.analysis.waiting:Waiting`,
+  Topology: $localize`:@@phase.analysis.topology:Topology`,
+  Enrichment: $localize`:@@phase.analysis.enrichment:Contributors`,
+  Persistence: $localize`:@@phase.analysis.persistence:Saving`,
+  Finished: $localize`:@@phase.analysis.finished:Finished`,
+  Failed: $localize`:@@phase.analysis.failed:Failed`,
+  Cancelled: $localize`:@@phase.analysis.cancelled:Cancelled`,
 };
 
 export function phaseLabel(phase: AnalysisPhase): string {
   return phaseLabels[phase];
 }
 
-/** Rang de la phase dans la séquence, ou `-1` pour un échec et une annulation. */
+/** Rank of the phase in the sequence, or `-1` for a failure and a cancellation. */
 export function phaseIndex(phase: AnalysisPhase): number {
   return analysisPhases.indexOf(phase);
 }

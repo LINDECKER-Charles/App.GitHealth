@@ -134,7 +134,7 @@
   padding-right: 4px;
 }
 
-/* Les actions ne s'invitent qu'au survol ; seule l'étoile d'un favori reste, car elle dit un état. */
+/* Actions only appear on hover; a favourite's star stays, because it states a state. */
 .rail-entry-actions .etb-iconbtn {
   opacity: 0;
 }
@@ -151,7 +151,7 @@
   }
 }
 
-/* Une étoile pleine se lit déjà comme un état : elle n'a pas besoin du fond « actif ». */
+/* A filled star already reads as a state: it does not need the "active" background. */
 .rail-entry-actions .etb-iconbtn--active {
   background: transparent;
   color: var(--status-warning-fg);

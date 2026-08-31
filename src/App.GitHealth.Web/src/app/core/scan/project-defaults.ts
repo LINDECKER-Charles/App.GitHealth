@@ -1,6 +1,6 @@
 import { ProjectSettingsRequest } from '../api/api.models';
 
-/** Seuils initiaux proposés à tout dépôt ajouté, quel que soit le chemin d'ajout. */
+/** Initial thresholds offered to every added repository, whichever way it is added. */
 export const defaultActiveUntilDays = 30;
 export const defaultInactiveAfterDays = 90;
 
@@ -9,7 +9,7 @@ export const remoteBranchNamespace = 'refs/remotes/*';
 
 const remoteHeadsPrefix = 'refs/remotes/';
 
-/** Une référence distante observe les branches distantes : les deux vont de pair. */
+/** A remote baseline observes the remote branches: the two go together. */
 export function branchNamespaceFor(referenceName: string): string {
   return referenceName.startsWith(remoteHeadsPrefix) ? remoteBranchNamespace : localBranchNamespace;
 }

@@ -61,7 +61,7 @@ const snapshot: BranchSnapshotResponse = {
   topology: 'Diverged',
   activity: 'Active',
   recommendation: 'Keep',
-  reason: 'La branche contient des commits propres.',
+  reason: 'The branch contains its own commits.',
   isProtected: false,
   isExcluded: false,
 };
@@ -276,9 +276,9 @@ describe('GitHealthApiClient', () => {
     const request = http.expectOne('/api/projects/missing');
     request.flush(
       {
-        title: 'Ressource introuvable',
+        title: 'Not found',
         status: 404,
-        detail: 'Le projet demandé n’existe pas.',
+        detail: 'The requested project does not exist.',
         code: 'project.not_found',
         traceId: 'trace-404',
       },

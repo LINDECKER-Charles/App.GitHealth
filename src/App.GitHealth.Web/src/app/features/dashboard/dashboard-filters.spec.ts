@@ -62,21 +62,21 @@ const branches: readonly BranchSnapshotResponse[] = [
 ];
 
 describe('filterBranches', () => {
-  it('ne filtre rien par défaut', () => {
+  it('filters nothing by default', () => {
     expect(filterBranches(branches, defaultFilters, 90)).toHaveLength(4);
   });
 
-  it('filtre sur la recommandation choisie par la tuile', () => {
+  it('filters on the recommendation chosen by the tile', () => {
     const filtered = filterBranches(branches, { ...defaultFilters, view: 'Keep' }, 90);
     expect(filtered.map((item) => item.id)).toEqual(['docs/guide']);
   });
 
-  it('cherche sur le nom court, sans le préfixe refs', () => {
+  it('searches the short name, without the refs prefix', () => {
     const filtered = filterBranches(branches, { ...defaultFilters, search: 'FEATURE/' }, 90);
     expect(filtered).toHaveLength(2);
   });
 
-  it('croise topologie et activité', () => {
+  it('crosses topology and activity', () => {
     const filtered = filterBranches(
       branches,
       { ...defaultFilters, topology: 'Merged', activity: 'Inactive' },
@@ -85,7 +85,7 @@ describe('filterBranches', () => {
     expect(filtered.map((item) => item.id)).toEqual(['feature/fusionnee']);
   });
 
-  it('filtre sur la relation Git', () => {
+  it('filters on the Git relationship', () => {
     const filtered = filterBranches(
       branches,
       { ...defaultFilters, relationship: 'BranchIsAncestorOfReference' },
@@ -94,14 +94,14 @@ describe('filterBranches', () => {
     expect(filtered).toHaveLength(1);
   });
 
-  it('ne garde que les branches au-delà du seuil d’inactivité', () => {
+  it('keeps only the branches beyond the inactivity threshold', () => {
     const filtered = filterBranches(branches, { ...defaultFilters, onlyStale: true }, 90);
     expect(filtered.map((item) => item.id).sort()).toEqual(['archive/2023', 'feature/fusionnee']);
   });
 });
 
 describe('sortBranches', () => {
-  it('trie par nom court sans muter la source', () => {
+  it('sorts by short name without mutating the source', () => {
     const sorted = sortBranches(branches, 'name', 'asc');
     expect(sorted.map((item) => item.id)).toEqual([
       'archive/2023',
@@ -112,17 +112,17 @@ describe('sortBranches', () => {
     expect(branches[0].id).toBe('feature/export-csv');
   });
 
-  it('trie par avance décroissante', () => {
+  it('sorts by descending ahead count', () => {
     expect(sortBranches(branches, 'ahead', 'desc')[0].id).toBe('feature/export-csv');
   });
 
-  it('trie par activité, la plus récente en tête', () => {
+  it('sorts by activity, the most recent first', () => {
     expect(sortBranches(branches, 'activity', 'desc')[0].aheadCount).toBe(4);
   });
 });
 
 describe('countByRecommendation', () => {
-  it('compte le total et chaque recommandation', () => {
+  it('counts the total and each recommendation', () => {
     expect(countByRecommendation(branches)).toEqual({
       all: 4,
       Keep: 1,

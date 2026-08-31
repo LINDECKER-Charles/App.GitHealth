@@ -1,7 +1,7 @@
 import { activityLabels, topologyLabels } from '../../core/branches/branch-labels';
 import { relationshipOptions, BranchFilters } from './dashboard-filters';
 
-/** Filtre actif, avec la retouche à appliquer pour le retirer. */
+/** Active filter, with the patch to apply in order to remove it. */
 export interface DashboardChip {
   readonly label: string;
   readonly patch: Partial<BranchFilters>;
@@ -13,30 +13,36 @@ export function buildChips(
 ): readonly DashboardChip[] {
   const chips: DashboardChip[] = [];
   if (filters.topology !== '') {
+    const topology = topologyLabels[filters.topology];
     chips.push({
-      label: `Topologie : ${topologyLabels[filters.topology]}`,
+      label: $localize`:@@dashboard.chip.topology:Topology: ${topology}:value:`,
       patch: { topology: '' },
     });
   }
 
   if (filters.activity !== '') {
+    const activity = activityLabels[filters.activity];
     chips.push({
-      label: `Activité : ${activityLabels[filters.activity]}`,
+      label: $localize`:@@dashboard.chip.activity:Activity: ${activity}:value:`,
       patch: { activity: '' },
     });
   }
 
   if (filters.search.trim().length > 0) {
-    chips.push({ label: `« ${filters.search.trim()} »`, patch: { search: '' } });
+    chips.push({ label: `"${filters.search.trim()}"`, patch: { search: '' } });
   }
 
   if (filters.relationship !== '') {
-    chips.push({ label: `Relation : ${relationshipLabel(filters)}`, patch: { relationship: '' } });
+    const relationship = relationshipLabel(filters);
+    chips.push({
+      label: $localize`:@@dashboard.chip.relationship:Relationship: ${relationship}:value:`,
+      patch: { relationship: '' },
+    });
   }
 
   if (filters.onlyStale) {
     chips.push({
-      label: `Sans activité > ${inactiveAfterDays} j`,
+      label: $localize`:@@dashboard.chip.stale:No activity > ${inactiveAfterDays}:days: d`,
       patch: { onlyStale: false },
     });
   }

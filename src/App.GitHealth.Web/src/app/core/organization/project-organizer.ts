@@ -14,9 +14,9 @@ interface OrganizationChange {
   readonly message: string;
 }
 
-const failureMessage = 'Le rangement du dépôt n’a pas pu être enregistré.';
+const failureMessage = $localize`:@@apiError.organization.move:The repository could not be moved.`;
 
-/** Écrit le rangement d'un dépôt — favori et groupe — puis réinjecte le projet mis à jour. */
+/** Writes where a repository sits — favourite and group — then feeds the updated project back. */
 @Injectable({ providedIn: 'root' })
 export class ProjectOrganizer {
   private readonly api = inject(GitHealthApiClient);
@@ -63,13 +63,17 @@ export class ProjectOrganizer {
 }
 
 function favoriteMessage(project: ProjectResponse, isFavorite: boolean): string {
+  const name = project.displayName;
   return isFavorite
-    ? `${project.displayName} · épinglé dans les favoris`
-    : `${project.displayName} · retiré des favoris`;
+    ? $localize`:@@ui.organizer.pinned:${name}:projectName: · pinned to favourites`
+    : $localize`:@@ui.organizer.unpinned:${name}:projectName: · removed from favourites`;
 }
 
 function groupMessage(project: ProjectResponse, groupName: string | null): string {
-  return groupName === null
-    ? `${project.displayName} · sorti de son groupe`
-    : `${project.displayName} · rangé dans ${groupName}`;
+  const name = project.displayName;
+  if (groupName === null) {
+    return $localize`:@@ui.organizer.ungrouped:${name}:projectName: · taken out of its group`;
+  }
+
+  return $localize`:@@ui.organizer.moved:${name}:projectName: · moved to ${groupName}:groupName:`;
 }

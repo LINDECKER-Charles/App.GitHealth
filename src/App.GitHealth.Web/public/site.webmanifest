@@ -1,14 +1,14 @@
 {
   "name": "GitHealth",
   "short_name": "GitHealth",
-  "description": "Diagnostic local et en lecture seule des branches Git.",
+  "description": "Local, read-only diagnostic of Git branches.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#fcfbf9",
   "theme_color": "#1a1815",
-  "lang": "fr",
+  "lang": "en",
   "icons": [
     {
       "src": "icons/icon-192x192.png",

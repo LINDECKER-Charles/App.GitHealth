@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 const defaultErrorCode = 'http.error';
 const unexpectedErrorCode = 'client.unexpected';
-const defaultErrorMessage = 'Une erreur inattendue est survenue.';
+const defaultErrorMessage = $localize`:@@apiError.default.message:An unexpected error occurred.`;
 
 export interface ApiProblemDetails {
   readonly type: string | null;

@@ -66,7 +66,7 @@ export class ProjectRail {
     })),
   );
 
-  /** Un rail sans groupe ni favori n'affiche aucun en-tête : la liste plate se suffit. */
+  /** A rail with no group and no favourite shows no heading: the flat list is enough. */
   protected readonly hasHeadings = computed(() => {
     const sections = this.sections();
     return sections.length > 1 || (sections.length === 1 && sections[0].kind !== 'ungrouped');
@@ -76,6 +76,12 @@ export class ProjectRail {
 
   protected isExpanded(section: RailSection): boolean {
     return !this.hasHeadings() || !section.isCollapsed;
+  }
+
+  protected sectionToggleLabel(section: RailSection): string {
+    return this.isExpanded(section)
+      ? $localize`:@@rail.section.collapse:Collapse ${section.title}:title:`
+      : $localize`:@@rail.section.expand:Expand ${section.title}:title:`;
   }
 
   protected toggleSection(key: string): void {
@@ -91,7 +97,9 @@ export class ProjectRail {
   }
 
   protected favoriteLabel(project: ProjectResponse): string {
-    return project.isFavorite ? 'Retirer des favoris' : 'Mettre en favori';
+    return project.isFavorite
+      ? $localize`:@@rail.entry.unfavourite:Remove from favourites`
+      : $localize`:@@rail.entry.favourite:Add to favourites`;
   }
 
   private toEntry(project: ProjectResponse): RailEntry {
@@ -102,7 +110,7 @@ export class ProjectRail {
     };
   }
 
-  /** Le nombre de branches n'est connu que pour le dépôt dont le snapshot est chargé. */
+  /** The branch count is only known for the repository whose snapshot is loaded. */
   private branchCount(project: ProjectResponse): string {
     const snapshot = this.context.snapshot();
     return this.context.project()?.id === project.id && snapshot !== null

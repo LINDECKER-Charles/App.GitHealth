@@ -21,7 +21,7 @@ function detail(overrides: Partial<SnapshotDetailResponse> = {}): SnapshotDetail
       topology: 'Diverged',
       activity: 'Active',
       recommendation: 'Review',
-      reason: 'Historique divergent à examiner',
+      reason: 'Diverged history to review',
       isProtected: false,
       isExcluded: false,
     },
@@ -39,19 +39,19 @@ function detail(overrides: Partial<SnapshotDetailResponse> = {}): SnapshotDetail
 }
 
 describe('buildTrace', () => {
-  it('énonce les motifs évalués, la topologie, l’activité puis la conclusion', () => {
+  it('states the evaluated patterns, the topology, the activity and the conclusion', () => {
     const lines = buildTrace(detail());
     expect(lines).toHaveLength(5);
-    expect(lines[0].text).toBe('Aucun motif d’exclusion ne correspond');
-    expect(lines[0].rule).toBe('1 motif évalué');
-    expect(lines[1].rule).toBe('2 motifs évalués');
-    expect(lines[2].text).toBe('Divergente : +4 / −3');
+    expect(lines[0].text).toBe('No exclusion pattern matches');
+    expect(lines[0].rule).toBe('1 pattern evaluated');
+    expect(lines[1].rule).toBe('2 patterns evaluated');
+    expect(lines[2].text).toBe('Diverged: +4 / −3');
     expect(lines[2].rule).toBe('git merge-base --is-ancestor + git rev-list --count');
-    expect(lines[3].text).toBe('Active : 3 j ≤ seuil 30 j');
-    expect(lines[4].text).toBe('Conclusion : à examiner');
+    expect(lines[3].text).toBe('Active: 3 d ≤ 30 d threshold');
+    expect(lines[4].text).toBe('Conclusion: review');
   });
 
-  it('nomme le motif protégé qui capture la branche', () => {
+  it('names the protected pattern that captures the branch', () => {
     const lines = buildTrace(
       detail({
         snapshot: {
@@ -61,11 +61,11 @@ describe('buildTrace', () => {
         },
       }),
     );
-    expect(lines[1].text).toBe('Protégée par « refs/heads/release/* »');
-    expect(lines[1].rule).toContain('retirée des recommandations');
+    expect(lines[1].text).toBe('Protected by "refs/heads/release/*"');
+    expect(lines[1].rule).toContain('removed from action recommendations');
   });
 
-  it('nomme le motif d’exclusion qui capture la branche', () => {
+  it('names the exclusion pattern that captures the branch', () => {
     const lines = buildTrace(
       detail({
         snapshot: {
@@ -75,22 +75,22 @@ describe('buildTrace', () => {
         },
       }),
     );
-    expect(lines[0].text).toBe('Exclue par « refs/heads/archive/* »');
+    expect(lines[0].text).toBe('Excluded by "refs/heads/archive/*"');
   });
 
-  it('décrit une branche fusionnée par rapport à la référence', () => {
+  it('describes a branch merged into the baseline', () => {
     const lines = buildTrace(
       detail({ snapshot: { ...detail().snapshot, topology: 'Merged', aheadCount: 0 } }),
     );
-    expect(lines[2].text).toBe('Fusionnée : 0 commit en avance sur main');
+    expect(lines[2].text).toBe('Merged: 0 commits ahead of main');
   });
 
-  it('assume l’absence de date de sommet', () => {
+  it('accepts the absence of a tip date', () => {
     const lines = buildTrace(
       detail({
         snapshot: { ...detail().snapshot, lastActivityAtUtc: null, activity: 'Unknown' },
       }),
     );
-    expect(lines[3].text).toContain('Activité inconnue');
+    expect(lines[3].text).toContain('Unknown activity');
   });
 });

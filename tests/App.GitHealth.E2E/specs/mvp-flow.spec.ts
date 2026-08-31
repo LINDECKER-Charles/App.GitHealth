@@ -35,15 +35,13 @@ test.afterAll(async () => {
   }
 });
 
-test("parcourt le MVP sans modifier le dépôt ni contacter un tiers", async ({
+test("walks the MVP without modifying the repository or contacting a third party", async ({
   page,
 }) => {
   const externalHosts = observeExternalHosts(page);
   await openWorkspace(page, context.app.baseUrl);
-  await expect(
-    page.getByText("Aucun dépôt observé pour l'instant"),
-  ).toBeVisible();
-  await addRepository(page, context.fixture.repositoryPath, "Recette E2E");
+  await expect(page.getByText("No repository observed yet")).toBeVisible();
+  await addRepository(page, context.fixture.repositoryPath, "E2E acceptance");
   await runAnalysis(page);
   await explainBranch(page);
   await savePolicy(page);
@@ -56,12 +54,12 @@ test("parcourt le MVP sans modifier le dépôt ni contacter un tiers", async ({
   );
 });
 
-test("joue la séquence d'ouverture et la laisse couper", async ({ page }) => {
+test("plays the opening sequence and lets it be skipped", async ({ page }) => {
   await page.goto(context.app.baseUrl);
   const intro = page.locator("app-boot-intro");
   await expect(intro).toBeVisible();
-  await expect(intro.getByText("Séquence de démarrage")).toBeVisible();
-  await page.getByRole("button", { name: "Passer l'introduction" }).click();
+  await expect(intro.getByText("Opening sequence")).toBeVisible();
+  await page.getByRole("button", { name: "Skip the intro" }).click();
   await expect(intro).toBeHidden();
   await expect(page.locator(".topbar")).toBeVisible();
 });
@@ -82,13 +80,13 @@ function observeExternalHosts(page: Page): string[] {
 
 async function runAnalysis(page: Page): Promise<void> {
   await page
-    .getByRole("button", { name: "Lancer la première analyse", exact: true })
+    .getByRole("button", { name: "Run the first analysis", exact: true })
     .click();
   await expect(page.locator(".dashboard-table tbody tr")).not.toHaveCount(0, {
     timeout: 60_000,
   });
   await expect(
-    page.locator(".dashboard-tile", { hasText: "Nettoyage possible" }),
+    page.locator(".dashboard-tile", { hasText: "Cleanup possible" }),
   ).toBeVisible();
 }
 
@@ -97,26 +95,26 @@ async function explainBranch(page: Page): Promise<void> {
     .locator(".dashboard-table tbody tr")
     .filter({ hasText: "feature/divergente" })
     .click();
-  const fiche = page.locator("app-branch-fiche");
-  await expect(fiche.locator(".fiche-name")).toHaveText("feature/divergente");
-  await expect(fiche.getByText("Pourquoi cette recommandation")).toBeVisible();
-  await expect(fiche.locator(".etb-code__pre")).toContainText(
+  const card = page.locator("app-branch-card");
+  await expect(card.locator(".card-name")).toHaveText("feature/divergente");
+  await expect(card.getByText("Why this recommendation")).toBeVisible();
+  await expect(card.locator(".etb-code__pre")).toContainText(
     "git branch -d feature/divergente",
   );
-  await page.getByRole("button", { name: "Fermer la fiche" }).click();
+  await page.getByRole("button", { name: "Close the card" }).click();
 }
 
 async function savePolicy(page: Page): Promise<void> {
-  await page.getByRole("link", { name: "Politiques" }).click();
-  await page.getByLabel("Nouveau motif protégé").fill("refs/heads/main");
+  await page.getByRole("link", { name: "Policies" }).click();
+  await page.getByLabel("New protected pattern").fill("refs/heads/main");
   await page
     .locator(".pattern-form")
     .first()
-    .getByRole("button", { name: "Ajouter" })
+    .getByRole("button", { name: "Add" })
     .click();
-  await expect(page.getByText("Modifications non enregistrées")).toBeVisible();
-  await page.getByRole("button", { name: "Enregistrer la politique" }).click();
-  await expect(page.locator(".workspace-toast")).toContainText("enregistrée");
+  await expect(page.getByText("Unsaved changes")).toBeVisible();
+  await page.getByRole("button", { name: "Save the policy" }).click();
+  await expect(page.locator(".workspace-toast")).toContainText("Policy saved");
   await page.getByRole("link", { name: "Diagnostic" }).click();
 }
 
@@ -125,7 +123,7 @@ async function verifyExports(
   outputDirectory: string,
 ): Promise<void> {
   const csv = await download(page, join(outputDirectory, "branches.csv"), () =>
-    page.getByRole("button", { name: "Exporter en CSV" }).click(),
+    page.getByRole("button", { name: "Export as CSV" }).click(),
   );
   expect(csv.subarray(0, 3)).toEqual(Buffer.from([0xef, 0xbb, 0xbf]));
   expect(csv.toString("utf8")).toContain("referenceName");
@@ -133,7 +131,7 @@ async function verifyExports(
   const database = await download(
     page,
     join(outputDirectory, "githealth.db.backup"),
-    () => page.getByRole("link", { name: "Sauvegarder les données" }).click(),
+    () => page.getByRole("link", { name: "Back up the data" }).click(),
   );
   expect(database.subarray(0, 16).toString("ascii")).toBe("SQLite format 3\0");
 }
@@ -157,9 +155,9 @@ async function restartAndVerifyPersistence(
   await recipe.app.stop();
   await recipe.app.start();
   await openWorkspace(page, recipe.app.baseUrl);
-  await expect(page.getByText("Dépôts observés")).toBeVisible();
+  await expect(page.getByText("Observed repositories")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Recette E2E" }),
+    page.getByRole("heading", { name: "E2E acceptance" }),
   ).toBeVisible();
   await expect(page.locator(".dashboard-table tbody tr")).not.toHaveCount(0);
 }

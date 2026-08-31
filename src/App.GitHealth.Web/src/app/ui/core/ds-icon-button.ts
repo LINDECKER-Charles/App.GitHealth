@@ -5,7 +5,7 @@ import { DsIcon } from './ds-icon';
 const smallGlyphSize = 14;
 const defaultGlyphSize = 16;
 
-/** Dans une barre d'outils, une icône seule exige toujours un `label` : infobulle et nom accessible. */
+/** In a toolbar, a lone icon always needs a `label`: tooltip and accessible name. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

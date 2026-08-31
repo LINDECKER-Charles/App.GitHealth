@@ -4,8 +4,8 @@ import { IconName } from '../icon-name';
 const iconRoot = '/ds/icons';
 
 /**
- * Applique le SVG en `mask-image` : le glyphe prend toujours `currentColor`.
- * On ne colore jamais une icône directement, on colore son parent.
+ * Applies the SVG as a `mask-image`: the glyph always takes `currentColor`.
+ * An icon is never coloured directly, its parent is.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

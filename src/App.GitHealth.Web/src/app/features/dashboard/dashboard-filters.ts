@@ -8,6 +8,7 @@ import {
   SortDirection,
 } from '../../core/api/api.models';
 import { ageInDays, displayReference } from '../../core/branches/branch-labels';
+import { sourceLocale } from '../../core/i18n/locale';
 import { SelectOption } from '../../ui/forms/ds-select';
 
 export type RecommendationView = RecommendationKind | 'all';
@@ -35,36 +36,45 @@ export const defaultFilters: BranchFilters = {
 };
 
 export const topologyOptions: readonly SelectOption[] = [
-  { value: '', label: 'Toute topologie' },
-  { value: 'Synchronized', label: 'Synchronisées' },
-  { value: 'Ahead', label: 'En avance' },
-  { value: 'Merged', label: 'Fusionnées' },
-  { value: 'Diverged', label: 'Divergentes' },
-  { value: 'Unrelated', label: 'Sans base' },
+  { value: '', label: $localize`:@@dashboard.topology.any:Any topology` },
+  { value: 'Synchronized', label: $localize`:@@dashboard.topology.inSync:In sync` },
+  { value: 'Ahead', label: $localize`:@@dashboard.topology.ahead:Ahead` },
+  { value: 'Merged', label: $localize`:@@dashboard.topology.merged:Merged` },
+  { value: 'Diverged', label: $localize`:@@dashboard.topology.diverged:Diverged` },
+  { value: 'Unrelated', label: $localize`:@@dashboard.topology.noMergeBase:No merge base` },
 ];
 
 export const activityOptions: readonly SelectOption[] = [
-  { value: '', label: 'Toute activité' },
-  { value: 'Active', label: 'Actives' },
-  { value: 'Aging', label: 'Vieillissantes' },
-  { value: 'Inactive', label: 'Inactives' },
-  { value: 'Unknown', label: 'Inconnues' },
+  { value: '', label: $localize`:@@dashboard.activity.any:Any activity` },
+  { value: 'Active', label: $localize`:@@dashboard.activity.active:Active` },
+  { value: 'Aging', label: $localize`:@@dashboard.activity.ageing:Ageing` },
+  { value: 'Inactive', label: $localize`:@@dashboard.activity.inactive:Inactive` },
+  { value: 'Unknown', label: $localize`:@@dashboard.activity.unknown:Unknown` },
 ];
 
 export const relationshipOptions: readonly SelectOption[] = [
-  { value: '', label: 'Toutes relations' },
-  { value: 'SameCommit', label: 'Même sommet' },
-  { value: 'CommonAncestor', label: 'Ancêtre commun' },
-  { value: 'BranchIsAncestorOfReference', label: 'Fusionnées dans la référence' },
-  { value: 'NoCommonAncestor', label: 'Sans base commune' },
+  { value: '', label: $localize`:@@dashboard.relationship.any:Any relationship` },
+  { value: 'SameCommit', label: $localize`:@@dashboard.relationship.sameCommit:Same commit` },
+  { value: 'CommonAncestor', label: $localize`:@@dashboard.relationship.ancestor:Common ancestor` },
+  {
+    value: 'BranchIsAncestorOfReference',
+    label: $localize`:@@dashboard.relationship.merged:Merged into the baseline`,
+  },
+  {
+    value: 'NoCommonAncestor',
+    label: $localize`:@@dashboard.relationship.noAncestor:No common ancestor`,
+  },
 ];
 
 export const sortOptions: readonly SelectOption[] = [
-  { value: 'activity', label: 'Dernière activité' },
-  { value: 'name', label: 'Nom' },
-  { value: 'ahead', label: 'Avance' },
-  { value: 'behind', label: 'Retard' },
+  { value: 'activity', label: $localize`:@@dashboard.sort.activity:Last activity` },
+  { value: 'name', label: $localize`:@@dashboard.sort.name:Name` },
+  { value: 'ahead', label: $localize`:@@dashboard.sort.ahead:Ahead` },
+  { value: 'behind', label: $localize`:@@dashboard.sort.behind:Behind` },
 ];
+
+/** Branch names are sorted with the app locale, never with the host's default collation. */
+const branchNameCollator = new Intl.Collator(sourceLocale);
 
 export function filterBranches(
   branches: readonly BranchSnapshotResponse[],
@@ -138,9 +148,9 @@ function compare(
 ): number {
   switch (sort) {
     case 'name':
-      return displayReference(left.referenceName).localeCompare(
+      return branchNameCollator.compare(
+        displayReference(left.referenceName),
         displayReference(right.referenceName),
-        'fr',
       );
     case 'ahead':
       return left.aheadCount - right.aheadCount;

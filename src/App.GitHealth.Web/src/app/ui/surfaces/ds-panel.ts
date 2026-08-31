@@ -4,7 +4,7 @@ import { DsIcon } from '../core/ds-icon';
 
 const headerGlyphSize = 14;
 
-/** L'en-tête d'un Panel ne défile jamais avec son contenu. */
+/** The header of a panel never scrolls with its content. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'etb-panel' },

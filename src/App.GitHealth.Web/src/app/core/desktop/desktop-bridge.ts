@@ -4,9 +4,9 @@ import { Injectable, inject } from '@angular/core';
 const pickFolderKind = 'pickFolder';
 
 /**
- * Pont de messages exposé par la coque de bureau. Il n'existe qu'en fenêtre : en Docker
- * et dans un navigateur, l'objet est absent et l'application garde son navigateur de
- * dossiers HTML.
+ * Message bridge exposed by the desktop shell. It only exists in a window: under Docker
+ * and in a browser the object is absent, and the application keeps its HTML folder
+ * browser.
  */
 interface DesktopHost {
   sendMessage(message: string): void;
@@ -19,9 +19,9 @@ interface PendingRequest {
 }
 
 /**
- * Ouvre le dialogue de dossier du système quand la coque de bureau le propose.
- * Strictement additif : sans coque, `isAvailable` est faux et l'appelant retombe sur le
- * navigateur de dossiers servi par l'API.
+ * Opens the system folder dialog when the desktop shell offers it.
+ * Strictly additive: with no shell, `isAvailable` is false and the caller falls back to
+ * the folder browser served by the API.
  */
 @Injectable({ providedIn: 'root' })
 export class DesktopBridge {
@@ -32,19 +32,19 @@ export class DesktopBridge {
   readonly isAvailable = this.host !== null;
 
   constructor() {
-    // Un seul abonnement pour toute la session : chaque appel à receiveMessage ajoute un
-    // écouteur de plus côté hôte, il n'en remplace jamais aucun.
+    // A single subscription for the whole session: every receiveMessage call adds one more
+    // listener on the host side, it never replaces any.
     this.host?.receiveMessage((message) => this.onMessage(message));
   }
 
-  /** Résout le chemin choisi, ou `null` si l'utilisateur annule ou si la coque est absente. */
+  /** Resolves the chosen path, or `null` when the user cancels or the shell is absent. */
   pickFolder(): Promise<string | null> {
     const host = this.host;
     if (host === null) {
       return Promise.resolve(null);
     }
 
-    // Le dialogue est modal : une requête en vol suffit, et la précédente est abandonnée.
+    // The dialog is modal: one in-flight request is enough, and the previous one is dropped.
     this.pending?.resolve(null);
     const id = `${++this.lastRequestNumber}`;
     return new Promise<string | null>((resolve) => {
@@ -77,7 +77,7 @@ function resolveHost(view: Window | null): DesktopHost | null {
   }
 }
 
-/** L'hôte parle en texte : toute réponse illisible est ignorée plutôt que propagée. */
+/** The host speaks in text: any unreadable reply is ignored rather than propagated. */
 function readReply(message: string): { id: string; path: string | null } | null {
   let value: unknown;
   try {

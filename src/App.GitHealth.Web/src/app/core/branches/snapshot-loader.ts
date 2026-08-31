@@ -1,15 +1,15 @@
 import { Observable, map, of, switchMap } from 'rxjs';
 import { BranchSnapshotResponse, PolicySnapshot, SnapshotPageResponse } from '../api/api.models';
 
-/** Le maximum accepté par l'API ; au-delà elle rejette la requête. */
+/** The maximum the API accepts; beyond it, the request is rejected. */
 export const snapshotPageSize = 200;
 
-/** Garde-fou : 10 000 branches suffisent très largement, et bornent les allers-retours. */
+/** Guard rail: 10,000 branches are far more than enough, and bound the round trips. */
 export const maximumSnapshotPages = 50;
 
 export type FetchSnapshotPage = (cursor: string | null) => Observable<SnapshotPageResponse>;
 
-/** Un snapshot complet, tel que les vues le manipulent : filtres, tris et compteurs sont locaux. */
+/** A whole snapshot, as the views handle it: filters, sorts and counters are local. */
 export interface LoadedSnapshot {
   readonly analysisId: string;
   readonly capturedAtUtc: string;
@@ -20,8 +20,8 @@ export interface LoadedSnapshot {
 }
 
 /**
- * Suit les curseurs jusqu'à la dernière page. Charger l'analyse entière une fois
- * permet ensuite de filtrer, trier et compter sans nouvel appel réseau.
+ * Follows the cursors to the last page. Loading the whole analysis once then allows
+ * filtering, sorting and counting with no further network call.
  */
 export function loadEntireSnapshot(fetchPage: FetchSnapshotPage): Observable<LoadedSnapshot> {
   return collectPages(fetchPage, null, maximumSnapshotPages).pipe(map(assemble));
