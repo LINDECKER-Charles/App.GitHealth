@@ -104,7 +104,7 @@ export class ProjectRail {
 
   /** Le nombre de branches n'est connu que pour le dépôt dont le snapshot est chargé. */
   private branchCount(project: ProjectResponse): string {
-    const snapshot = this.context.snapshot();
+    const snapshot = this.context.latestSnapshot();
     return this.context.project()?.id === project.id && snapshot !== null
       ? String(snapshot.branches.length)
       : unknownBranchCount;

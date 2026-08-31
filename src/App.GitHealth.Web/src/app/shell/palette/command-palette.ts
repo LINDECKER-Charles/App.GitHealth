@@ -17,6 +17,7 @@ import { ProjectsStore } from '../../core/workspace/projects-store';
 import { ThemeService } from '../../core/workspace/theme';
 import { plural } from '../../core/workspace/plural';
 import { WorkspaceDialogs } from '../../core/workspace/workspace-dialogs';
+import { CaptureStore } from '../../features/project/capture-store';
 import { ProjectContext } from '../../features/project/project-context';
 import { DsIcon } from '../../ui/core/ds-icon';
 import { DsKbd } from '../../ui/core/ds-kbd';
@@ -47,6 +48,7 @@ const maximumProjectResults = 4;
   templateUrl: './command-palette.html',
 })
 export class CommandPalette {
+  private readonly captures = inject(CaptureStore);
   private readonly context = inject(ProjectContext);
   private readonly exporter = inject(SnapshotExporter);
   private readonly organizer = inject(ProjectOrganizer);
@@ -99,7 +101,7 @@ export class CommandPalette {
   }
 
   private branchItems(): readonly PaletteItem[] {
-    const snapshot = this.context.snapshot();
+    const snapshot = this.captures.snapshot();
     const project = this.context.project();
     if (snapshot === null || project === null) {
       return [];
@@ -140,7 +142,7 @@ export class CommandPalette {
   }
 
   private projectActions(project: ProjectResponse): readonly PaletteItem[] {
-    const snapshot = this.context.snapshot();
+    const snapshot = this.captures.snapshot();
     const exportAction =
       snapshot === null
         ? []

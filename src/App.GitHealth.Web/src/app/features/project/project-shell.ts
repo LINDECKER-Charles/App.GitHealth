@@ -1,6 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import {
+  ActivatedRoute,
+  NavigationEnd,
+  Params,
+  Router,
+  RouterLink,
+  RouterOutlet,
+} from '@angular/router';
 import { filter, map } from 'rxjs';
 import { displayReference } from '../../core/branches/branch-labels';
 import { SnapshotExporter } from '../../core/branches/snapshot-export';
@@ -11,16 +18,35 @@ import { DsBadge } from '../../ui/core/ds-badge';
 import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
 import { DsSpinner } from '../../ui/core/ds-spinner';
+import { DsSelect } from '../../ui/forms/ds-select';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
 import { BranchFiche } from '../branch-fiche/branch-fiche';
+import { CaptureStore } from './capture-store';
 import { ProjectContext } from './project-context';
 
-type TabId = 'diagnostic' | 'history' | 'settings';
+type TabId = 'diagnostic' | 'visualisation' | 'history' | 'settings';
+
+/** Premier segment reconnu dans l'URL, sinon le diagnostic. L'ordre fixe la priorité. */
+const tabSegments: readonly (readonly [string, TabId])[] = [
+  ['/visualisation', 'visualisation'],
+  ['/history', 'history'],
+  ['/settings', 'settings'],
+];
 
 /** Cadre d'un dépôt : identité, actions, onglets et fiche de branche latérale. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BranchFiche, DsBadge, DsButton, DsCallout, DsIcon, DsSpinner, RouterLink, RouterOutlet],
+  imports: [
+    BranchFiche,
+    DsBadge,
+    DsButton,
+    DsCallout,
+    DsIcon,
+    DsSelect,
+    DsSpinner,
+    RouterLink,
+    RouterOutlet,
+  ],
   selector: 'app-project-shell',
   styleUrl: './project-shell.scss',
   templateUrl: './project-shell.html',
@@ -30,6 +56,7 @@ export class ProjectShell {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  protected readonly captures = inject(CaptureStore);
   protected readonly context = inject(ProjectContext);
   protected readonly phases = analysisPhases;
   protected readonly phaseLabel = phaseLabel;
@@ -47,14 +74,7 @@ export class ProjectShell {
   protected readonly projectId = computed(() => this.params().get('projectId') ?? '');
   protected readonly branchId = computed(() => this.queryParams().get('branch'));
 
-  protected readonly activeTab = computed<TabId>(() => {
-    const url = this.url();
-    if (url.includes('/settings')) {
-      return 'settings';
-    }
-
-    return url.includes('/history') ? 'history' : 'diagnostic';
-  });
+  protected readonly activeTab = computed<TabId>(() => tabFromUrl(this.url()));
 
   protected readonly referenceLabel = computed(() => {
     const project = this.context.project();
@@ -63,8 +83,9 @@ export class ProjectShell {
       : displayReference(project.referenceName);
   });
 
+  /** Le sélecteur dit déjà quelle capture est lue : la ligne dit son âge et son volume. */
   protected readonly meta = computed(() => {
-    const snapshot = this.context.snapshot();
+    const snapshot = this.captures.snapshot();
     if (snapshot === null) {
       const project = this.context.project();
       return project === null
@@ -72,8 +93,16 @@ export class ProjectShell {
         : `Aucune analyse enregistrée · ajouté ${relativeTime(project.createdAtUtc)}`;
     }
 
-    const branches = plural(snapshot.branches.length, 'branche');
-    return `Capture ${relativeTime(snapshot.capturedAtUtc)} · ${branches} · analyse ${snapshot.analysisId.slice(0, 8)}`;
+    return `${plural(snapshot.branches.length, 'branche')} · capturées ${relativeTime(snapshot.capturedAtUtc)}`;
+  });
+
+  /** Identité stable : chaque onglet reconstruirait son lien à chaque cycle sinon. */
+  protected readonly captureLink = computed<Params>(() => this.captures.captureLink());
+
+  /** Une capture archivée porte les verdicts de son époque : le dire évite de les croire d'aujourd'hui. */
+  protected readonly archivedNotice = computed(() => {
+    const selected = this.captures.selected();
+    return selected === null ? 'verdicts figés' : `${selected.short} · verdicts figés à cette date`;
   });
 
   protected readonly runLabel = computed(() =>
@@ -98,8 +127,14 @@ export class ProjectShell {
     effect(() => this.context.open(this.projectId()));
   }
 
+  /** Relancer, c'est vouloir le résultat suivant : rester sur une capture figée le cacherait. */
+  protected launchAnalysis(): void {
+    this.captures.followLatest();
+    this.context.launchAnalysis();
+  }
+
   protected exportSnapshot(): void {
-    const snapshot = this.context.snapshot();
+    const snapshot = this.captures.snapshot();
     const project = this.context.project();
     if (snapshot !== null && project !== null) {
       this.exporter.export(project.displayName, snapshot.branches);
@@ -122,4 +157,8 @@ export class ProjectShell {
       relativeTo: this.route,
     });
   }
+}
+
+function tabFromUrl(url: string): TabId {
+  return tabSegments.find(([segment]) => url.includes(segment))?.[1] ?? 'diagnostic';
 }

@@ -39,7 +39,8 @@
           @if (run.isOpenable) {
             <a
               class="etb-btn etb-btn--secondary etb-btn--sm"
-              [routerLink]="['/projects', projectId(), 'analyses', run.id]"
+              [routerLink]="['/projects', projectId()]"
+              [queryParams]="run.captureParams"
             >
               Ouvrir ce snapshot
             </a>

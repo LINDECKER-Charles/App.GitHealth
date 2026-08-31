@@ -1,0 +1,178 @@
+<div class="viz-card">
+  <div class="viz-card-head">
+    <div class="viz-card-identity">
+      <div class="viz-card-title">Écart entre deux captures</div>
+      <div class="viz-card-subtitle">{{ subtitle() }}</div>
+    </div>
+    <span class="viz-card-spacer"></span>
+    @if (hasComparison()) {
+      <span class="drift-compare-label">Comparer</span>
+      <ds-select
+        class="drift-select"
+        size="sm"
+        ariaLabel="Capture de départ"
+        [options]="fromOptions()"
+        [value]="fromValue()"
+        (valueChange)="selectFrom($event)"
+      />
+      <ds-icon class="drift-compare-arrow" name="arrow-right" [size]="compareArrowSize" />
+      <ds-select
+        class="drift-select"
+        size="sm"
+        ariaLabel="Capture d’arrivée"
+        [options]="toOptions()"
+        [value]="toValue()"
+        (valueChange)="selectTo($event)"
+      />
+    }
+  </div>
+
+  <div class="viz-card-body">
+    @if (store.isLoading()) {
+      <div class="drift-fill">
+        <div class="viz-empty">
+          <ds-spinner [size]="spinnerSize" label="Lecture des captures" />
+        </div>
+      </div>
+    } @else if (store.error(); as message) {
+      <div class="drift-notice">
+        <ds-callout tone="danger" title="Historique illisible">{{ message }}</ds-callout>
+      </div>
+    } @else if (drift(); as journal) {
+      <div class="drift-content">
+        @if (store.isBranchListTruncated()) {
+          <div class="drift-notice">
+            <ds-callout tone="warning" title="Comparaison partielle">
+              Au moins une capture dépasse la limite de lecture : les branches situées au-delà du
+              plafond n’ont pas été relues, l’écart et ses compteurs sont donc incomplets.
+            </ds-callout>
+          </div>
+        }
+
+        <div class="drift-layout">
+          <div class="drift-journal">
+            <div class="drift-head" [style.gridTemplateColumns]="gridColumns()">
+              <span class="viz-column-label">Captures</span>
+              <span class="viz-column-label">Branche</span>
+              <span class="viz-column-label drift-head-from">{{ fromShort() }}</span>
+              <span></span>
+              <span class="viz-column-label">{{ toShort() }}</span>
+              <span class="viz-column-label">Pourquoi</span>
+            </div>
+
+            @for (group of groups(); track group.kind) {
+              <div class="drift-group">
+                <ds-status-dot [tone]="group.tone" [size]="dotSize" />
+                <span class="drift-group-label">{{ group.label }}</span>
+                <span class="drift-group-count">{{ group.count }}</span>
+                @if (group.isCollapsible) {
+                  <button
+                    class="drift-toggle"
+                    type="button"
+                    [attr.aria-controls]="group.rowsId"
+                    [attr.aria-expanded]="isUnchangedOpen()"
+                    (click)="toggleUnchanged()"
+                  >
+                    {{ toggleLabel() }}
+                  </button>
+                }
+              </div>
+              <div class="drift-rows" [id]="group.rowsId">
+                @for (row of group.rows; track row.name) {
+                  <div class="drift-row" [style.gridTemplateColumns]="gridColumns()">
+                    <span class="drift-strip">
+                      @for (cell of row.cells; track $index) {
+                        <span
+                          class="drift-cell"
+                          role="img"
+                          [attr.aria-label]="cell.title"
+                          [attr.data-tone]="cell.tone"
+                          [class.is-compared]="cell.isCompared"
+                          [title]="cell.title"
+                        ></span>
+                      }
+                    </span>
+                    <span class="drift-name">
+                      <span class="drift-name-text">{{ row.name }}</span>
+                      @if (row.isProtected) {
+                        <ds-icon
+                          class="drift-flag-protected"
+                          name="lock"
+                          label="Branche protégée"
+                          [size]="flagSize"
+                        />
+                      } @else if (row.isExcluded) {
+                        <ds-icon
+                          class="drift-flag-excluded"
+                          name="eye-off"
+                          label="Branche exclue"
+                          [size]="flagSize"
+                        />
+                      }
+                    </span>
+                    <span class="drift-verdict drift-verdict-from">
+                      @if (row.fromTone; as tone) {
+                        <ds-badge size="sm" [tone]="tone">{{ row.fromLabel }}</ds-badge>
+                      } @else {
+                        <span class="drift-ghost">{{ row.fromLabel }}</span>
+                      }
+                    </span>
+                    <ds-icon
+                      class="drift-arrow"
+                      name="arrow-right"
+                      [attr.data-tone]="group.arrowTone"
+                      [size]="rowArrowSize"
+                    />
+                    <span class="drift-verdict">
+                      @if (row.toTone; as tone) {
+                        <ds-badge size="sm" [tone]="tone">{{ row.toLabel }}</ds-badge>
+                      } @else {
+                        <span class="drift-ghost">{{ row.toLabel }}</span>
+                      }
+                    </span>
+                    <span class="drift-note">{{ row.note }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <aside class="drift-side">
+            <div class="drift-side-title">En un coup d’œil</div>
+            <div class="drift-stats">
+              @for (stat of journal.stats; track stat.label) {
+                <div class="drift-stat">
+                  <ds-status-dot [tone]="stat.tone" [size]="dotSize" />
+                  <span class="drift-stat-label">{{ stat.label }}</span>
+                  <span class="drift-stat-count">{{ stat.count }}</span>
+                </div>
+              }
+            </div>
+            <p class="drift-legend">{{ legend() }}</p>
+          </aside>
+        </div>
+      </div>
+    } @else {
+      <div class="drift-fill">
+        <div class="viz-empty">
+          <ds-empty-state
+            icon="clock"
+            title="Il faut deux captures pour mesurer un écart"
+            [description]="emptyDescription()"
+          >
+            <button
+              dsButton
+              size="md"
+              variant="primary"
+              iconLeft="play"
+              [disabled]="context.isRunning()"
+              (click)="launch()"
+            >
+              Lancer une analyse
+            </button>
+          </ds-empty-state>
+        </div>
+      </div>
+    }
+  </div>
+</div>

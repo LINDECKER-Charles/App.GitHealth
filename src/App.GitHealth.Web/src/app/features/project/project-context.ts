@@ -20,8 +20,9 @@ const noResultCode = 'analysis.no_successful_result';
 const pollIntervalMs = 800;
 
 /**
- * État partagé d'un dépôt observé : le projet, son dernier snapshot complet et
- * l'analyse en cours. Un seul dépôt est ouvert à la fois : `open()` réinitialise l'état.
+ * État partagé d'un dépôt observé : le projet, sa dernière capture complète et l'analyse
+ * en cours. Un seul dépôt est ouvert à la fois : `open()` réinitialise l'état. Quelle capture
+ * les vues montrent ne se décide pas ici mais dans `CaptureStore`, qui s'appuie dessus.
  */
 @Injectable({ providedIn: 'root' })
 export class ProjectContext {
@@ -33,10 +34,10 @@ export class ProjectContext {
   private projectId = '';
 
   readonly project = signal<ProjectResponse | null>(null);
-  readonly snapshot = signal<LoadedSnapshot | null>(null);
+  readonly latestSnapshot = signal<LoadedSnapshot | null>(null);
   readonly analysis = signal<AnalysisStatusResponse | null>(null);
   readonly error = signal<string | null>(null);
-  readonly isLoadingSnapshot = signal(true);
+  readonly isLoadingLatest = signal(true);
   readonly isLaunching = signal(false);
   readonly isSavingPolicy = signal(false);
 
@@ -44,7 +45,6 @@ export class ProjectContext {
   readonly visibleBranchIds = signal<readonly string[]>([]);
 
   readonly isRunning = computed(() => this.isLaunching() || this.analysis()?.status === 'Running');
-  readonly hasSnapshot = computed(() => this.snapshot() !== null);
 
   open(projectId: string): void {
     if (this.projectId === projectId) {
@@ -52,10 +52,10 @@ export class ProjectContext {
     }
 
     this.projectId = projectId;
-    this.snapshot.set(null);
+    this.latestSnapshot.set(null);
     this.analysis.set(null);
     this.loadProject();
-    this.loadSnapshot();
+    this.loadLatestSnapshot();
   }
 
   clearError(): void {
@@ -93,7 +93,7 @@ export class ProjectContext {
       .subscribe({
         next: (project) => {
           this.applyProject(project);
-          this.loadSnapshot();
+          this.loadLatestSnapshot();
           this.toast.show(message);
           onSaved?.();
         },
@@ -119,8 +119,8 @@ export class ProjectContext {
       });
   }
 
-  loadSnapshot(): void {
-    this.isLoadingSnapshot.set(true);
+  loadLatestSnapshot(): void {
+    this.isLoadingLatest.set(true);
     loadEntireSnapshot((cursor) =>
       this.api.getLatestSnapshots(this.projectId, {
         cursor: cursor ?? undefined,
@@ -130,13 +130,13 @@ export class ProjectContext {
       }),
     )
       .pipe(
-        finalize(() => this.isLoadingSnapshot.set(false)),
+        finalize(() => this.isLoadingLatest.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (snapshot) => this.snapshot.set(snapshot),
+        next: (snapshot) => this.latestSnapshot.set(snapshot),
         error: (error: unknown) => {
-          this.snapshot.set(null);
+          this.latestSnapshot.set(null);
           if (!(error instanceof ApiError && error.code === noResultCode)) {
             this.fail(error, 'Le dernier snapshot ne peut pas être lu.');
           }
@@ -175,7 +175,7 @@ export class ProjectContext {
 
     this.polling?.unsubscribe();
     this.loadProject();
-    this.loadSnapshot();
+    this.loadLatestSnapshot();
     if (status.failureMessage !== null) {
       this.error.set(status.failureMessage);
       return;

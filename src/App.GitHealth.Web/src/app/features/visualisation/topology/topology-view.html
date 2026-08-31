@@ -1,0 +1,189 @@
+<section class="viz-card">
+  <header class="viz-card-head">
+    <div class="viz-card-identity">
+      <div class="viz-card-title">Plan de topologie</div>
+      <div class="viz-card-subtitle">
+        chaque branche part de {{ referenceLabel() }} et s’en écarte selon ses commits · survole
+        pour lire, clique pour épingler
+      </div>
+    </div>
+    <span class="viz-card-spacer"></span>
+    <div class="viz-legend">
+      @for (entry of legend; track entry.label) {
+        <span class="viz-legend-item">
+          <ds-status-dot [tone]="entry.tone" [size]="legendDotSize" />
+          {{ entry.label }}
+        </span>
+      }
+    </div>
+    <ds-segmented-control
+      size="sm"
+      aria-label="Branches montrées par la carte"
+      [options]="filterOptions"
+      [value]="filter()"
+      (valueChange)="changeFilter($event)"
+    />
+  </header>
+
+  <div class="viz-card-body">
+    @if (captures.isLoading()) {
+      <div class="viz-empty">
+        <ds-spinner label="Lecture de la dernière capture" [size]="spinnerSize" />
+      </div>
+    } @else if (map(); as plan) {
+      @if (plan.counts.total === 0) {
+        <div class="viz-empty">
+          <ds-empty-state
+            icon="git-branch"
+            title="Aucune branche à cartographier"
+            description="La dernière capture ne contient aucune branche à comparer à la référence."
+          />
+        </div>
+      } @else {
+        <div class="topology-layout">
+          <div class="topology-plot">
+            <svg
+              class="topology-canvas"
+              role="group"
+              [attr.viewBox]="plan.viewBox"
+              [attr.aria-label]="summary()"
+              (mouseleave)="hover(null)"
+            >
+              <line
+                class="topology-trunk"
+                [attr.x1]="plan.trunkStartX"
+                [attr.y1]="plan.trunkY"
+                [attr.x2]="plan.headX"
+                [attr.y2]="plan.trunkY"
+              />
+              <circle
+                class="topology-halo"
+                [attr.cx]="plan.headX"
+                [attr.cy]="plan.trunkY"
+                [attr.r]="haloRadius"
+              />
+              <circle
+                class="topology-head"
+                [attr.cx]="plan.headX"
+                [attr.cy]="plan.trunkY"
+                [attr.r]="headRadius"
+              />
+              <text class="topology-head-name" [attr.x]="plan.headLabelX" [attr.y]="plan.headNameY">
+                {{ referenceLabel() }}
+              </text>
+              <text class="topology-head-note" [attr.x]="plan.headLabelX" [attr.y]="plan.headNoteY">
+                {{ referenceNote() }}
+              </text>
+              @for (node of plan.nodes; track node.id) {
+                <g
+                  class="topology-branch"
+                  role="button"
+                  tabindex="0"
+                  [attr.data-tone]="node.tone"
+                  [attr.aria-label]="node.ariaLabel"
+                  [attr.aria-pressed]="node.id === pinnedId()"
+                  [attr.opacity]="node.opacity"
+                  (mouseenter)="hover(node.id)"
+                  (click)="togglePin(node.id)"
+                  (keydown.enter)="pinFromKeyboard($event, node.id)"
+                  (keydown.space)="pinFromKeyboard($event, node.id)"
+                  (keydown.escape)="clearPin()"
+                >
+                  <path
+                    class="topology-path"
+                    [attr.d]="node.path"
+                    [attr.stroke-width]="node.strokeWidth"
+                    [attr.stroke-dasharray]="node.dash"
+                  />
+                  <circle
+                    class="topology-junction"
+                    [attr.cx]="node.junction.x"
+                    [attr.cy]="node.junction.y"
+                    [attr.r]="junctionRadius"
+                  />
+                  <circle
+                    class="topology-tip"
+                    [attr.cx]="node.tip.x"
+                    [attr.cy]="node.tip.y"
+                    [attr.r]="tipRadius"
+                  />
+                </g>
+              }
+            </svg>
+
+            <div class="topology-labels">
+              @for (node of plan.nodes; track node.id) {
+                <span
+                  class="topology-name"
+                  aria-hidden="true"
+                  [class.is-focused]="node.isFocused"
+                  [class.is-trailing]="node.namePosition.isTrailing"
+                  [style.left]="node.namePosition.left"
+                  [style.top]="node.namePosition.top"
+                  [style.opacity]="node.labelOpacity"
+                  (mouseenter)="hover(node.id)"
+                  (click)="togglePin(node.id)"
+                  >{{ node.name }}</span
+                >
+                <span
+                  class="topology-gap"
+                  aria-hidden="true"
+                  [class.is-trailing]="node.gapPosition.isTrailing"
+                  [style.left]="node.gapPosition.left"
+                  [style.top]="node.gapPosition.top"
+                  [style.opacity]="node.labelOpacity"
+                  >{{ node.gap }}</span
+                >
+              }
+            </div>
+          </div>
+
+          <aside class="topology-fiche">
+            @if (card(); as fiche) {
+              <div class="topology-fiche-card">
+                <div class="topology-fiche-head">
+                  <span class="topology-fiche-name">{{ fiche.name }}</span>
+                  @if (fiche.isPinned) {
+                    <span class="topology-pin">épinglée</span>
+                  }
+                </div>
+                <div class="topology-fiche-badges">
+                  <ds-badge size="sm" [tone]="fiche.topologyTone">{{
+                    fiche.topologyLabel
+                  }}</ds-badge>
+                  <ds-badge
+                    size="sm"
+                    [tone]="fiche.recommendationTone"
+                    [icon]="fiche.recommendationIcon"
+                    >{{ fiche.recommendationLabel }}</ds-badge
+                  >
+                </div>
+                <ds-key-value-list [items]="fiche.details" />
+                <div class="topology-why">
+                  <div class="viz-column-label">Pourquoi</div>
+                  <p class="topology-why-body">{{ fiche.reason }}</p>
+                </div>
+                <p class="topology-hint">{{ fiche.hint }}</p>
+              </div>
+            } @else {
+              <div class="viz-column-label">Ce que montre la carte</div>
+              <p class="topology-lead">{{ overview() }}</p>
+              <p class="topology-lead">
+                La longueur suit l’écart de commits ; le point creux marque le sommet de la branche.
+              </p>
+              <p class="topology-hint">Survole une branche pour ouvrir sa fiche.</p>
+            }
+          </aside>
+        </div>
+      }
+    } @else {
+      <div class="viz-empty">
+        <ds-empty-state
+          icon="git-branch"
+          title="Aucune capture disponible"
+          description="Lance une analyse depuis l’en-tête du dépôt pour dessiner son plan de topologie."
+        />
+      </div>
+    }
+  </div>
+</section>

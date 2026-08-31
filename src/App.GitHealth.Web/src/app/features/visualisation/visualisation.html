@@ -1,0 +1,10 @@
+<div class="viz-switch">
+  <ds-segmented-control
+    aria-label="Lecture du dépôt"
+    [options]="subViews"
+    [value]="active()"
+    (valueChange)="open($event)"
+  />
+</div>
+
+<router-outlet />

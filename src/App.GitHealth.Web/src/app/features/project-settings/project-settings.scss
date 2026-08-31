@@ -160,6 +160,11 @@
   gap: 6px;
 }
 
+/* La colonne des motifs est étroite : le choix de branche passe sous le champ. */
+.pattern-form {
+  flex-wrap: wrap;
+}
+
 .relocation-form {
   max-width: 560px;
 }
@@ -168,6 +173,15 @@
 .relocation-form ds-input {
   flex: 1;
   min-width: 0;
+}
+
+.pattern-form ds-input {
+  min-width: 140px;
+}
+
+/* Une fois passé à la ligne, le bouton occupe la largeur : le repli semble voulu. */
+.pattern-pick {
+  flex: 1;
 }
 
 .settings-actions {

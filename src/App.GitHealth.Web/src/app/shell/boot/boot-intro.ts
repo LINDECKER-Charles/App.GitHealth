@@ -57,13 +57,15 @@ export class BootIntro {
   protected readonly progress = signal(0);
 
   protected readonly referenceLabel = computed(() => {
-    const snapshot = this.context.snapshot();
+    const snapshot = this.context.latestSnapshot();
     return snapshot === null
       ? 'la référence de comparaison'
       : displayReference(snapshot.referenceName);
   });
 
-  protected readonly branchCount = computed(() => this.context.snapshot()?.branches.length ?? 0);
+  protected readonly branchCount = computed(
+    () => this.context.latestSnapshot()?.branches.length ?? 0,
+  );
 
   protected readonly totalTile = computed<BootTile>(() => ({
     label: 'Toutes',
@@ -73,7 +75,7 @@ export class BootIntro {
   }));
 
   protected readonly tiles = computed<readonly BootTile[]>(() => {
-    const branches = this.context.snapshot()?.branches ?? [];
+    const branches = this.context.latestSnapshot()?.branches ?? [];
     const total = Math.max(branches.length, 1);
     return tileOrder.map((kind) => {
       const count = branches.filter((branch) => branch.recommendation === kind).length;

@@ -1,0 +1,218 @@
+.dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 10vh;
+  background: var(--scrim);
+  backdrop-filter: var(--blur-overlay);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: 560px;
+  max-width: 92vw;
+  max-height: 80vh;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+  animation: gh-in var(--dur-base) var(--ease-out);
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.dialog-heading-mark {
+  display: flex;
+  color: var(--text-secondary);
+}
+
+.dialog-heading-title {
+  flex: 1;
+  font: var(--type-heading);
+  letter-spacing: var(--tracking-heading);
+}
+
+.dialog-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+}
+
+.picker-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-md);
+  background: var(--field-bg);
+}
+
+.picker-search:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: var(--ring-focus);
+}
+
+.picker-search-mark {
+  display: flex;
+  color: var(--text-muted);
+}
+
+.picker-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: var(--text-sm);
+  line-height: var(--lh-md);
+  color: var(--text-primary);
+}
+
+.picker-input::placeholder {
+  color: var(--field-placeholder);
+}
+
+.picker-alert {
+  margin-top: 10px;
+}
+
+.picker-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 32px 12px;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* La liste porte le défilement pour que la recherche et le pied restent atteignables. */
+.picker-list {
+  flex: 1;
+  min-height: 0;
+  margin-top: 10px;
+  overflow: auto;
+}
+
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
+.picker-row.is-highlighted {
+  background: var(--surface-hover);
+  border-color: var(--border-default);
+}
+
+.picker-row.is-covered {
+  color: var(--text-disabled);
+}
+
+.picker-row-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.picker-row-main:disabled {
+  cursor: default;
+}
+
+.picker-row-main:focus-visible {
+  outline: none;
+  border-radius: var(--radius-xs);
+  box-shadow: var(--ring-focus);
+}
+
+.picker-row-name {
+  font: var(--type-code);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-row.is-covered .picker-row-name {
+  color: var(--text-muted);
+}
+
+.picker-row-reference {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-row-covered {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  max-width: 45%;
+}
+
+.picker-row-pattern {
+  font: var(--type-code-sm);
+  font-style: normal;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-empty {
+  padding: 28px 12px;
+  text-align: center;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.field-hint {
+  margin: 10px 0 0;
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--divider);
+  background: var(--surface-chrome);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.dialog-footer span {
+  flex: 1;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}

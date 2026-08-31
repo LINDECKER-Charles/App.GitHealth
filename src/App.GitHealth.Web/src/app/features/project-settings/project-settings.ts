@@ -17,6 +17,8 @@ import { DsInput } from '../../ui/forms/ds-input';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
 import { DsPanel } from '../../ui/surfaces/ds-panel';
 import { ProjectContext } from '../project/project-context';
+import { BranchPicker } from './branch-picker/branch-picker';
+import { BranchPatternKind } from './branch-picker/branch-picker-options';
 import { PolicyMatch, PolicyStat, projectMatches, projectStats } from './policy-projection';
 
 const minimumBandDays = 120;
@@ -25,7 +27,17 @@ const bandHeadroom = 1.6;
 /** Vue Politiques : seuils, motifs, relocalisation et projection sur le dernier snapshot. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DsBadge, DsButton, DsCallout, DsIcon, DsInput, DsPanel, DsStatusDot, DsTag],
+  imports: [
+    BranchPicker,
+    DsBadge,
+    DsButton,
+    DsCallout,
+    DsIcon,
+    DsInput,
+    DsPanel,
+    DsStatusDot,
+    DsTag,
+  ],
   selector: 'app-project-settings',
   styleUrl: './project-settings.scss',
   templateUrl: './project-settings.html',
@@ -44,6 +56,7 @@ export class ProjectSettings {
   protected readonly newExcluded = signal('');
   protected readonly relocationPath = signal('');
   protected readonly isRelocating = signal(false);
+  protected readonly pickerKind = signal<BranchPatternKind | null>(null);
 
   protected readonly draft = computed<PolicySnapshot>(() => ({
     activeUntilDays: toDays(this.activeUntilDays(), 0),
@@ -86,12 +99,23 @@ export class ProjectSettings {
     };
   });
 
-  protected readonly branches = computed(() => this.context.snapshot()?.branches ?? []);
+  protected readonly branches = computed(() => this.context.latestSnapshot()?.branches ?? []);
   protected readonly stats = computed<readonly PolicyStat[]>(() =>
     projectStats(this.branches(), this.draft()),
   );
   protected readonly matches = computed<readonly PolicyMatch[]>(() =>
     projectMatches(this.branches(), this.draft()),
+  );
+
+  protected readonly repositoryPath = computed(() => this.context.project()?.repositoryPath ?? '');
+
+  /** Le dépôt peut être injoignable : la dernière capture reste une liste de références. */
+  protected readonly capturedReferences = computed<readonly string[]>(() =>
+    this.branches().map((branch) => branch.referenceName),
+  );
+
+  protected readonly pickerPatterns = computed<readonly string[]>(() =>
+    this.pickerKind() === 'excluded' ? this.excludedPatterns() : this.protectedPatterns(),
   );
 
   constructor() {
@@ -118,6 +142,26 @@ export class ProjectSettings {
   protected addExcluded(): void {
     this.excludedPatterns.update((patterns) => append(patterns, this.newExcluded()));
     this.newExcluded.set('');
+  }
+
+  protected openPicker(kind: BranchPatternKind): void {
+    this.pickerKind.set(kind);
+  }
+
+  protected closePicker(): void {
+    this.pickerKind.set(null);
+  }
+
+  /** Une branche choisie devient un motif exact : le glob reste réservé à la saisie manuelle. */
+  protected addPicked(references: readonly string[]): void {
+    const kind = this.pickerKind();
+    this.closePicker();
+    if (kind === null) {
+      return;
+    }
+
+    const target = kind === 'excluded' ? this.excludedPatterns : this.protectedPatterns;
+    target.update((patterns) => references.reduce(append, patterns));
   }
 
   protected removeProtected(pattern: string): void {
