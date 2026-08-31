@@ -69,8 +69,7 @@ internal sealed class GitPhaseBenchmark
         if (branches.Length != expectedBranchCount)
         {
             throw new InvalidOperationException(
-                $"Fixture invalide : {branches.Length} branches au lieu de " +
-                $"{expectedBranchCount}.");
+                $"Invalid fixture: {branches.Length} branches instead of {expectedBranchCount}.");
         }
 
         return branches;

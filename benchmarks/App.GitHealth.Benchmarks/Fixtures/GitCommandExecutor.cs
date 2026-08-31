@@ -41,7 +41,7 @@ internal static class GitCommandExecutor
         }
 
         process.Dispose();
-        throw new InvalidOperationException("Impossible de démarrer Git.");
+        throw new InvalidOperationException("Git could not be started.");
     }
 
     private static async Task<IOException?> WriteInputAsync(
@@ -77,13 +77,13 @@ internal static class GitCommandExecutor
         if (result.ExitCode != 0)
         {
             throw new InvalidOperationException(
-                $"Git {string.Join(' ', request.Arguments)} a échoué : {result.Error.Trim()}");
+                $"Git {string.Join(' ', request.Arguments)} failed: {result.Error.Trim()}");
         }
 
         if (result.InputException is not null)
         {
             throw new InvalidOperationException(
-                "Git a fermé son entrée standard prématurément.",
+                "Git closed its standard input prematurely.",
                 result.InputException);
         }
 

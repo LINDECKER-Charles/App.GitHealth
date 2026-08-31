@@ -26,20 +26,20 @@ internal sealed class BenchmarkOptionException(string message) : Exception(messa
 internal static class BenchmarkOptionsParser
 {
     public const string HelpText = """
-        Benchmark GitHealth reproductible
+        Reproducible GitHealth benchmark
 
         Usage:
           dotnet run --project benchmarks/App.GitHealth.Benchmarks -c Release -- [options]
 
         Options:
-          --sizes <liste>       Nombres de branches, séparés par des virgules
-                                (défaut : 100,500,1000)
-          --iterations <n>      Mesures conservées par phase (défaut : 3)
-          --warmup <n>          Itérations de chauffe par phase (défaut : 1)
-          --output <chemin>     Rapport JSON produit
-          --budgets <chemin>    Budgets JSON à comparer si le fichier existe
-          --enforce-budgets     Retourner le code 2 en cas de dépassement
-          --help                Afficher cette aide
+          --sizes <list>        Branch counts, comma-separated
+                                (default: 100,500,1000)
+          --iterations <n>      Measurements kept per phase (default: 3)
+          --warmup <n>          Warm-up iterations per phase (default: 1)
+          --output <path>       JSON report produced
+          --budgets <path>      JSON budgets to compare against if the file exists
+          --enforce-budgets     Return exit code 2 when a budget is exceeded
+          --help                Print this help
         """;
 
     public static BenchmarkOptionsParseResult Parse(IReadOnlyList<string> args)
@@ -84,13 +84,13 @@ internal static class BenchmarkOptionsParser
         var argument = args[optionIndex];
         if (!KnownValueOptions.Contains(argument, StringComparer.Ordinal))
         {
-            throw new BenchmarkOptionException($"Option inconnue : {argument}");
+            throw new BenchmarkOptionException($"Unknown option: {argument}");
         }
 
         var valueIndex = optionIndex + 1;
         if (valueIndex >= args.Count)
         {
-            throw new BenchmarkOptionException($"Valeur manquante pour {argument}.");
+            throw new BenchmarkOptionException($"Missing value for {argument}.");
         }
 
         values[argument] = args[valueIndex];
@@ -129,7 +129,7 @@ internal static class BenchmarkOptionsParser
         if (counts.Length == 0 || counts.Any(count => count > 10_000))
         {
             throw new BenchmarkOptionException(
-                "--sizes doit contenir des entiers entre 1 et 10000.");
+                "--sizes must contain integers between 1 and 10000.");
         }
 
         return counts;
@@ -140,7 +140,7 @@ internal static class BenchmarkOptionsParser
         var parsed = ParseNonNegative(value, option);
         return parsed > 0
             ? parsed
-            : throw new BenchmarkOptionException($"{option} doit être supérieur à zéro.");
+            : throw new BenchmarkOptionException($"{option} must be greater than zero.");
     }
 
     private static int ParseNonNegative(string value, string option)
@@ -148,7 +148,7 @@ internal static class BenchmarkOptionsParser
         return int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var parsed)
             && parsed >= 0
             ? parsed
-            : throw new BenchmarkOptionException($"Valeur invalide pour {option} : {value}");
+            : throw new BenchmarkOptionException($"Invalid value for {option}: {value}");
     }
 
     private static string Get(

@@ -59,7 +59,7 @@ internal sealed class BenchmarkRunner(BenchmarkOptions options)
         BenchmarkBudgetReader budgets,
         CancellationToken cancellationToken)
     {
-        Console.WriteLine($"Préparation de la fixture déterministe ({branchCount} branches)...");
+        Console.WriteLine($"Preparing the deterministic fixture ({branchCount} branches)...");
         await using var fixture = await SyntheticGitFixture.CreateAsync(
             branchCount,
             cancellationToken);
@@ -126,7 +126,7 @@ internal sealed class BenchmarkRunner(BenchmarkOptions options)
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken)
     {
-        Console.WriteLine($"  Mesure {phase}...");
+        Console.WriteLine($"  Measuring {phase}...");
         T? lastResult = default;
         for (var iteration = 0; iteration < options.WarmupIterations; iteration++)
         {
@@ -150,7 +150,7 @@ internal sealed class BenchmarkRunner(BenchmarkOptions options)
         RepositoryScan scan,
         CancellationToken cancellationToken)
     {
-        Console.WriteLine("  Mesure persistence...");
+        Console.WriteLine("  Measuring persistence...");
         var samples = new List<double>(options.MeasurementIterations);
         Guid lastResult = default;
         var totalIterations = options.WarmupIterations + options.MeasurementIterations;
@@ -187,7 +187,7 @@ internal sealed class BenchmarkRunner(BenchmarkOptions options)
             cancellationToken);
         if (measurement.LastResult <= 0)
         {
-            throw new InvalidOperationException("Le rendu API a produit une réponse vide.");
+            throw new InvalidOperationException("The API rendering produced an empty response.");
         }
 
         return measurement;
@@ -257,7 +257,7 @@ internal static class BenchmarkStatistics
     {
         if (values.Count == 0)
         {
-            throw new ArgumentException("Au moins une mesure est requise.", nameof(values));
+            throw new ArgumentException("At least one measurement is required.", nameof(values));
         }
 
         return values.Order().ToArray();

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "policy": "P95 maximal sur l'environnement Windows de référence",
+  "policy": "Maximum P95 on the reference Windows environment",
   "baseline": "docs/benchmarks/windows-initial.json",
-  "margin": "au moins 50 %, arrondi et monotone par taille",
+  "margin": "at least 50%, rounded and monotonic by size",
   "budgets": [
     {
       "branchCount": 100,
