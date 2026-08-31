@@ -31,7 +31,7 @@ public sealed record Project
     {
         if (id == Guid.Empty)
         {
-            throw new ArgumentException("L’identifiant du projet est obligatoire.", nameof(id));
+            throw new ArgumentException("The project identifier is required.", nameof(id));
         }
 
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);

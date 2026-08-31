@@ -8,7 +8,7 @@ public sealed record RepositoryScanMetadata
         if (capturedAt.Offset != TimeSpan.Zero)
         {
             throw new ArgumentException(
-                "La date de capture doit être en UTC.",
+                "The capture date must be in UTC.",
                 nameof(capturedAt));
         }
 

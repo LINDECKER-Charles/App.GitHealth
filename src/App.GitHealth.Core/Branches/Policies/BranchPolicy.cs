@@ -37,7 +37,7 @@ public sealed record BranchPolicy
         if (copy.Length > MaximumPatternCount)
         {
             throw new ArgumentException(
-                $"Une politique accepte au plus {MaximumPatternCount} motifs.",
+                $"A policy accepts at most {MaximumPatternCount} patterns.",
                 parameterName);
         }
 
@@ -54,14 +54,14 @@ public sealed record BranchPolicy
         if (string.IsNullOrWhiteSpace(pattern))
         {
             throw new ArgumentException(
-                "Un motif de branche ne peut pas être vide.",
+                "A branch pattern cannot be empty.",
                 parameterName);
         }
 
         if (pattern.Length > MaximumPatternLength)
         {
             throw new ArgumentException(
-                $"Un motif ne peut pas dépasser {MaximumPatternLength} caractères.",
+                $"A pattern cannot exceed {MaximumPatternLength} characters.",
                 parameterName);
         }
 

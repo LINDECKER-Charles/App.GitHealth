@@ -39,7 +39,7 @@ public sealed class RepositoryContractsTests
     {
         var success = RepositoryResults.Success("repository");
         var failure = RepositoryResults.Failure<string>(
-            new RepositoryError(RepositoryErrorCode.NotARepository, "Dépôt invalide"));
+            new RepositoryError(RepositoryErrorCode.NotARepository, "Invalid repository"));
 
         Assert.True(success.TryGetValue(out var value));
         Assert.Equal("repository", value);

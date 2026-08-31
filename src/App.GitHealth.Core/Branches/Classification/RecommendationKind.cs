@@ -8,8 +8,8 @@ public enum RecommendationKind
     Excluded,
 
     /// <summary>
-    /// La branche n'a aucun commit propre et le délai court encore. Ce n'est pas
-    /// « conserver » : il n'y a rien à préserver, seulement rien à faire dans l'immédiat.
+    /// The branch has no own commits and the deadline is still running. This is not
+    /// "keep": there is nothing to preserve, only nothing to do right now.
     /// </summary>
     Merged,
 }

@@ -35,8 +35,8 @@ public sealed class BranchClassifier(IClock clock)
     }
 
     /// <summary>
-    /// Une branche sans commit propre est mesurée sur l'échelle réduite : la référence
-    /// contient déjà tout son historique, donc rien ne se perd à la supprimer.
+    /// A branch with no own commits is measured on the shortened scale: the baseline
+    /// already contains its whole history, so nothing is lost by deleting it.
     /// </summary>
     public static ActivityThresholds AppliedThresholds(
         BranchTopology topology,
@@ -47,8 +47,8 @@ public sealed class BranchClassifier(IClock clock)
     }
 
     /// <summary>
-    /// Faux quand tous les commits de la branche sont déjà accessibles depuis la
-    /// référence : sommet identique, ou branche strictement ancêtre.
+    /// False when every commit of the branch is already reachable from the baseline:
+    /// same commit, or branch strictly an ancestor.
     /// </summary>
     public static bool HasOwnCommits(BranchTopology topology)
     {
@@ -131,12 +131,12 @@ public sealed class BranchClassifier(IClock clock)
     {
         if (assessment.Protection is not null)
         {
-            return $"Protégée par le motif « {assessment.Protection} »";
+            return $"Protected by pattern \"{assessment.Protection}\"";
         }
 
         if (assessment.Exclusion is not null)
         {
-            return $"Exclue par le motif « {assessment.Exclusion} »";
+            return $"Excluded by pattern \"{assessment.Exclusion}\"";
         }
 
         return assessment.HasOwnCommits
@@ -149,13 +149,13 @@ public sealed class BranchClassifier(IClock clock)
         return activity switch
         {
             ActivityStatus.Inactive =>
-                "Aucun commit propre et sans activité depuis longtemps : "
-                + "candidate au nettoyage manuel",
+                "No own commits and no activity for a long time: "
+                + "candidate for manual cleanup",
             ActivityStatus.Aging =>
-                "Aucun commit propre : la référence contient déjà tout son historique",
+                "No own commits: the baseline already contains its whole history",
             ActivityStatus.Active =>
-                "Terminée : la référence contient déjà tout, le délai court encore",
-            _ => "Aucun commit propre, sans date de sommet exploitable",
+                "Done: the baseline already contains everything, the deadline is still running",
+            _ => "No own commits, with no usable tip date",
         };
     }
 
@@ -163,10 +163,10 @@ public sealed class BranchClassifier(IClock clock)
     {
         return (assessment.Topology, assessment.Activity) switch
         {
-            (_, ActivityStatus.Inactive) => "Inactive avec des faits Git à examiner",
-            (BranchTopology.Diverged, _) => "Historique divergent à examiner",
-            (BranchTopology.Unrelated, _) => "Aucun ancêtre commun avec la référence",
-            _ => "Aucune action recommandée",
+            (_, ActivityStatus.Inactive) => "Inactive, with Git facts to review",
+            (BranchTopology.Diverged, _) => "Diverged history to review",
+            (BranchTopology.Unrelated, _) => "No common ancestor with the baseline",
+            _ => "No action recommended",
         };
     }
 
