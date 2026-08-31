@@ -28,7 +28,7 @@ function Wait-ForHealth {
     $deadline = [DateTimeOffset]::UtcNow.AddSeconds(30)
     while ([DateTimeOffset]::UtcNow -lt $deadline) {
         if ($Process.HasExited) {
-            throw "GitHealth s'est arrêté avec le code $($Process.ExitCode)."
+            throw "GitHealth stopped with exit code $($Process.ExitCode)."
         }
 
         try {
@@ -42,7 +42,7 @@ function Wait-ForHealth {
         }
     }
 
-    throw "GitHealth n'a pas répondu sur $HealthUri dans le délai imparti."
+    throw "GitHealth did not respond on $HealthUri within the allotted time."
 }
 
 function Set-ProcessArguments {
@@ -122,7 +122,7 @@ function Invoke-ExpectedFailure {
         $failedProcess.StartInfo = $failureInfo
         $processStarted = $failedProcess.Start()
         if (-not $processStarted) {
-            throw "Le processus de diagnostic n'a pas démarré."
+            throw "The diagnostic process did not start."
         }
 
         $outputTask = $failedProcess.StandardOutput.ReadToEndAsync()
@@ -130,14 +130,14 @@ function Invoke-ExpectedFailure {
         if (-not $failedProcess.WaitForExit(15000)) {
             Stop-ProcessTree -Process $failedProcess
             $failedProcess.WaitForExit()
-            throw "Le processus de diagnostic ne s'est pas arrêté."
+            throw "The diagnostic process did not stop."
         }
 
         $output = $outputTask.GetAwaiter().GetResult()
         $diagnostic = $errorTask.GetAwaiter().GetResult()
         $combinedOutput = "$diagnostic`n$output"
         if ($failedProcess.ExitCode -ne 1 -or $combinedOutput -notlike "*$ExpectedMessage*") {
-            throw "Diagnostic inattendu : $combinedOutput"
+            throw "Unexpected diagnostic: $combinedOutput"
         }
     }
     finally {
@@ -158,7 +158,7 @@ $isWindowsPlatform = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPl
 $executableName = if ($isWindowsPlatform) { "githealth.exe" } else { "githealth" }
 $executable = Join-Path $resolvedPublish $executableName
 if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
-    throw "Exécutable natif introuvable : $executable"
+    throw "Native executable not found: $executable"
 }
 
 $smokeRoot = Join-Path (
@@ -187,7 +187,7 @@ $processStarted = $false
 try {
     $processStarted = $process.Start()
     if (-not $processStarted) {
-        throw "Le processus GitHealth n'a pas démarré."
+        throw "The GitHealth process did not start."
     }
 
     $outputTask = $process.StandardOutput.ReadToEndAsync()
@@ -196,32 +196,32 @@ try {
 
     $index = Invoke-WebRequest -Uri $baseUri -TimeoutSec 5 -UseBasicParsing
     if ($index.Content -notmatch "<app-root") {
-        throw "Le bundle Angular n'est pas servi par l'exécutable natif."
+        throw "The Angular bundle is not served by the native executable."
     }
 
     $runtime = Invoke-RestMethod -Uri ([uri]"$baseAddress/api/runtime") -TimeoutSec 5
     if ($runtime.mode -ne "native" -or $runtime.initialRepositoryPath -ne $resolvedRepository) {
-        throw "Le diagnostic runtime ne reflète pas les options du lanceur."
+        throw "The runtime diagnostic does not reflect the launcher options."
     }
 
     if (-not (Test-Path -LiteralPath (Join-Path $smokeRoot "githealth.db"))) {
-        throw "La base SQLite n'a pas été créée dans --data-dir."
+        throw "The SQLite database was not created in --data-dir."
     }
 
     Invoke-ExpectedFailure -Executable $executable -Arguments @(
         "--no-browser", "--port", (Get-AvailableLoopbackPort).ToString(),
         "--data-dir", $smokeRoot
-    ) -ExpectedMessage "autre instance"
+    ) -ExpectedMessage "another GitHealth instance"
     Invoke-ExpectedFailure -Executable $executable -Arguments @(
         "--no-browser", "--port", $port.ToString(),
         "--data-dir", (Join-Path $smokeRoot "port-conflict")
-    ) -ExpectedMessage "loopback $port"
+    ) -ExpectedMessage "Loopback port $port"
     $invalidDataDirectory = Join-Path $smokeRoot "invalid-data-directory"
-    [System.IO.File]::WriteAllText($invalidDataDirectory, "fichier")
+    [System.IO.File]::WriteAllText($invalidDataDirectory, "file")
     Invoke-ExpectedFailure -Executable $executable -Arguments @(
         "--no-browser", "--port", (Get-AvailableLoopbackPort).ToString(),
         "--data-dir", $invalidDataDirectory
-    ) -ExpectedMessage "inaccessible ou non inscriptible"
+    ) -ExpectedMessage "unreachable or not writable"
 }
 catch {
     $failure = $_
@@ -247,7 +247,7 @@ finally {
             "githealth-native-smoke-",
             [StringComparison]::Ordinal
         )) {
-            throw "Le répertoire temporaire à nettoyer est hors périmètre."
+            throw "The temporary directory to clean up is outside the allowed scope."
         }
 
         Remove-Item -LiteralPath $resolvedSmokeRoot -Recurse -Force
@@ -262,10 +262,10 @@ finally {
 
 if ($null -ne $failure -or $null -ne $cleanupFailure) {
     throw (
-        "$failure`nNettoyage : $cleanupFailure" +
-        "`nSortie :`n$standardOutput" +
-        "`nErreurs :`n$standardError"
+        "$failure`nCleanup: $cleanupFailure" +
+        "`nOutput:`n$standardOutput" +
+        "`nErrors:`n$standardError"
     )
 }
 
-Write-Output "Smoke test natif réussi sur $baseUri."
+Write-Output "Native smoke test passed on $baseUri."

@@ -75,7 +75,7 @@ function Start-GitHealth {
 
     $assembly = Join-Path $PublishPath "githealth.dll"
     if (-not (Test-Path -LiteralPath $assembly -PathType Leaf)) {
-        throw "Publication GitHealth introuvable : $assembly"
+        throw "GitHealth publication not found: $assembly"
     }
 
     $startInfo = [Diagnostics.ProcessStartInfo]::new()
@@ -90,7 +90,7 @@ function Start-GitHealth {
 
     $process = [Diagnostics.Process]::Start($startInfo)
     if ($null -eq $process) {
-        throw "Le processus GitHealth n'a pas démarré."
+        throw "The GitHealth process did not start."
     }
     return $process
 }

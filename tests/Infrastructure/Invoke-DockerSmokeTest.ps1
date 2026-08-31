@@ -36,7 +36,7 @@ function Wait-ForContainerHealth {
         }
     }
 
-    throw "Le conteneur GitHealth n'est pas devenu sain."
+    throw "The GitHealth container did not become healthy."
 }
 
 $resolvedRoot = (Resolve-Path -LiteralPath $RepositoryRoot).Path
@@ -54,7 +54,7 @@ $cleanupFailure = $null
 try {
     & docker compose --project-name $projectName up --build --detach
     if ($LASTEXITCODE -ne 0) {
-        throw "La construction ou le démarrage Docker a échoué."
+        throw "The Docker build or start failed."
     }
 
     $baseAddress = "http://127.0.0.1:$port"
@@ -62,41 +62,41 @@ try {
     Wait-ForContainerHealth -HealthUri ([uri]"$baseAddress/health")
     $index = Invoke-WebRequest -Uri $baseUri -TimeoutSec 5 -UseBasicParsing
     if ($index.Content -notmatch "<app-root") {
-        throw "Le conteneur ne sert pas l'interface Angular."
+        throw "The container does not serve the Angular interface."
     }
 
     $userId = & docker compose --project-name $projectName exec -T githealth id -u
     if ($LASTEXITCODE -ne 0 -or [int]$userId -eq 0) {
-        throw "Le conteneur GitHealth doit utiliser un UID non privilégié."
+        throw "The GitHealth container must use an unprivileged UID."
     }
 
     & docker compose --project-name $projectName exec -T githealth git --version | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        throw "Git n'est pas installé dans l'image."
+        throw "Git is not installed in the image."
     }
 
     & docker compose --project-name $projectName exec -T githealth `
         git -C /repositories rev-parse --is-inside-work-tree | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        throw "Le dépôt monté n'est pas accessible dans le conteneur."
+        throw "The mounted repository is not accessible in the container."
     }
 
     & docker compose --project-name $projectName exec -T githealth `
         sh -c "test ! -w /repositories && echo smoke > /data/smoke-marker"
     if ($LASTEXITCODE -ne 0) {
-        throw "Les permissions des montages Docker sont invalides."
+        throw "The Docker mount permissions are invalid."
     }
 
     & docker compose --project-name $projectName up --detach --force-recreate
     if ($LASTEXITCODE -ne 0) {
-        throw "La recréation du conteneur a échoué."
+        throw "Recreating the container failed."
     }
 
     Wait-ForContainerHealth -HealthUri ([uri]"$baseAddress/health")
     & docker compose --project-name $projectName exec -T githealth `
         test -f /data/smoke-marker
     if ($LASTEXITCODE -ne 0) {
-        throw "Le volume de données n'a pas survécu à la recréation."
+        throw "The data volume did not survive the recreation."
     }
 }
 catch {
@@ -108,14 +108,14 @@ catch {
         ) -join "`n"
     }
     catch {
-        $diagnostics = "Diagnostics Docker indisponibles : $_"
+        $diagnostics = "Docker diagnostics unavailable: $_"
     }
 }
 finally {
     try {
         & docker compose --project-name $projectName down --volumes --remove-orphans
         if ($LASTEXITCODE -ne 0) {
-            $cleanupFailure = "Docker Compose n'a pas pu nettoyer le projet $projectName."
+            $cleanupFailure = "Docker Compose could not clean up project $projectName."
         }
     }
     catch {
@@ -129,7 +129,7 @@ finally {
 }
 
 if ($null -ne $failure -or $null -ne $cleanupFailure) {
-    throw "$failure`nNettoyage : $cleanupFailure`nDiagnostics :`n$diagnostics"
+    throw "$failure`nCleanup: $cleanupFailure`nDiagnostics:`n$diagnostics"
 }
 
-Write-Output "Smoke test Docker réussi sur le port $port."
+Write-Output "Docker smoke test passed on port $port."

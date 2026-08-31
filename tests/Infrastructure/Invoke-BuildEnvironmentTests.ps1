@@ -1,16 +1,16 @@
 ﻿<#
 .SYNOPSIS
-    Éprouve les règles de ciblage des builds locaux, sans rien construire.
+    Exercises the local build targeting rules, without building anything.
 
 .DESCRIPTION
-    Ces règles décident ce qu'une machine a le droit de produire. Se tromper ne
-    casse aucune compilation : cela livre un artefact silencieusement inutilisable,
-    ou refuse un build légitime. D'où des tests, et d'où le fait que le système hôte
-    soit un paramètre de ces fonctions plutôt qu'une détection interne — les deux
-    sens de la règle se vérifient depuis n'importe quel poste.
+    These rules decide what a machine is allowed to produce. Getting them wrong
+    breaks no compilation: it ships a silently unusable artefact, or refuses a
+    legitimate build. Hence tests, and hence the fact that the host system is a
+    parameter of these functions rather than an internal detection — both sides
+    of the rule can be verified from any machine.
 
-    Aucune publication n'est déclenchée : la chaîne réelle est déjà couverte par
-    Invoke-NativeSmokeTest.ps1, exécuté par la CI de release sur chaque plateforme.
+    No publication is triggered: the real chain is already covered by
+    Invoke-NativeSmokeTest.ps1, run by the release CI on every platform.
 #>
 [CmdletBinding()]
 param()
@@ -34,7 +34,7 @@ function Invoke-TestCase {
     }
     catch {
         $script:FailureCount++
-        Write-Host "  ÉCHEC   $Name — $($_.Exception.Message)"
+        Write-Host "  FAILED  $Name — $($_.Exception.Message)"
     }
 }
 
@@ -45,7 +45,7 @@ function Assert-Equal {
     )
 
     if ($Expected -ne $Actual) {
-        throw "attendu '$Expected', obtenu '$Actual'"
+        throw "expected '$Expected', got '$Actual'"
     }
 }
 
@@ -63,71 +63,71 @@ function Assert-Throws {
             return
         }
 
-        throw "message inattendu : $($_.Exception.Message)"
+        throw "unexpected message: $($_.Exception.Message)"
     }
 
-    throw "aucun refus alors qu'un refus était attendu"
+    throw "no rejection although a rejection was expected"
 }
 
-Write-Host "Règles de ciblage des builds locaux"
+Write-Host "Local build targeting rules"
 
-Invoke-TestCase "compose l'identifiant d'une cible publiable" {
+Invoke-TestCase "composes the identifier of a publishable target" {
     $identifier = New-RuntimeIdentifier -OperatingSystem "osx" -Architecture "arm64"
     Assert-Equal -Expected "osx-arm64" -Actual $identifier
 }
 
-Invoke-TestCase "refuse une machine hors des cibles publiables" {
-    Assert-Throws -ExpectedPattern "non prise en charge" -Body {
+Invoke-TestCase "rejects a machine outside the publishable targets" {
+    Assert-Throws -ExpectedPattern "is not supported" -Body {
         New-RuntimeIdentifier -OperatingSystem "win" -Architecture "arm64"
     }
 }
 
-Invoke-TestCase "extrait le système d'exploitation d'une cible" {
+Invoke-TestCase "extracts the operating system of a target" {
     Assert-Equal -Expected "osx" -Actual (Get-RuntimeOperatingSystem "osx-x64")
 }
 
-Invoke-TestCase "reconnaît à ce poste une cible publiable" {
+Invoke-TestCase "recognises this machine as a publishable target" {
     $identifier = Get-HostRuntimeIdentifier
     if ((Get-SupportedRuntimeIdentifiers) -notcontains $identifier) {
-        throw "cible hôte '$identifier' hors des cibles publiables"
+        throw "host target '$identifier' outside the publishable targets"
     }
 }
 
-Invoke-TestCase "autorise l'installeur quand l'hôte est le système ciblé" {
+Invoke-TestCase "allows the installer when the host is the targeted system" {
     Assert-InstallerSupported -RuntimeIdentifier "win-x64" -HostOperatingSystem "win"
     Assert-InstallerSupported -RuntimeIdentifier "osx-arm64" -HostOperatingSystem "osx"
 }
 
-Invoke-TestCase "refuse l'installeur depuis un autre système, et dit où le produire" {
+Invoke-TestCase "rejects the installer from another system, and says where to produce it" {
     Assert-Throws -ExpectedPattern "release\.yml" -Body {
         Assert-InstallerSupported -RuntimeIdentifier "osx-arm64" -HostOperatingSystem "win"
     }
 }
 
-Invoke-TestCase "refuse l'installeur Linux, jusque sur un hôte Linux" {
-    Assert-Throws -ExpectedPattern "archive portable" -Body {
+Invoke-TestCase "rejects the Linux installer, even on a Linux host" {
+    Assert-Throws -ExpectedPattern "portable archive" -Body {
         Assert-InstallerSupported -RuntimeIdentifier "linux-x64" -HostOperatingSystem "linux"
     }
 }
 
-Invoke-TestCase "lit une version sémantique dans Directory.Build.props" {
+Invoke-TestCase "reads a semantic version from Directory.Build.props" {
     $version = Get-RepositoryVersion
     if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') {
-        throw "version non sémantique : '$version'"
+        throw "non-semantic version: '$version'"
     }
 }
 
-Invoke-TestCase "expose les versions d'outillage épinglées par le dépôt" {
+Invoke-TestCase "exposes the tooling versions pinned by the repository" {
     $pinned = Get-PinnedToolVersions
     foreach ($tool in @("Dotnet", "Node", "Git")) {
         if ([string]::IsNullOrWhiteSpace($pinned[$tool])) {
-            throw "version épinglée absente pour '$tool'"
+            throw "pinned version missing for '$tool'"
         }
     }
 }
 
 if ($FailureCount -gt 0) {
-    throw "$FailureCount test(s) de règles de ciblage en échec."
+    throw "$FailureCount build targeting rule test(s) failed."
 }
 
-Write-Host "Toutes les règles de ciblage sont vérifiées."
+Write-Host "All build targeting rules are verified."
