@@ -1,4 +1,6 @@
 using App.GitHealth.Api.Features.Analyses;
+using App.GitHealth.Api.Features.Analyses.Lifecycle;
+using App.GitHealth.Api.Features.Baselines;
 using App.GitHealth.Api.Features.Common;
 using App.GitHealth.Api.Features.Discovery;
 using App.GitHealth.Api.Features.Policies;
@@ -27,11 +29,15 @@ internal static class GitHealthApiServiceCollectionExtensions
         services.AddScoped<RepositoryDiscoveryService>();
         services.AddScoped<ProjectService>();
         services.AddScoped<ProjectOrganizationService>();
+        services.AddScoped<ProjectDeletionService>();
         services.AddScoped<PolicyService>();
+        services.AddScoped<BaselineService>();
         services.AddSingleton<AnalysisQueue>();
         services.AddHostedService<AnalysisWorker>();
         services.AddScoped<AnalysisStatusService>();
         services.AddScoped<AnalysisHistoryService>();
+        services.AddScoped<AnalysisLaunchService>();
+        services.AddScoped<AnalysisDeletionService>();
         services.AddScoped<SnapshotMapper>();
         services.AddScoped<SnapshotService>();
         return services;

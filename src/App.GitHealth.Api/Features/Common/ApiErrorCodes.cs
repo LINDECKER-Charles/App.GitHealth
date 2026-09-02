@@ -4,6 +4,7 @@ internal static class ApiErrorCodes
 {
     public const string AnalysisNotFound = "analysis.not_found";
     public const string AnalysisNotAvailable = "analysis.no_successful_result";
+    public const string AnalysisRunning = "analysis.running";
     public const string DatabaseBusy = "database.busy";
     public const string DirectoryInaccessible = "runtime.directory_inaccessible";
     public const string DirectoryNotAllowed = "runtime.directory_not_allowed";
