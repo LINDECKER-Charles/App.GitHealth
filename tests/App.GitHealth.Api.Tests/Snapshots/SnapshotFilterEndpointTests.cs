@@ -11,6 +11,10 @@ public sealed class SnapshotFilterEndpointTests
         "topology=Ahead&activity=Active&recommendation=Excluded"
         + "&isProtected=true&isExcluded=true&sort=name&direction=asc&pageSize=1";
 
+    private const string PrimaryBaseline = "refs/heads/main";
+    private const string SecondaryBaseline = "refs/heads/release";
+    private const string SecondaryBranch = "release";
+
     [Fact]
     public async Task CombinedFiltersRemainBoundToTheCursor()
     {
@@ -41,6 +45,51 @@ public sealed class SnapshotFilterEndpointTests
             secondItem.GetProperty("id").GetGuid());
 
         await AssertChangedFilterIsRejectedAsync(client, projectId, cursor!);
+    }
+
+    /// <summary>
+    /// The baseline is deliberately left out of the cursor payload: it picks the analysis to
+    /// read, and the analysis identifier already embedded in the cursor guards the change.
+    /// </summary>
+    [Fact]
+    public async Task ChangingTheBaselineInvalidatesTheCursor()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 3);
+        repository.AddSynchronizedBranch(SecondaryBranch);
+        using var factory = new ApiApplicationFactory
+        {
+            RepositoriesRoot = repository.RootPath,
+        };
+        using var client = factory.CreateClient();
+        var projectId = await ApiTestWorkflow.CreateProjectAsync(
+            client,
+            repository.RepositoryPath,
+            ApiTestWorkflow.MultiBaselineSettings(PrimaryBaseline, SecondaryBaseline));
+        await ApiTestWorkflow.AnalyzeAllAsync(client, projectId);
+
+        var first = await GetPageAsync(client, projectId, BaselineQuery(PrimaryBaseline));
+        var cursor = first.GetProperty("nextCursor").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(cursor));
+
+        await AssertChangedBaselineIsRejectedAsync(client, projectId, cursor!);
+    }
+
+    private static string BaselineQuery(string baseline) =>
+        $"sort=name&direction=asc&pageSize=1&baseline={Uri.EscapeDataString(baseline)}";
+
+    private static async Task AssertChangedBaselineIsRejectedAsync(
+        HttpClient client,
+        Guid projectId,
+        string cursor)
+    {
+        var uri = $"/api/projects/{projectId}/analyses/latest/branches"
+            + $"?{BaselineQuery(SecondaryBaseline)}"
+            + $"&cursor={Uri.EscapeDataString(cursor)}";
+        using var response = await client.GetAsync(uri);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(
+            "pagination.invalid_cursor",
+            await ApiTestWorkflow.ReadProblemCodeAsync(response));
     }
 
     private static async Task ApplyMatchingPolicyAsync(HttpClient client, Guid projectId)

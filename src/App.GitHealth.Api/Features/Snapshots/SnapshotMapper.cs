@@ -53,6 +53,7 @@ internal sealed class SnapshotMapper(IClock clock)
             Reason = comparison.Reason,
             IsProtected = comparison.IsProtected,
             IsExcluded = comparison.IsExcluded,
+            TopContributor = MapContributors(branch).FirstOrDefault(),
         };
     }
 
