@@ -23,6 +23,16 @@ internal sealed record AgentRunOutcome
     public bool IsSuccess => ExitCode == 0;
 }
 
+/// <summary>What one run needs before its command line can be written out.</summary>
+internal sealed record AgentRunOptions
+{
+    /// <summary>Where an agent that reports through a file is told to write its answer.</summary>
+    public required string AnswerFilePath { get; init; }
+
+    /// <summary>An allowlisted level, never a value taken straight from the request.</summary>
+    public required string Effort { get; init; }
+}
+
 /// <summary>What GitHealth is about to run, and with what.</summary>
 internal sealed record AgentRunRequest
 {

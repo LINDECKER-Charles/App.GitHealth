@@ -29,9 +29,20 @@ internal sealed class AssistantRunService(
             return ApiOutcome<AssistantRunSnapshot>.Failed(agent.Failure!);
         }
 
+        var effort = ResolveEffort(agent.Value!.Agent, request.Effort);
+        if (!effort.IsSuccess)
+        {
+            return ApiOutcome<AssistantRunSnapshot>.Failed(effort.Failure!);
+        }
+
         var briefing = await briefings.BuildAsync(projectId, request.Baseline, cancellationToken);
         return briefing.IsSuccess
-            ? Launch(projectId, agent.Value!, AssistantPrompt.Compose(briefing.Value!, question), question)
+            ? Launch(new LaunchRequest(
+                projectId,
+                agent.Value!,
+                AssistantPrompt.Compose(briefing.Value!, question),
+                question,
+                effort.Value!))
             : ApiOutcome<AssistantRunSnapshot>.Failed(briefing.Failure!);
     }
 
@@ -80,15 +91,30 @@ internal sealed class AssistantRunService(
             : ApiOutcome<AgentLocation>.Success(location);
     }
 
-    private ApiOutcome<AssistantRunSnapshot> Launch(
-        Guid projectId,
-        AgentLocation location,
-        string prompt,
-        string question)
+    /// <summary>
+    /// An unsupported level is refused rather than quietly downgraded: the panel offers what
+    /// the agent declares, so a level outside that list means the caller invented it.
+    /// </summary>
+    private static ApiOutcome<string> ResolveEffort(AgentDefinition agent, string? requested)
+    {
+        var effort = AgentEffort.Resolve(requested, agent);
+        return AgentEffort.IsSupported(effort, agent)
+            ? ApiOutcome<string>.Success(effort)
+            : ApiOutcome<string>.Failed(ApiProblems.BadRequest(
+                ApiErrorCodes.AssistantEffortUnsupported,
+                $"{agent.DisplayName} does not accept the \"{effort}\" effort. "
+                + $"Expected one of: {string.Join(", ", agent.Efforts)}."));
+    }
+
+    private ApiOutcome<AssistantRunSnapshot> Launch(LaunchRequest request)
     {
         var scratch = AssistantScratch.Create();
-        var commandLine = AgentCommandLine.ForRun(location, scratch.AnswerFilePath);
-        var run = new AssistantRun(Describe(projectId, location, question, commandLine));
+        var commandLine = AgentCommandLine.ForRun(request.Location, new AgentRunOptions
+        {
+            AnswerFilePath = scratch.AnswerFilePath,
+            Effort = request.Effort,
+        });
+        var run = new AssistantRun(Describe(request, commandLine));
         if (!registry.TryRegister(run))
         {
             run.Dispose();
@@ -98,22 +124,21 @@ internal sealed class AssistantRunService(
                 "Another run is already in progress. Wait for it or stop it first."));
         }
 
-        var launch = new AgentLaunch(location, commandLine, prompt, scratch);
+        var launch = new AgentLaunch(request.Location, commandLine, request.Prompt, scratch);
         _ = Task.Run(() => ExecuteAsync(run, launch), CancellationToken.None);
         return ApiOutcome<AssistantRunSnapshot>.Success(run.Read(from: 0));
     }
 
     private static AssistantRunDescriptor Describe(
-        Guid projectId,
-        AgentLocation location,
-        string question,
+        LaunchRequest request,
         AgentCommandLine commandLine) => new()
         {
             RunId = Guid.NewGuid(),
-            ProjectId = projectId,
-            AgentId = location.Agent.Id,
-            AgentName = location.Agent.DisplayName,
-            Question = question,
+            ProjectId = request.ProjectId,
+            AgentId = request.Location.Agent.Id,
+            AgentName = request.Location.Agent.DisplayName,
+            Effort = request.Effort,
+            Question = request.Question,
             CommandLine = commandLine.ToString(),
             StartedAtUtc = DateTimeOffset.UtcNow,
         };
@@ -213,6 +238,13 @@ internal sealed class AssistantRunService(
     private static ApiFailure RunNotFound() => ApiProblems.NotFound(
         ApiErrorCodes.AssistantRunNotFound,
         "The requested run does not exist, or it is old enough to have been discarded.");
+
+    private sealed record LaunchRequest(
+        Guid ProjectId,
+        AgentLocation Location,
+        string Prompt,
+        string Question,
+        string Effort);
 
     private sealed record AgentLaunch(
         AgentLocation Location,

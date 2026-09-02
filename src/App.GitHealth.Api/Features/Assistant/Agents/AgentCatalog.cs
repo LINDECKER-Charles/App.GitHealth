@@ -23,7 +23,11 @@ internal static class AgentCatalog
             "--output-format", "text",
             "--permission-mode", "plan",
             "--strict-mcp-config",
+            AgentDefinition.EffortSlot,
         ],
+        EffortArguments = ["--effort", AgentDefinition.EffortToken],
+        Efforts = AgentEffort.All,
+        DefaultEffort = AgentEffort.Medium,
         AnswerSource = AgentAnswerSource.StandardOutput,
         InstallationUrl = "https://claude.com/claude-code",
     };
@@ -31,7 +35,8 @@ internal static class AgentCatalog
     /// <summary>
     /// Codex CLI. <c>--sandbox read-only</c> is its own read-only policy;
     /// <c>--skip-git-repo-check</c> is required because the run happens in an empty scratch
-    /// directory rather than in a repository, which is the point.
+    /// directory rather than in a repository, which is the point. The effort travels as a
+    /// configuration override, which is the only way this CLI exposes it.
     /// </summary>
     private static readonly AgentDefinition Codex = new()
     {
@@ -41,12 +46,16 @@ internal static class AgentCatalog
         RunArguments =
         [
             "exec",
+            AgentDefinition.EffortSlot,
             "--sandbox", "read-only",
             "--skip-git-repo-check",
             "--color", "never",
             "--output-last-message", AgentDefinition.AnswerFileToken,
             "-",
         ],
+        EffortArguments = ["-c", $"model_reasoning_effort={AgentDefinition.EffortToken}"],
+        Efforts = AgentEffort.All,
+        DefaultEffort = AgentEffort.Medium,
         AnswerSource = AgentAnswerSource.LastMessageFile,
         InstallationUrl = "https://developers.openai.com/codex/cli",
     };

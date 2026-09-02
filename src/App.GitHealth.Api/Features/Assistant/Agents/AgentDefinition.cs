@@ -20,6 +20,15 @@ internal sealed record AgentDefinition
     /// <summary>Replaced by the run's answer file when the arguments are materialised.</summary>
     public const string AnswerFileToken = "{answerFile}";
 
+    /// <summary>
+    /// Marks where the effort arguments belong in <see cref="RunArguments" />. A position,
+    /// not a value: Codex takes its overrides before the stdin marker that ends its command.
+    /// </summary>
+    public const string EffortSlot = "{effortArguments}";
+
+    /// <summary>Replaced by the chosen level inside <see cref="EffortArguments" />.</summary>
+    public const string EffortToken = "{effort}";
+
     public required string Id { get; init; }
 
     public required string DisplayName { get; init; }
@@ -32,6 +41,14 @@ internal sealed record AgentDefinition
     /// where no command-line length limit can truncate a briefing.
     /// </summary>
     public required IReadOnlyList<string> RunArguments { get; init; }
+
+    /// <summary>How this CLI is told how hard to think, with the level left as a token.</summary>
+    public required IReadOnlyList<string> EffortArguments { get; init; }
+
+    /// <summary>Levels this CLI accepts. Anything outside it is refused, never passed on.</summary>
+    public required IReadOnlyList<string> Efforts { get; init; }
+
+    public required string DefaultEffort { get; init; }
 
     public required AgentAnswerSource AnswerSource { get; init; }
 

@@ -13,6 +13,12 @@ internal sealed record AssistantRunRequest
 
     /// <summary>Baseline whose capture is briefed. Absent means the project's primary one.</summary>
     public string? Baseline { get; init; }
+
+    /// <summary>
+    /// How hard the agent is asked to think. Absent means the agent's own default; a level
+    /// the agent does not declare is refused rather than passed on to its command line.
+    /// </summary>
+    public string? Effort { get; init; }
 }
 
 internal sealed record AssistantBriefingQueryParameters
@@ -53,6 +59,11 @@ internal sealed record AssistantAgentResponse
     /// <summary>Where the search looked and what to do about it, when nothing was found.</summary>
     public string? UnavailableReason { get; init; }
 
+    /// <summary>Effort levels this agent accepts, cheapest first.</summary>
+    public required IReadOnlyList<string> Efforts { get; init; }
+
+    public required string DefaultEffort { get; init; }
+
     public static AssistantAgentResponse From(AgentLocation location) => new()
     {
         Id = location.Agent.Id,
@@ -62,6 +73,8 @@ internal sealed record AssistantAgentResponse
         ExecutablePath = location.ExecutablePath,
         InstallationUrl = location.Agent.InstallationUrl,
         UnavailableReason = location.Version is null ? location.UnavailableMessage : null,
+        Efforts = location.Agent.Efforts,
+        DefaultEffort = location.Agent.DefaultEffort,
     };
 }
 

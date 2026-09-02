@@ -8,6 +8,7 @@ internal static class ApiErrorCodes
     public const string AssistantAgentUnavailable = "assistant.agent_unavailable";
     public const string AssistantBusy = "assistant.busy";
     public const string AssistantDisabled = "assistant.disabled";
+    public const string AssistantEffortUnsupported = "assistant.effort_unsupported";
     public const string AssistantQuestionRequired = "assistant.question_required";
     public const string AssistantRunFailed = "assistant.run_failed";
     public const string AssistantRunNotFound = "assistant.run_not_found";

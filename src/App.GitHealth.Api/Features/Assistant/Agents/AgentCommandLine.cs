@@ -23,15 +23,40 @@ internal sealed record AgentCommandLine
         return Create(location, location.Agent.VersionArguments);
     }
 
-    public static AgentCommandLine ForRun(AgentLocation location, string answerFilePath)
+    public static AgentCommandLine ForRun(AgentLocation location, AgentRunOptions options)
     {
         ArgumentNullException.ThrowIfNull(location);
-        var arguments = location.Agent.RunArguments
-            .Select(argument => argument == AgentDefinition.AnswerFileToken
-                ? answerFilePath
-                : argument)
-            .ToArray();
-        return Create(location, arguments);
+        ArgumentNullException.ThrowIfNull(options);
+        var agent = location.Agent;
+        if (!AgentEffort.IsSupported(options.Effort, agent))
+        {
+            throw new ArgumentException(
+                $"{agent.DisplayName} does not accept the \"{options.Effort}\" effort.",
+                nameof(options));
+        }
+
+        return Create(location, [.. agent.RunArguments.SelectMany(
+            argument => Materialise(argument, agent, options))]);
+    }
+
+    /// <summary>
+    /// Expands one declared argument. The effort is a slot rather than a plain token because
+    /// its position matters: Codex takes its overrides before the marker ending its command.
+    /// </summary>
+    private static IEnumerable<string> Materialise(
+        string argument,
+        AgentDefinition agent,
+        AgentRunOptions options)
+    {
+        if (argument == AgentDefinition.EffortSlot)
+        {
+            return agent.EffortArguments.Select(effortArgument => effortArgument.Replace(
+                AgentDefinition.EffortToken,
+                options.Effort,
+                StringComparison.Ordinal));
+        }
+
+        return [argument == AgentDefinition.AnswerFileToken ? options.AnswerFilePath : argument];
     }
 
     /// <summary>Reads back as it would be typed, for the interface and for a diagnostic.</summary>

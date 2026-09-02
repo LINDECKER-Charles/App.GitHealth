@@ -110,6 +110,7 @@ internal sealed class AssistantRun : IDisposable
                 ProjectId = Descriptor.ProjectId,
                 AgentId = Descriptor.AgentId,
                 AgentName = Descriptor.AgentName,
+                Effort = Descriptor.Effort,
                 Question = Descriptor.Question,
                 CommandLine = Descriptor.CommandLine,
                 Status = _status.ToString(),
@@ -151,6 +152,9 @@ internal sealed record AssistantRunDescriptor
 
     public required string AgentName { get; init; }
 
+    /// <summary>The level actually used, which may be the agent's default.</summary>
+    public required string Effort { get; init; }
+
     public required string Question { get; init; }
 
     /// <summary>Shown as it will be run, so the command is never a black box.</summary>
@@ -168,6 +172,8 @@ internal sealed record AssistantRunSnapshot
     public required string AgentId { get; init; }
 
     public required string AgentName { get; init; }
+
+    public required string Effort { get; init; }
 
     public required string Question { get; init; }
 

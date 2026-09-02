@@ -89,6 +89,48 @@ public sealed class AssistantEndpointTests
     }
 
     [Fact]
+    public async Task EachAgentPublishesTheEffortLevelsItAcceptsAndItsDefault()
+    {
+        using var factory = new ApiApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var payload = await client.GetFromJsonAsync<JsonElement>("/api/assistant/agents");
+
+        foreach (var agent in payload.GetProperty("agents").EnumerateArray())
+        {
+            var efforts = agent.GetProperty("efforts")
+                .EnumerateArray()
+                .Select(effort => effort.GetString() ?? string.Empty)
+                .ToArray();
+            Assert.Equal(["low", "medium", "high", "xhigh", "max"], efforts);
+            Assert.Contains(Text(agent, "defaultEffort"), efforts);
+        }
+    }
+
+    /// <summary>
+    /// The effort ends up inside a command line, so it is allowlisted rather than trusted.
+    /// Refusing beats quietly falling back: a run at the wrong effort costs real money.
+    /// </summary>
+    [Fact]
+    public async Task AnEffortTheAgentDoesNotAcceptIsRefused()
+    {
+        using var factory = new ApiApplicationFactory();
+        using var client = factory.CreateClient();
+
+        using var response = await client.PostAsJsonAsync(
+            $"/api/projects/{Guid.NewGuid()}/assistant/runs",
+            new
+            {
+                agentId = "claude",
+                question = Question,
+                effort = "--dangerously-skip-permissions",
+            });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("assistant.effort_unsupported", await CodeAsync(response));
+    }
+
+    [Fact]
     public async Task AnUnknownRunIsNotFound()
     {
         using var factory = new ApiApplicationFactory();

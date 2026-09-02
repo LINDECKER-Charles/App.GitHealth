@@ -85,8 +85,62 @@ public sealed class AgentCommandLineTests
         Assert.Throws<InvalidOperationException>(() => AgentCommandLine.ForVersion(location));
     }
 
-    private static AgentCommandLine Run(string agentId) =>
-        AgentCommandLine.ForRun(Located(agentId), AnswerFile);
+    /// <summary>
+    /// Codex reads its overrides as options of `exec`, so an effort appended after the `-`
+    /// that ends its command line would be silently ignored. The slot fixes the position.
+    /// </summary>
+    [Theory]
+    [InlineData("claude", "--effort", "xhigh")]
+    [InlineData("codex", "-c", "model_reasoning_effort=xhigh")]
+    public void TheChosenEffortIsPlacedWhereTheAgentExpectsIt(
+        string agentId,
+        string flag,
+        string value)
+    {
+        var arguments = Run(agentId, AgentEffort.ExtraHigh).Arguments.ToList();
+
+        var index = arguments.IndexOf(flag);
+        Assert.True(index >= 0, $"{agentId} no longer carries {flag}.");
+        Assert.Equal(value, arguments[index + 1]);
+        Assert.DoesNotContain(AgentDefinition.EffortSlot, arguments);
+        Assert.DoesNotContain(AgentDefinition.EffortToken, arguments);
+    }
+
+    [Fact]
+    public void CodexKeepsItsEffortBeforeTheMarkerThatEndsItsCommand()
+    {
+        var arguments = Run("codex", AgentEffort.Low).Arguments.ToList();
+
+        Assert.True(arguments.IndexOf("-c") < arguments.IndexOf("-"));
+    }
+
+    [Fact]
+    public void EveryAgentAcceptsTheSameLevels()
+    {
+        Assert.All(
+            AgentCatalog.All,
+            agent => Assert.Equal(AgentEffort.All, agent.Efforts));
+    }
+
+    /// <summary>
+    /// The last gate before a level reaches a command line. Without it a request could write
+    /// its own arguments through the effort field.
+    /// </summary>
+    [Theory]
+    [InlineData("ultra")]
+    [InlineData("--dangerously-skip-permissions")]
+    [InlineData("")]
+    public void ALevelOutsideTheAgentsListNeverReachesACommandLine(string effort)
+    {
+        Assert.Throws<ArgumentException>(() => Run("claude", effort));
+    }
+
+    private static AgentCommandLine Run(string agentId, string? effort = null) =>
+        AgentCommandLine.ForRun(Located(agentId), new AgentRunOptions
+        {
+            AnswerFilePath = AnswerFile,
+            Effort = effort ?? AgentEffort.Medium,
+        });
 
     private static AgentLocation Located(string agentId) => new()
     {
