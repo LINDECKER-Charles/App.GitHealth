@@ -40,6 +40,13 @@ export function buildChips(
     });
   }
 
+  if (filters.author !== '') {
+    chips.push({
+      label: $localize`:@@dashboard.chip.author:Author: ${filters.author}:value:`,
+      patch: { author: '' },
+    });
+  }
+
   if (filters.onlyStale) {
     chips.push({
       label: $localize`:@@dashboard.chip.stale:No activity > ${inactiveAfterDays}:days: d`,

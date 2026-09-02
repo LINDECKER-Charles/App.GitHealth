@@ -129,6 +129,16 @@
           (valueChange)="update({ relationship: $any($event) })"
         />
       </div>
+      <div class="filter-author">
+        <ds-select
+          size="sm"
+          i18n-ariaLabel="@@dashboard.authorFilter.aria"
+          ariaLabel="Author"
+          [options]="authors()"
+          [value]="filters().author"
+          (valueChange)="update({ author: $any($event) })"
+        />
+      </div>
       <span class="filter-divider"></span>
       <ds-switch
         i18n-ariaLabel="@@dashboard.stale.aria"

@@ -28,6 +28,7 @@ function branch(
     reason: 'Diverged history to review',
     isProtected: false,
     isExcluded: false,
+    topContributor: null,
     ...overrides,
   };
 }

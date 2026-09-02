@@ -34,6 +34,7 @@ import {
   BranchFilters,
   RecommendationView,
   activityOptions,
+  authorOptions,
   countByRecommendation,
   defaultFilters,
   filterBranches,
@@ -107,6 +108,7 @@ export class Dashboard {
   protected readonly isLoading = this.captures.isLoading;
   protected readonly branches = computed(() => this.snapshot()?.branches ?? []);
   protected readonly counts = computed(() => countByRecommendation(this.branches()));
+  protected readonly authors = computed(() => authorOptions(this.branches()));
 
   protected readonly tiles = computed<readonly Tile[]>(() => {
     const counts = this.counts();
