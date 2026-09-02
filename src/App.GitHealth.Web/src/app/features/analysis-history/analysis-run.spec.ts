@@ -34,6 +34,12 @@ describe('toRuns', () => {
     expect(run.reference).toBe('main');
     expect(run.branchCount).toBe('8 branches');
     expect(run.isOpenable).toBe(true);
+    expect(run.isDeletable).toBe(true);
+  });
+
+  it('does not offer to delete a run that is still going', () => {
+    const [run] = toRuns([item({ status: 'Running', completedAtUtc: null, capturedAtUtc: null })]);
+    expect(run.isDeletable).toBe(false);
   });
 
   it('compares a run to the previous one, which follows it in the list', () => {
