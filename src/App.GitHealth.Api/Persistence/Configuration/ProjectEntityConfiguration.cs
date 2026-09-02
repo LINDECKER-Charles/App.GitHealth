@@ -35,5 +35,9 @@ internal sealed class ProjectEntityConfiguration : IEntityTypeConfiguration<Proj
             .WithOne(analysis => analysis.Project)
             .HasForeignKey(analysis => analysis.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(project => project.Baselines)
+            .WithOne(baseline => baseline.Project)
+            .HasForeignKey(baseline => baseline.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

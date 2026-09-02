@@ -11,6 +11,13 @@ public sealed class ProjectPersistenceTests
     private static readonly DateTimeOffset CreatedAt =
         new(2026, 8, 1, 8, 0, 0, TimeSpan.Zero);
 
+    /// <summary>The declared order, reversed: the secondary baseline becomes the primary.</summary>
+    private static readonly GitRef[] SwappedBaselines =
+    [
+        new(PersistenceTestData.SecondaryBaseline),
+        new(PersistenceTestData.PrimaryBaseline),
+    ];
+
     [Fact]
     public async Task ProjectSettingsSurviveRestart()
     {
@@ -20,7 +27,7 @@ public sealed class ProjectPersistenceTests
         await AddProjectAsync(database, project, CreatedAt);
         var settings = project.Settings with
         {
-            Reference = new GitRef("refs/remotes/origin/main"),
+            Baselines = SwappedBaselines,
             Thresholds = ActivityThresholds.Create(7, 45),
         };
         await UpdateSettingsAsync(database, project.Id, settings);
@@ -32,6 +39,9 @@ public sealed class ProjectPersistenceTests
 
         Assert.NotNull(stored);
         var restored = stored.ToDomain();
+        Assert.Equal(
+            [PersistenceTestData.SecondaryBaseline, PersistenceTestData.PrimaryBaseline],
+            restored.Settings.Baselines.Select(baseline => baseline.FullName));
         Assert.Equal("refs/remotes/origin/main", restored.Settings.Reference!.FullName);
         Assert.Equal("refs/remotes/origin/*", restored.Settings.BranchNamespace);
         Assert.Equal(7, restored.Settings.Thresholds.ActiveUntilDays);
@@ -45,7 +55,9 @@ public sealed class ProjectPersistenceTests
         await using var database = await SqliteTestDatabase.CreateAsync();
         var project = PersistenceTestData.CreateProject(Path.Combine(database.RootPath, "old"));
         await AddProjectAsync(database, project, CreatedAt);
-        var analysisId = await CompleteAnalysisAsync(database, project.Id);
+        var analysisId = await CompleteAnalysisAsync(
+            database,
+            PersistenceTestData.PrimaryTarget(project.Id));
         var newPath = Path.Combine(database.RootPath, "relocated");
 
         await RelocateAsync(database, project.Id, newPath);
@@ -60,6 +72,76 @@ public sealed class ProjectPersistenceTests
         Assert.Equal(analysisId, last!.Id);
     }
 
+    [Fact]
+    public async Task ReorderingBaselinesKeepsEachLatestCapture()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var project = PersistenceTestData.CreateProject(
+            Path.Combine(database.RootPath, "repository"));
+        await AddProjectAsync(database, project, CreatedAt);
+        var primaryRun = await CompleteAnalysisAsync(
+            database,
+            PersistenceTestData.PrimaryTarget(project.Id));
+        var secondaryRun = await CompleteAnalysisAsync(
+            database,
+            PersistenceTestData.SecondaryTarget(project.Id));
+
+        await UpdateSettingsAsync(
+            database,
+            project.Id,
+            project.Settings with { Baselines = SwappedBaselines });
+
+        await using var scope = database.CreateScope();
+        var analyses = scope.ServiceProvider.GetRequiredService<IAnalysisRepository>();
+        Assert.Equal(primaryRun, await ReadBaselineLatestAsync(
+            analyses,
+            PersistenceTestData.PrimaryTarget(project.Id)));
+        Assert.Equal(secondaryRun, await ReadBaselineLatestAsync(
+            analyses,
+            PersistenceTestData.SecondaryTarget(project.Id)));
+        Assert.Equal(
+            secondaryRun,
+            (await analyses.GetLastSuccessfulAsync(project.Id, CancellationToken.None))!.Id);
+    }
+
+    [Fact]
+    public async Task RemovingABaselineForgetsItsCaptures()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var project = PersistenceTestData.CreateProject(
+            Path.Combine(database.RootPath, "repository"));
+        await AddProjectAsync(database, project, CreatedAt);
+        var primaryRun = await CompleteAnalysisAsync(
+            database,
+            PersistenceTestData.PrimaryTarget(project.Id));
+        await CompleteAnalysisAsync(database, PersistenceTestData.SecondaryTarget(project.Id));
+
+        await UpdateSettingsAsync(database, project.Id, project.Settings with
+        {
+            Baselines = [new GitRef(PersistenceTestData.PrimaryBaseline)],
+        });
+        await UpdateSettingsAsync(database, project.Id, project.Settings);
+
+        await using var scope = database.CreateScope();
+        var analyses = scope.ServiceProvider.GetRequiredService<IAnalysisRepository>();
+        Assert.Null(await analyses.GetLastSuccessfulForBaselineAsync(
+            PersistenceTestData.SecondaryTarget(project.Id),
+            CancellationToken.None));
+        Assert.Equal(primaryRun, await ReadBaselineLatestAsync(
+            analyses,
+            PersistenceTestData.PrimaryTarget(project.Id)));
+    }
+
+    private static async Task<Guid> ReadBaselineLatestAsync(
+        IAnalysisRepository analyses,
+        AnalysisTarget target)
+    {
+        var latest = await analyses.GetLastSuccessfulForBaselineAsync(
+            target,
+            CancellationToken.None);
+        return latest!.Id;
+    }
+
     private static async Task AddProjectAsync(
         SqliteTestDatabase database,
         App.GitHealth.Core.Projects.Project project,
@@ -72,12 +154,12 @@ public sealed class ProjectPersistenceTests
 
     private static async Task<Guid> CompleteAnalysisAsync(
         SqliteTestDatabase database,
-        Guid projectId)
+        AnalysisTarget target)
     {
         await using var scope = database.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IAnalysisRepository>();
         var capturedAt = CreatedAt.AddHours(1);
-        var analysisId = await repository.StartAsync(projectId, CreatedAt, CancellationToken.None);
+        var analysisId = await repository.StartAsync(target, CreatedAt, CancellationToken.None);
         var completion = new AnalysisCompletion(
             PersistenceTestData.CreateScan(capturedAt),
             capturedAt.AddMinutes(1));

@@ -32,13 +32,20 @@ internal sealed class RetentionService(
         });
     }
 
+    /// <summary>
+    /// The newest capture of every baseline is kept, not only the project's primary one:
+    /// pruning it would leave a declared baseline with nothing to show.
+    /// </summary>
     private static Task<Guid[]> ReadProtectedIdsAsync(
         GitHealthDbContext context,
         CancellationToken cancellationToken)
     {
-        return context.Projects.AsNoTracking()
+        var projectPointers = context.Projects.AsNoTracking()
             .Where(project => project.LastSuccessfulAnalysisId != null)
-            .Select(project => project.LastSuccessfulAnalysisId!.Value)
-            .ToArrayAsync(cancellationToken);
+            .Select(project => project.LastSuccessfulAnalysisId!.Value);
+        var baselinePointers = context.ProjectBaselines.AsNoTracking()
+            .Where(baseline => baseline.LastSuccessfulAnalysisId != null)
+            .Select(baseline => baseline.LastSuccessfulAnalysisId!.Value);
+        return projectPointers.Union(baselinePointers).ToArrayAsync(cancellationToken);
     }
 }

@@ -5,6 +5,14 @@ namespace App.GitHealth.Api.Features.Snapshots;
 
 internal record SnapshotFilterParameters
 {
+    /// <summary>
+    /// Baseline whose latest capture is read. It selects the source, not the rows, so it is
+    /// deliberately absent from the pagination cursor: a different baseline resolves a
+    /// different analysis, which the cursor's own analysis check already rejects.
+    /// </summary>
+    [FromQuery(Name = "baseline")]
+    public string? Baseline { get; init; }
+
     [FromQuery(Name = "search")]
     public string? Search { get; init; }
 
@@ -128,6 +136,12 @@ internal sealed record BranchSnapshotResponse
     public required bool IsProtected { get; init; }
 
     public required bool IsExcluded { get; init; }
+
+    /// <summary>
+    /// Whoever wrote most of the commits this branch adds to the baseline. Null on a merged
+    /// branch, which adds none — the tip author still answers "whose branch is this".
+    /// </summary>
+    public ContributorResponse? TopContributor { get; init; }
 }
 
 internal sealed record ContributorResponse(string Name, string Email, int CommitCount);

@@ -37,7 +37,7 @@ internal sealed class AnalysisHistoryService(
         var skip = checked((pageNumber - 1) * pageSize);
         var page = await analyses.GetHistoryAsync(
             projectId,
-            new AnalysisHistoryRange(skip, pageSize),
+            new AnalysisHistoryRange(skip, pageSize, Baseline(query)),
             cancellationToken);
         return ApiOutcome<AnalysisHistoryPageResponse>.Success(Map(page, query));
     }
@@ -61,6 +61,9 @@ internal sealed class AnalysisHistoryService(
 
     private static int PageSize(AnalysisHistoryQueryParameters query) =>
         query.PageSize ?? DefaultPageSize;
+
+    private static string? Baseline(AnalysisHistoryQueryParameters query) =>
+        string.IsNullOrWhiteSpace(query.Baseline) ? null : query.Baseline.Trim();
 
     private static AnalysisHistoryItemResponse Map(AnalysisHistoryRecord analysis) => new()
     {

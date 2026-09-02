@@ -1,13 +1,28 @@
+using App.GitHealth.Api.Persistence;
 using App.GitHealth.Api.Persistence.Models;
 using App.GitHealth.Api.Persistence.Repositories;
 using App.GitHealth.Api.Persistence.Services;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace App.GitHealth.Api.Tests.Persistence;
 
 public sealed class DatabaseMigrationTests
 {
+    /// <summary>Last migration shipped before baselines became a list of their own.</summary>
+    private const string BeforeBaselines = "20260829221101_AddProjectOrganization";
+
+    private const string LegacyProjectInsert =
+        "INSERT INTO Projects (Id, DisplayName, RepositoryPath, IsRepositoryAccessible, "
+        + "CreatedAtUtc, UpdatedAtUtc, ReferenceName, BranchNamespace, ActiveUntilDays, "
+        + "InactiveAfterDays, ExcludedPatternsJson, ProtectedPatternsJson, "
+        + "LastSuccessfulAnalysisId, IsFavorite) "
+        + "VALUES ({0}, 'Legacy', '/legacy/repository', 1, 0, 0, {1}, 'refs/heads/*', "
+        + "14, 60, '[]', '[]', {2}, 0);";
+
     [Fact]
     public void ExistingParentDirectoryPermissionsArePreserved()
     {
@@ -75,6 +90,74 @@ public sealed class DatabaseMigrationTests
         Assert.True(analysis.CompletedAtUtc >= analysis.StartedAtUtc);
     }
 
+    /// <summary>
+    /// The upgrade an existing installation goes through: a project that only ever knew one
+    /// reference must come out of it declaring that reference as its primary baseline, still
+    /// pointing at the capture it had.
+    /// </summary>
+    [Fact]
+    public async Task MigrationBackfillsTheExistingReferenceAsPrimaryBaseline()
+    {
+        var directory = Directory.CreateTempSubdirectory("githealth-backfill-").FullName;
+        var databasePath = Path.Combine(directory, "githealth.db");
+        var legacy = new LegacyProject(Guid.NewGuid(), "refs/heads/trunk", Guid.NewGuid());
+        try
+        {
+            await MigrateAsync(databasePath, BeforeBaselines);
+            await InsertLegacyProjectAsync(databasePath, legacy);
+            await MigrateAsync(databasePath, targetMigration: null);
+
+            await AssertBackfilledBaselineAsync(databasePath, legacy);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, true);
+        }
+    }
+
+    private static async Task AssertBackfilledBaselineAsync(
+        string databasePath,
+        LegacyProject legacy)
+    {
+        await using var context = CreateContext(databasePath);
+        var baseline = await context.ProjectBaselines.AsNoTracking()
+            .SingleAsync(item => item.ProjectId == legacy.Id);
+        Assert.Equal(legacy.ReferenceName, baseline.ReferenceName);
+        Assert.Equal(0, baseline.Position);
+        Assert.Equal(legacy.AnalysisId, baseline.LastSuccessfulAnalysisId);
+    }
+
+    private static async Task MigrateAsync(string databasePath, string? targetMigration)
+    {
+        await using var context = CreateContext(databasePath);
+        await context.GetService<IMigrator>().MigrateAsync(targetMigration);
+    }
+
+    private static async Task InsertLegacyProjectAsync(
+        string databasePath,
+        LegacyProject legacy)
+    {
+        await using var context = CreateContext(databasePath);
+        await context.Database.ExecuteSqlRawAsync(
+            LegacyProjectInsert,
+            legacy.Id,
+            legacy.ReferenceName,
+            legacy.AnalysisId);
+    }
+
+    private static GitHealthDbContext CreateContext(string databasePath)
+    {
+        var connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            ForeignKeys = true,
+        }.ToString();
+        return new GitHealthDbContext(new DbContextOptionsBuilder<GitHealthDbContext>()
+            .UseSqlite(connectionString)
+            .Options);
+    }
+
     private static async Task<Guid> CreateRunningAnalysisAsync(SqliteTestDatabase database)
     {
         await using var scope = database.CreateScope();
@@ -84,7 +167,10 @@ public sealed class DatabaseMigrationTests
         var project = PersistenceTestData.CreateProject(path);
         var startedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
         await projects.AddAsync(project, startedAt, CancellationToken.None);
-        return await analyses.StartAsync(project.Id, startedAt, CancellationToken.None);
+        return await analyses.StartAsync(
+            PersistenceTestData.PrimaryTarget(project.Id),
+            startedAt,
+            CancellationToken.None);
     }
 
     private static async Task<long> CountAppliedMigrationsAsync(SqliteTestDatabase database)
@@ -132,4 +218,7 @@ public sealed class DatabaseMigrationTests
             }
         }
     }
+
+    /// <summary>A row as it existed before ProjectBaselines: one reference, one pointer.</summary>
+    private sealed record LegacyProject(Guid Id, string ReferenceName, Guid AnalysisId);
 }

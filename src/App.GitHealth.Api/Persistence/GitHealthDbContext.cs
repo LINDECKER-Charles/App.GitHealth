@@ -8,6 +8,8 @@ internal sealed class GitHealthDbContext(DbContextOptions<GitHealthDbContext> op
 {
     public DbSet<ProjectEntity> Projects => Set<ProjectEntity>();
 
+    public DbSet<ProjectBaselineEntity> ProjectBaselines => Set<ProjectBaselineEntity>();
+
     public DbSet<AnalysisRunEntity> AnalysisRuns => Set<AnalysisRunEntity>();
 
     public DbSet<BranchSnapshotEntity> BranchSnapshots => Set<BranchSnapshotEntity>();

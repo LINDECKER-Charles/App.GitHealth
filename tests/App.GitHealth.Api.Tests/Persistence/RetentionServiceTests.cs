@@ -15,7 +15,11 @@ public sealed class RetentionServiceTests
     public async Task RetentionIsDisabledByDefault()
     {
         await using var database = await CreateDatabaseWithProjectAsync();
-        var analysisId = await CompleteAnalysisAsync(database, Now.AddDays(-100));
+        var projectId = await ReadProjectIdAsync(database);
+        var analysisId = await CompleteAnalysisAsync(
+            database,
+            PersistenceTestData.PrimaryTarget(projectId),
+            Now.AddDays(-100));
         await using var scope = database.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<IRetentionService>();
 
@@ -31,8 +35,10 @@ public sealed class RetentionServiceTests
     public async Task RetentionDeletesOldHistoryButPreservesLatestSuccessfulSnapshot()
     {
         await using var database = await CreateDatabaseWithProjectAsync(30);
-        var oldId = await CompleteAnalysisAsync(database, Now.AddDays(-100));
-        var latestId = await CompleteAnalysisAsync(database, Now.AddDays(-1));
+        var projectId = await ReadProjectIdAsync(database);
+        var primary = PersistenceTestData.PrimaryTarget(projectId);
+        var oldId = await CompleteAnalysisAsync(database, primary, Now.AddDays(-100));
+        var latestId = await CompleteAnalysisAsync(database, primary, Now.AddDays(-1));
         await using var scope = database.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<IRetentionService>();
 
@@ -43,9 +49,35 @@ public sealed class RetentionServiceTests
         Assert.Equal(1, result.DeletedAnalysisCount);
         Assert.Null(await repository.GetAsync(oldId, CancellationToken.None));
         Assert.Equal(latestId, (await repository.GetLastSuccessfulAsync(
-            await ReadProjectIdAsync(database),
+            projectId,
             CancellationToken.None))!.Id);
         Assert.Equal(1, await CountBranchesAsync(database));
+    }
+
+    /// <summary>
+    /// Every run here is past the cutoff. Only the project-wide pointer would save the primary
+    /// baseline's newest capture; the secondary one is saved by its own pointer or not at all.
+    /// </summary>
+    [Fact]
+    public async Task RetentionPreservesTheLatestCaptureOfEveryBaseline()
+    {
+        await using var database = await CreateDatabaseWithProjectAsync(30);
+        var projectId = await ReadProjectIdAsync(database);
+        var primary = PersistenceTestData.PrimaryTarget(projectId);
+        var secondary = PersistenceTestData.SecondaryTarget(projectId);
+        var prunedId = await CompleteAnalysisAsync(database, primary, Now.AddDays(-100));
+        var primaryId = await CompleteAnalysisAsync(database, primary, Now.AddDays(-90));
+        var secondaryId = await CompleteAnalysisAsync(database, secondary, Now.AddDays(-80));
+        await using var scope = database.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IRetentionService>();
+
+        var result = await service.ApplyAsync(Now, CancellationToken.None);
+
+        var repository = scope.ServiceProvider.GetRequiredService<IAnalysisRepository>();
+        Assert.Equal(1, result.DeletedAnalysisCount);
+        Assert.Null(await repository.GetAsync(prunedId, CancellationToken.None));
+        Assert.NotNull(await repository.GetAsync(primaryId, CancellationToken.None));
+        Assert.NotNull(await repository.GetAsync(secondaryId, CancellationToken.None));
     }
 
     private static async Task<SqliteTestDatabase> CreateDatabaseWithProjectAsync(
@@ -62,12 +94,12 @@ public sealed class RetentionServiceTests
 
     private static async Task<Guid> CompleteAnalysisAsync(
         SqliteTestDatabase database,
+        AnalysisTarget target,
         DateTimeOffset startedAt)
     {
         await using var scope = database.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IAnalysisRepository>();
-        var projectId = await ReadProjectIdAsync(database);
-        var id = await repository.StartAsync(projectId, startedAt, CancellationToken.None);
+        var id = await repository.StartAsync(target, startedAt, CancellationToken.None);
         var completion = new AnalysisCompletion(
             PersistenceTestData.CreateScan(startedAt.AddMinutes(1)),
             startedAt.AddMinutes(2));

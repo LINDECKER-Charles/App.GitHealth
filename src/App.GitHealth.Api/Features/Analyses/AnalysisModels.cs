@@ -1,3 +1,6 @@
+using App.GitHealth.Api.Persistence.Models;
+using Microsoft.AspNetCore.Mvc;
+
 namespace App.GitHealth.Api.Features.Analyses;
 
 internal enum AnalysisPhase
@@ -20,12 +23,19 @@ internal enum AnalysisEnqueueKind
     ProjectBusy,
 }
 
-internal sealed record AnalysisWorkItem(Guid AnalysisId, Guid ProjectId);
+internal sealed record AnalysisWorkItem(Guid AnalysisId, AnalysisTarget Target)
+{
+    public Guid ProjectId => Target.ProjectId;
+}
 
 internal sealed record AnalysisEnqueueResult(
     AnalysisEnqueueKind Kind,
     Guid? AnalysisId,
-    bool IsDuplicate);
+    bool IsDuplicate)
+{
+    /// <summary>Baseline this outcome concerns, so a fan-out can report each one by name.</summary>
+    public string ReferenceName { get; init; } = string.Empty;
+}
 
 internal sealed class ProjectOperationReservation(
     AnalysisQueue queue,
@@ -53,8 +63,29 @@ internal sealed record AnalysisProgressSnapshot
     public string? Message { get; init; }
 }
 
+/// <summary>
+/// Launching stays a bodyless POST, as it has always been: the baseline travels in the query
+/// string like every other selector in this API.
+/// </summary>
+internal sealed record AnalysisLaunchQueryParameters
+{
+    /// <summary>Single baseline to measure. Absent means every baseline of the project.</summary>
+    [FromQuery(Name = "baseline")]
+    public string? Baseline { get; init; }
+}
+
+internal sealed record AnalysisLaunchItem(
+    Guid AnalysisId,
+    string ReferenceName,
+    string StatusUrl,
+    bool IsDuplicate);
+
 internal sealed record AnalysisLaunchResponse
 {
+    /// <summary>One entry per baseline measured by this launch, in project order.</summary>
+    public required IReadOnlyList<AnalysisLaunchItem> Analyses { get; init; }
+
+    /// <summary>Run of the primary baseline, which a single-baseline reader follows.</summary>
     public required Guid AnalysisId { get; init; }
 
     public required string StatusUrl { get; init; }

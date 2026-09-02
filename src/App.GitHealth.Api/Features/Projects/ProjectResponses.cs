@@ -25,7 +25,11 @@ internal sealed record ProjectResponse
 
     public required DateTimeOffset UpdatedAtUtc { get; init; }
 
+    /// <summary>Primary baseline. Always equal to the first entry of ReferenceNames.</summary>
     public string? ReferenceName { get; init; }
+
+    /// <summary>Every comparison baseline the project declares, in display order.</summary>
+    public IReadOnlyList<string> ReferenceNames { get; init; } = [];
 
     public required string BranchNamespace { get; init; }
 

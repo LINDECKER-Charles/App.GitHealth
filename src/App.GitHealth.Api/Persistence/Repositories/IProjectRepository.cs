@@ -19,6 +19,8 @@ internal interface IProjectRepository
 
     Task<IReadOnlyList<ProjectEntity>> ListAsync(CancellationToken cancellationToken);
 
+    Task<bool> DeleteAsync(Guid projectId, CancellationToken cancellationToken);
+
     Task RelocateAsync(ProjectRelocation relocation, CancellationToken cancellationToken);
 
     Task UpdateSettingsAsync(ProjectSettingsUpdate update, CancellationToken cancellationToken);

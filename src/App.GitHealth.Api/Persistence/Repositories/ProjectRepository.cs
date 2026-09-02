@@ -29,6 +29,7 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Projects.AsNoTracking()
+            .Include(project => project.Baselines)
             .SingleOrDefaultAsync(project => project.Id == projectId, cancellationToken);
     }
 
@@ -37,9 +38,26 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Projects.AsNoTracking()
+            .Include(project => project.Baselines)
             .OrderByDescending(project => project.UpdatedAtUtc)
             .ThenBy(project => project.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Everything the project owns goes with it: the database cascade removes the baselines,
+    /// the runs, their branch snapshots and the contributors in a single statement.
+    /// </summary>
+    public Task<bool> DeleteAsync(Guid projectId, CancellationToken cancellationToken)
+    {
+        return SqliteWriteExecutor.ExecuteAsync(async () =>
+        {
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+            var deleted = await context.Projects
+                .Where(project => project.Id == projectId)
+                .ExecuteDeleteAsync(cancellationToken);
+            return deleted > 0;
+        });
     }
 
     public async Task<string?> GetLastSuccessfulReferenceCommitAsync(
@@ -123,9 +141,9 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
         Guid projectId,
         CancellationToken cancellationToken)
     {
-        return await context.Projects.SingleOrDefaultAsync(
-            project => project.Id == projectId,
-            cancellationToken)
+        return await context.Projects
+            .Include(project => project.Baselines)
+            .SingleOrDefaultAsync(project => project.Id == projectId, cancellationToken)
             ?? throw new KeyNotFoundException("The requested project does not exist.");
     }
 }

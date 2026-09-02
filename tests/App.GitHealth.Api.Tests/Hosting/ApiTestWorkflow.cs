@@ -9,13 +9,19 @@ internal static class ApiTestWorkflow
     private const int PollAttempts = 200;
     private static readonly TimeSpan PollDelay = TimeSpan.FromMilliseconds(25);
 
-    public static async Task<Guid> CreateProjectAsync(HttpClient client, string repositoryPath)
+    public static Task<Guid> CreateProjectAsync(HttpClient client, string repositoryPath) =>
+        CreateProjectAsync(client, repositoryPath, DefaultSettings());
+
+    public static async Task<Guid> CreateProjectAsync(
+        HttpClient client,
+        string repositoryPath,
+        object settings)
     {
         var request = new
         {
             displayName = "API repository",
             repositoryPath,
-            settings = DefaultSettings(),
+            settings,
         };
         using var response = await client.PostAsJsonAsync("/api/projects", request);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -44,6 +50,20 @@ internal static class ApiTestWorkflow
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         await WaitForStatusAsync(client, launch.Id, "Completed");
         return launch.Id;
+    }
+
+    /// <summary>Runs every declared baseline once and waits for all of them to finish.</summary>
+    public static async Task<IReadOnlyList<(Guid Id, string ReferenceName)>> AnalyzeAllAsync(
+        HttpClient client,
+        Guid projectId)
+    {
+        var runs = await LaunchAllAsync(client, projectId);
+        foreach (var run in runs)
+        {
+            await WaitForStatusAsync(client, run.Id, "Completed");
+        }
+
+        return runs;
     }
 
     public static async Task<JsonElement> WaitForStatusAsync(
@@ -81,6 +101,34 @@ internal static class ApiTestWorkflow
         excludedPatterns = Array.Empty<string>(),
         protectedPatterns = new[] { "refs/heads/feature/near-*" },
     };
+
+    /// <summary>The default policy, with an explicit ordered baseline list.</summary>
+    public static object MultiBaselineSettings(params string[] referenceNames) => new
+    {
+        referenceNames,
+        branchNamespace = "refs/heads/feature/*",
+        activeUntilDays = 30,
+        inactiveAfterDays = 90,
+        excludedPatterns = Array.Empty<string>(),
+        protectedPatterns = new[] { "refs/heads/feature/near-*" },
+    };
+
+    private static async Task<IReadOnlyList<(Guid Id, string ReferenceName)>> LaunchAllAsync(
+        HttpClient client,
+        Guid projectId)
+    {
+        using var response = await client.PostAsync(
+            $"/api/projects/{projectId}/analyses",
+            content: null);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return payload.GetProperty("analyses")
+            .EnumerateArray()
+            .Select(item => (
+                item.GetProperty("analysisId").GetGuid(),
+                item.GetProperty("referenceName").GetString()!))
+            .ToArray();
+    }
 
     private static async Task<JsonElement> GetStatusAsync(HttpClient client, Guid analysisId)
     {

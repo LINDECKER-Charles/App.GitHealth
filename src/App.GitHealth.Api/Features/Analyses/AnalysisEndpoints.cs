@@ -1,3 +1,4 @@
+using App.GitHealth.Api.Features.Analyses.Lifecycle;
 using App.GitHealth.Api.Features.Common;
 
 namespace App.GitHealth.Api.Features.Analyses;
@@ -10,6 +11,8 @@ internal static class AnalysisEndpoints
             .WithTags("Analyses");
         endpoints.MapGet("/api/analyses/{analysisId:guid}", GetStatusAsync)
             .WithTags("Analyses");
+        endpoints.MapDelete("/api/analyses/{analysisId:guid}", DeleteAsync)
+            .WithTags("Analyses");
         endpoints.MapGet("/api/projects/{projectId:guid}/analyses", GetHistoryAsync)
             .WithTags("Analyses");
         return endpoints;
@@ -17,50 +20,23 @@ internal static class AnalysisEndpoints
 
     private static async Task<IResult> LaunchAsync(
         Guid projectId,
-        AnalysisQueue queue,
-        CancellationToken cancellationToken)
+        [AsParameters] AnalysisLaunchQueryParameters query,
+        HttpContext context)
     {
-        var result = await queue.EnqueueAsync(projectId, cancellationToken);
-        if (result.Kind is not (
-            AnalysisEnqueueKind.Accepted or AnalysisEnqueueKind.Duplicate))
-        {
-            return Failure(result.Kind);
-        }
-
-        return Accepted(result);
+        var service = context.RequestServices.GetRequiredService<AnalysisLaunchService>();
+        var result = await service.LaunchAsync(projectId, query, context.RequestAborted);
+        return result.IsSuccess
+            ? Results.Accepted(result.Value!.StatusUrl, result.Value)
+            : ApiProblems.Result(result.Failure!);
     }
 
-    private static IResult Failure(AnalysisEnqueueKind kind)
+    private static async Task<IResult> DeleteAsync(Guid analysisId, HttpContext context)
     {
-        if (kind == AnalysisEnqueueKind.ProjectNotFound)
-        {
-            return ApiProblems.Result(ApiProblems.NotFound(
-                ApiErrorCodes.ProjectNotFound,
-                "The requested project does not exist."));
-        }
-
-        if (kind == AnalysisEnqueueKind.ProjectBusy)
-        {
-            return ApiProblems.Result(ApiProblems.Conflict(
-                ApiErrorCodes.ProjectBusy,
-                "The project is reserved by a relocation in progress."));
-        }
-
-        return ApiProblems.Result(ApiProblems.Unavailable(
-            ApiErrorCodes.QueueFull,
-            "The analysis queue is full."));
-    }
-
-    private static IResult Accepted(AnalysisEnqueueResult result)
-    {
-        var location = $"/api/analyses/{result.AnalysisId}";
-        var response = new AnalysisLaunchResponse
-        {
-            AnalysisId = result.AnalysisId!.Value,
-            StatusUrl = location,
-            IsDuplicate = result.IsDuplicate,
-        };
-        return Results.Accepted(location, response);
+        var service = context.RequestServices.GetRequiredService<AnalysisDeletionService>();
+        var result = await service.DeleteAsync(analysisId, context.RequestAborted);
+        return result.IsSuccess
+            ? Results.NoContent()
+            : ApiProblems.Result(result.Failure!);
     }
 
     private static async Task<IResult> GetStatusAsync(Guid analysisId, HttpContext context)

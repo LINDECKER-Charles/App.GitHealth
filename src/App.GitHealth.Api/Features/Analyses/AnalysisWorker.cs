@@ -83,7 +83,7 @@ internal sealed partial class AnalysisWorker(
         }
         finally
         {
-            await queue.ReleaseAsync(item.ProjectId);
+            await queue.ReleaseAsync(item.Target);
             queue.Forget(item.AnalysisId);
         }
     }
@@ -94,6 +94,11 @@ internal sealed partial class AnalysisWorker(
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var execution = await LoadExecutionAsync(scope.ServiceProvider, item, cancellationToken);
+        if (execution is null)
+        {
+            return;
+        }
+
         var request = await CreateValidatedRequestAsync(item, execution, cancellationToken);
         if (request is null)
         {
@@ -115,18 +120,22 @@ internal sealed partial class AnalysisWorker(
         queue.Update(item.AnalysisId, AnalysisPhase.Finished);
     }
 
-    private static async Task<AnalysisExecution> LoadExecutionAsync(
+    /// <summary>
+    /// A queued item can outlive what it points at: deleting a project or one of its captures
+    /// leaves the item in the channel. Nothing to analyse is not a failure — the run is gone.
+    /// </summary>
+    private static async Task<AnalysisExecution?> LoadExecutionAsync(
         IServiceProvider services,
         AnalysisWorkItem item,
         CancellationToken cancellationToken)
     {
         var projects = services.GetRequiredService<IProjectRepository>();
         var analyses = services.GetRequiredService<IAnalysisRepository>();
-        var project = await projects.GetAsync(item.ProjectId, cancellationToken)
-            ?? throw new KeyNotFoundException("The requested project does not exist.");
-        var analysis = await analyses.GetAsync(item.AnalysisId, cancellationToken)
-            ?? throw new KeyNotFoundException("The requested analysis does not exist.");
-        return new AnalysisExecution(services, project, analysis);
+        var project = await projects.GetAsync(item.ProjectId, cancellationToken);
+        var analysis = await analyses.GetAsync(item.AnalysisId, cancellationToken);
+        return project is null || analysis is null
+            ? null
+            : new AnalysisExecution(services, project, analysis);
     }
 
     private async Task<RepositoryScanRequest?> CreateValidatedRequestAsync(
@@ -241,7 +250,7 @@ internal sealed partial class AnalysisWorker(
         while (queue.TryRead(out var item))
         {
             await CancelAsync(item!);
-            await queue.ReleaseAsync(item!.ProjectId);
+            await queue.ReleaseAsync(item!.Target);
             queue.Forget(item.AnalysisId);
         }
     }

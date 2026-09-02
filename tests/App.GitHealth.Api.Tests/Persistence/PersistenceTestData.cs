@@ -1,3 +1,4 @@
+using App.GitHealth.Api.Persistence.Models;
 using App.GitHealth.Core.Analysis;
 using App.GitHealth.Core.Branches;
 using App.GitHealth.Core.Projects;
@@ -6,14 +7,23 @@ namespace App.GitHealth.Api.Tests.Persistence;
 
 internal static class PersistenceTestData
 {
+    public const string PrimaryBaseline = "refs/heads/main";
+    public const string SecondaryBaseline = "refs/remotes/origin/main";
+
     private const string ReferenceCommit = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     private const string BranchCommit = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+    public static AnalysisTarget PrimaryTarget(Guid projectId) =>
+        new(projectId, PrimaryBaseline);
+
+    public static AnalysisTarget SecondaryTarget(Guid projectId) =>
+        new(projectId, SecondaryBaseline);
 
     public static Project CreateProject(string repositoryPath)
     {
         var settings = new ProjectSettings
         {
-            Reference = new GitRef("refs/heads/main"),
+            Baselines = [new GitRef(PrimaryBaseline), new GitRef(SecondaryBaseline)],
             BranchNamespace = "refs/remotes/origin/*",
             Thresholds = ActivityThresholds.Create(14, 60),
             Policy = BranchPolicy.Create(["refs/heads/tmp/*"], ["refs/heads/release/*"]),
