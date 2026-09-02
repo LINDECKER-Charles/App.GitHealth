@@ -163,6 +163,27 @@ describe('parseMarkdown', () => {
     expect(parseMarkdown('   \n\n  ')).toEqual([]);
   });
 
+  /**
+   * Captured verbatim from a Claude Code run against this repository. A synthetic sample
+   * only proves the parser reads what it was written for; this one proves it reads what an
+   * agent actually sends.
+   */
+  it('reads a real answer, block by block', () => {
+    const blocks = parseMarkdown(realAnswer);
+
+    expect(blocks.map((block) => block.kind)).toEqual(['heading', 'paragraph', 'list', 'table']);
+    const list = blocks[2] as MarkdownListBlock;
+    expect(list.items).toHaveLength(3);
+    expect(list.items[2]).toContainEqual({ kind: 'strong', text: '33' });
+    expect(list.items[2]).toContainEqual({
+      kind: 'code',
+      text: 'refs/heads/feat/local-agent-assistant',
+    });
+    const table = blocks[3] as MarkdownTableBlock;
+    expect(table.header.map(flatten)).toEqual(['branch', 'verdict']);
+    expect(table.rows).toHaveLength(3);
+  });
+
   it('reads a whole answer in order', () => {
     const blocks = parseMarkdown(
       '## Verdict\n\nTwo branches can go.\n\n- `feat/a` — merged\n- `feat/b` — stale\n\n> Check with the author first.',
@@ -179,3 +200,19 @@ function text(block: MarkdownBlock): string {
 function flatten(spans: MarkdownSpans): string {
   return spans.map((span) => span.text).join('');
 }
+
+/** Verbatim output of `claude --print --effort xhigh` on this repository's capture. */
+const realAnswer = `## Three active branches, all ahead of \`main\`
+
+All three branches carry work \`main\` does not have, none are behind, and all three committed on the capture date — so \`keep\` is right for each. Nothing here is a cleanup candidate; the only thing worth watching is that \`feat/analysis-progress-events\` and \`feat/local-agent-assistant\` have each accumulated 30+ commits off a common ancestor, so integrating them soon limits divergence.
+
+- \`refs/heads/dev\` — **25** ahead
+- \`refs/heads/feat/analysis-progress-events\` — **30** ahead
+- \`refs/heads/feat/local-agent-assistant\` — **33** ahead
+
+| branch | verdict |
+|---|---|
+| refs/heads/dev | keep |
+| refs/heads/feat/analysis-progress-events | keep |
+| refs/heads/feat/local-agent-assistant | keep |
+`;
