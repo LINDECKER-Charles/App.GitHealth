@@ -1,5 +1,6 @@
 using App.GitHealth.Api.Features.Analyses;
 using App.GitHealth.Api.Features.Analyses.Lifecycle;
+using App.GitHealth.Api.Features.Assistant;
 using App.GitHealth.Api.Features.Baselines;
 using App.GitHealth.Api.Features.Common;
 using App.GitHealth.Api.Features.Discovery;
@@ -25,6 +26,7 @@ internal static class GitHealthApiServiceCollectionExtensions
             .Validate(IsAnalysisTimeoutValid, "Invalid overall analysis timeout.")
             .Validate(IsParallelAnalysisCountValid, "Invalid analysis parallelism.")
             .ValidateOnStart();
+        services.AddAssistant(configuration);
         services.AddSingleton<RepositoryValidator>();
         services.AddScoped<RepositoryDiscoveryService>();
         services.AddScoped<ProjectService>();
