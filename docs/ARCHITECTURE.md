@@ -203,9 +203,20 @@ inline scripts, and the `onload` handler it generates would not run.
 
 - identifier, display name and canonical path;
 - reachability state of the path;
-- selected baseline and analysed branch space;
+- analysed branch space;
 - activity thresholds, exclusions and protected patterns;
 - creation and last modification dates, identifier of the last successful analysis.
+
+**ProjectBaseline**
+
+- project and reference name, which together identify the baseline;
+- position in the list — position `0` is the primary baseline, the one shown by default;
+- identifier of the last successful analysis *of that baseline*.
+
+A project compares itself against as many baselines as it declares, up to eight. Each one
+keeps its own history, so `dev`, `test` and `main` are read independently rather than
+overwriting one another. The baseline is identified by its name, which is why reordering the
+list never detaches a baseline from the captures already taken against it.
 
 **AnalysisRun**
 
@@ -277,13 +288,16 @@ repository rejected because the queue was full is retried as soon as a slot free
 
 1. The user provides the new path from the project settings.
 2. The API applies the same path controls and inspects the repository read-only.
-3. The configured baseline must still exist and the path must not already be attached.
+3. Every configured baseline must still exist and the path must not already be attached. A
+   partial match is refused, because it would orphan one baseline's whole history.
 4. Only the project's path is replaced; its analyses and its last snapshot stay attached.
 
 ### Analysis
 
-1. `POST /api/projects/{id}/analyses` creates a run and returns `202 Accepted`.
-2. The queue refuses a second simultaneous analysis of the same project.
+1. `POST /api/projects/{id}/analyses` creates one run per declared baseline and returns
+   `202 Accepted`. `?baseline=` restricts the launch to a single one.
+2. The queue refuses a second simultaneous analysis of the same *baseline*; the baselines of
+   one project are separate measurements and run independently.
 3. The scanner captures the starting SHAs to obtain a consistent snapshot.
 4. The topology of every branch is computed and made available quickly.
 5. Contributors are enriched in the background with bounded parallelism.
@@ -323,8 +337,12 @@ Routes are grouped under `/api` and return dedicated DTOs.
 | `PUT /api/projects/{id}/repository` | Relocate a repository while keeping its history |
 | `PUT /api/projects/{id}/settings` | Change the baseline, thresholds and exclusions |
 | `PUT /api/projects/{id}/organization` | Mark as favourite and move into a group |
-| `POST /api/projects/{id}/analyses` | Start an analysis |
+| `DELETE /api/projects/{id}` | Forget a project and every capture taken of it |
+| `GET /api/projects/{id}/baselines` | List the comparison baselines and their latest capture |
+| `PUT /api/projects/{id}/baselines` | Replace the ordered baseline list |
+| `POST /api/projects/{id}/analyses` | Start an analysis, one run per baseline |
 | `GET /api/analyses/{id}` | Read state and progress |
+| `DELETE /api/analyses/{id}` | Delete one capture and its measurements |
 | `GET /api/projects/{id}/analyses/latest/branches` | List the snapshots |
 | `GET /api/branch-snapshots/{id}` | Read the detail and its contributors |
 | `GET /api/exports/database` | Download a consistent SQLite backup |
