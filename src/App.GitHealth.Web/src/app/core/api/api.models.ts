@@ -89,6 +89,8 @@ export interface RepositoryDiscoveryResponse {
 
 export interface ProjectSettingsRequest {
   readonly referenceName: string | null;
+  /** Full ordered baseline list; when absent, `referenceName` is the only baseline. */
+  readonly referenceNames?: readonly string[];
   readonly branchNamespace: string;
   readonly activeUntilDays: number;
   readonly inactiveAfterDays: number;
@@ -139,7 +141,10 @@ export interface ProjectResponse {
   readonly isRepositoryAccessible: boolean;
   readonly createdAtUtc: UtcDateTime;
   readonly updatedAtUtc: UtcDateTime;
+  /** Primary baseline; always the first entry of `referenceNames`. */
   readonly referenceName: string | null;
+  /** Every branch this repository is compared against, in display order. */
+  readonly referenceNames: readonly string[];
   readonly branchNamespace: string;
   readonly activeUntilDays: number;
   readonly inactiveAfterDays: number;
@@ -150,10 +155,35 @@ export interface ProjectResponse {
   readonly lastSuccessfulAnalysisId: Uuid | null;
 }
 
+export interface AnalysisLaunchItem {
+  readonly analysisId: Uuid;
+  readonly referenceName: string;
+  readonly statusUrl: string;
+  readonly isDuplicate: boolean;
+}
+
 export interface AnalysisLaunchResponse {
+  /** One run per baseline measured by this launch. */
+  readonly analyses: readonly AnalysisLaunchItem[];
+  /** Run of the primary baseline. */
   readonly analysisId: Uuid;
   readonly statusUrl: string;
   readonly isDuplicate: boolean;
+}
+
+export interface BaselineResponse {
+  readonly referenceName: string;
+  readonly position: number;
+  readonly isPrimary: boolean;
+  readonly lastSuccessfulAnalysisId: Uuid | null;
+  readonly lastCapturedAtUtc: UtcDateTime | null;
+  readonly branchCount: number;
+}
+
+export interface BaselineListResponse {
+  readonly items: readonly BaselineResponse[];
+  /** References the repository offers now; empty when it cannot be read. */
+  readonly availableReferences: readonly string[];
 }
 
 export interface AnalysisStatusResponse {
@@ -194,6 +224,8 @@ export interface AnalysisHistoryResponse {
 }
 
 export interface SnapshotQuery {
+  /** Baseline whose latest capture is read; absent means the primary one. */
+  readonly baseline?: string | null;
   readonly search?: string | null;
   readonly relationship?: string | null;
   readonly sort?: string | null;
@@ -222,6 +254,8 @@ export interface BranchSnapshotResponse {
   readonly reason: string;
   readonly isProtected: boolean;
   readonly isExcluded: boolean;
+  /** Author of most of the commits this branch adds; null once it is merged. */
+  readonly topContributor: ContributorResponse | null;
 }
 
 export interface SnapshotPageResponse {

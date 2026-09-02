@@ -32,6 +32,7 @@ function branch(overrides: Partial<BranchSnapshotResponse> = {}): BranchSnapshot
     reason: '',
     isProtected: false,
     isExcluded: false,
+    topContributor: null,
     ...overrides,
   };
 }

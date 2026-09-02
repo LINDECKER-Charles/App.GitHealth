@@ -24,6 +24,7 @@ function detail(overrides: Partial<SnapshotDetailResponse> = {}): SnapshotDetail
       reason: 'Diverged history to review',
       isProtected: false,
       isExcluded: false,
+      topContributor: null,
     },
     contributors: [],
     attributionStatus: 'Available',
