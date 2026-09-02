@@ -341,7 +341,7 @@ Routes are grouped under `/api` and return dedicated DTOs.
 | `GET /api/projects/{id}/baselines` | List the comparison baselines and their latest capture |
 | `PUT /api/projects/{id}/baselines` | Replace the ordered baseline list |
 | `POST /api/projects/{id}/analyses` | Start an analysis, one run per baseline |
-| `GET /api/analyses/{id}` | Read state and progress |
+| `GET /api/analyses/{id}` | Read state, phase, reference ledger and Git command tail |
 | `DELETE /api/analyses/{id}` | Delete one capture and its measurements |
 | `GET /api/projects/{id}/analyses/latest/branches` | List the snapshots |
 | `GET /api/branch-snapshots/{id}` | Read the detail and its contributors |
@@ -367,7 +367,11 @@ identifier. No raw process output is ever sent to the browser.
 ## State and concurrency management
 
 - SQLite is the source of truth for configurations and completed analyses.
-- The analysis queue and progress are held in memory by the host.
+- The analysis queue and progress are held in memory by the host. A running analysis also
+  keeps its live reading there: the ledger of its references and a bounded tail of the Git
+  commands it has run. A run ends between two polls, so its reading outlives it — the last
+  eight endings stay readable and are pushed out by the runs that follow. Nothing of it is
+  persisted: a landed analysis is described by its capture, not by how it was obtained.
 - Only one scan can be active per project; global concurrency is bounded.
 - `AnalysisQueue:MaximumParallelAnalyses` sets the number of queue readers, and therefore
   the number of analyses running at once. At `1`, the queue becomes strictly sequential
