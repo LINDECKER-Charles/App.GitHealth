@@ -19,6 +19,7 @@ the `[<version>]` section of the root [`CHANGELOG.md`](../../../CHANGELOG.md).
 | 2026-09-02 | [Several comparison baselines per repository](2026-09-02-multiple-baselines.md) | `feat` | `dev`, `test` and `main` measured side by side |
 | 2026-09-02 | [Deleting a capture or a repository](2026-09-02-deleting-captures-and-repositories.md) | `feat` | Pruning a history, removing a project |
 | 2026-09-02 | [Filtering the branches by author, and the top contributor](2026-09-02-author-filter-and-top-contributor.md) | `feat` | "Whose branch is this", answered at a glance |
+| 2026-09-02 | [Asking a local agent about a capture](2026-09-02-local-agent-assistant.md) | `feat` | An installed CLI reads the capture and answers |
 
 ## Watch out when releasing
 
@@ -27,4 +28,8 @@ the `[<version>]` section of the root [`CHANGELOG.md`](../../../CHANGELOG.md).
   [its entry](2026-08-31-english-interface-and-i18n.md#consequences);
 - the baseline list ships an **additive migration** that backfills the existing reference as
   the primary baseline;
-- the `analyses/:analysisId` route is **removed**, replaced by `?capture=` on the repository.
+- the `analyses/:analysisId` route is **removed**, replaced by `?capture=` on the repository;
+- the assistant is the **first feature that reaches a network**. It is opt-in per question and
+  removable with `GitHealth:Assistant:Enabled=false`, but the "works offline" line in the
+  README and the architecture now carries an exception, see
+  [its entry](2026-09-02-local-agent-assistant.md#consequences).

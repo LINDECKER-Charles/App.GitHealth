@@ -8,7 +8,8 @@ local or remote branches.
 
 The application must:
 
-- work offline, with no mandatory external service;
+- work offline, with no mandatory external service — the sole exception being the local
+  agent assistant, which is opt-in per question and removable for an installation;
 - start from a single entry point;
 - be distributable on Windows and macOS;
 - analyse repositories without a checkout and without modifying their references;
@@ -31,11 +32,14 @@ therefore talks to a single process and a single origin.
 - Sort, filter and inspect the detail of branches.
 - Configure inactivity thresholds and protected branch patterns.
 - Keep several analyses and export the database consistently.
+- Hand a capture to an agent CLI already installed on the machine, and read its answer.
 - Provide a native executable and a Docker Compose launch.
 
 ### Outside the MVP scope
 
 - Delete, merge, check out or push a branch.
+- Install, update or authenticate an agent CLI, or call a model provider directly.
+- Let an agent reach the repository, or any path other than its own scratch directory.
 - Automatically run `git fetch` or `git remote prune`.
 - Clone a remote repository and manage its credentials.
 - Host a multi-user instance on a network.
@@ -57,6 +61,9 @@ therefore talks to a single process and a single origin.
 | Front-end state | Angular services and Signals | No external global store for the MVP |
 | Long-running tasks | Queue and background service | Non-blocking API and visible progress |
 | Cleanup | Recommendations only | GitHealth never deletes a branch |
+| Agent assistant | An agent CLI already installed, driven headless | The user's own tool and account, no key to hold |
+| Agent input | A briefing built from a stored capture | The repository is never opened by the agent |
+| Agent sandbox | Empty scratch directory, the CLI's read-only mode | The read-only guarantee survives a foreign process |
 
 ## Git semantics
 

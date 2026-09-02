@@ -16,6 +16,7 @@ database.
 - [Reading an analysis](#reading-an-analysis)
 - [Comparing against several baselines](#comparing-against-several-baselines)
 - [Filtering by author](#filtering-by-author)
+- [Asking a local agent](#asking-a-local-agent)
 - [Understanding the recommendations](#understanding-the-recommendations)
 - [Explaining a branch](#explaining-a-branch)
 - [Configuring policies](#configuring-policies)
@@ -38,13 +39,18 @@ branches. It decides nothing on your behalf and performs no cleanup action.
 | Compare each branch to a chosen baseline | Check out anything or modify the worktree |
 | Measure ahead, behind, merge state and activity | Run `git fetch` or `git remote prune` |
 | Identify the contributors of a branch | Clone a repository or handle credentials |
-| Offer a recommendation and explain it | Send your data anywhere |
+| Offer a recommendation and explain it | Send your data anywhere on its own |
 | Keep the analysis history locally | Write anything into the repository |
 | Copy the deletion command for you | Run that command |
 
 No analysis writes to the repository: references, index, worktree and reflogs stay
 untouched. These guarantees are detailed in the
 [security model](SECURITY_MODEL.md).
+
+One feature is opt-in and does reach a network: the [Assistant](#asking-a-local-agent) tab
+hands a capture to an agent CLI you installed yourself, question by question, after showing
+you the exact text it would send. It is off unless you use it, and can be removed from an
+installation entirely.
 
 ## Install and start
 
@@ -308,6 +314,45 @@ people who appear in it, and it combines with every other filter.
 The branch detail panel also names the **top contributor**: whoever wrote most of the commits
 the branch adds to its baseline. That one is empty for a merged branch, which by definition
 adds none — which is why the filter uses the tip author, the only one always present.
+
+## Asking a local agent
+
+The **Assistant** tab hands the capture you are reading to an AI agent **you have already
+installed on this machine** — [Claude Code](https://claude.com/claude-code) or
+[Codex CLI](https://developers.openai.com/codex/cli) — and shows you its answer. GitHealth
+installs nothing, holds no API key, and has no account of its own: it drives your tool, on
+your subscription.
+
+> [!IMPORTANT]
+> This is the only part of GitHealth that uses a network. Everything else works offline.
+
+**Finding the agent.** The tab lists what it found, with the version each CLI answered and
+the path it was found at. A windowed application does not inherit the `PATH` your shell
+builds, so GitHealth also looks in the usual installation directories — `~/.local/bin`,
+`/opt/homebrew/bin`, `~/.claude/local`, the npm prefix. If it still finds nothing, it says
+exactly where it looked; **Look again** re-checks without restarting the application, and
+`GitHealth:Assistant:Agents:claude:ExecutablePath` points at a CLI installed somewhere else.
+
+**Reading what is sent.** Before you can ask anything, the panel shows the briefing in full:
+repository name, baseline, capture date, the thresholds and patterns in force, then one row
+per branch — ahead, behind, relationship, last commit, topology, activity, GitHealth's own
+verdict and its reason, the protected and excluded flags, and the tip author's name.
+Contributor email addresses are never included. Read it, then tick the box that agrees to it
+leaving the machine.
+
+**Asking.** Type a question, or take one of the suggestions. The answer appears as the agent
+writes it; **Stop** ends the run. The command that was run stays readable underneath the
+answer, so nothing about the exchange is hidden from you.
+
+**What the agent can and cannot do.** It gets the briefing and nothing else. It runs in an
+empty temporary directory — never in your repository — and is started in its own read-only
+mode, so it cannot edit a file, run a Git command or reach your repository even if asked to.
+It may disagree with a GitHealth verdict, and it is told to say so when it does; it is not
+allowed to invent a branch that is not in the table.
+
+**Turning it off.** Set `GitHealth:Assistant:Enabled` to `false` in `appsettings.json`. The
+tab then explains that the feature is disabled and no interface can re-enable it. In Docker
+the container has no agent CLI, so there is nothing to disable.
 
 ## Understanding the recommendations
 

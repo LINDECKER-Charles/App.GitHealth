@@ -11,6 +11,20 @@ built that way and what it costs.
 
 ### Added
 
+- **asking a local agent about a capture**: an "Assistant" tab where an agent already
+  installed on the machine — Claude Code or Codex CLI — reads the branches GitHealth has
+  measured and answers a question about them in plain language. GitHealth finds the CLI
+  itself, including outside the `PATH` a windowed application sees, and says where it looked
+  when it finds nothing rather than greying out a button. The agent is handed a briefing and
+  nothing else: it runs in an empty scratch directory, never in the repository, in its own
+  read-only mode, so the guarantee that GitHealth changes nothing in your repository holds
+  even though the process running is somebody else's. Before anything is sent the exact text
+  is shown in full — repository, baseline, policy and one row per branch, without contributor
+  email addresses — and has to be agreed to; the answer then streams in as the agent writes
+  it, with the command that was run readable underneath and a stop button throughout. This is
+  the one feature that reaches a network, it is billed to your own account with the agent's
+  provider, and it can be removed from an installation entirely with
+  `GitHealth:Assistant:Enabled=false`;
 - **several comparison baselines per repository**: a project no longer declares a single
   reference branch but an ordered list of up to eight — `dev`, `test` and `main` side by
   side. Each baseline keeps its own analyses and its own history, so switching between them

@@ -97,6 +97,38 @@ other than loopback.
 Author names and addresses are stored in SQLite and can appear in the CSV or in the
 backup the user requests. Those files must be protected like business data.
 
+### The agent assistant
+
+One feature deliberately sends data off the machine, and it is the only one. The
+**Assistant** tab starts an agent CLI the user installed themselves; that process calls its
+own provider, over the user's own account. GitHealth holds no key and opens no connection of
+its own — the exception is a child process, not an HTTP client in this code.
+
+What is sent is a briefing built from a capture already in the database: repository name,
+baseline, thresholds, patterns, and one row per branch carrying its measurements, GitHealth's
+verdict and the tip author's **name**. Contributor email addresses are excluded by
+construction. The exact text is displayed in full and has to be agreed to before a run
+starts, per run.
+
+Containment of the child process:
+
+- it is started in an empty temporary directory created for the run and deleted after it,
+  never in the analysed repository, so it has nothing to read on disk;
+- it is launched in the CLI's own read-only mode — `--permission-mode plan` for Claude Code,
+  `--sandbox read-only` for Codex — and Claude Code also with `--strict-mcp-config`, so the
+  machine's MCP servers are out of reach;
+- the prompt travels on standard input; output is bounded, the run is capped by a timeout,
+  and the process tree is killed on cancellation or overrun;
+- only identifiers from a fixed catalog resolve to an executable. A request naming anything
+  else is refused, so this endpoint is not a way to run an arbitrary command;
+- runs are held in memory and dropped after thirty minutes: nothing about them enters the
+  exportable database.
+
+`GitHealth:Assistant:Enabled=false` removes the feature from an installation; no interface
+can re-enable it. The environment handed to the agent is deliberately **not** scrubbed, since
+that is where its credentials live — a consequence accepted for a process the user already
+runs themselves.
+
 ## Supply chain
 
 CI builds and tests .NET, Angular and the end-to-end journey. A separate workflow runs
@@ -115,4 +147,8 @@ verified, but do not replace code signing or macOS notarisation.
 - a vulnerability in Git or in the runtime stays exploitable until it is patched;
 - the macOS archives are neither signed nor notarised;
 - an export copied off the machine escapes GitHealth's controls;
+- an agent run leaves the machine by design: what its provider retains, and what the CLI
+  itself logs on disk, are outside GitHealth's control;
+- the read-only containment of a run relies on flags the agent CLI honours; a change of
+  behaviour on its side would not be detected here;
 - local references can be stale, because no `fetch` is ever automatic.

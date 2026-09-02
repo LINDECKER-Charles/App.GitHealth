@@ -61,7 +61,15 @@ your hands.
 > [!IMPORTANT]
 > GitHealth never runs `clone`, `fetch`, `pull`, `checkout`, `merge`, `push` or any
 > deletion. It modifies neither the references, nor the index, nor the worktree, nor the
-> reflogs.
+> reflogs. This holds for the optional assistant too: the agent runs in an empty scratch
+> directory, in its own read-only mode, and is handed a capture rather than your repository.
+
+> [!NOTE]
+> Everything above works with no network. One optional feature does not: the **Assistant**
+> tab hands the capture GitHealth already took to an agent CLI you have installed yourself,
+> which calls its own provider on your own account. It is opt-in question by question, the
+> exact text sent is shown in full beforehand, and it can be removed from an installation
+> with `GitHealth:Assistant:Enabled=false`.
 
 ## 01 — One repository. Facts. A verdict you can read.
 
