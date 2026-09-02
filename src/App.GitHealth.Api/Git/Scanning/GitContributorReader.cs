@@ -7,11 +7,16 @@ using App.GitHealth.Core.Branches;
 
 namespace App.GitHealth.Api.Git.Scanning;
 
-internal sealed class GitContributorReader(IGitProcessRunner runner)
+/// <summary>
+/// Reads who wrote the commits a branch adds. The runner comes per call: a followed scan
+/// runs its commands through a traced one, while the cache stays shared across scans.
+/// </summary>
+internal sealed class GitContributorReader
 {
     private readonly ConcurrentDictionary<string, IReadOnlyList<Contributor>> _cache = new();
 
     public async Task<IReadOnlyList<Contributor>> ReadAsync(
+        IGitProcessRunner runner,
         GitComparison comparison,
         CancellationToken cancellationToken)
     {

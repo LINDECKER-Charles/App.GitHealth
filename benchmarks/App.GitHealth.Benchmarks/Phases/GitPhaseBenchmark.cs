@@ -79,14 +79,15 @@ internal sealed class GitPhaseBenchmark
         CancellationToken cancellationToken)
     {
         var scan = new TopologyScan(_repository, _reference, _branches);
-        return new GitTopologyReader(_runner, _settings).ReadAsync(scan, cancellationToken);
+        var reader = new GitTopologyReader(_runner, _settings, ScanReporter.Silent);
+        return reader.ReadAsync(scan, cancellationToken);
     }
 
     public async Task<RepositoryScan> EnrichAsync(
         IReadOnlyDictionary<string, BranchDivergence> topology,
         CancellationToken cancellationToken)
     {
-        var contributorReader = new GitContributorReader(_runner);
+        var contributorReader = new GitContributorReader();
         var branches = new List<ScannedBranch>(_branches.Count);
         foreach (var branch in _branches)
         {
@@ -95,7 +96,10 @@ internal sealed class GitPhaseBenchmark
                 _repository.Context,
                 _reference.Commit,
                 branch.Commit);
-            var contributors = await contributorReader.ReadAsync(comparison, cancellationToken);
+            var contributors = await contributorReader.ReadAsync(
+                _runner,
+                comparison,
+                cancellationToken);
             var facts = new BranchFacts(
                 branch.Reference,
                 divergence,

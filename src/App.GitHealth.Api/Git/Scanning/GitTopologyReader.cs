@@ -9,7 +9,8 @@ namespace App.GitHealth.Api.Git.Scanning;
 
 internal sealed class GitTopologyReader(
     IGitProcessRunner runner,
-    GitScannerOptions options)
+    GitScannerOptions options,
+    ScanReporter reporter)
 {
     public async Task<IReadOnlyDictionary<string, BranchDivergence>> ReadAsync(
         TopologyScan scan,
@@ -72,12 +73,10 @@ internal sealed class GitTopologyReader(
                 continue;
             }
 
-            var comparison = CreateComparison(scan, branch);
+            reporter.ReferenceStarted(branch.Reference, RepositoryScanStage.Topology);
             var aheadBehind = new AheadBehindCounts(counts.Ahead, counts.Behind);
-            topology[branch.Reference.FullName] = await BuildDivergenceAsync(
-                comparison,
-                aheadBehind,
-                cancellationToken);
+            var measured = await MeasureAsync(scan, branch, aheadBehind, cancellationToken);
+            topology[branch.Reference.FullName] = measured.Divergence;
         }
 
         var fallback = await ReadMovedReferencesAsync(scan, moved, cancellationToken);
@@ -111,18 +110,19 @@ internal sealed class GitTopologyReader(
         };
         await Parallel.ForEachAsync(scan.Branches, parallelOptions, async (branch, token) =>
         {
-            var comparison = CreateComparison(scan, branch);
-            result[branch.Reference.FullName] = await ReadFallbackBranchAsync(
-                comparison,
-                token);
+            var measured = await ReadFallbackBranchAsync(scan, branch, token);
+            result[branch.Reference.FullName] = measured.Divergence;
         });
         return result;
     }
 
-    private async Task<BranchDivergence> ReadFallbackBranchAsync(
-        GitComparison comparison,
+    private async Task<MeasuredReference> ReadFallbackBranchAsync(
+        TopologyScan scan,
+        CapturedReference branch,
         CancellationToken cancellationToken)
     {
+        reporter.ReferenceStarted(branch.Reference, RepositoryScanStage.Topology);
+        var comparison = CreateComparison(scan, branch);
         var range = $"{comparison.Reference.Value}...{comparison.Branch.Value}";
         var result = await RunAsync(
             comparison.Context,
@@ -135,35 +135,65 @@ internal sealed class GitTopologyReader(
 
         var values = GitOutputParser.ParseRevListCounts(result.StandardOutput);
         var counts = new AheadBehindCounts(values.Ahead, values.Behind);
-        return await BuildDivergenceAsync(comparison, counts, cancellationToken);
+        return await MeasureAsync(scan, branch, counts, cancellationToken);
     }
 
-    private async Task<BranchDivergence> BuildDivergenceAsync(
+    /// <summary>Places the reference against the baseline and says so as soon as it lands.</summary>
+    private async Task<MeasuredReference> MeasureAsync(
+        TopologyScan scan,
+        CapturedReference branch,
+        AheadBehindCounts counts,
+        CancellationToken cancellationToken)
+    {
+        var comparison = CreateComparison(scan, branch);
+        var measured = await BuildDivergenceAsync(comparison, counts, cancellationToken);
+        reporter.ReferenceMeasured(
+            branch.Reference,
+            measured.Divergence,
+            measured.MergeBaseCommit);
+        return measured;
+    }
+
+    /// <summary>
+    /// Only two histories that both moved need a merge base read from Git: in every other
+    /// case the shared commit is one of the two tips, and asking would waste a process.
+    /// </summary>
+    private async Task<MeasuredReference> BuildDivergenceAsync(
         GitComparison comparison,
         AheadBehindCounts counts,
         CancellationToken cancellationToken)
     {
         if (counts.Ahead == 0 && counts.Behind == 0)
         {
-            return BranchDivergence.Create(0, 0, BranchRelationship.SameCommit);
+            return Measured(0, 0, BranchRelationship.SameCommit, comparison.Branch.Value);
         }
 
         if (counts.Ahead == 0)
         {
-            return BranchDivergence.Create(
+            return Measured(
                 counts.Ahead,
                 counts.Behind,
-                BranchRelationship.BranchIsAncestorOfReference);
+                BranchRelationship.BranchIsAncestorOfReference,
+                comparison.Branch.Value);
         }
 
-        var relationship = counts.Behind > 0
-            && !await HasCommonAncestorAsync(comparison, cancellationToken)
+        if (counts.Behind == 0)
+        {
+            return Measured(
+                counts.Ahead,
+                0,
+                BranchRelationship.CommonAncestor,
+                comparison.Reference.Value);
+        }
+
+        var mergeBase = await ReadMergeBaseAsync(comparison, cancellationToken);
+        var relationship = mergeBase is null
             ? BranchRelationship.NoCommonAncestor
             : BranchRelationship.CommonAncestor;
-        return BranchDivergence.Create(counts.Ahead, counts.Behind, relationship);
+        return Measured(counts.Ahead, counts.Behind, relationship, mergeBase);
     }
 
-    private async Task<bool> HasCommonAncestorAsync(
+    private async Task<string?> ReadMergeBaseAsync(
         GitComparison comparison,
         CancellationToken cancellationToken)
     {
@@ -173,7 +203,8 @@ internal sealed class GitTopologyReader(
             cancellationToken);
         if (result.ExitCode is 0 or 1)
         {
-            return result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.StandardOutput);
+            var commit = result.StandardOutput.Trim();
+            return result.ExitCode == 0 && commit.Length > 0 ? commit : null;
         }
 
         throw ProcessFailure("Git could not determine the merge base.");
@@ -190,6 +221,14 @@ internal sealed class GitTopologyReader(
             commandArguments);
         return runner.RunAsync(command, cancellationToken);
     }
+
+    private static MeasuredReference Measured(
+        int ahead,
+        int behind,
+        BranchRelationship relationship,
+        string? mergeBaseCommit) => new(
+            BranchDivergence.Create(ahead, behind, relationship),
+            mergeBaseCommit);
 
     private static GitComparison CreateComparison(
         TopologyScan scan,
