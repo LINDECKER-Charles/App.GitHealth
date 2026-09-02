@@ -1,0 +1,56 @@
+<section class="scene" role="status" aria-live="polite">
+  <header class="scene-head">
+    <div class="scene-status">
+      @if (narration.isWorking()) {
+        <ds-spinner [size]="13" />
+      } @else {
+        <ds-status-dot tone="success" [size]="7" />
+      }
+      <strong>{{ narration.phaseTitle() }}</strong>
+      <span class="scene-detail">{{ narration.phaseDetail() }}</span>
+      <span class="scene-spacer"></span>
+      <span class="scene-figure">{{ narration.progressLabel() }}</span>
+      <span class="scene-rule"></span>
+      <span class="scene-figure scene-elapsed">{{ elapsedLabel() }}</span>
+      <span class="scene-rule"></span>
+      <span class="scene-step">{{ narration.stepLabel() }}</span>
+    </div>
+    <div class="scene-phases">
+      @for (step of narration.steps(); track step.phase) {
+        <div class="scene-phase">
+          <span class="scene-track"><span [style.width]="step.fill"></span></span>
+          <span
+            class="scene-phase-name"
+            [class.is-active]="step.isDone || step.isCurrent"
+            [class.is-current]="step.isCurrent"
+            [class.is-done]="step.isDone"
+            >{{ step.label }}</span
+          >
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="scene-body">
+    <app-analysis-ledger [references]="references()" />
+    <div class="scene-aside">
+      <app-analysis-topology-graph [references]="references()" [baseline]="baseline()" />
+      <app-analysis-console
+        [commands]="commands()"
+        [commandCount]="commandCount()"
+        [isWorking]="narration.isWorking()"
+      />
+    </div>
+  </div>
+
+  <footer class="scene-foot">
+    <ds-status-dot tone="success" [size]="6" />
+    <span i18n="@@analysisRun.promise"
+      >References read in place · no fetch, no write, no reflog touched</span
+    >
+    <span class="scene-spacer"></span>
+    <button dsButton size="sm" variant="ghost" iconLeft="list" (click)="collapse()">
+      <ng-container i18n="@@analysisRun.action.collapse">Show the last capture</ng-container>
+    </button>
+  </footer>
+</section>

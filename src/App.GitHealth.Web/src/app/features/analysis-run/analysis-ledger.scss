@@ -1,0 +1,132 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--divider);
+}
+
+.ledger-head,
+.ledger-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px 96px 92px 120px 60px;
+  gap: 8px;
+  align-items: center;
+  padding: 0 14px;
+}
+
+.ledger-head {
+  height: 32px;
+  flex: none;
+  font: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.ledger-head span {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ledger-head .is-right {
+  text-align: right;
+}
+
+.ledger-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ledger-row {
+  height: 30px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color var(--dur-fast) var(--ease-out);
+  animation: gh-in 240ms var(--ease-out) both;
+}
+
+.ledger-row.is-reading {
+  background: var(--surface-selected);
+}
+
+.ledger-reference {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Three states on six pixels: waiting, being read, read. */
+.ledger-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+}
+
+.ledger-dot.is-reading {
+  background: var(--status-info-solid);
+  animation: gh-pulse 900ms linear infinite;
+}
+
+.ledger-dot.is-read {
+  background: var(--status-success-solid);
+  animation: gh-fade 200ms var(--ease-out) both;
+}
+
+.ledger-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-name.is-pending {
+  color: var(--text-muted);
+}
+
+.ledger-base {
+  font: var(--type-code-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-distance {
+  font: var(--type-code-sm);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+.ledger-distance .is-muted {
+  color: var(--text-muted);
+}
+
+.ledger-topology {
+  min-width: 0;
+}
+
+.ledger-topology ds-badge {
+  animation: gh-fade 200ms var(--ease-out) both;
+}
+
+.ledger-contributors,
+.ledger-age {
+  font: var(--type-caption);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-age {
+  font-variant-numeric: tabular-nums;
+}

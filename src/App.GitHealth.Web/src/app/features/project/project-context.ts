@@ -9,6 +9,7 @@ import {
   PolicyUpdateRequest,
   ProjectResponse,
 } from '../../core/api/api.models';
+import { AnalysisRunStore } from '../../core/analysis/analysis-run-store';
 import { ProjectsStore } from '../../core/workspace/projects-store';
 import { ToastService } from '../../core/workspace/toast';
 import {
@@ -29,6 +30,7 @@ const pollIntervalMs = 800;
 export class ProjectContext {
   private readonly api = inject(GitHealthApiClient);
   private readonly projects = inject(ProjectsStore);
+  private readonly run = inject(AnalysisRunStore);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private polling?: Subscription;
@@ -98,6 +100,7 @@ export class ProjectContext {
 
     this.isLaunching.set(true);
     this.error.set(null);
+    this.run.start(Date.now());
     this.api
       .launchAnalysis(this.projectId)
       .pipe(
@@ -242,6 +245,7 @@ export class ProjectContext {
 
   private handleStatus(status: AnalysisStatusResponse): void {
     this.analysis.set(status);
+    this.run.apply(status);
     if (status.status === 'Running') {
       return;
     }
@@ -250,10 +254,12 @@ export class ProjectContext {
     this.loadProject();
     this.loadLatestSnapshot();
     if (status.failureMessage !== null) {
+      this.run.abandon();
       this.error.set(status.failureMessage);
       return;
     }
 
+    this.run.close();
     this.toast.show($localize`:@@project.toast.analysisDone:Analysis finished · no Git write`);
   }
 
