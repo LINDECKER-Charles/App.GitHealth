@@ -42,6 +42,8 @@ evidence, the limitations and the structural choices.
 - [Support](../.github/SUPPORT.md) — pick the right channel and provide a reproducible case;
 - [Security policy](../.github/SECURITY.md) — report a vulnerability without exposing it;
 - [Changelog](../CHANGELOG.md) — follow the capabilities that shipped;
+- [Changelog journal](changelog/README.md) — one entry per implementation, version by
+  version, with the reasoning behind it;
 - [Editorial and visual direction](ART_DIRECTION.md) — extend the identity without diluting it.
 
 ## Three reading paths

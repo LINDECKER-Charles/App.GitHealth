@@ -22,7 +22,9 @@ Extend this map as new projects appear — a `src/App.GitHealth.<Zone>` project 
 scope `<zone>` in lowercase.
 
 Cross-cutting rules: tests (`tests/**`, `*Tests.cs`, `*.Tests/**`) travel with the code
-they test; changelog entries are attached to the feature/fix commit they document.
+they test; changelog entries are attached to the feature/fix commit they document — the
+reader's line in `CHANGELOG.md` and the detailed entry in `docs/changelog/unreleased/`,
+whose conventions are in `docs/changelog/README.md`.
 
 ## Code conventions
 

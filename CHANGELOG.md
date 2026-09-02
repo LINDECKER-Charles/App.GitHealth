@@ -3,6 +3,10 @@
 All notable changes to GitHealth are recorded in this file. The format follows Keep a
 Changelog and semantic versioning.
 
+Each line below is backed by an entry in [`docs/changelog/`](docs/changelog/README.md) —
+one file per implementation, one folder per version, stating what was built, why it was
+built that way and what it costs.
+
 ## [Unreleased]
 
 ### Added
