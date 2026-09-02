@@ -8,6 +8,9 @@ namespace App.GitHealth.Api.Tests.Projects;
 
 public sealed class ProjectEndpointTests
 {
+    private static readonly string[] TwoBaselines =
+        ["refs/heads/release", "refs/heads/main"];
+
     [Fact]
     public async Task ValidateRejectsMissingNonGitAndOutsidePaths()
     {
@@ -103,10 +106,61 @@ public sealed class ProjectEndpointTests
         await AssertSettingsCanBeUpdatedAsync(client, projectId);
     }
 
+    [Fact]
+    public async Task ProjectCanBeCreatedWithSeveralBaselines()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 1);
+        repository.AddSynchronizedBranch("release");
+        using var factory = CreateFactory(repository.RootPath);
+        using var client = factory.CreateClient();
+
+        var project = await CreateAsync(
+            client,
+            repository.RepositoryPath,
+            new { referenceNames = TwoBaselines });
+
+        Assert.Equal("refs/heads/release", project.GetProperty("referenceName").GetString());
+        Assert.Equal(TwoBaselines, References(project));
+    }
+
+    [Fact]
+    public async Task CreatingAProjectWithoutSettingsStillPicksASingleBaseline()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 1);
+        using var factory = CreateFactory(repository.RootPath);
+        using var client = factory.CreateClient();
+
+        var project = await CreateAsync(client, repository.RepositoryPath, settings: null);
+
+        Assert.Equal("refs/heads/main", project.GetProperty("referenceName").GetString());
+        Assert.Equal(["refs/heads/main"], References(project));
+    }
+
     private static ApiApplicationFactory CreateFactory(string repositoriesRoot) => new()
     {
         RepositoriesRoot = repositoriesRoot,
     };
+
+    private static async Task<JsonElement> CreateAsync(
+        HttpClient client,
+        string repositoryPath,
+        object? settings)
+    {
+        using var response = await client.PostAsJsonAsync("/api/projects", new
+        {
+            displayName = "API repository",
+            repositoryPath,
+            settings,
+        });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return await response.Content.ReadFromJsonAsync<JsonElement>();
+    }
+
+    private static string[] References(JsonElement project) =>
+        project.GetProperty("referenceNames")
+            .EnumerateArray()
+            .Select(value => value.GetString()!)
+            .ToArray();
 
     private static async Task AssertProblemAsync(
         HttpClient client,

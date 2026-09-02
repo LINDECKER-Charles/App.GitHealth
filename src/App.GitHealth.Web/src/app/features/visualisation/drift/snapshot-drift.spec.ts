@@ -29,6 +29,7 @@ function branch(name: string, recommendation: RecommendationKind, short: string)
     reason: `reason ${short}`,
     isProtected: false,
     isExcluded: false,
+    topContributor: null,
   } satisfies BranchSnapshotResponse;
 }
 

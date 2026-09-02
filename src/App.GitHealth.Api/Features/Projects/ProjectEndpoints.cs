@@ -14,7 +14,15 @@ internal static class ProjectEndpoints
         group.MapPut("/{projectId:guid}/repository", RelocateAsync);
         group.MapPut("/{projectId:guid}/settings", UpdateAsync);
         group.MapPut("/{projectId:guid}/organization", OrganizeAsync);
+        group.MapDelete("/{projectId:guid}", DeleteAsync);
         return endpoints;
+    }
+
+    private static async Task<IResult> DeleteAsync(Guid projectId, HttpContext context)
+    {
+        var service = context.RequestServices.GetRequiredService<ProjectDeletionService>();
+        var result = await service.DeleteAsync(projectId, context.RequestAborted);
+        return result.IsSuccess ? Results.NoContent() : ApiProblems.Result(result.Failure!);
     }
 
     private static async Task<IResult> ValidateAsync(

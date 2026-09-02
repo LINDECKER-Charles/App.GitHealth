@@ -1,6 +1,13 @@
 namespace App.GitHealth.Api.Persistence.Models;
 
-internal sealed record AnalysisHistoryRange(int Skip, int Take);
+/// <summary>
+/// Outcome of removing one analysis run. A run in flight is refused rather than deleted:
+/// the worker still holds it and would resurrect rows behind the delete.
+/// </summary>
+internal sealed record AnalysisDeletionResult(bool WasFound, bool WasRunning);
+
+/// <summary>Slice of a project's history, optionally narrowed to a single baseline.</summary>
+internal sealed record AnalysisHistoryRange(int Skip, int Take, string? Baseline = null);
 
 internal sealed record AnalysisHistoryPage(
     IReadOnlyList<AnalysisHistoryRecord> Items,

@@ -9,6 +9,10 @@ internal sealed record AnalysisHistoryQueryParameters
 
     [FromQuery(Name = "pageSize")]
     public int? PageSize { get; init; }
+
+    /// <summary>Baseline whose history is read. Absent means every baseline of the project.</summary>
+    [FromQuery(Name = "baseline")]
+    public string? Baseline { get; init; }
 }
 
 internal sealed record AnalysisHistoryPageResponse

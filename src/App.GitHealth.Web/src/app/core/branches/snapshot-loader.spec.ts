@@ -29,6 +29,7 @@ function page(index: number, nextCursor: string | null): SnapshotPageResponse {
         reason: '',
         isProtected: false,
         isExcluded: false,
+        topContributor: null,
       },
     ],
     nextCursor,

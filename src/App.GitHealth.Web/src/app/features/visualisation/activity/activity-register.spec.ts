@@ -46,6 +46,7 @@ function branch(
     reason: '',
     isProtected: false,
     isExcluded: false,
+    topContributor: null,
     ...overrides,
   };
 }

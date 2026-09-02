@@ -6,6 +6,7 @@ import {
   AnalysisHistoryResponse,
   AnalysisLaunchResponse,
   AnalysisStatusResponse,
+  BaselineListResponse,
   CreateProjectRequest,
   DirectoryListing,
   PolicyPreviewResponse,
@@ -104,9 +105,33 @@ export class GitHealthApiClient {
     );
   }
 
-  launchAnalysis(projectId: string): Observable<AnalysisLaunchResponse> {
+  /** Without a baseline, every baseline the project declares is measured. */
+  launchAnalysis(projectId: string, baseline?: string | null): Observable<AnalysisLaunchResponse> {
     const url = `${projectUrl(projectId)}/analyses`;
-    return this.request(this.http.post<AnalysisLaunchResponse>(url, null));
+    const params = setParam(new HttpParams(), 'baseline', baseline);
+    return this.request(this.http.post<AnalysisLaunchResponse>(url, null, { params }));
+  }
+
+  listBaselines(projectId: string): Observable<BaselineListResponse> {
+    return this.request(this.http.get<BaselineListResponse>(`${projectUrl(projectId)}/baselines`));
+  }
+
+  updateBaselines(
+    projectId: string,
+    referenceNames: readonly string[],
+  ): Observable<ProjectResponse> {
+    return this.request(
+      this.http.put<ProjectResponse>(`${projectUrl(projectId)}/baselines`, { referenceNames }),
+    );
+  }
+
+  deleteProject(projectId: string): Observable<void> {
+    return this.request(this.http.delete<void>(projectUrl(projectId)));
+  }
+
+  deleteAnalysis(analysisId: string): Observable<void> {
+    const id = encodeURIComponent(analysisId);
+    return this.request(this.http.delete<void>(`${apiRoot}/analyses/${id}`));
   }
 
   getAnalysis(analysisId: string): Observable<AnalysisStatusResponse> {
@@ -140,8 +165,14 @@ export class GitHealthApiClient {
     );
   }
 
-  getAnalysisHistory(projectId: string, pageSize?: number): Observable<AnalysisHistoryResponse> {
-    const params = setParam(new HttpParams(), 'pageSize', pageSize);
+  /** A baseline narrows the history to its own captures, which is what the picker shows. */
+  getAnalysisHistory(
+    projectId: string,
+    pageSize?: number,
+    baseline?: string | null,
+  ): Observable<AnalysisHistoryResponse> {
+    let params = setParam(new HttpParams(), 'pageSize', pageSize);
+    params = setParam(params, 'baseline', baseline);
     return this.request(
       this.http.get<AnalysisHistoryResponse>(`${projectUrl(projectId)}/analyses`, { params }),
     );
@@ -176,6 +207,7 @@ function projectUrl(projectId: string): string {
 
 function snapshotParams(query: SnapshotQuery): HttpParams {
   let params = new HttpParams();
+  params = setParam(params, 'baseline', query.baseline);
   params = setParam(params, 'search', query.search);
   params = setParam(params, 'relationship', query.relationship);
   params = setParam(params, 'sort', query.sort);

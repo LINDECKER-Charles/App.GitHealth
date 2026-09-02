@@ -1,5 +1,6 @@
 import { BranchSnapshotResponse } from '../../core/api/api.models';
 import {
+  authorOptions,
   countByRecommendation,
   defaultFilters,
   filterBranches,
@@ -20,13 +21,14 @@ function branch(
     behindCount: 1,
     relationship: 'CommonAncestor',
     lastActivityAtUtc: new Date(Date.now() - 5 * day).toISOString(),
-    tipAuthor: 'Ada',
+    tipAuthor: 'Ada Lovelace',
     topology: 'Diverged',
     activity: 'Active',
     recommendation: 'Review',
     reason: '',
     isProtected: false,
     isExcluded: false,
+    topContributor: null,
     ...overrides,
   };
 }
@@ -35,6 +37,7 @@ const branches: readonly BranchSnapshotResponse[] = [
   branch('feature/export-csv', {
     aheadCount: 4,
     recommendation: 'Review',
+    tipAuthor: 'Zoé Martin',
     lastActivityAtUtc: new Date(Date.now() - 3 * day).toISOString(),
   }),
   branch('docs/guide', {
@@ -48,6 +51,7 @@ const branches: readonly BranchSnapshotResponse[] = [
     recommendation: 'Excluded',
     isExcluded: true,
     activity: 'Inactive',
+    tipAuthor: null,
     lastActivityAtUtc: new Date(Date.now() - 400 * day).toISOString(),
   }),
   branch('feature/fusionnee', {
@@ -94,6 +98,20 @@ describe('filterBranches', () => {
     expect(filtered).toHaveLength(1);
   });
 
+  it('filters on the tip author, merged branches included', () => {
+    const filtered = filterBranches(branches, { ...defaultFilters, author: 'Ada Lovelace' }, 90);
+    expect(filtered.map((item) => item.id)).toEqual(['docs/guide', 'feature/fusionnee']);
+  });
+
+  it('crosses the author with another facet', () => {
+    const filtered = filterBranches(
+      branches,
+      { ...defaultFilters, author: 'Ada Lovelace', topology: 'Merged' },
+      90,
+    );
+    expect(filtered.map((item) => item.id)).toEqual(['feature/fusionnee']);
+  });
+
   it('keeps only the branches beyond the inactivity threshold', () => {
     const filtered = filterBranches(branches, { ...defaultFilters, onlyStale: true }, 90);
     expect(filtered.map((item) => item.id).sort()).toEqual(['archive/2023', 'feature/fusionnee']);
@@ -118,6 +136,21 @@ describe('sortBranches', () => {
 
   it('sorts by activity, the most recent first', () => {
     expect(sortBranches(branches, 'activity', 'desc')[0].aheadCount).toBe(4);
+  });
+});
+
+describe('authorOptions', () => {
+  it('lists the distinct authors, sorted, behind the any-author entry', () => {
+    expect(authorOptions(branches)).toEqual([
+      { value: '', label: 'Any author' },
+      { value: 'Ada Lovelace', label: 'Ada Lovelace' },
+      { value: 'Zoé Martin', label: 'Zoé Martin' },
+    ]);
+  });
+
+  it('ignores the branches without a tip author', () => {
+    const options = authorOptions([branch('orphan', { tipAuthor: null })]);
+    expect(options).toEqual([{ value: '', label: 'Any author' }]);
   });
 });
 

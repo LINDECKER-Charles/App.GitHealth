@@ -69,10 +69,21 @@
   color: var(--text-muted);
 }
 
+.project-baseline,
 .project-capture {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.project-baseline-label {
+  white-space: nowrap;
+}
+
+/* A reference name, not a date and a commit: it needs far less room than a capture. */
+.project-baseline-select {
+  width: 168px;
+  flex: none;
 }
 
 .project-capture-select {

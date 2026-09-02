@@ -45,4 +45,9 @@ export class ProjectsStore {
         : [...projects, project],
     );
   }
+
+  /** Mirror of `upsert`: one call updates the rail, the palette and the group dialog. */
+  remove(projectId: string): void {
+    this.projects.update((projects) => projects.filter((project) => project.id !== projectId));
+  }
 }

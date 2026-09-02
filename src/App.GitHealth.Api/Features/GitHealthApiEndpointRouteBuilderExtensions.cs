@@ -1,4 +1,5 @@
 using App.GitHealth.Api.Features.Analyses;
+using App.GitHealth.Api.Features.Baselines;
 using App.GitHealth.Api.Features.Discovery;
 using App.GitHealth.Api.Features.Exports;
 using App.GitHealth.Api.Features.Policies;
@@ -17,6 +18,7 @@ internal static class GitHealthApiEndpointRouteBuilderExtensions
         endpoints.MapLocalSessionEndpoint();
         endpoints.MapProjectEndpoints();
         endpoints.MapPolicyEndpoints();
+        endpoints.MapBaselineEndpoints();
         endpoints.MapRuntimeEndpoints();
         endpoints.MapDiscoveryEndpoints();
         endpoints.MapAnalysisEndpoints();

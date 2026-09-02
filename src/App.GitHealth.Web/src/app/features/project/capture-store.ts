@@ -122,6 +122,21 @@ export class CaptureStore {
     this.show(null);
   }
 
+  /**
+   * Deleting a capture that is not the most recent one leaves the last analysis unchanged:
+   * nothing in the key moves, and only an explicit refresh reopens the history.
+   */
+  refresh(): void {
+    const project = this.context.project();
+    if (project === null) {
+      return;
+    }
+
+    this.loadedFor = '';
+    this.archived.set(null);
+    this.follow(project);
+  }
+
   private show(analysisId: string | null): void {
     if (analysisId === this.requestedId()) {
       return;
@@ -133,18 +148,22 @@ export class CaptureStore {
     });
   }
 
-  /** One more analysis extends the history; another repository replaces it entirely. */
+  /**
+   * One more analysis extends the history; another repository, or another baseline, replaces
+   * it entirely — the two histories have no capture in common.
+   */
   private follow(project: ProjectResponse | null): void {
     if (project === null) {
       return;
     }
 
-    const key = `${project.id}:${project.lastSuccessfulAnalysisId}`;
+    const baseline = this.context.baseline();
+    const key = `${project.id}:${baseline}:${project.lastSuccessfulAnalysisId}`;
     if (key === this.loadedFor) {
       return;
     }
 
-    if (!this.loadedFor.startsWith(`${project.id}:`)) {
+    if (!this.loadedFor.startsWith(`${project.id}:${baseline}:`)) {
       this.captures.set([]);
       this.archived.set(null);
     }
@@ -168,7 +187,7 @@ export class CaptureStore {
     this.history?.unsubscribe();
     this.error.set(null);
     this.history = this.api
-      .getAnalysisHistory(projectId, captureHistoryPageSize)
+      .getAnalysisHistory(projectId, captureHistoryPageSize, this.context.baseline())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (history) =>

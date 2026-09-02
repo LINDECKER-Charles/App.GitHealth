@@ -16,7 +16,7 @@ internal sealed class SnapshotService(
         SnapshotQueryParameters query,
         CancellationToken cancellationToken)
     {
-        var source = await LoadLatestAsync(projectId, cancellationToken);
+        var source = await LoadLatestAsync(projectId, query, cancellationToken);
         return source.IsSuccess
             ? BuildPage(source.Value!, query)
             : ApiOutcome<SnapshotPageResponse>.Failed(source.Failure!);
@@ -42,7 +42,7 @@ internal sealed class SnapshotService(
         SnapshotFilterParameters query,
         CancellationToken cancellationToken)
     {
-        var source = await LoadLatestAsync(projectId, cancellationToken);
+        var source = await LoadLatestAsync(projectId, query, cancellationToken);
         if (!source.IsSuccess)
         {
             return ApiOutcome<SnapshotSelectionData>.Failed(source.Failure!);
@@ -70,8 +70,14 @@ internal sealed class SnapshotService(
             : ApiOutcome<SnapshotDetailResponse>.Success(SnapshotMapper.MapDetail(branch));
     }
 
+    /// <summary>
+    /// Reads the newest capture of the requested baseline, or of the primary one when none is
+    /// asked for. A baseline that was never analysed reads the same as a project that never
+    /// was: there is simply nothing to show yet.
+    /// </summary>
     private async Task<ApiOutcome<SnapshotSelectionData>> LoadLatestAsync(
         Guid projectId,
+        SnapshotFilterParameters query,
         CancellationToken cancellationToken)
     {
         var project = await projects.GetAsync(projectId, cancellationToken);
@@ -80,14 +86,23 @@ internal sealed class SnapshotService(
             return ApiOutcome<SnapshotSelectionData>.Failed(ProjectNotFound());
         }
 
-        var analysis = await analyses.GetLastSuccessfulAsync(projectId, cancellationToken);
-        if (analysis is null)
-        {
-            return ApiOutcome<SnapshotSelectionData>.Failed(NoSuccessfulResult());
-        }
+        var analysis = await ReadLatestAsync(projectId, query.Baseline, cancellationToken);
+        return analysis is null
+            ? ApiOutcome<SnapshotSelectionData>.Failed(NoSuccessfulResult())
+            : ApiOutcome<SnapshotSelectionData>.Success(
+                CreateCurrentSource(analysis, project.ToDomain().Settings));
+    }
 
-        return ApiOutcome<SnapshotSelectionData>.Success(
-            CreateCurrentSource(analysis, project.ToDomain().Settings));
+    private Task<AnalysisRunEntity?> ReadLatestAsync(
+        Guid projectId,
+        string? baseline,
+        CancellationToken cancellationToken)
+    {
+        return string.IsNullOrWhiteSpace(baseline)
+            ? analyses.GetLastSuccessfulAsync(projectId, cancellationToken)
+            : analyses.GetLastSuccessfulForBaselineAsync(
+                new AnalysisTarget(projectId, baseline.Trim()),
+                cancellationToken);
     }
 
     private SnapshotSelectionData CreateCurrentSource(

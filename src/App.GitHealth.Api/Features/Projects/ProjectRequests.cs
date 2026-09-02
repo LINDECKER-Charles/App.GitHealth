@@ -27,6 +27,12 @@ internal sealed record ProjectSettingsRequest
 {
     public string? ReferenceName { get; init; }
 
+    /// <summary>
+    /// Full ordered baseline list. When absent, <see cref="ReferenceName"/> is used, which
+    /// keeps every single-baseline caller working unchanged.
+    /// </summary>
+    public string[]? ReferenceNames { get; init; }
+
     public string BranchNamespace { get; init; } = "refs/heads/*";
 
     public int ActiveUntilDays { get; init; } = 30;

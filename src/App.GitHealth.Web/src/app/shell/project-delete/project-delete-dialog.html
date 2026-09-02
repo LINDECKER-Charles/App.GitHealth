@@ -1,0 +1,68 @@
+<div class="dialog-scrim" (click)="close.emit()">
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="project-delete-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="dialog-heading">
+      <span class="dialog-heading-mark"><ds-icon name="triangle-alert" [size]="16" /></span>
+      <span
+        id="project-delete-title"
+        class="dialog-heading-title"
+        i18n="@@projectDelete.dialog.title"
+        >Delete this repository</span
+      >
+      <button
+        dsIconButton
+        icon="x"
+        i18n-label="@@projectDelete.dialog.close"
+        label="Close"
+        size="sm"
+        (click)="close.emit()"
+      ></button>
+    </header>
+
+    <div class="dialog-body">
+      @if (project(); as target) {
+        <p class="dialog-lead">{{ target.displayName }}</p>
+        <p class="dialog-path">{{ target.repositoryPath }}</p>
+        <p class="dialog-captures">{{ captureLabel() }}</p>
+        <p class="field-hint" i18n="@@projectDelete.promise">
+          The Git repository at that path is not touched: GitHealth only ever reads it. What
+          disappears is what GitHealth measured — the branches, the counters and the dates of every
+          baseline of this repository.
+        </p>
+      } @else {
+        <p class="field-hint" i18n="@@projectDelete.missing.note">
+          This repository is no longer in the observed list.
+        </p>
+      }
+    </div>
+
+    <footer class="dialog-footer">
+      <span i18n="@@projectDelete.footer.note">This cannot be undone.</span>
+      <button
+        dsButton
+        size="md"
+        variant="ghost"
+        i18n="@@projectDelete.footer.cancel"
+        (click)="close.emit()"
+      >
+        Cancel
+      </button>
+      <button
+        dsButton
+        size="md"
+        variant="danger"
+        iconLeft="trash-2"
+        [disabled]="project() === null"
+        i18n="@@projectDelete.footer.submit"
+        (click)="confirm()"
+      >
+        Delete
+      </button>
+    </footer>
+  </div>
+</div>

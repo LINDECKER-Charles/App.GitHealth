@@ -10,6 +10,7 @@ import { WorkspaceDialogs } from './core/workspace/workspace-dialogs';
 import { AddRepositoryDialog } from './shell/add-repository/add-repository-dialog';
 import { BootIntro } from './shell/boot/boot-intro';
 import { CommandPalette } from './shell/palette/command-palette';
+import { ProjectDeleteDialog } from './shell/project-delete/project-delete-dialog';
 import { ProjectGroupDialog } from './shell/project-group/project-group-dialog';
 import { ProjectRail } from './shell/rail/project-rail';
 import { ScanFolderDialog } from './shell/scan-folder/scan-folder-dialog';
@@ -45,6 +46,7 @@ interface WorkspaceAlert {
     DsIconButton,
     DsKbd,
     DsStatusDot,
+    ProjectDeleteDialog,
     ProjectGroupDialog,
     ProjectRail,
     RouterOutlet,

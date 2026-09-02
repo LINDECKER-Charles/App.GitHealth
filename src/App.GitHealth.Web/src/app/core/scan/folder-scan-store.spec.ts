@@ -123,6 +123,7 @@ function project(id: string, repositoryPath: string): ProjectResponse {
     createdAtUtc: '2026-08-29T08:00:00Z',
     updatedAtUtc: '2026-08-29T08:00:00Z',
     referenceName: reference,
+    referenceNames: [reference],
     branchNamespace: 'refs/heads/*',
     activeUntilDays: 30,
     inactiveAfterDays: 90,

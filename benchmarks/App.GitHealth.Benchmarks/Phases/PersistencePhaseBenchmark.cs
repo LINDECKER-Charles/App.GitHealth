@@ -92,7 +92,7 @@ internal sealed class PersistencePhaseBenchmark : IAsyncDisposable
         CancellationToken cancellationToken)
     {
         var analysisId = await _analyses.StartAsync(
-            ProjectId,
+            new AnalysisTarget(ProjectId, "refs/heads/main"),
             PersistedAt,
             cancellationToken);
         var completion = new AnalysisCompletion(scan, PersistedAt.AddMinutes(1));
@@ -137,7 +137,7 @@ internal sealed class PersistencePhaseBenchmark : IAsyncDisposable
         var project = Project.Create("Benchmark", repositoryPath);
         var settings = new ProjectSettings
         {
-            Reference = new GitRef("refs/heads/main"),
+            Baselines = [new GitRef("refs/heads/main")],
             BranchNamespace = "refs/remotes/origin/benchmark/*",
             Thresholds = ActivityThresholds.Create(30, 90),
             Policy = BranchPolicy.Empty,

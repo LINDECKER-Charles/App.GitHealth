@@ -6,7 +6,7 @@ namespace App.GitHealth.Api.Persistence.Repositories;
 internal interface IAnalysisRepository
 {
     Task<Guid> StartAsync(
-        Guid projectId,
+        AnalysisTarget target,
         DateTimeOffset startedAtUtc,
         CancellationToken cancellationToken);
 
@@ -20,10 +20,18 @@ internal interface IAnalysisRepository
         AnalysisFailure failure,
         CancellationToken cancellationToken);
 
+    Task<AnalysisDeletionResult> DeleteAsync(
+        Guid analysisId,
+        CancellationToken cancellationToken);
+
     Task<AnalysisRunEntity?> GetAsync(Guid analysisId, CancellationToken cancellationToken);
 
     Task<AnalysisRunEntity?> GetLastSuccessfulAsync(
         Guid projectId,
+        CancellationToken cancellationToken);
+
+    Task<AnalysisRunEntity?> GetLastSuccessfulForBaselineAsync(
+        AnalysisTarget target,
         CancellationToken cancellationToken);
 
     Task<AnalysisHistoryPage> GetHistoryAsync(

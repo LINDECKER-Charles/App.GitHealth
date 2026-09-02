@@ -28,6 +28,7 @@ function branch(
     reason: 'Active divergence.',
     isProtected: false,
     isExcluded: false,
+    topContributor: null,
     ...overrides,
   };
 }

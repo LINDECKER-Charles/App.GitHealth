@@ -9,7 +9,12 @@ namespace App.GitHealth.Api.Features.Analyses;
 
 internal sealed class AnalysisQueue : IDisposable
 {
-    private readonly Dictionary<Guid, Guid> _activeByProject = [];
+    /// <summary>
+    /// Keyed by baseline, not by project: the baselines of one project are separate
+    /// measurements and must be allowed to run together.
+    /// </summary>
+    private readonly Dictionary<AnalysisTarget, Guid> _activeByTarget = [];
+
     private readonly Channel<AnalysisWorkItem> _channel;
     private readonly IClock _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -44,29 +49,31 @@ internal sealed class AnalysisQueue : IDisposable
     public int MaximumParallelAnalyses { get; }
 
     public async Task<AnalysisEnqueueResult> EnqueueAsync(
-        Guid projectId,
+        AnalysisTarget target,
         CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            if (_activeByProject.TryGetValue(projectId, out var activeId))
+            if (_activeByTarget.TryGetValue(target, out var activeId))
             {
                 return new AnalysisEnqueueResult(
                     AnalysisEnqueueKind.Duplicate,
                     activeId,
-                    IsDuplicate: true);
+                    IsDuplicate: true)
+                { ReferenceName = target.ReferenceName };
             }
 
-            if (_reservedProjects.Contains(projectId))
+            if (_reservedProjects.Contains(target.ProjectId))
             {
                 return new AnalysisEnqueueResult(
                     AnalysisEnqueueKind.ProjectBusy,
                     AnalysisId: null,
-                    IsDuplicate: false);
+                    IsDuplicate: false)
+                { ReferenceName = target.ReferenceName };
             }
 
-            return await EnqueueLockedAsync(projectId, cancellationToken);
+            return await EnqueueLockedAsync(target, cancellationToken);
         }
         finally
         {
@@ -84,7 +91,8 @@ internal sealed class AnalysisQueue : IDisposable
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            if (_activeByProject.ContainsKey(projectId) || !_reservedProjects.Add(projectId))
+            var isBusy = _activeByTarget.Keys.Any(key => key.ProjectId == projectId);
+            if (isBusy || !_reservedProjects.Add(projectId))
             {
                 return null;
             }
@@ -113,12 +121,12 @@ internal sealed class AnalysisQueue : IDisposable
         };
     }
 
-    public async Task ReleaseAsync(Guid projectId)
+    public async Task ReleaseAsync(AnalysisTarget target)
     {
         await _gate.WaitAsync();
         try
         {
-            _activeByProject.Remove(projectId);
+            _activeByTarget.Remove(target);
         }
         finally
         {
@@ -146,56 +154,60 @@ internal sealed class AnalysisQueue : IDisposable
     }
 
     private async Task<AnalysisEnqueueResult> EnqueueLockedAsync(
-        Guid projectId,
+        AnalysisTarget target,
         CancellationToken cancellationToken)
     {
-        var analysisId = await StartAnalysisAsync(projectId, cancellationToken);
+        var analysisId = await StartAnalysisAsync(target, cancellationToken);
         if (analysisId is null)
         {
             return new AnalysisEnqueueResult(
                 AnalysisEnqueueKind.ProjectNotFound,
                 AnalysisId: null,
-                IsDuplicate: false);
+                IsDuplicate: false)
+            { ReferenceName = target.ReferenceName };
         }
 
-        var workItem = PrepareWork(projectId, analysisId.Value);
+        var workItem = PrepareWork(target, analysisId.Value);
         if (_channel.Writer.TryWrite(workItem))
         {
-            return Accepted(analysisId.Value);
+            return Accepted(target, analysisId.Value);
         }
 
         await FailQueueFullAsync(workItem);
-        _activeByProject.Remove(projectId);
+        _activeByTarget.Remove(target);
         Forget(analysisId.Value);
         return new AnalysisEnqueueResult(
             AnalysisEnqueueKind.QueueFull,
             analysisId,
-            IsDuplicate: false);
+            IsDuplicate: false)
+        { ReferenceName = target.ReferenceName };
     }
 
-    private AnalysisWorkItem PrepareWork(Guid projectId, Guid analysisId)
+    private AnalysisWorkItem PrepareWork(AnalysisTarget target, Guid analysisId)
     {
-        _activeByProject[projectId] = analysisId;
+        _activeByTarget[target] = analysisId;
         Update(analysisId, AnalysisPhase.Waiting);
-        return new AnalysisWorkItem(analysisId, projectId);
+        return new AnalysisWorkItem(analysisId, target);
     }
 
-    private static AnalysisEnqueueResult Accepted(Guid analysisId) => new(
+    private static AnalysisEnqueueResult Accepted(AnalysisTarget target, Guid analysisId) => new(
         AnalysisEnqueueKind.Accepted,
         analysisId,
-        IsDuplicate: false);
+        IsDuplicate: false)
+    { ReferenceName = target.ReferenceName };
 
     private async Task<Guid?> StartAnalysisAsync(
-        Guid projectId,
+        AnalysisTarget target,
         CancellationToken cancellationToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
         var repository = scope.ServiceProvider.GetRequiredService<IAnalysisRepository>();
         try
         {
-            return await repository.StartAsync(projectId, _clock.UtcNow, cancellationToken);
+            return await repository.StartAsync(target, _clock.UtcNow, cancellationToken);
         }
-        catch (KeyNotFoundException)
+        catch (Exception exception)
+            when (exception is KeyNotFoundException or InvalidOperationException)
         {
             return null;
         }

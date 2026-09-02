@@ -30,9 +30,26 @@
       </div>
     </div>
     <div class="project-meta">
-      <ds-badge size="sm" tone="info" icon="git-branch" [mono]="true">
-        {{ referenceLabel() }}
-      </ds-badge>
+      @if (baselines.hasChoice()) {
+        <span class="project-baseline">
+          <span class="project-baseline-label" aria-hidden="true" i18n="@@project.baseline.label"
+            >Baseline</span
+          >
+          <ds-select
+            class="project-baseline-select"
+            size="sm"
+            i18n-ariaLabel="@@project.baseline.aria"
+            ariaLabel="Baseline being measured"
+            [options]="baselines.options()"
+            [value]="baselines.selected()"
+            (valueChange)="baselines.select($any($event))"
+          />
+        </span>
+      } @else {
+        <ds-badge size="sm" tone="info" icon="git-branch" [mono]="true">
+          {{ referenceLabel() }}
+        </ds-badge>
+      }
       @if (captures.hasCaptures()) {
         <span class="project-capture">
           <span class="project-capture-label" aria-hidden="true" i18n="@@project.capture.label"

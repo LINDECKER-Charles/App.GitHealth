@@ -99,6 +99,10 @@
   <app-project-group-dialog [projectId]="projectId" (close)="dialogs.closeProjectGroup()" />
 }
 
+@if (dialogs.projectDeleteId(); as projectId) {
+  <app-project-delete-dialog [projectId]="projectId" (close)="dialogs.closeProjectDelete()" />
+}
+
 @if (toast.message(); as message) {
   <div class="workspace-toast" role="status" aria-live="polite">
     <ds-status-dot tone="success" [size]="7" />

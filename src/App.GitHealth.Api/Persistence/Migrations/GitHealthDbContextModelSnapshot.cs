@@ -159,6 +159,30 @@ namespace App.GitHealth.Api.Persistence.Migrations
                     b.ToTable("ContributorSnapshots", (string)null);
                 });
 
+            modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.ProjectBaselineEntity", b =>
+                {
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferenceName")
+                        .HasMaxLength(1024)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LastSuccessfulAnalysisId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ProjectId", "ReferenceName");
+
+                    b.HasIndex("LastSuccessfulAnalysisId");
+
+                    b.HasIndex("ProjectId", "Position");
+
+                    b.ToTable("ProjectBaselines", (string)null);
+                });
+
             modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.ProjectEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -261,6 +285,17 @@ namespace App.GitHealth.Api.Persistence.Migrations
                     b.Navigation("BranchSnapshot");
                 });
 
+            modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.ProjectBaselineEntity", b =>
+                {
+                    b.HasOne("App.GitHealth.Api.Persistence.Entities.ProjectEntity", "Project")
+                        .WithMany("Baselines")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.AnalysisRunEntity", b =>
                 {
                     b.Navigation("Branches");
@@ -274,6 +309,8 @@ namespace App.GitHealth.Api.Persistence.Migrations
             modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.ProjectEntity", b =>
                 {
                     b.Navigation("AnalysisRuns");
+
+                    b.Navigation("Baselines");
                 });
 #pragma warning restore 612, 618
         }

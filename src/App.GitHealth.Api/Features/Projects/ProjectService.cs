@@ -1,5 +1,6 @@
 using App.GitHealth.Api.Features.Analyses;
 using App.GitHealth.Api.Features.Common;
+using App.GitHealth.Api.Persistence.Entities;
 using App.GitHealth.Api.Persistence.Models;
 using App.GitHealth.Api.Persistence.Repositories;
 using App.GitHealth.Core.Analysis;
@@ -95,7 +96,7 @@ internal sealed class ProjectService(
         }
 
         var descriptor = validation.Value!;
-        if (!ContainsConfiguredReference(stored.ReferenceName, descriptor))
+        if (!ContainsConfiguredReferences(stored, descriptor))
         {
             return ApiOutcome<ProjectResponse>.Failed(ApiProblems.BadRequest(
                 ApiErrorCodes.InvalidReference,
@@ -242,10 +243,9 @@ internal sealed class ProjectService(
         try
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(request.BranchNamespace);
-            var reference = SelectReference(request.ReferenceName, descriptor);
             return ApiOutcome<ProjectSettings>.Success(new ProjectSettings
             {
-                Reference = reference,
+                Baselines = SelectBaselines(request, descriptor),
                 BranchNamespace = request.BranchNamespace,
                 Thresholds = ActivityThresholds.Create(
                     request.ActiveUntilDays,
@@ -261,21 +261,46 @@ internal sealed class ProjectService(
         }
     }
 
-    private static GitRef SelectReference(string? requested, RepositoryDescriptor descriptor)
+    /// <summary>
+    /// The full list wins when it is given; otherwise the single reference, and failing that
+    /// the repository's own suggestion. Every name must exist, or the project would declare
+    /// a baseline nothing can be measured against.
+    /// </summary>
+    private static GitRef[] SelectBaselines(
+        ProjectSettingsRequest request,
+        RepositoryDescriptor descriptor)
     {
-        var reference = requested is null ? descriptor.SuggestedReference : new GitRef(requested);
-        if (reference is null || !descriptor.References.Contains(reference))
+        var requested = request.ReferenceNames
+            ?? (request.ReferenceName is null ? null : [request.ReferenceName]);
+        if (requested is null)
         {
-            throw new ArgumentException("The chosen baseline does not exist in the repository.");
+            return [RequireKnown(descriptor.SuggestedReference, descriptor)];
         }
 
-        return reference;
+        if (requested.Length == 0)
+        {
+            throw new ArgumentException("At least one baseline is required.");
+        }
+
+        return requested
+            .Select(name => RequireKnown(new GitRef(name), descriptor))
+            .ToArray();
     }
 
-    private static bool ContainsConfiguredReference(
-        string? referenceName,
+    private static GitRef RequireKnown(GitRef? reference, RepositoryDescriptor descriptor) =>
+        reference is not null && descriptor.References.Contains(reference)
+            ? reference
+            : throw new ArgumentException(
+                "The chosen baseline does not exist in the repository.");
+
+    /// <summary>
+    /// Every declared baseline must survive the move. A partial match would silently orphan
+    /// one baseline's whole history.
+    /// </summary>
+    private static bool ContainsConfiguredReferences(
+        ProjectEntity stored,
         RepositoryDescriptor descriptor) =>
-        referenceName is null || descriptor.References.Contains(new GitRef(referenceName));
+        stored.ToDomain().Settings.Baselines.All(descriptor.References.Contains);
 
     private static ApiOutcome<T> Invalid<T>(string detail) =>
         ApiOutcome<T>.Failed(ApiProblems.BadRequest(ApiErrorCodes.InvalidRequest, detail));

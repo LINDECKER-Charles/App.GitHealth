@@ -4,6 +4,7 @@ import { Subscription, finalize, switchMap, timer } from 'rxjs';
 import { ApiError, apiErrorMessage } from '../../core/api/api-error';
 import { GitHealthApiClient } from '../../core/api/git-health-api-client';
 import {
+  AnalysisLaunchResponse,
   AnalysisStatusResponse,
   PolicyUpdateRequest,
   ProjectResponse,
@@ -31,6 +32,7 @@ export class ProjectContext {
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private polling?: Subscription;
+  private snapshotLoad?: Subscription;
   private projectId = '';
 
   readonly project = signal<ProjectResponse | null>(null);
@@ -40,6 +42,10 @@ export class ProjectContext {
   readonly isLoadingLatest = signal(true);
   readonly isLaunching = signal(false);
   readonly isSavingPolicy = signal(false);
+  readonly isSavingBaselines = signal(false);
+
+  /** Baseline the views are measured against; `null` is the primary one of the project. */
+  readonly baseline = signal<string | null>(null);
 
   /** Current order of the displayed branches: the card uses it for "Next". */
   readonly visibleBranchIds = signal<readonly string[]>([]);
@@ -52,10 +58,33 @@ export class ProjectContext {
     }
 
     this.projectId = projectId;
+    this.baseline.set(null);
     this.latestSnapshot.set(null);
     this.analysis.set(null);
     this.loadProject();
     this.loadLatestSnapshot();
+  }
+
+  /**
+   * Another baseline, same repository: `open()` would recognise the project and do nothing,
+   * so the snapshot is reloaded here on its own.
+   */
+  setBaseline(reference: string | null): void {
+    if (this.baseline() === reference) {
+      return;
+    }
+
+    this.baseline.set(reference);
+    this.loadLatestSnapshot();
+  }
+
+  /** Forgets the open repository, including its id: reopening it must read it again. */
+  reset(): void {
+    this.projectId = '';
+    this.project.set(null);
+    this.latestSnapshot.set(null);
+    this.analysis.set(null);
+    this.error.set(null);
   }
 
   clearError(): void {
@@ -76,9 +105,33 @@ export class ProjectContext {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (launch) => this.pollAnalysis(launch.analysisId),
+        next: (launch) => this.pollAnalysis(trackedRun(launch, this.baseline())),
         error: (error: unknown) =>
           this.fail(error, $localize`:@@project.error.launch:The analysis could not be started.`),
+      });
+  }
+
+  saveBaselines(referenceNames: readonly string[], onSaved?: () => void): void {
+    this.isSavingBaselines.set(true);
+    this.error.set(null);
+    this.api
+      .updateBaselines(this.projectId, referenceNames)
+      .pipe(
+        finalize(() => this.isSavingBaselines.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (project) => {
+          this.applyProject(project);
+          this.loadLatestSnapshot();
+          this.toast.show($localize`:@@project.toast.baselines:Baselines saved · no Git write`);
+          onSaved?.();
+        },
+        error: (error: unknown) =>
+          this.fail(
+            error,
+            $localize`:@@project.error.saveBaselines:The baselines could not be saved.`,
+          ),
       });
   }
 
@@ -128,10 +181,13 @@ export class ProjectContext {
       });
   }
 
+  /** One read at a time: a baseline switch must not be overtaken by the read it replaces. */
   loadLatestSnapshot(): void {
+    this.snapshotLoad?.unsubscribe();
     this.isLoadingLatest.set(true);
-    loadEntireSnapshot((cursor) =>
+    this.snapshotLoad = loadEntireSnapshot((cursor) =>
       this.api.getLatestSnapshots(this.projectId, {
+        baseline: this.baseline() ?? undefined,
         cursor: cursor ?? undefined,
         pageSize: snapshotPageSize,
         sort: 'activity',
@@ -209,4 +265,10 @@ export class ProjectContext {
   private fail(error: unknown, fallback: string): void {
     this.error.set(apiErrorMessage(error, fallback));
   }
+}
+
+/** A launch starts one run per baseline: the one worth following is the one being read. */
+function trackedRun(launch: AnalysisLaunchResponse, baseline: string | null): string {
+  const tracked = launch.analyses.find((item) => item.referenceName === baseline);
+  return tracked?.analysisId ?? launch.analysisId;
 }

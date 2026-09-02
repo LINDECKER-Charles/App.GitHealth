@@ -19,6 +19,8 @@ export interface BranchFilters {
   readonly topology: BranchTopology | '';
   readonly activity: ActivityStatus | '';
   readonly relationship: BranchRelationship | '';
+  /** Tip author to keep, empty for any. */
+  readonly author: string;
   readonly onlyStale: boolean;
   readonly sort: SnapshotSort;
   readonly direction: SortDirection;
@@ -30,6 +32,7 @@ export const defaultFilters: BranchFilters = {
   topology: '',
   activity: '',
   relationship: '',
+  author: '',
   onlyStale: false,
   sort: 'activity',
   direction: 'desc',
@@ -73,8 +76,29 @@ export const sortOptions: readonly SelectOption[] = [
   { value: 'behind', label: $localize`:@@dashboard.sort.behind:Behind` },
 ];
 
-/** Branch names are sorted with the app locale, never with the host's default collation. */
-const branchNameCollator = new Intl.Collator(sourceLocale);
+/** Names are sorted with the app locale, never with the host's default collation. */
+const nameCollator = new Intl.Collator(sourceLocale);
+
+/**
+ * Facet built from the loaded snapshot: the tip author is the only author present on every
+ * branch, including the merged ones a top contributor never covers.
+ */
+export function authorOptions(
+  branches: readonly BranchSnapshotResponse[],
+): readonly SelectOption[] {
+  const authors = new Set<string>();
+  for (const branch of branches) {
+    if (branch.tipAuthor !== null && branch.tipAuthor !== '') {
+      authors.add(branch.tipAuthor);
+    }
+  }
+
+  const sorted = [...authors].sort((left, right) => nameCollator.compare(left, right));
+  return [
+    { value: '', label: $localize`:@@dashboard.author.any:Any author` },
+    ...sorted.map((author) => ({ value: author, label: author })),
+  ];
+}
 
 export function filterBranches(
   branches: readonly BranchSnapshotResponse[],
@@ -138,6 +162,10 @@ function matchesFacets(branch: BranchSnapshotResponse, filters: BranchFilters): 
     return false;
   }
 
+  if (filters.author !== '' && branch.tipAuthor !== filters.author) {
+    return false;
+  }
+
   return filters.relationship === '' || branch.relationship === filters.relationship;
 }
 
@@ -148,7 +176,7 @@ function compare(
 ): number {
   switch (sort) {
     case 'name':
-      return branchNameCollator.compare(
+      return nameCollator.compare(
         displayReference(left.referenceName),
         displayReference(right.referenceName),
       );

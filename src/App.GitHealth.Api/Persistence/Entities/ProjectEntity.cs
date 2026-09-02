@@ -42,6 +42,12 @@ internal sealed class ProjectEntity
 
     public ICollection<AnalysisRunEntity> AnalysisRuns { get; } = [];
 
+    /// <summary>
+    /// Comparison baselines. Always eager-loaded: an empty collection here is indistinguishable
+    /// from a project that declares none, and would silently reinsert every row on a save.
+    /// </summary>
+    public ICollection<ProjectBaselineEntity> Baselines { get; } = [];
+
     public static ProjectEntity Create(Project project, DateTimeOffset createdAtUtc)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -61,7 +67,7 @@ internal sealed class ProjectEntity
     {
         var settings = new ProjectSettings
         {
-            Reference = ReferenceName is null ? null : new GitRef(ReferenceName),
+            Baselines = ReadBaselines(),
             BranchNamespace = BranchNamespace,
             Thresholds = ActivityThresholds.Create(ActiveUntilDays, InactiveAfterDays),
             Policy = BranchPolicy.Create(
@@ -127,6 +133,10 @@ internal sealed class ProjectEntity
         return this;
     }
 
+    /// <summary>
+    /// Sole writer of <see cref="ReferenceName"/>, which is the denormalised primary baseline.
+    /// Keeping the two in one statement is what stops them drifting apart.
+    /// </summary>
     private ProjectEntity ApplySettings(ProjectSettings settings)
     {
         ReferenceName = settings.Reference?.FullName;
@@ -135,8 +145,65 @@ internal sealed class ProjectEntity
         InactiveAfterDays = settings.Thresholds.InactiveAfterDays;
         ExcludedPatternsJson = JsonSerializer.Serialize(settings.Policy.ExcludedPatterns);
         ProtectedPatternsJson = JsonSerializer.Serialize(settings.Policy.ProtectedPatterns);
+        ApplyBaselines(settings.Baselines);
         return this;
     }
+
+    /// <summary>
+    /// Reconciles by reference name rather than rebuilding the list, so that reordering the
+    /// baselines keeps each one's <see cref="ProjectBaselineEntity.LastSuccessfulAnalysisId"/>.
+    /// </summary>
+    private void ApplyBaselines(IReadOnlyList<GitRef> baselines)
+    {
+        var wanted = baselines.Select(baseline => baseline.FullName).ToArray();
+        var removed = Baselines
+            .Where(baseline => !wanted.Contains(baseline.ReferenceName, StringComparer.Ordinal))
+            .ToArray();
+        foreach (var baseline in removed)
+        {
+            Baselines.Remove(baseline);
+        }
+
+        for (var position = 0; position < wanted.Length; position++)
+        {
+            AttachBaseline(wanted[position], position);
+        }
+
+        PromoteLatestOfPrimaryBaseline();
+    }
+
+    /// <summary>
+    /// The project-wide pointer always follows the primary baseline. Every writer that can move
+    /// which baseline is primary — a completed run, a deleted capture, a reordered list — ends by
+    /// calling this, which is what stops the pointer disagreeing with
+    /// <see cref="ReferenceName"/> on the same row.
+    /// </summary>
+    public void PromoteLatestOfPrimaryBaseline()
+    {
+        LastSuccessfulAnalysisId = Baselines
+            .OrderBy(baseline => baseline.Position)
+            .Select(baseline => baseline.LastSuccessfulAnalysisId)
+            .FirstOrDefault();
+    }
+
+    private void AttachBaseline(string referenceName, int position)
+    {
+        var existing = Baselines.SingleOrDefault(baseline =>
+            string.Equals(baseline.ReferenceName, referenceName, StringComparison.Ordinal));
+        if (existing is null)
+        {
+            Baselines.Add(ProjectBaselineEntity.Create(Id, referenceName, position));
+            return;
+        }
+
+        existing.MoveTo(position);
+    }
+
+    private GitRef[] ReadBaselines() => Baselines
+        .OrderBy(baseline => baseline.Position)
+        .ThenBy(baseline => baseline.ReferenceName, StringComparer.Ordinal)
+        .Select(baseline => new GitRef(baseline.ReferenceName))
+        .ToArray();
 
     private static string[] DeserializePatterns(string json) =>
         JsonSerializer.Deserialize<string[]>(json) ?? [];

@@ -17,6 +17,9 @@ internal static class ProjectResponseMapper
             CreatedAtUtc = entity.CreatedAtUtc,
             UpdatedAtUtc = entity.UpdatedAtUtc,
             ReferenceName = project.Settings.Reference?.FullName,
+            ReferenceNames = project.Settings.Baselines
+                .Select(baseline => baseline.FullName)
+                .ToArray(),
             BranchNamespace = project.Settings.BranchNamespace,
             ActiveUntilDays = project.Settings.Thresholds.ActiveUntilDays,
             InactiveAfterDays = project.Settings.Thresholds.InactiveAfterDays,

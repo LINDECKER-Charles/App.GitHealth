@@ -3,10 +3,36 @@
 All notable changes to GitHealth are recorded in this file. The format follows Keep a
 Changelog and semantic versioning.
 
+Each line below is backed by an entry in [`docs/changelog/`](docs/changelog/README.md) —
+one file per implementation, one folder per version, stating what was built, why it was
+built that way and what it costs.
+
 ## [Unreleased]
 
 ### Added
 
+- **several comparison baselines per repository**: a project no longer declares a single
+  reference branch but an ordered list of up to eight — `dev`, `test` and `main` side by
+  side. Each baseline keeps its own analyses and its own history, so switching between them
+  reads a different capture rather than a re-filtered one; a selector in the repository
+  header does the switching and the choice travels in the URL (`?baseline=`), which every tab
+  and every link preserves. The first baseline in the list is the primary one, shown by
+  default. Running an analysis measures every declared baseline in one click, as independent
+  runs: one baseline pointing at a deleted branch fails alone, and each run gets its own
+  timeout rather than sharing one. The list is edited from the Policies tab, through the same
+  branch picker the patterns use. Repositories saved before this version keep their single
+  baseline as the primary one, with the captures already taken against it;
+- **deleting captures and repositories**: a capture can be removed from the history, which
+  hands its baseline back the previous one rather than leaving the view empty, and a
+  repository can be removed entirely from the Policies tab's danger zone. Both say plainly
+  what disappears and both leave the Git repository untouched — only GitHealth's own
+  measurements are deleted. A capture still being analysed is refused rather than half-removed;
+- **filtering the branches by author**: the Diagnostic tab filters on the author of each
+  branch's tip commit, which answers "whose branch is this" at a glance. The author list is
+  built from the loaded capture, so it holds exactly the people who appear in it, and the
+  filter combines with the existing facets. Branch snapshots also carry the top contributor —
+  whoever wrote most of the commits the branch adds to its baseline — which is empty for a
+  merged branch, since a merged branch adds none;
 - **"Visualisation" tab**: three readings of the same capture, each with its own URL. The
   _topology map_ draws every branch around the reference, its shape carrying how far ahead
   and behind it is; hovering reads a branch, clicking pins its card. The _activity register_

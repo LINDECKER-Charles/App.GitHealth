@@ -45,19 +45,30 @@ internal sealed class AnalysisRunEntity
 
     public ICollection<BranchSnapshotEntity> Branches { get; } = [];
 
-    public static AnalysisRunEntity Start(ProjectEntity project, DateTimeOffset startedAtUtc)
+    /// <summary>
+    /// Freezes the project's settings and the baseline this run measures against. The baseline
+    /// must be one the project declares, otherwise its results would belong to nothing.
+    /// </summary>
+    public static AnalysisRunEntity Start(
+        ProjectEntity project,
+        AnalysisTarget target,
+        DateTimeOffset startedAtUtc)
     {
         ArgumentNullException.ThrowIfNull(project);
         UtcDate.Require(startedAtUtc, nameof(startedAtUtc));
-        var referenceName = project.ReferenceName
-            ?? throw new InvalidOperationException("The project has no Git baseline.");
+        var baseline = project.Baselines.SingleOrDefault(candidate => string.Equals(
+            candidate.ReferenceName,
+            target.ReferenceName,
+            StringComparison.Ordinal))
+            ?? throw new InvalidOperationException(
+                "The project does not declare this Git baseline.");
         return new AnalysisRunEntity
         {
             Id = Guid.NewGuid(),
             ProjectId = project.Id,
             Status = AnalysisRunStatus.Running,
             StartedAtUtc = startedAtUtc,
-            ReferenceName = referenceName,
+            ReferenceName = baseline.ReferenceName,
             BranchNamespace = project.BranchNamespace,
             ActiveUntilDays = project.ActiveUntilDays,
             InactiveAfterDays = project.InactiveAfterDays,

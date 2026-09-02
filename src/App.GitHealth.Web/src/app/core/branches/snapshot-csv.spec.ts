@@ -17,6 +17,7 @@ function branch(overrides: Partial<BranchSnapshotResponse> = {}): BranchSnapshot
     reason: 'No action recommended',
     isProtected: false,
     isExcluded: false,
+    topContributor: null,
     ...overrides,
   };
 }

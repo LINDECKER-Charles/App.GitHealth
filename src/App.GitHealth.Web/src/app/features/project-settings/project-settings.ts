@@ -8,15 +8,27 @@ import {
 } from '@angular/core';
 import { PolicySnapshot } from '../../core/api/api.models';
 import { mergedActiveUntilDays, mergedInactiveAfterDays } from '../../core/branches/branch-policy';
+import { WorkspaceDialogs } from '../../core/workspace/workspace-dialogs';
 import { DsBadge } from '../../ui/core/ds-badge';
 import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
+import { DsIconButton } from '../../ui/core/ds-icon-button';
 import { DsStatusDot } from '../../ui/core/ds-status-dot';
 import { DsTag } from '../../ui/core/ds-tag';
 import { DsInput } from '../../ui/forms/ds-input';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
 import { DsPanel } from '../../ui/surfaces/ds-panel';
 import { ProjectContext } from '../project/project-context';
+import {
+  addBaselines,
+  baselineMoveUpLabel,
+  baselineRemoveLabel,
+  canAddBaseline,
+  isBaselineListDirty,
+  maximumBaselineCount,
+  moveBaseline,
+  removeBaseline,
+} from './baseline-draft';
 import { BranchPicker } from './branch-picker/branch-picker';
 import { BranchPatternKind } from './branch-picker/branch-picker-options';
 import { PolicyMatch, PolicyStat, projectMatches, projectStats } from './policy-projection';
@@ -24,7 +36,7 @@ import { PolicyMatch, PolicyStat, projectMatches, projectStats } from './policy-
 const minimumBandDays = 120;
 const bandHeadroom = 1.6;
 
-/** Policies view: thresholds, patterns, relocation and projection on the last snapshot. */
+/** Settings view: thresholds, patterns, baselines, relocation and deletion. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -33,6 +45,7 @@ const bandHeadroom = 1.6;
     DsButton,
     DsCallout,
     DsIcon,
+    DsIconButton,
     DsInput,
     DsPanel,
     DsStatusDot,
@@ -43,15 +56,21 @@ const bandHeadroom = 1.6;
   templateUrl: './project-settings.html',
 })
 export class ProjectSettings {
+  private readonly dialogs = inject(WorkspaceDialogs);
+
   protected readonly context = inject(ProjectContext);
 
   protected readonly mergedActiveUntilDays = mergedActiveUntilDays;
   protected readonly mergedInactiveAfterDays = mergedInactiveAfterDays;
+  protected readonly maximumBaselineCount = maximumBaselineCount;
+  protected readonly baselineRemoveLabel = baselineRemoveLabel;
+  protected readonly baselineMoveUpLabel = baselineMoveUpLabel;
 
   protected readonly activeUntilDays = signal('30');
   protected readonly inactiveAfterDays = signal('90');
   protected readonly protectedPatterns = signal<readonly string[]>([]);
   protected readonly excludedPatterns = signal<readonly string[]>([]);
+  protected readonly baselines = signal<readonly string[]>([]);
   protected readonly newProtected = signal('');
   protected readonly newExcluded = signal('');
   protected readonly relocationPath = signal('');
@@ -90,6 +109,20 @@ export class ProjectSettings {
       : $localize`:@@settings.dirty.clean:Policy up to date.`,
   );
 
+  protected readonly canAddBaseline = computed(() => canAddBaseline(this.baselines()));
+  /** A project needs at least one reference to compare against. */
+  protected readonly canRemoveBaseline = computed(() => this.baselines().length > 1);
+
+  protected readonly isBaselineDirty = computed(() =>
+    isBaselineListDirty(this.baselines(), this.context.project()?.referenceNames ?? []),
+  );
+
+  protected readonly baselineDirtyLabel = computed(() =>
+    this.isBaselineDirty()
+      ? $localize`:@@settings.baselines.dirty:Unsaved baselines — save them to measure them.`
+      : $localize`:@@settings.baselines.clean:Baselines up to date.`,
+  );
+
   protected readonly bands = computed(() => {
     const draft = this.draft();
     const span = Math.max(draft.inactiveAfterDays * bandHeadroom, minimumBandDays);
@@ -114,9 +147,15 @@ export class ProjectSettings {
     this.branches().map((branch) => branch.referenceName),
   );
 
-  protected readonly pickerPatterns = computed<readonly string[]>(() =>
-    this.pickerKind() === 'excluded' ? this.excludedPatterns() : this.protectedPatterns(),
-  );
+  /** What the picker must already consider taken, whichever list it is feeding. */
+  protected readonly pickerPatterns = computed<readonly string[]>(() => {
+    const kind = this.pickerKind();
+    if (kind === 'baseline') {
+      return this.baselines();
+    }
+
+    return kind === 'excluded' ? this.excludedPatterns() : this.protectedPatterns();
+  });
 
   constructor() {
     effect(() => this.reset());
@@ -132,6 +171,7 @@ export class ProjectSettings {
     this.inactiveAfterDays.set(String(project.inactiveAfterDays));
     this.protectedPatterns.set(project.protectedPatterns);
     this.excludedPatterns.set(project.excludedPatterns);
+    this.baselines.set(project.referenceNames);
   }
 
   protected addProtected(): void {
@@ -160,8 +200,35 @@ export class ProjectSettings {
       return;
     }
 
+    if (kind === 'baseline') {
+      this.baselines.update((current) => addBaselines(current, references));
+      return;
+    }
+
     const target = kind === 'excluded' ? this.excludedPatterns : this.protectedPatterns;
     target.update((patterns) => references.reduce(append, patterns));
+  }
+
+  protected dropBaseline(reference: string): void {
+    this.baselines.update((current) => removeBaseline(current, reference));
+  }
+
+  /** One step towards the primary position: repeated, it reaches any order. */
+  protected promoteBaseline(reference: string): void {
+    this.baselines.update((current) => moveBaseline(current, reference, -1));
+  }
+
+  protected saveBaselines(): void {
+    if (this.isBaselineDirty()) {
+      this.context.saveBaselines(this.baselines());
+    }
+  }
+
+  protected openProjectDelete(): void {
+    const project = this.context.project();
+    if (project !== null) {
+      this.dialogs.openProjectDelete(project.id);
+    }
   }
 
   protected removeProtected(pattern: string): void {

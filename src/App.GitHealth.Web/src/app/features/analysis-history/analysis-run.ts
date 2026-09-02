@@ -13,6 +13,8 @@ export interface AnalysisRun {
   readonly statusLabel: string;
   readonly tone: Tone;
   readonly isOpenable: boolean;
+  /** The API refuses to delete a running analysis: the action must not be offered. */
+  readonly isDeletable: boolean;
   /** What to add to the repository URL so that it shows this capture. */
   readonly captureParams: Params;
   readonly startedAtUtc: string;
@@ -59,6 +61,7 @@ function toRun(item: AnalysisHistoryItem, previous: AnalysisHistoryItem | undefi
     statusLabel: statusLabels[item.status],
     tone: statusTones[item.status],
     isOpenable: isCompleted,
+    isDeletable: item.status !== 'Running',
     captureParams: { [captureQueryParam]: item.analysisId },
     startedAtUtc: item.startedAtUtc,
     duration: elapsedDuration(item.startedAtUtc, item.completedAtUtc),

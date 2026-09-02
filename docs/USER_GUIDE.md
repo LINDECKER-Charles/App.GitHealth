@@ -14,11 +14,14 @@ database.
 - [Adding a repository](#adding-a-repository)
 - [Scanning a whole folder](#scanning-a-whole-folder)
 - [Reading an analysis](#reading-an-analysis)
+- [Comparing against several baselines](#comparing-against-several-baselines)
+- [Filtering by author](#filtering-by-author)
 - [Understanding the recommendations](#understanding-the-recommendations)
 - [Explaining a branch](#explaining-a-branch)
 - [Configuring policies](#configuring-policies)
 - [Relocating a repository that moved](#relocating-a-repository-that-moved)
 - [History and exports](#history-and-exports)
+- [Deleting captures and repositories](#deleting-captures-and-repositories)
 - [Stopping and resuming](#stopping-and-resuming)
 - [Frequently asked questions](#frequently-asked-questions)
 - [Going further](#going-further)
@@ -271,6 +274,41 @@ chips recall what is narrowing the view and can be removed one by one.
 Ticking rows opens the bulk actions: protect, exclude, copy the matching `git` commands,
 or export the selection.
 
+## Comparing against several baselines
+
+A repository can declare up to eight comparison baselines — typically `dev`, `test` and
+`main`. Each one is measured independently and keeps its own history, so the same branch can
+be four commits ahead of `dev` and forty ahead of `main`, and both readings stay available.
+
+The **Baseline** selector in the repository header switches between them. Every tab, every
+link and the CSV export follow the selection, and it travels in the URL (`?baseline=`), so a
+view can be shared or reloaded without losing it. The first baseline in the list is the
+**primary** one: it is what you see before choosing anything.
+
+**Run an analysis** measures every declared baseline in one go, as separate runs. That means
+a baseline whose branch has been deleted fails on its own without taking the others down, and
+each run gets the full analysis timeout rather than sharing one. It also means the work is
+multiplied: three baselines cost roughly three times one, which is worth knowing on a large
+repository.
+
+The list is edited in **Policies** → **Baselines**, using the same picker as the patterns.
+Reordering it changes which baseline is primary; it never detaches a baseline from the
+captures already taken against it, because a baseline is identified by its branch name.
+
+Repositories added before this feature keep their single baseline as the primary one, with
+all their existing captures attached to it.
+
+## Filtering by author
+
+The author selector, under **More filters**, narrows the table to the branches whose **tip
+commit** was written by one person — the quickest way to see which branch belongs to whom.
+The list of names is built from the capture you are reading, so it contains exactly the
+people who appear in it, and it combines with every other filter.
+
+The branch detail panel also names the **top contributor**: whoever wrote most of the commits
+the branch adds to its baseline. That one is empty for a merged branch, which by definition
+adds none — which is why the filter uses the tip author, the only one always present.
+
 ## Understanding the recommendations
 
 Each branch receives three independent qualifications: its **topology** relative to the
@@ -404,6 +442,21 @@ It contains branch names and author identities: treat it as internal data.
 
 To restore a SQLite backup, stop GitHealth, keep a copy of the current database, replace
 `githealth.db`, then restart the application.
+
+## Deleting captures and repositories
+
+A capture can be removed from **History** with the bin icon on its row. Its baseline falls
+back to the previous capture, so the dashboard keeps showing something rather than going
+blank; if it was the only one, the baseline simply has nothing to show until the next
+analysis. A capture still being analysed cannot be deleted — wait for it to finish.
+
+A whole repository is removed from **Policies** → **Danger zone**. That deletes the project,
+its baselines and every capture ever taken of it, and the path becomes available to be added
+again as a fresh project.
+
+Neither action touches the Git repository on disk. GitHealth only ever deletes its own
+measurements — nothing it removes can cost you a commit. Both are irreversible in the
+application, so **Back up the data** first if the history matters.
 
 ## Stopping and resuming
 

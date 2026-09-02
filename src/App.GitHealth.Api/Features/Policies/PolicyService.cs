@@ -97,11 +97,11 @@ internal sealed class PolicyService(
     {
         try
         {
+            // `with` rather than a fresh record: a policy edit must never touch the
+            // baselines or the branch scope, and only copying what changes guarantees it.
             var current = project.ToDomain().Settings;
-            return ApiOutcome<ProjectSettings>.Success(new ProjectSettings
+            return ApiOutcome<ProjectSettings>.Success(current with
             {
-                Reference = current.Reference,
-                BranchNamespace = current.BranchNamespace,
                 Thresholds = ActivityThresholds.Create(
                     request.ActiveUntilDays,
                     request.InactiveAfterDays),

@@ -58,7 +58,45 @@
           } @else {
             <span class="run-unavailable" i18n="@@history.run.noSnapshot">No snapshot to open</span>
           }
+          @if (run.isDeletable) {
+            <button
+              dsIconButton
+              size="sm"
+              icon="trash-2"
+              [label]="deleteLabel(run.shortId)"
+              (click)="askDelete(run.id)"
+            ></button>
+          }
         </header>
+
+        @if (pendingDeleteId() === run.id) {
+          <div class="run-confirm" role="status">
+            <span class="run-confirm-question">{{ deletePrompt() }}</span>
+            <span class="run-confirm-note" i18n="@@history.delete.note">
+              The Git repository is not touched; the other analyses stay as they are.
+            </span>
+            <button
+              dsButton
+              size="sm"
+              variant="ghost"
+              (click)="cancelDelete()"
+              i18n="@@history.delete.cancel"
+            >
+              Cancel
+            </button>
+            <button
+              dsButton
+              size="sm"
+              variant="danger"
+              iconLeft="trash-2"
+              [loading]="isDeleting()"
+              (click)="confirmDelete(run.id)"
+              i18n="@@history.delete.confirm"
+            >
+              Delete
+            </button>
+          </div>
+        }
 
         <div class="run-facts">
           <div>

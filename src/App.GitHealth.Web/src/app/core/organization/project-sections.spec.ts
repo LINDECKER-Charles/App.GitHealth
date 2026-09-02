@@ -19,6 +19,7 @@ function project(
     createdAtUtc: '2026-08-01T00:00:00Z',
     updatedAtUtc: '2026-08-01T00:00:00Z',
     referenceName: 'refs/heads/main',
+    referenceNames: ['refs/heads/main'],
     branchNamespace: 'refs/heads/*',
     activeUntilDays: 30,
     inactiveAfterDays: 90,

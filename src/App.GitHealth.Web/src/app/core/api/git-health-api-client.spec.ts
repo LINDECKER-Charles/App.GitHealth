@@ -21,9 +21,10 @@ import { GitHealthApiClient } from './git-health-api-client';
 const projectId = '11111111-1111-1111-1111-111111111111';
 const analysisId = '22222222-2222-2222-2222-222222222222';
 const snapshotId = '33333333-3333-3333-3333-333333333333';
+const referenceName = 'refs/heads/main';
 
 const settings: ProjectSettingsRequest = {
-  referenceName: 'refs/heads/main',
+  referenceName,
   branchNamespace: 'refs/heads/*',
   activeUntilDays: 30,
   inactiveAfterDays: 90,
@@ -38,7 +39,8 @@ const project: ProjectResponse = {
   isRepositoryAccessible: true,
   createdAtUtc: '2026-08-29T07:00:00Z',
   updatedAtUtc: '2026-08-29T08:00:00Z',
-  referenceName: settings.referenceName,
+  referenceName,
+  referenceNames: [referenceName],
   branchNamespace: settings.branchNamespace,
   activeUntilDays: settings.activeUntilDays,
   inactiveAfterDays: settings.inactiveAfterDays,
@@ -64,6 +66,7 @@ const snapshot: BranchSnapshotResponse = {
   reason: 'The branch contains its own commits.',
   isProtected: false,
   isExcluded: false,
+  topContributor: { name: 'Ada Lovelace', email: 'ada@example.test', commitCount: 2 },
 };
 
 describe('GitHealthApiClient', () => {
@@ -185,9 +188,11 @@ describe('GitHealthApiClient', () => {
   });
 
   it('launches an analysis and gets its status', async () => {
+    const statusUrl = `/api/analyses/${analysisId}`;
     const launch: AnalysisLaunchResponse = {
+      analyses: [{ analysisId, referenceName, statusUrl, isDuplicate: false }],
       analysisId,
-      statusUrl: `/api/analyses/${analysisId}`,
+      statusUrl,
       isDuplicate: false,
     };
     const launchResult = firstValueFrom(client.launchAnalysis(projectId));

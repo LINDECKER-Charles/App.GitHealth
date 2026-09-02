@@ -8,6 +8,9 @@ namespace App.GitHealth.Api.Tests.Analyses;
 public sealed class AnalysisHistoryEndpointTests
 {
     private const string BranchNamespace = "refs/heads/feature/*";
+    private const string PrimaryBaseline = "refs/heads/main";
+    private const string SecondaryBaseline = "refs/heads/release";
+    private const string SecondaryBranch = "release";
 
     [Fact]
     public async Task HistoryIsPagedAndPreservesEachAnalysisPolicy()
@@ -30,6 +33,78 @@ public sealed class AnalysisHistoryEndpointTests
         await AssertCapturedPolicyAsync(client, firstAnalysisId, DefaultPolicy());
         await AssertCapturedPolicyAsync(client, secondAnalysisId, UpdatedPolicy());
         await AssertInvalidPageAsync(client, projectId);
+    }
+
+    [Fact]
+    public async Task HistoryCanBeFilteredByBaseline()
+    {
+        using var repository = CreateMultiBaselineRepository();
+        using var factory = CreateFactory(repository.RootPath);
+        using var client = factory.CreateClient();
+        var projectId = await ApiTestWorkflow.CreateProjectAsync(
+            client,
+            repository.RepositoryPath,
+            ApiTestWorkflow.MultiBaselineSettings(PrimaryBaseline, SecondaryBaseline));
+        await ApiTestWorkflow.AnalyzeAllAsync(client, projectId);
+        await ApiTestWorkflow.AnalyzeAllAsync(client, projectId);
+
+        var everything = await ReadHistoryAsync(client, projectId, baseline: null);
+        var scoped = await ReadHistoryAsync(client, projectId, SecondaryBaseline);
+
+        Assert.Equal(4, everything.GetProperty("totalCount").GetInt32());
+        Assert.Equal(2, scoped.GetProperty("totalCount").GetInt32());
+        Assert.All(
+            scoped.GetProperty("items").EnumerateArray(),
+            item => Assert.Equal(
+                SecondaryBaseline,
+                item.GetProperty("referenceName").GetString()));
+    }
+
+    [Fact]
+    public async Task DeletingACaptureRemovesItFromTheHistory()
+    {
+        using var repository = GitTestRepository.Create(aheadBranchCount: 1);
+        using var factory = CreateFactory(repository.RootPath);
+        using var client = factory.CreateClient();
+        var projectId = await ApiTestWorkflow.CreateProjectAsync(
+            client,
+            repository.RepositoryPath);
+        var older = await ApiTestWorkflow.AnalyzeAsync(client, projectId);
+        var newer = await ApiTestWorkflow.AnalyzeAsync(client, projectId);
+
+        using var deletion = await client.DeleteAsync($"/api/analyses/{older}");
+
+        Assert.Equal(HttpStatusCode.NoContent, deletion.StatusCode);
+        var history = await ReadHistoryAsync(client, projectId, baseline: null);
+        Assert.Equal(1, history.GetProperty("totalCount").GetInt32());
+        var survivor = Assert.Single(history.GetProperty("items").EnumerateArray());
+        Assert.Equal(newer, survivor.GetProperty("analysisId").GetGuid());
+    }
+
+    private static ApiApplicationFactory CreateFactory(string repositoriesRoot) => new()
+    {
+        RepositoriesRoot = repositoriesRoot,
+    };
+
+    private static GitTestRepository CreateMultiBaselineRepository()
+    {
+        var repository = GitTestRepository.Create(aheadBranchCount: 1);
+        repository.AddSynchronizedBranch(SecondaryBranch);
+        return repository;
+    }
+
+    private static async Task<JsonElement> ReadHistoryAsync(
+        HttpClient client,
+        Guid projectId,
+        string? baseline)
+    {
+        var uri = $"/api/projects/{projectId}/analyses?pageSize=100";
+        if (baseline is not null)
+        {
+            uri += $"&baseline={Uri.EscapeDataString(baseline)}";
+        }
+
+        return await client.GetFromJsonAsync<JsonElement>(uri);
     }
 
     private static async Task UpdatePolicyAsync(HttpClient client, Guid projectId)
