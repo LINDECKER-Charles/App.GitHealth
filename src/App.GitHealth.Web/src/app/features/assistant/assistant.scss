@@ -145,7 +145,7 @@
   color: var(--text-muted);
 }
 
-/* The answer is prose, not code: it keeps the body face and only its line breaks. */
+/* The finished answer is rendered Markdown; the live trace is raw, and reads as raw. */
 .assistant-answer {
   margin: var(--space-2) 0 0;
   padding: var(--space-4);
@@ -153,15 +153,15 @@
   border-radius: var(--radius-md);
   background: var(--surface);
   box-shadow: var(--shadow-xs);
-  font: var(--type-body);
-  font-family: var(--font-sans);
-  color: var(--text-primary);
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
 
-  &.is-live {
-    color: var(--text-secondary);
-  }
+.assistant-answer--live {
+  font: var(--type-code-sm);
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  max-height: 24rem;
+  overflow: auto;
 }
 
 .assistant-command {

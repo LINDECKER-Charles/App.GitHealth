@@ -308,6 +308,9 @@ export interface AssistantAgent {
   readonly installationUrl: string;
   /** Where the search looked and what to set, when the agent was not found. */
   readonly unavailableReason: string | null;
+  /** Effort levels this agent accepts, cheapest first. */
+  readonly efforts: readonly string[];
+  readonly defaultEffort: string;
 }
 
 export interface AssistantAgentList {
@@ -329,6 +332,8 @@ export interface AssistantRunRequest {
   readonly agentId: string;
   readonly question: string;
   readonly baseline?: string | null;
+  /** One of the agent's declared levels; anything else is refused by the API. */
+  readonly effort: string;
 }
 
 export interface AssistantRun {
@@ -336,6 +341,8 @@ export interface AssistantRun {
   readonly projectId: Uuid;
   readonly agentId: string;
   readonly agentName: string;
+  /** The level actually used, which may be the agent's default. */
+  readonly effort: string;
   readonly question: string;
   /** The command as it was run, so it is never a black box. */
   readonly commandLine: string;

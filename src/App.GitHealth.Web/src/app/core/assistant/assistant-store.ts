@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, linkedSignal, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, switchMap, timer } from 'rxjs';
 import { apiErrorMessage } from '../api/api-error';
@@ -12,6 +12,20 @@ export const assistantPollIntervalMs = 700;
 const agentsFailureMessage = $localize`:@@apiError.assistant.agents:The installed agents could not be listed.`;
 const briefingFailureMessage = $localize`:@@apiError.assistant.briefing:The capture could not be prepared.`;
 const startFailureMessage = $localize`:@@apiError.assistant.start:The agent could not be started.`;
+
+/** Named for what the level buys, not for the flag it becomes. */
+const effortLabels: Readonly<Record<string, string>> = {
+  low: $localize`:@@assistant.effort.low:Quick`,
+  medium: $localize`:@@assistant.effort.medium:Balanced`,
+  high: $localize`:@@assistant.effort.high:Thorough`,
+  xhigh: $localize`:@@assistant.effort.xhigh:Very thorough`,
+  max: $localize`:@@assistant.effort.max:Maximum`,
+};
+
+/** An unknown level still reads as itself rather than disappearing from the list. */
+function effortLabel(level: string): string {
+  return effortLabels[level] ?? level;
+}
 
 /**
  * Drives one conversation with a local agent. The briefing is loaded before anything is
@@ -56,6 +70,19 @@ export class AssistantStore {
 
   readonly selectedAgent = computed<AssistantAgent | null>(
     () => this.availableAgents().find((agent) => agent.id === this.agentId()) ?? null,
+  );
+
+  /**
+   * How hard the agent is asked to think. Linked to the selection so changing agent falls
+   * back to that agent's own default rather than carrying over a level it may not accept.
+   */
+  readonly effort = linkedSignal<string>(() => this.selectedAgent()?.defaultEffort ?? '');
+
+  readonly effortOptions = computed<readonly SelectOption[]>(() =>
+    (this.selectedAgent()?.efforts ?? []).map((level) => ({
+      value: level,
+      label: effortLabel(level),
+    })),
   );
 
   readonly isRunning = computed(() => this.run()?.status === 'Running');
@@ -128,6 +155,7 @@ export class AssistantStore {
         agentId: agent.id,
         question: this.question().trim(),
         baseline,
+        effort: this.effort(),
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

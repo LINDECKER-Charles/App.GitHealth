@@ -13,6 +13,7 @@ import { DsInput } from '../../ui/forms/ds-input';
 import { DsSelect } from '../../ui/forms/ds-select';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
 import { DsEmptyState } from '../../ui/surfaces/ds-empty-state';
+import { DsMarkdown } from '../../ui/surfaces/ds-markdown';
 import { BaselineStore } from '../project/baseline/baseline-store';
 
 /** Questions worth one click, chosen to be answerable from the capture alone. */
@@ -37,6 +38,7 @@ const suggestions: readonly string[] = [
     DsCheckbox,
     DsEmptyState,
     DsInput,
+    DsMarkdown,
     DsSelect,
     DsSpinner,
   ],

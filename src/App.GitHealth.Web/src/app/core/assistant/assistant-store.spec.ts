@@ -17,6 +17,8 @@ const claude: AssistantAgent = {
   executablePath: '/usr/local/bin/claude',
   installationUrl: 'https://claude.com/claude-code',
   unavailableReason: null,
+  efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+  defaultEffort: 'medium',
 };
 
 const codex: AssistantAgent = {
@@ -27,6 +29,8 @@ const codex: AssistantAgent = {
   executablePath: null,
   installationUrl: 'https://developers.openai.com/codex/cli',
   unavailableReason: 'Codex CLI was not found.',
+  efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+  defaultEffort: 'low',
 };
 
 const briefing: AssistantBriefing = {
@@ -100,7 +104,12 @@ describe('AssistantStore', () => {
     ask();
 
     const request = http.expectOne(`/api/projects/${projectId}/assistant/runs`);
-    expect(request.request.body).toEqual({ agentId: 'claude', question, baseline });
+    expect(request.request.body).toEqual({
+      agentId: 'claude',
+      question,
+      baseline,
+      effort: 'medium',
+    });
     request.flush(run());
   });
 
@@ -146,6 +155,44 @@ describe('AssistantStore', () => {
     expect(store.run()).toBeNull();
     expect(store.output()).toBe('');
     expect(store.question()).toContain(question);
+  });
+
+  it('offers the levels the selected agent declares, starting on its default', () => {
+    loadAgents();
+
+    expect(store.effort()).toBe('medium');
+    expect(store.effortOptions().map((option) => option.value)).toEqual([
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+    ]);
+    expect(store.effortOptions()[0].label).toBe('Quick');
+  });
+
+  it('sends the chosen level rather than the default', () => {
+    loadAgents();
+    store.effort.set('xhigh');
+    ask();
+
+    const request = http.expectOne(`/api/projects/${projectId}/assistant/runs`);
+    expect(request.request.body).toMatchObject({ effort: 'xhigh' });
+    request.flush(run());
+  });
+
+  /**
+   * Levels are per agent. Carrying one over to an agent that does not declare it would send
+   * a run the API is bound to refuse.
+   */
+  it('falls back to the new agent default when the agent changes', () => {
+    loadAgents();
+    store.effort.set('max');
+
+    store.agents.set([{ ...codex, isAvailable: true, version: 'codex-cli 0.150.1' }]);
+    store.agentId.set('codex');
+
+    expect(store.effort()).toBe('low');
   });
 
   it('reports a disabled installation rather than an empty list', () => {
@@ -203,6 +250,7 @@ describe('AssistantStore', () => {
       projectId,
       agentId: 'claude',
       agentName: 'Claude Code',
+      effort: 'medium',
       question,
       commandLine: '/usr/local/bin/claude --print',
       status: 'Running',

@@ -58,9 +58,23 @@
     />
     @if (store.selectedAgent(); as agent) {
       <ds-badge size="sm" tone="success" icon="circle-check">{{ agent.version }}</ds-badge>
+      <span class="assistant-agent-label" i18n="@@assistant.effort.label">Reasoning</span>
+      <ds-select
+        size="sm"
+        i18n-ariaLabel="@@assistant.effort.aria"
+        ariaLabel="How hard the agent thinks"
+        [options]="store.effortOptions()"
+        [value]="store.effort()"
+        [disabled]="store.isRunning()"
+        (valueChange)="store.effort.set($event)"
+      />
       <span class="assistant-agent-path">{{ agent.executablePath }}</span>
     }
   </div>
+  <p class="assistant-state" i18n="@@assistant.effort.hint">
+    A deeper level reads the same capture more carefully. It is slower, and it spends more of your
+    own quota with the agent's provider.
+  </p>
 
   <section class="assistant-section">
     <header class="assistant-section-head">
@@ -224,8 +238,10 @@
         </ds-callout>
       }
 
-      @if (store.output(); as text) {
-        <pre class="assistant-answer" [class.is-live]="store.isRunning()">{{ text }}</pre>
+      @if (run.answer; as answer) {
+        <div class="assistant-answer"><ds-markdown [text]="answer" /></div>
+      } @else if (store.trace(); as trace) {
+        <pre class="assistant-answer assistant-answer--live">{{ trace }}</pre>
       }
 
       <details class="assistant-command">
