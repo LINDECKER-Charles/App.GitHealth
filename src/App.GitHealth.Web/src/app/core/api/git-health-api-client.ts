@@ -6,6 +6,10 @@ import {
   AnalysisHistoryResponse,
   AnalysisLaunchResponse,
   AnalysisStatusResponse,
+  AssistantAgentList,
+  AssistantBriefing,
+  AssistantRun,
+  AssistantRunRequest,
   BaselineListResponse,
   CreateProjectRequest,
   DirectoryListing,
@@ -194,6 +198,40 @@ export class GitHealthApiClient {
     const params = snapshotParams(query).toString();
     const url = `${projectUrl(projectId)}/analyses/latest/branches.csv`;
     return params.length === 0 ? url : `${url}?${params}`;
+  }
+
+  /** `refresh` probes the machine again, for a CLI installed since the app was opened. */
+  listAssistantAgents(refresh = false): Observable<AssistantAgentList> {
+    const params = setParam(new HttpParams(), 'refresh', refresh || null);
+    return this.request(
+      this.http.get<AssistantAgentList>(`${apiRoot}/assistant/agents`, { params }),
+    );
+  }
+
+  /** The exact text a run would send, read before the run is allowed to start. */
+  getAssistantBriefing(projectId: string, baseline?: string | null): Observable<AssistantBriefing> {
+    const params = setParam(new HttpParams(), 'baseline', baseline);
+    const url = `${projectUrl(projectId)}/assistant/briefing`;
+    return this.request(this.http.get<AssistantBriefing>(url, { params }));
+  }
+
+  startAssistantRun(projectId: string, request: AssistantRunRequest): Observable<AssistantRun> {
+    const url = `${projectUrl(projectId)}/assistant/runs`;
+    return this.request(this.http.post<AssistantRun>(url, request));
+  }
+
+  /** `from` is the trace offset already received, so a poll carries only what is new. */
+  getAssistantRun(runId: string, from: number): Observable<AssistantRun> {
+    const id = encodeURIComponent(runId);
+    const params = setParam(new HttpParams(), 'from', from);
+    return this.request(this.http.get<AssistantRun>(`${apiRoot}/assistant/runs/${id}`, { params }));
+  }
+
+  cancelAssistantRun(runId: string): Observable<AssistantRun> {
+    const id = encodeURIComponent(runId);
+    return this.request(
+      this.http.post<AssistantRun>(`${apiRoot}/assistant/runs/${id}/cancel`, null),
+    );
   }
 
   private request<T>(source: Observable<T>): Observable<T> {

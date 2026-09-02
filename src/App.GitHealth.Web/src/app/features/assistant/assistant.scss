@@ -1,0 +1,208 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  padding: 14px 20px 20px;
+  overflow: auto;
+}
+
+.assistant-intro {
+  margin: 0 0 var(--space-4);
+  max-width: var(--prose-max);
+  font: var(--type-small);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.assistant-state {
+  margin: var(--space-2) 0 0;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.assistant-agent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+.assistant-agent-label {
+  font: var(--type-label);
+  color: var(--text-muted);
+}
+
+.assistant-agent-path {
+  font: var(--type-code-sm);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.assistant-section {
+  max-width: var(--content-max);
+  margin-bottom: var(--space-6);
+
+  h2 {
+    margin: 0;
+    font: var(--type-subheading);
+    color: var(--text-primary);
+  }
+}
+
+.assistant-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.assistant-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin: 0 0 var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* The whole consent rests on this being readable, so it scrolls rather than truncating. */
+.assistant-briefing {
+  margin: var(--space-2) 0;
+  padding: var(--space-3);
+  max-height: 22rem;
+  overflow: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-code);
+  font: var(--type-code-sm);
+  color: var(--text-code);
+  white-space: pre;
+}
+
+.assistant-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  font: var(--type-small);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-wrap: pretty;
+}
+
+.assistant-ask {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.assistant-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.assistant-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.assistant-suggestion {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font: var(--type-small);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-surface);
+
+  &:hover:not(:disabled) {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+  }
+
+  &:disabled {
+    color: var(--text-disabled);
+    cursor: default;
+  }
+}
+
+.assistant-running {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+/* The answer is prose, not code: it keeps the body face and only its line breaks. */
+.assistant-answer {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  font: var(--type-body);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  &.is-live {
+    color: var(--text-secondary);
+  }
+}
+
+.assistant-command {
+  margin-top: var(--space-3);
+  font: var(--type-small);
+  color: var(--text-muted);
+
+  summary {
+    cursor: pointer;
+  }
+
+  pre {
+    margin: var(--space-2) 0 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--surface-code);
+    font: var(--type-code-sm);
+    color: var(--text-code);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+.assistant-candidates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  text-align: left;
+}
+
+.assistant-candidate {
+  font: var(--type-small);
+  color: var(--text-muted);
+
+  p {
+    margin: var(--space-1) 0;
+    text-wrap: pretty;
+  }
+
+  a {
+    color: var(--text-link);
+  }
+}

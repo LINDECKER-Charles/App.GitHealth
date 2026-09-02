@@ -56,6 +56,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'assistant',
+        loadComponent: () =>
+          import('./features/assistant/assistant').then(({ Assistant }) => Assistant),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/project-settings/project-settings').then(

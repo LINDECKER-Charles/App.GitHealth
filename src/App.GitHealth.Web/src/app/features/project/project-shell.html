@@ -159,6 +159,15 @@
       </a>
       <a
         class="etb-tabs__tab"
+        [class.etb-tabs__tab--on]="activeTab() === 'assistant'"
+        [routerLink]="['/projects', projectId(), 'assistant']"
+        [queryParams]="captureLink()"
+      >
+        <ds-icon name="sparkles" [size]="14" />
+        <ng-container i18n="@@project.tabs.assistant">Assistant</ng-container>
+      </a>
+      <a
+        class="etb-tabs__tab"
         [class.etb-tabs__tab--on]="activeTab() === 'settings'"
         [routerLink]="['/projects', projectId(), 'settings']"
         [queryParams]="captureLink()"

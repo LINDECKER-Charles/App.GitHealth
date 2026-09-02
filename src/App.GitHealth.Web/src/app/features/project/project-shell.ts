@@ -25,7 +25,7 @@ import { BaselineStore } from './baseline/baseline-store';
 import { CaptureStore } from './capture-store';
 import { ProjectContext } from './project-context';
 
-type TabId = 'diagnostic' | 'visualisation' | 'history' | 'settings';
+type TabId = 'diagnostic' | 'visualisation' | 'history' | 'assistant' | 'settings';
 
 const readingRepositoryLabel = $localize`:@@project.state.reading:Reading the repository…`;
 
@@ -33,6 +33,7 @@ const readingRepositoryLabel = $localize`:@@project.state.reading:Reading the re
 const tabSegments: readonly (readonly [string, TabId])[] = [
   ['/visualisation', 'visualisation'],
   ['/history', 'history'],
+  ['/assistant', 'assistant'],
   ['/settings', 'settings'],
 ];
 

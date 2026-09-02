@@ -1,0 +1,237 @@
+<p class="assistant-intro" i18n="@@assistant.intro">
+  Asks an agent already installed on this machine to read the capture below. The agent never opens
+  the repository and can change nothing in it — it is given this text and nothing else.
+</p>
+
+@if (!store.isEnabled()) {
+  <ds-callout
+    tone="neutral"
+    i18n-title="@@assistant.disabled.title"
+    title="The assistant is turned off on this installation"
+    i18n="@@assistant.disabled.body"
+  >
+    Every other GitHealth feature works without a network. This one does not, so it can be disabled
+    outright with the <code>GitHealth:Assistant:Enabled</code> setting — and it is.
+  </ds-callout>
+} @else if (store.isLoadingAgents()) {
+  <p class="assistant-state" i18n="@@assistant.looking">Looking for installed agents…</p>
+} @else if (!store.hasAvailableAgent()) {
+  <ds-empty-state
+    icon="sparkles"
+    i18n-title="@@assistant.none.title"
+    title="No agent found on this machine"
+    i18n-description="@@assistant.none.description"
+    description="GitHealth drives a command-line agent you already have. It never installs one."
+  >
+    <div class="assistant-candidates">
+      @for (agent of store.agents(); track agent.id) {
+        <div class="assistant-candidate">
+          <strong>{{ agent.name }}</strong>
+          <p>{{ agent.unavailableReason }}</p>
+          <a [href]="agent.installationUrl" target="_blank" rel="noreferrer noopener">
+            {{ agent.installationUrl }}
+          </a>
+        </div>
+      }
+    </div>
+    <button
+      dsButton
+      size="sm"
+      variant="secondary"
+      iconLeft="refresh-cw"
+      (click)="lookAgain()"
+      i18n="@@assistant.none.retry"
+    >
+      Look again
+    </button>
+  </ds-empty-state>
+} @else {
+  <div class="assistant-agent">
+    <span class="assistant-agent-label" i18n="@@assistant.agent.label">Agent</span>
+    <ds-select
+      size="sm"
+      i18n-ariaLabel="@@assistant.agent.aria"
+      ariaLabel="Agent that answers"
+      [options]="store.agentOptions()"
+      [value]="store.agentId()"
+      (valueChange)="store.agentId.set($event)"
+    />
+    @if (store.selectedAgent(); as agent) {
+      <ds-badge size="sm" tone="success" icon="circle-check">{{ agent.version }}</ds-badge>
+      <span class="assistant-agent-path">{{ agent.executablePath }}</span>
+    }
+  </div>
+
+  <section class="assistant-section">
+    <header class="assistant-section-head">
+      <h2 i18n="@@assistant.briefing.title">What would leave this machine</h2>
+      @if (hasCapture()) {
+        <button
+          dsButton
+          size="sm"
+          variant="ghost"
+          [iconLeft]="store.isBriefingOpen() ? 'eye-off' : 'eye'"
+          (click)="store.toggleBriefing()"
+        >
+          {{ store.isBriefingOpen() ? briefingHideLabel : briefingShowLabel }}
+        </button>
+      }
+    </header>
+
+    @if (store.isLoadingBriefing()) {
+      <p class="assistant-state" i18n="@@assistant.briefing.loading">Preparing the capture…</p>
+    } @else if (store.briefing(); as briefing) {
+      <p class="assistant-summary">
+        <ds-badge size="sm" tone="info" icon="git-branch" [mono]="true">
+          {{ baselineLabel() }}
+        </ds-badge>
+        <span>{{ branchCountLabel() }}</span>
+        <span>{{ briefing.capturedAtUtc | date: 'medium' }}</span>
+      </p>
+      @if (omittedLabel(); as notice) {
+        <p class="assistant-state">{{ notice }}</p>
+      }
+      @if (store.isBriefingOpen()) {
+        <pre class="assistant-briefing">{{ briefing.text }}</pre>
+      }
+      <label class="assistant-consent">
+        <ds-checkbox
+          [checked]="store.hasConsented()"
+          (checkedChange)="store.hasConsented.set($event)"
+          i18n-ariaLabel="@@assistant.consent.aria"
+          ariaLabel="Agree that this capture leaves the machine"
+        />
+        <span i18n="@@assistant.consent.label">
+          I understand this capture — branch names, dates and author names — is sent to the agent's
+          provider, and is billed to my own account there.
+        </span>
+      </label>
+    } @else {
+      <ds-callout
+        tone="warning"
+        i18n-title="@@assistant.briefing.missing.title"
+        title="No capture to read yet"
+        i18n="@@assistant.briefing.missing.body"
+      >
+        Run an analysis on this baseline first. The assistant reads measurements already taken; it
+        never takes them itself.
+      </ds-callout>
+    }
+  </section>
+
+  @if (hasCapture()) {
+    <section class="assistant-section">
+      <h2 i18n="@@assistant.question.title">Your question</h2>
+      <div class="assistant-ask">
+        <ds-input
+          class="assistant-input"
+          i18n-placeholder="@@assistant.question.placeholder"
+          placeholder="Which branches look safe to clean up, and why?"
+          i18n-ariaLabel="@@assistant.question.aria"
+          ariaLabel="Question about this capture"
+          [value]="store.question()"
+          (valueChange)="store.question.set($event)"
+          (submit)="ask()"
+        />
+        @if (store.isRunning()) {
+          <button
+            dsButton
+            variant="secondary"
+            iconLeft="x"
+            (click)="store.cancel()"
+            i18n="@@assistant.action.stop"
+          >
+            Stop
+          </button>
+        } @else {
+          <button
+            dsButton
+            variant="primary"
+            iconLeft="sparkles"
+            [disabled]="!store.canRun()"
+            [loading]="store.isStarting()"
+            (click)="ask()"
+            i18n="@@assistant.action.ask"
+          >
+            Ask
+          </button>
+        }
+      </div>
+      <div class="assistant-suggestions">
+        @for (suggestion of suggestions; track suggestion) {
+          <button
+            class="assistant-suggestion"
+            type="button"
+            [disabled]="store.isRunning()"
+            (click)="useSuggestion(suggestion)"
+          >
+            {{ suggestion }}
+          </button>
+        }
+      </div>
+    </section>
+  }
+
+  @if (store.error(); as message) {
+    <ds-callout
+      tone="danger"
+      i18n-title="@@assistant.error.title"
+      title="The assistant could not be reached"
+      >{{ message }}</ds-callout
+    >
+  }
+
+  @if (store.run(); as run) {
+    <section class="assistant-section">
+      <header class="assistant-section-head">
+        <h2 i18n="@@assistant.answer.title">Answer</h2>
+        @if (store.isRunning()) {
+          <span class="assistant-running" role="status" aria-live="polite">
+            <ds-spinner [size]="13" />
+            <span i18n="@@assistant.answer.running">{{ run.agentName }} is reading…</span>
+          </span>
+        } @else {
+          <button
+            dsButton
+            size="sm"
+            variant="ghost"
+            iconLeft="x"
+            (click)="store.clear()"
+            i18n="@@assistant.answer.clear"
+          >
+            Clear
+          </button>
+        }
+      </header>
+
+      @if (failure(); as message) {
+        <ds-callout
+          tone="danger"
+          i18n-title="@@assistant.answer.failed"
+          title="The agent stopped without answering"
+          >{{ message }}</ds-callout
+        >
+      } @else if (wasCancelled()) {
+        <ds-callout tone="neutral" i18n="@@assistant.answer.cancelled">
+          The run was stopped. Nothing further was sent.
+        </ds-callout>
+      }
+
+      @if (run.isTruncated) {
+        <ds-callout tone="warning" i18n="@@assistant.answer.truncated">
+          The agent wrote more than GitHealth accepts and was stopped. What follows is the part that
+          was read.
+        </ds-callout>
+      }
+
+      @if (store.output(); as text) {
+        <pre class="assistant-answer" [class.is-live]="store.isRunning()">{{ text }}</pre>
+      }
+
+      <details class="assistant-command">
+        <summary i18n="@@assistant.command.summary">Command that was run</summary>
+        <pre>{{ run.commandLine }}</pre>
+      </details>
+    </section>
+  }
+}

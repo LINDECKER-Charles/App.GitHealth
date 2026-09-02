@@ -294,3 +294,61 @@ export type AnalysisStatus = AnalysisStatusResponse;
 export type BranchSnapshot = BranchSnapshotResponse;
 
 export type SnapshotPage = SnapshotPageResponse;
+
+export type AssistantRunStatus = 'Running' | 'Completed' | 'Failed' | 'Cancelled';
+
+/** One command-line agent GitHealth knows how to drive, and whether it can be driven here. */
+export interface AssistantAgent {
+  readonly id: string;
+  readonly name: string;
+  readonly isAvailable: boolean;
+  /** What the CLI answered to its version flag, or `null` when it never answered. */
+  readonly version: string | null;
+  readonly executablePath: string | null;
+  readonly installationUrl: string;
+  /** Where the search looked and what to set, when the agent was not found. */
+  readonly unavailableReason: string | null;
+}
+
+export interface AssistantAgentList {
+  /** False turns the feature off for the installation, whatever is on the machine. */
+  readonly isEnabled: boolean;
+  readonly agents: readonly AssistantAgent[];
+}
+
+/** The capture as it would be handed to an agent, shown before anything is sent. */
+export interface AssistantBriefing {
+  readonly baseline: string;
+  readonly capturedAtUtc: UtcDateTime;
+  readonly branchCount: number;
+  readonly omittedBranchCount: number;
+  readonly text: string;
+}
+
+export interface AssistantRunRequest {
+  readonly agentId: string;
+  readonly question: string;
+  readonly baseline?: string | null;
+}
+
+export interface AssistantRun {
+  readonly runId: Uuid;
+  readonly projectId: Uuid;
+  readonly agentId: string;
+  readonly agentName: string;
+  readonly question: string;
+  /** The command as it was run, so it is never a black box. */
+  readonly commandLine: string;
+  readonly status: AssistantRunStatus;
+  readonly startedAtUtc: UtcDateTime;
+  readonly completedAtUtc: UtcDateTime | null;
+  /** What the agent wrote since the offset asked for, not the whole log. */
+  readonly trace: string;
+  /** Offset to send on the next poll. */
+  readonly traceOffset: number;
+  readonly answer: string | null;
+  readonly failureCode: string | null;
+  readonly failureMessage: string | null;
+  /** The agent wrote past the budget and was stopped short. */
+  readonly isTruncated: boolean;
+}

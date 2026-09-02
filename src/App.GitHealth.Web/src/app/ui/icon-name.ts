@@ -34,6 +34,7 @@ export type IconName =
   | 'refresh-cw'
   | 'search'
   | 'settings'
+  | 'sparkles'
   | 'star'
   | 'star-filled'
   | 'sun'
