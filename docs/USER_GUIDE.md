@@ -340,9 +340,21 @@ verdict and its reason, the protected and excluded flags, and the tip author's n
 Contributor email addresses are never included. Read it, then tick the box that agrees to it
 leaving the machine.
 
+**Choosing how hard it thinks.** Next to the agent, a selector goes from **Quick** to
+**Maximum**, through **Balanced**, **Thorough** and **Very thorough**. Both agents accept the
+same five levels, so the one you pick is the one the CLI receives. A deeper level reads the
+same capture more carefully; it is slower and spends more of your quota, which is why
+**Balanced** is the default rather than the top of the scale.
+
 **Asking.** Type a question, or take one of the suggestions. The answer appears as the agent
-writes it; **Stop** ends the run. The command that was run stays readable underneath the
-answer, so nothing about the exchange is hidden from you.
+writes it; **Stop** ends the run. Once finished it is rendered as it was written — headings,
+lists, tables, quotes and code all read as themselves rather than as raw Markdown. The
+command that was run stays readable underneath, so nothing about the exchange is hidden from
+you.
+
+Links in an answer are only clickable when they point at `http`, `https` or `mailto`.
+Anything else stays visible as plain text: an agent's answer is text to read, not a place to
+follow instructions from.
 
 **What the agent can and cannot do.** It gets the briefing and nothing else. It runs in an
 empty temporary directory — never in your repository — and is started in its own read-only

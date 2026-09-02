@@ -20,8 +20,11 @@ built that way and what it costs.
   read-only mode, so the guarantee that GitHealth changes nothing in your repository holds
   even though the process running is somebody else's. Before anything is sent the exact text
   is shown in full — repository, baseline, policy and one row per branch, without contributor
-  email addresses — and has to be agreed to; the answer then streams in as the agent writes
-  it, with the command that was run readable underneath and a stop button throughout. This is
+  email addresses — and has to be agreed to. You also choose how hard the agent should think,
+  from quick to maximum, on a ladder both agents share. The answer then streams in as the
+  agent writes it and is rendered as it was written — headings, lists, tables and code, not a
+  wall of asterisks — with the command that was run readable underneath and a stop button
+  throughout. This is
   the one feature that reaches a network, it is billed to your own account with the agent's
   provider, and it can be removed from an installation entirely with
   `GitHealth:Assistant:Enabled=false`;

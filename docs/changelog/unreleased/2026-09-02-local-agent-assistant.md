@@ -3,7 +3,7 @@
 - **Type** — `feat`
 - **Scope** — `core`, `api`, `front`, `docs`
 - **Landed** — 2026-09-02
-- **Commits** — `9daefad`, `ae7fbfe`, `58a1beb`
+- **Commits** — `9daefad`, `ae7fbfe`, `58a1beb`, `8dca00b`, `b97bf0c`, `11156dc`
 
 ## What shipped
 
@@ -21,14 +21,20 @@ The screen states what it is doing in that order:
    branch (ahead, behind, relationship, last commit, topology, activity, GitHealth's own
    verdict and its reason, protected/excluded flags, tip author);
 3. a consent checkbox, naming what is sent and to whom it is billed;
-4. the question, with three suggestions worth one click;
-5. the answer, which streams in as the agent writes it, with the command that was run
-   readable underneath and a **Stop** button while it runs.
+4. how hard the agent should think — **Quick**, **Balanced**, **Thorough**, **Very
+   thorough** or **Maximum** — next to the agent it applies to;
+5. the question, with three suggestions worth one click;
+6. the answer, rendered from the Markdown the agent writes — headings, lists, tables, code,
+   quotes and links — with the command that was run readable underneath and a **Stop**
+   button while it runs.
 
 New routes: `GET /api/assistant/agents` (with `?refresh=true` for an agent installed since
 the app was opened), `GET /api/projects/{id}/assistant/briefing`,
 `POST /api/projects/{id}/assistant/runs`, `GET /api/assistant/runs/{id}?from=` and
 `POST /api/assistant/runs/{id}/cancel`.
+
+The run request carries an `effort`; `GET /api/assistant/agents` publishes the levels each
+agent accepts and its default.
 
 New settings under `GitHealth:Assistant` — `Enabled`, `RunTimeout`, `MaximumOutputBytes`,
 `MaximumBranches`, `MaximumParallelRuns`, and `Agents:<id>:ExecutablePath` to point at a CLI
@@ -64,6 +70,24 @@ started from the Finder or the Explorer inherits the system's minimal `PATH`, no
 user's shell builds — so the CLI installed last week is very often invisible in `PATH` as
 this process sees it. `~/.local/bin`, `/opt/homebrew/bin`, `~/.<agent>/local` and the npm
 prefix are searched explicitly.
+
+**The effort ladder is shared, not mapped.** Claude Code takes `--effort`, Codex takes a
+`model_reasoning_effort` configuration override — but both accept exactly `low`, `medium`,
+`high`, `xhigh` and `max`. That was verified against the installed CLIs rather than assumed,
+so a level shown in the interface is the level the CLI receives, with nothing lost in
+translation. The level ends up inside a command line, so it is allowlisted against what the
+agent declares; an unsupported one is refused rather than downgraded, because a run at the
+wrong effort costs the user real money. Its position is a declared slot rather than an
+append, since Codex reads its overrides as options of `exec` and would silently ignore one
+placed after the marker that ends its command.
+
+**The answer is parsed, not injected.** It is Markdown written by a language model, so it is
+read into a typed tree of blocks and spans and rendered through Angular bindings, which
+escape what they print. There is no `innerHTML` on this path and there must not be one. That
+also avoided a parser dependency: the grammar covered is what an agent actually writes, and
+a link whose target is not `http`, `https` or `mailto` stays visible as the text it was
+written as — neither dropped nor made clickable. The live trace is left raw, because for
+Codex it is a log rather than prose.
 
 **Polling, not streaming.** The trace is read back on a 700 ms poll carrying only what
 appeared since the last offset, which is the transport every other long-running screen in the
