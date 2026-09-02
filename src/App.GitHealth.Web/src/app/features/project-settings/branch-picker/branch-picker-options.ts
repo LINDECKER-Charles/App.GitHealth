@@ -4,8 +4,8 @@ import { sourceLocale } from '../../../core/i18n/locale';
 
 const nameCollator = new Intl.Collator(sourceLocale);
 
-/** The two pattern lists of a policy, told apart by the picker dialog. */
-export type BranchPatternKind = 'protected' | 'excluded';
+/** The reference lists a project edits — the two of the policy, plus its baselines. */
+export type BranchPatternKind = 'protected' | 'excluded' | 'baseline';
 
 export interface BranchPickerOption {
   readonly referenceName: string;

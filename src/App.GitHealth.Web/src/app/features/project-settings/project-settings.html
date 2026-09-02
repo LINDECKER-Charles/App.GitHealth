@@ -182,6 +182,76 @@
       </div>
     </ds-panel>
 
+    <ds-panel i18n-title="@@settings.baselines.title" title="Baselines" icon="git-branch">
+      <div class="panel-content">
+        <p class="panel-intro" i18n="@@settings.baselines.intro">
+          Each baseline keeps its own history of analyses. The first one is the primary baseline: it
+          is the one this repository opens on.
+        </p>
+
+        <div class="pattern-tags">
+          @for (baseline of baselines(); track baseline; let isFirst = $first) {
+            <span class="baseline-chip">
+              @if (isFirst) {
+                <ds-badge size="sm" tone="brand" i18n="@@settings.baselines.primary"
+                  >primary</ds-badge
+                >
+              } @else {
+                <button
+                  dsIconButton
+                  size="sm"
+                  icon="chevron-up"
+                  [label]="baselineMoveUpLabel(baseline)"
+                  (click)="promoteBaseline(baseline)"
+                ></button>
+              }
+              <ds-tag
+                [removable]="canRemoveBaseline()"
+                [removeLabel]="baselineRemoveLabel(baseline)"
+                (remove)="dropBaseline(baseline)"
+                >{{ baseline }}</ds-tag
+              >
+            </span>
+          }
+        </div>
+
+        <div class="pattern-form">
+          <button
+            dsButton
+            size="sm"
+            variant="secondary"
+            iconLeft="plus"
+            type="button"
+            [disabled]="!canAddBaseline()"
+            (click)="openPicker('baseline')"
+            i18n="@@settings.baselines.add"
+          >
+            Add a baseline
+          </button>
+          <span class="baseline-dirty">{{ baselineDirtyLabel() }}</span>
+          <button
+            dsButton
+            size="sm"
+            variant="primary"
+            iconLeft="check"
+            type="button"
+            [disabled]="!isBaselineDirty()"
+            (click)="saveBaselines()"
+            i18n="@@settings.baselines.save"
+          >
+            Save the baselines
+          </button>
+        </div>
+
+        @if (!canAddBaseline()) {
+          <p class="pattern-hint" i18n="@@settings.baselines.full">
+            A repository compares against {{ maximumBaselineCount }} baselines at most. Remove one
+            to add another.
+          </p>
+        }
+      </div>
+    </ds-panel>
+
     <ds-panel i18n-title="@@settings.relocation.title" title="Relocate repository" icon="folder">
       <div class="panel-content">
         <p class="panel-intro" i18n="@@settings.relocation.intro">
@@ -209,6 +279,26 @@
             Relocate
           </button>
         </form>
+      </div>
+    </ds-panel>
+
+    <ds-panel i18n-title="@@settings.danger.title" title="Danger zone" icon="triangle-alert">
+      <div class="panel-content">
+        <p class="panel-intro" i18n="@@settings.danger.intro">
+          Deleting this repository erases every capture saved for it; the Git repository on disk is
+          never touched.
+        </p>
+        <button
+          dsButton
+          size="sm"
+          variant="danger"
+          iconLeft="trash-2"
+          type="button"
+          (click)="openProjectDelete()"
+          i18n="@@settings.danger.action"
+        >
+          Delete this repository
+        </button>
       </div>
     </ds-panel>
 

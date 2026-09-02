@@ -29,6 +29,7 @@ import { BranchPatternKind, BranchPickerOption, buildBranchOptions } from './bra
 const kindSubtitles: Readonly<Record<BranchPatternKind, string>> = {
   protected: $localize`:@@branchPicker.kind.protected:Protected pattern`,
   excluded: $localize`:@@branchPicker.kind.excluded:Exclusion pattern`,
+  baseline: $localize`:@@branchPicker.kind.baseline:Comparison baseline`,
 };
 
 /**

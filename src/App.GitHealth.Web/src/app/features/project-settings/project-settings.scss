@@ -184,6 +184,20 @@
   flex: 1;
 }
 
+/* The rank marker travels with its baseline, so a wrap never splits the pair. */
+.baseline-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.baseline-dirty {
+  flex: 1;
+  align-self: center;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
 .settings-actions {
   display: flex;
   align-items: center;

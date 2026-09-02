@@ -121,6 +121,35 @@ describe('CaptureStore', () => {
     http.verify();
   });
 
+  it('reads the capture history of the baseline being shown', async () => {
+    await withHistory();
+
+    context.baseline.set('refs/heads/dev');
+    TestBed.tick();
+
+    const reload = http.expectOne((request) => request.url.endsWith('/api/projects/p1/analyses'));
+    expect(reload.request.params.get('baseline')).toBe('refs/heads/dev');
+    // The other baseline's captures are gone the moment the switch happens.
+    expect(store.hasCaptures()).toBe(false);
+    reload.flush({ items: [anAnalysis(latestId)], page: 1, pageSize: 100, totalCount: 1 });
+
+    expect(store.captures()).toHaveLength(1);
+    http.verify();
+  });
+
+  it('reads the history again on demand, even when the last analysis has not moved', async () => {
+    await withHistory();
+
+    store.refresh();
+
+    http
+      .expectOne((request) => request.url.endsWith('/api/projects/p1/analyses'))
+      .flush({ items: [anAnalysis(latestId)], page: 1, pageSize: 100, totalCount: 1 });
+
+    expect(store.captures()).toHaveLength(1);
+    http.verify();
+  });
+
   it('keeps the capture being read in the tab links', async () => {
     await withHistory();
     expect(store.captureLink()).toEqual({});
@@ -143,6 +172,7 @@ function aProject(): ProjectResponse {
     createdAtUtc: '2026-08-30T10:00:00.000Z',
     updatedAtUtc: '2026-08-30T10:00:00.000Z',
     referenceName: 'refs/heads/main',
+    referenceNames: ['refs/heads/main', 'refs/heads/dev'],
     branchNamespace: 'refs/heads/*',
     activeUntilDays: 30,
     inactiveAfterDays: 90,

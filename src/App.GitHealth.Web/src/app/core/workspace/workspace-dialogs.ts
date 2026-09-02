@@ -11,6 +11,10 @@ export class WorkspaceDialogs {
   readonly projectGroupId = signal<string | null>(null);
   readonly isProjectGroupOpen = computed(() => this.projectGroupId() !== null);
 
+  /** Repository whose deletion is being confirmed, or `null` when the dialog is closed. */
+  readonly projectDeleteId = signal<string | null>(null);
+  readonly isProjectDeleteOpen = computed(() => this.projectDeleteId() !== null);
+
   togglePalette(): void {
     this.isPaletteOpen.update((open) => !open);
   }
@@ -50,10 +54,20 @@ export class WorkspaceDialogs {
     this.projectGroupId.set(null);
   }
 
+  openProjectDelete(projectId: string): void {
+    this.closeAll();
+    this.projectDeleteId.set(projectId);
+  }
+
+  closeProjectDelete(): void {
+    this.projectDeleteId.set(null);
+  }
+
   closeAll(): void {
     this.isPaletteOpen.set(false);
     this.isAddRepositoryOpen.set(false);
     this.isScanFolderOpen.set(false);
     this.projectGroupId.set(null);
+    this.projectDeleteId.set(null);
   }
 }

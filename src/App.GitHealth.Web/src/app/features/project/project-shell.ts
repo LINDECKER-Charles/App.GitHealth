@@ -21,6 +21,7 @@ import { DsSpinner } from '../../ui/core/ds-spinner';
 import { DsSelect } from '../../ui/forms/ds-select';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
 import { BranchCard } from '../branch-card/branch-card';
+import { BaselineStore } from './baseline/baseline-store';
 import { CaptureStore } from './capture-store';
 import { ProjectContext } from './project-context';
 
@@ -58,6 +59,7 @@ export class ProjectShell {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  protected readonly baselines = inject(BaselineStore);
   protected readonly captures = inject(CaptureStore);
   protected readonly context = inject(ProjectContext);
   protected readonly phases = analysisPhases;
@@ -104,8 +106,14 @@ export class ProjectShell {
     return $localize`:@@project.meta.capture:${branches}:branches: · captured ${at}:capturedAt:`;
   });
 
-  /** Stable identity: without it every tab would rebuild its link on each cycle. */
-  protected readonly captureLink = computed<Params>(() => this.captures.captureLink());
+  /**
+   * Stable identity: without it every tab would rebuild its link on each cycle. Both the
+   * baseline and the capture travel with it, or moving tab would drop what is being read.
+   */
+  protected readonly captureLink = computed<Params>(() => ({
+    ...this.baselines.baselineLink(),
+    ...this.captures.captureLink(),
+  }));
 
   /** An archived capture carries the verdicts of its time; saying so stops them reading as new. */
   protected readonly archivedNotice = computed(() => {
@@ -139,6 +147,7 @@ export class ProjectShell {
 
   constructor() {
     effect(() => this.context.open(this.projectId()));
+    effect(() => this.context.setBaseline(this.baselines.requested()));
   }
 
   /** Running again means wanting the next result: staying on a frozen capture would hide it. */
