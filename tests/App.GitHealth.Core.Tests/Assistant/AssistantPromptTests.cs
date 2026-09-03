@@ -4,16 +4,32 @@ namespace App.GitHealth.Core.Tests.Assistant;
 
 public sealed class AssistantPromptTests
 {
-    [Fact]
-    public void ThePromptCarriesTheCaptureAndThenTheQuestion()
-    {
-        var prompt = AssistantPrompt.Compose(Briefing(), "Which branches can I clean up?");
+    private const string Question = "Which branches can I clean up?";
 
-        var capture = prompt.IndexOf("# Branch capture", StringComparison.Ordinal);
+    /// <summary>
+    /// The tools are the only way the capture reaches the agent now that it is no longer
+    /// pasted in. A prompt that stops naming one leaves that reading unreachable.
+    /// </summary>
+    [Theory]
+    [InlineData("`get_capture`")]
+    [InlineData("`list_branches`")]
+    [InlineData("`get_branch`")]
+    [InlineData("`count_branches`")]
+    public void ThePromptNamesEveryToolTheAgentIsGiven(string tool)
+    {
+        Assert.Contains(tool, AssistantPrompt.Compose(Question), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ThePromptDescribesTheToolsBeforeItAsksTheQuestion()
+    {
+        var prompt = AssistantPrompt.Compose(Question);
+
+        var tools = prompt.IndexOf("## Tools", StringComparison.Ordinal);
         var question = prompt.IndexOf("## Question", StringComparison.Ordinal);
-        Assert.True(capture >= 0);
-        Assert.True(question > capture);
-        Assert.Contains("Which branches can I clean up?", prompt, StringComparison.Ordinal);
+        Assert.True(tools >= 0);
+        Assert.True(question > tools);
+        Assert.Contains(Question, prompt, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -21,18 +37,21 @@ public sealed class AssistantPromptTests
     /// being stated, the agent starts inventing branches instead of reading them.
     /// </summary>
     [Fact]
-    public void ThePromptTellsTheAgentItHasNoAccessToTheRepository()
+    public void ThePromptTellsTheAgentItCannotOpenTheRepository()
     {
-        var prompt = AssistantPrompt.Compose(Briefing(), "Anything to clean?");
+        var prompt = AssistantPrompt.Compose("Anything to clean?");
 
-        Assert.Contains("no access to the repository", prompt, StringComparison.Ordinal);
+        Assert.Contains(
+            "You cannot open the repository and you have no other tool.",
+            prompt,
+            StringComparison.Ordinal);
         Assert.Contains("Never invent one.", prompt, StringComparison.Ordinal);
     }
 
     [Fact]
     public void ThePromptForbidsActingOnTheRepository()
     {
-        var prompt = AssistantPrompt.Compose(Briefing(), "Anything to clean?");
+        var prompt = AssistantPrompt.Compose("Anything to clean?");
 
         Assert.Contains(
             "deletes, merges and pushes nothing, and neither do you",
@@ -59,18 +78,21 @@ public sealed class AssistantPromptTests
         Assert.Equal(AssistantPrompt.MaximumQuestionLength, normalized.Length);
     }
 
-    private static AnalysisBriefing Briefing() => new()
+    /// <summary>
+    /// The prompt is what actually leaves the machine, so the cap has to hold there and not
+    /// only in the value a caller thought to normalize first.
+    /// </summary>
+    [Fact]
+    public void TheComposedPromptCarriesTheCutQuestionRatherThanTheWholeOne()
     {
-        RepositoryName = "Storefront",
-        Baseline = "main",
-        CapturedAt = new DateTimeOffset(2026, 9, 2, 10, 0, 0, TimeSpan.Zero),
-        Policy = new BriefingPolicy
-        {
-            ActiveUntilDays = 30,
-            InactiveAfterDays = 90,
-            ProtectedPatterns = [],
-            ExcludedPatterns = [],
-        },
-        Branches = [],
-    };
+        var question = new string('a', AssistantPrompt.MaximumQuestionLength + 500);
+
+        var prompt = AssistantPrompt.Compose(question);
+
+        Assert.DoesNotContain(question, prompt, StringComparison.Ordinal);
+        Assert.Contains(
+            question[..AssistantPrompt.MaximumQuestionLength],
+            prompt,
+            StringComparison.Ordinal);
+    }
 }

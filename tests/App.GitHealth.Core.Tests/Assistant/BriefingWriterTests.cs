@@ -82,7 +82,7 @@ public sealed class BriefingWriterTests
 
     /// <summary>
     /// A truncated table that says so beats one that reads as complete: a count over 40 rows
-    /// is not a count over the repository, and the agent has to be told which it is holding.
+    /// is not a count over the repository, and both readers have to be told which it is.
     /// </summary>
     [Fact]
     public void TruncationIsAnnouncedWithTheNumberOfBranchesLeftOut()
@@ -95,7 +95,34 @@ public sealed class BriefingWriterTests
         var text = BriefingWriter.Write(briefing);
 
         Assert.Contains("40 further branches", text, StringComparison.Ordinal);
-        Assert.Contains("not over the repository", text, StringComparison.Ordinal);
+        Assert.Contains("out of reach of the bridge", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// This text used to be the prompt itself, pasted into the agent's standard input. It is
+    /// now read by a person deciding whether to allow a repository to be queried at all, so
+    /// it has to say that the agent asks for what it needs rather than being handed all of it.
+    /// </summary>
+    [Fact]
+    public void TheCaptureIsDescribedAsSomethingQueriedRatherThanSent()
+    {
+        var text = BriefingWriter.Write(Briefing(Branch("refs/heads/feat/login")));
+
+        Assert.Contains("# What the agent can query", text, StringComparison.Ordinal);
+        Assert.Contains("never handed over as a document", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("How to read a row", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>Naming the four questions is what shows the reader that the agent pulls.</summary>
+    [Fact]
+    public void TheFourQuestionsTheBridgeAnswersAreNamed()
+    {
+        var text = BriefingWriter.Write(Briefing(Branch("refs/heads/feat/login")));
+
+        Assert.Contains(AssistantPrompt.CaptureTool, text, StringComparison.Ordinal);
+        Assert.Contains(AssistantPrompt.ListTool, text, StringComparison.Ordinal);
+        Assert.Contains(AssistantPrompt.BranchTool, text, StringComparison.Ordinal);
+        Assert.Contains(AssistantPrompt.CountTool, text, StringComparison.Ordinal);
     }
 
     [Fact]

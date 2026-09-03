@@ -4,9 +4,10 @@ using System.Text;
 namespace App.GitHealth.Core.Assistant;
 
 /// <summary>
-/// Renders a briefing as Markdown. The result is shown to the user, character for
-/// character, before it is allowed to leave the machine — so it is written to be read by a
-/// human first and a model second.
+/// Describes a capture to the person deciding whether an agent may read it. This is not the
+/// text an agent is given — nothing is: the agent queries GitHealth and receives one answer
+/// at a time. What is written here is the whole of what those answers can contain, so that
+/// permission is granted against something seen rather than against a promise.
 /// </summary>
 public static class BriefingWriter
 {
@@ -19,20 +20,34 @@ public static class BriefingWriter
         "activity", "verdict", "reason", "flags", "author",
     ];
 
+    private static readonly string[] Questions =
+    [
+        $"`{AssistantPrompt.CaptureTool}` — the four facts above, and the policy in force.",
+        $"`{AssistantPrompt.ListTool}` — the rows below, filtered and read a page at a time.",
+        $"`{AssistantPrompt.BranchTool}` — one of the rows below, named exactly.",
+        $"`{AssistantPrompt.CountTool}` — how many rows fall in each verdict, topology,"
+            + " activity or author.",
+    ];
+
     public static string Write(AnalysisBriefing briefing)
     {
         ArgumentNullException.ThrowIfNull(briefing);
         var builder = new StringBuilder();
         WriteHeader(builder, briefing);
         WritePolicy(builder, briefing.Policy);
-        WriteLegend(builder);
+        WriteQuestions(builder);
         WriteBranches(builder, briefing);
         return builder.ToString();
     }
 
     private static void WriteHeader(StringBuilder builder, AnalysisBriefing briefing)
     {
-        builder.AppendLine("# Branch capture");
+        builder.AppendLine("# What the agent can query");
+        builder.AppendLine();
+        builder.AppendLine(
+            "GitHealth serves this capture over a local bridge, one question at a time. It is"
+            + " never handed over as a document, and nothing below leaves this machine until"
+            + " the agent asks for it. This is the whole of what it can ever get back.");
         builder.AppendLine();
         builder.AppendLine(Line("Repository", briefing.RepositoryName));
         builder.AppendLine(Line("Baseline compared against", briefing.Baseline));
@@ -54,23 +69,25 @@ public static class BriefingWriter
         builder.AppendLine();
     }
 
-    private static void WriteLegend(StringBuilder builder)
+    /// <summary>
+    /// The four questions the bridge answers. Naming them is the point: it is what tells a
+    /// reader that the agent pulls what it needs rather than being pushed all of it.
+    /// </summary>
+    private static void WriteQuestions(StringBuilder builder)
     {
-        builder.AppendLine("## How to read a row");
+        builder.AppendLine("## What it can ask for");
         builder.AppendLine();
-        builder.AppendLine("- `ahead` — commits the branch carries that the baseline does not.");
-        builder.AppendLine("- `behind` — commits the baseline carries that the branch does not.");
-        builder.AppendLine("- `verdict` and `reason` — what GitHealth concluded, and why. They are");
-        builder.AppendLine("  a starting point, not a constraint: disagree with them when the facts");
-        builder.AppendLine("  in the row support it, and say so explicitly.");
-        builder.AppendLine("- `flags` — `protected` shields a branch from any cleanup advice;");
-        builder.AppendLine("  `excluded` means the policy leaves it out of the reading entirely.");
+        foreach (var question in Questions)
+        {
+            builder.AppendLine("- " + question);
+        }
+
         builder.AppendLine();
     }
 
     private static void WriteBranches(StringBuilder builder, AnalysisBriefing briefing)
     {
-        builder.AppendLine("## Branches");
+        builder.AppendLine("## The branches it can read");
         builder.AppendLine();
         builder.AppendLine("| " + string.Join(" | ", Columns) + " |");
         builder.AppendLine("|" + string.Concat(Columns.Select(_ => "---|")));
@@ -92,8 +109,8 @@ public static class BriefingWriter
         builder.AppendLine();
         builder.AppendLine(
             $"> {omitted.ToString(CultureInfo.InvariantCulture)} further branches were measured "
-            + "but left out of this table. Any count you give is a count over the rows above, "
-            + "not over the repository — say so.");
+            + "but are out of reach of the bridge: the agent cannot read them, and any count it "
+            + "gives is a count over the rows above.");
     }
 
     private static string Row(BriefingBranch branch)
