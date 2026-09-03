@@ -33,7 +33,12 @@ public sealed class AssistantOptions
 
     public TimeSpan RunTimeout { get; init; } = TimeSpan.FromMinutes(3);
 
-    public int MaximumOutputBytes { get; init; } = 512 * 1024;
+    /// <summary>
+    /// Ceiling on what one run may write before it is stopped. The agents narrate themselves
+    /// as JSON, so this covers a whole exchange — every event, and the capture rows a tool
+    /// call sends back through it — rather than an answer.
+    /// </summary>
+    public int MaximumOutputBytes { get; init; } = 4 * 1024 * 1024;
 
     /// <summary>
     /// Branches carried by a briefing. Past this, rows are dropped and their number is

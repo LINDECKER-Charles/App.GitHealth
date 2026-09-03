@@ -1,5 +1,6 @@
 using App.GitHealth.Api.Persistence.Entities;
 using App.GitHealth.Api.Persistence.Models;
+using App.GitHealth.Api.Persistence.Models.Assistant;
 using App.GitHealth.Core.Projects;
 using Microsoft.EntityFrameworkCore;
 
@@ -107,6 +108,17 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
         return UpdateAsync(
             update.ProjectId,
             project => project.UpdateSettings(update.Settings, update.ChangedAtUtc),
+            cancellationToken);
+    }
+
+    public Task SetAssistantConsentAsync(
+        AssistantConsentUpdate update,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+        return UpdateAsync(
+            update.ProjectId,
+            project => project.SetAssistantConsent(update.GrantedAtUtc, update.ChangedAtUtc),
             cancellationToken);
     }
 

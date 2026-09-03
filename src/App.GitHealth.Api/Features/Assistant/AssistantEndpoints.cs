@@ -46,7 +46,7 @@ internal static class AssistantEndpoints
         var service = context.RequestServices.GetRequiredService<AssistantBriefingService>();
         var result = await service.BuildAsync(projectId, query.Baseline, context.RequestAborted);
         return result.IsSuccess
-            ? Results.Ok(Describe(result.Value!))
+            ? Results.Ok(Describe(result.Value!.Briefing))
             : ApiProblems.Result(result.Failure!);
     }
 

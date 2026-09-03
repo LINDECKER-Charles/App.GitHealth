@@ -1,4 +1,5 @@
 using System.Text;
+using App.GitHealth.Api.Features.Assistant.Agents.Events;
 
 namespace App.GitHealth.Api.Features.Assistant;
 
@@ -11,14 +12,21 @@ internal enum AssistantRunStatus
 }
 
 /// <summary>
-/// State of one conversation with an agent. Runs are held in memory only: an answer is
-/// worth reading while the window is open, and persisting it would put the repository's
-/// branch names — and whatever the user asked — into the exportable database.
+/// State of one run of an agent, while it runs. This is the live half only: the trace, the
+/// cancellation and the settling. Once it settles the exchange is written to the history and
+/// read back from there, so what is kept of a conversation is never this object.
 /// </summary>
 internal sealed class AssistantRun : IDisposable
 {
+    /// <summary>
+    /// Steps one run may hold. A run that reaches this has stopped saying anything a reader
+    /// could follow, and the list is sent whole on every poll — it is not a log.
+    /// </summary>
+    private const int MaximumSteps = 200;
+
     private readonly Lock _sync = new();
     private readonly StringBuilder _trace = new();
+    private readonly List<AssistantRunStep> _steps = [];
     private readonly CancellationTokenSource _cancellation = new();
     private AssistantRunStatus _status = AssistantRunStatus.Running;
     private DateTimeOffset? _completedAtUtc;
@@ -55,6 +63,30 @@ internal sealed class AssistantRun : IDisposable
         using (_sync.EnterScope())
         {
             _trace.Append(chunk);
+        }
+    }
+
+    /// <summary>
+    /// Records what the agent has just started doing. The same activity twice running is
+    /// kept once — an agent that asks the model three times in a row is doing one thing —
+    /// and the list stops growing at <see cref="MaximumSteps" />.
+    /// </summary>
+    public void AppendStep(AgentStep step)
+    {
+        ArgumentNullException.ThrowIfNull(step);
+        var recorded = new AssistantRunStep
+        {
+            Kind = step.Kind.ToString(),
+            Label = step.Label,
+            Detail = step.Detail,
+            AtUtc = DateTimeOffset.UtcNow,
+        };
+        using (_sync.EnterScope())
+        {
+            if (_steps.Count < MaximumSteps && !Repeats(recorded))
+            {
+                _steps.Add(recorded);
+            }
         }
     }
 
@@ -113,9 +145,12 @@ internal sealed class AssistantRun : IDisposable
                 Effort = Descriptor.Effort,
                 Question = Descriptor.Question,
                 CommandLine = Descriptor.CommandLine,
+                ConversationId = Descriptor.ConversationId,
+                BranchCount = Descriptor.BranchCount,
                 Status = _status.ToString(),
                 StartedAtUtc = Descriptor.StartedAtUtc,
                 CompletedAtUtc = _completedAtUtc,
+                Steps = [.. _steps],
                 Trace = _trace.ToString(offset, _trace.Length - offset),
                 TraceOffset = _trace.Length,
                 Answer = _answer,
@@ -127,6 +162,10 @@ internal sealed class AssistantRun : IDisposable
     }
 
     public void Dispose() => _cancellation.Dispose();
+
+    /// <summary>The same activity as the one before it, the moment it happened aside.</summary>
+    private bool Repeats(AssistantRunStep step) =>
+        _steps.Count > 0 && _steps[^1] with { AtUtc = step.AtUtc } == step;
 
     /// <summary>First outcome wins: a cancellation racing a completion must not rewrite it.</summary>
     private void Settle(AssistantRunStatus status)
@@ -160,7 +199,31 @@ internal sealed record AssistantRunDescriptor
     /// <summary>Shown as it will be run, so the command is never a black box.</summary>
     public required string CommandLine { get; init; }
 
+    /// <summary>Thread this run belongs to, whether it opened it or continued it.</summary>
+    public required Guid ConversationId { get; init; }
+
+    /// <summary>Rows of the capture the agent may read, which bounds any count it gives.</summary>
+    public required int BranchCount { get; init; }
+
     public required DateTimeOffset StartedAtUtc { get; init; }
+}
+
+/// <summary>
+/// One thing the agent did, as the panel narrates it. Sent while the run is in flight and
+/// never afterwards: the steps are what replaces a spinner, not a record of anything.
+/// </summary>
+internal sealed record AssistantRunStep
+{
+    /// <summary>Waiting, Thinking, Tool or Writing, phrased by the interface.</summary>
+    public required string Kind { get; init; }
+
+    /// <summary>The capture tool that was called. Empty for every other kind.</summary>
+    public required string Label { get; init; }
+
+    /// <summary>What the call asked for, or what the agent said of its own reasoning.</summary>
+    public string? Detail { get; init; }
+
+    public required DateTimeOffset AtUtc { get; init; }
 }
 
 internal sealed record AssistantRunSnapshot
@@ -179,11 +242,22 @@ internal sealed record AssistantRunSnapshot
 
     public required string CommandLine { get; init; }
 
+    public required Guid ConversationId { get; init; }
+
+    public required int BranchCount { get; init; }
+
     public required string Status { get; init; }
 
     public required DateTimeOffset StartedAtUtc { get; init; }
 
     public DateTimeOffset? CompletedAtUtc { get; init; }
+
+    /// <summary>
+    /// What the agent has been doing, oldest first, whole rather than since an offset: the
+    /// list is bounded and small, and sending it whole makes a poll worth nothing more than
+    /// the one before it — a dropped answer costs a frame, never a step.
+    /// </summary>
+    public required IReadOnlyList<AssistantRunStep> Steps { get; init; }
 
     /// <summary>What the agent has written since the offset the caller asked from.</summary>
     public required string Trace { get; init; }

@@ -1,4 +1,5 @@
 using App.GitHealth.Api.Features.Assistant.Agents;
+using App.GitHealth.Core.Assistant;
 using Microsoft.AspNetCore.Mvc;
 
 namespace App.GitHealth.Api.Features.Assistant;
@@ -19,6 +20,31 @@ internal sealed record AssistantRunRequest
     /// the agent does not declare is refused rather than passed on to its command line.
     /// </summary>
     public string? Effort { get; init; }
+
+    /// <summary>
+    /// Thread this run continues. Absent starts a new one, whose identifier comes back on
+    /// the snapshot so the next question can name it.
+    /// </summary>
+    public Guid? ConversationId { get; init; }
+}
+
+/// <summary>
+/// The capture a run works from: the measurements themselves, and the identifier of the
+/// analysis that took them. The identifier never reaches the agent — it is what a stored
+/// conversation hangs off, so that deleting the capture takes the conversation with it.
+/// </summary>
+internal sealed record AssistantCapture
+{
+    public required Guid AnalysisId { get; init; }
+
+    public required AnalysisBriefing Briefing { get; init; }
+
+    /// <summary>
+    /// When this repository's captures were allowed to be sent, or null while they never
+    /// were. A run reads it rather than trusting the panel: the permission is what lets
+    /// anything leave the machine, so refusing without it has to happen here.
+    /// </summary>
+    public required DateTimeOffset? ConsentGrantedAtUtc { get; init; }
 }
 
 internal sealed record AssistantBriefingQueryParameters

@@ -28,7 +28,7 @@ internal sealed class AssistantBriefingService(
         Direction = "asc",
     };
 
-    public async Task<ApiOutcome<AnalysisBriefing>> BuildAsync(
+    public async Task<ApiOutcome<AssistantCapture>> BuildAsync(
         Guid projectId,
         string? baseline,
         CancellationToken cancellationToken)
@@ -36,7 +36,7 @@ internal sealed class AssistantBriefingService(
         var project = await projects.GetAsync(projectId, cancellationToken);
         if (project is null)
         {
-            return ApiOutcome<AnalysisBriefing>.Failed(ApiProblems.NotFound(
+            return ApiOutcome<AssistantCapture>.Failed(ApiProblems.NotFound(
                 ApiErrorCodes.ProjectNotFound,
                 "The requested project does not exist."));
         }
@@ -46,15 +46,15 @@ internal sealed class AssistantBriefingService(
             OldestFirst with { Baseline = baseline },
             cancellationToken);
         return selection.IsSuccess
-            ? ApiOutcome<AnalysisBriefing>.Success(Compose(project, selection.Value!))
-            : ApiOutcome<AnalysisBriefing>.Failed(selection.Failure!);
+            ? ApiOutcome<AssistantCapture>.Success(Compose(project, selection.Value!))
+            : ApiOutcome<AssistantCapture>.Failed(selection.Failure!);
     }
 
-    private AnalysisBriefing Compose(ProjectEntity project, SnapshotSelectionData selection)
+    private AssistantCapture Compose(ProjectEntity project, SnapshotSelectionData selection)
     {
         var cap = options.Value.MaximumBranches;
         var branches = selection.Branches.Take(cap).Select(Describe).ToArray();
-        return new AnalysisBriefing
+        var briefing = new AnalysisBriefing
         {
             RepositoryName = project.DisplayName,
             Baseline = selection.Analysis.ReferenceName,
@@ -62,6 +62,12 @@ internal sealed class AssistantBriefingService(
             Policy = MapPolicy(selection.Policy),
             Branches = branches,
             OmittedBranchCount = Math.Max(0, selection.Branches.Count - branches.Length),
+        };
+        return new AssistantCapture
+        {
+            AnalysisId = selection.Analysis.Id,
+            Briefing = briefing,
+            ConsentGrantedAtUtc = project.AssistantConsentAtUtc,
         };
     }
 
@@ -73,10 +79,10 @@ internal sealed class AssistantBriefingService(
             ReferenceName = branch.ReferenceName,
             AheadCount = branch.AheadCount,
             BehindCount = branch.BehindCount,
-            Relationship = Label(branch.Relationship),
-            Topology = Label(branch.Topology),
-            Activity = Label(branch.Activity),
-            Recommendation = Label(branch.Recommendation),
+            Relationship = BriefingLabel.Words(branch.Relationship),
+            Topology = BriefingLabel.Words(branch.Topology),
+            Activity = BriefingLabel.Words(branch.Activity),
+            Recommendation = BriefingLabel.Words(branch.Recommendation),
             Reason = branch.Reason,
             LastActivityAt = branch.LastActivityAtUtc,
             TipAuthor = branch.TipAuthor,
@@ -92,7 +98,4 @@ internal sealed class AssistantBriefingService(
         ProtectedPatterns = policy.ProtectedPatterns,
         ExcludedPatterns = policy.ExcludedPatterns,
     };
-
-    /// <summary>The enum names are written for C#; the briefing is written to be read.</summary>
-    private static string Label(string value) => value.ToLowerInvariant();
 }

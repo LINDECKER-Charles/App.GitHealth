@@ -1,4 +1,6 @@
 using App.GitHealth.Api.Features.Assistant.Agents;
+using App.GitHealth.Api.Features.Assistant.Conversations;
+using App.GitHealth.Api.Features.Assistant.Mcp;
 using Microsoft.Extensions.Options;
 
 namespace App.GitHealth.Api.Features.Assistant;
@@ -23,7 +25,11 @@ internal static class AssistantServiceCollectionExtensions
             provider.GetRequiredService<IOptions<AssistantOptions>>()));
         services.AddSingleton<AgentAvailabilityService>();
         services.AddSingleton<AssistantRunRegistry>();
+        services.AddSingleton<AssistantMcpSessionRegistry>();
+        services.AddSingleton<AssistantBridge>();
+        services.AddSingleton<AssistantTurnRecorder>();
         services.AddScoped<AssistantBriefingService>();
+        services.AddScoped<AssistantConversationService>();
         services.AddScoped<AssistantRunService>();
         return services;
     }

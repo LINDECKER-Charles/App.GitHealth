@@ -1,5 +1,6 @@
 using App.GitHealth.Api.Persistence.Entities;
 using App.GitHealth.Api.Persistence.Models;
+using App.GitHealth.Api.Persistence.Models.Assistant;
 using App.GitHealth.Core.Projects;
 
 namespace App.GitHealth.Api.Persistence.Repositories;
@@ -32,5 +33,9 @@ internal interface IProjectRepository
     Task MarkUnavailableAsync(
         Guid projectId,
         DateTimeOffset changedAtUtc,
+        CancellationToken cancellationToken);
+
+    Task SetAssistantConsentAsync(
+        AssistantConsentUpdate update,
         CancellationToken cancellationToken);
 }

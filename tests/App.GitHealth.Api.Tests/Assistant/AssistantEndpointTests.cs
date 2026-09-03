@@ -173,11 +173,12 @@ public sealed class AssistantEndpointTests
     }
 
     /// <summary>
-    /// The briefing is the consent screen: what it returns is what would leave the machine,
-    /// so the test reads it the way the user does.
+    /// This preview is the consent screen. Nothing is sent as a document any more, so what it
+    /// has to show is every row the bridge would hand back if the agent asked for it — read
+    /// here the way the reader reads it, before allowing anything.
     /// </summary>
     [Fact]
-    public async Task TheBriefingCarriesTheCaptureThatWouldBeSent()
+    public async Task ThePreviewCarriesEveryRowTheBridgeWouldServe()
     {
         using var repository = GitTestRepository.Create(aheadBranchCount: 2);
         repository.AddAheadBranchWithAuthor("feature/reporting", BranchAuthor);
@@ -192,7 +193,7 @@ public sealed class AssistantEndpointTests
         Assert.Equal("refs/heads/main", payload.GetProperty("baseline").GetString());
         Assert.Equal(0, payload.GetProperty("omittedBranchCount").GetInt32());
         Assert.True(payload.GetProperty("branchCount").GetInt32() >= 3);
-        Assert.Contains("# Branch capture", text, StringComparison.Ordinal);
+        Assert.Contains("# What the agent can query", text, StringComparison.Ordinal);
         Assert.Contains("refs/heads/feature/reporting", text, StringComparison.Ordinal);
         Assert.Contains(BranchAuthor, text, StringComparison.Ordinal);
     }
