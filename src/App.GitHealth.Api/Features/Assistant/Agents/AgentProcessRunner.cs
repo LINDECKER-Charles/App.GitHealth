@@ -14,10 +14,11 @@ internal static class AgentProcessRunner
 
     public static async Task<AgentRunOutcome> RunAsync(
         AgentRunRequest request,
-        IProgress<string>? trace,
+        IProgress<string> output,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(output);
         using var process = Start(request);
         using var timeout = new CancellationTokenSource(request.Timeout);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(
@@ -25,7 +26,7 @@ internal static class AgentProcessRunner
             timeout.Token);
         try
         {
-            return await CommunicateAsync(process, request, trace, linked.Token);
+            return await CommunicateAsync(process, request, output, linked.Token);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -45,23 +46,29 @@ internal static class AgentProcessRunner
     private static async Task<AgentRunOutcome> CommunicateAsync(
         DiagnosticsProcess process,
         AgentRunRequest request,
-        IProgress<string>? trace,
+        IProgress<string> output,
         CancellationToken cancellationToken)
     {
         // The reads start before the prompt is written: a briefing fills the pipe buffer,
         // and a process blocked on its own output would never drain our stdin.
         var budget = new OutputBudget(request.MaximumOutputBytes);
-        var context = new PumpContext(budget, () => Kill(process), trace);
-        var output = PumpAsync(process.StandardOutput, context, cancellationToken);
-        var error = PumpAsync(process.StandardError, context with { Trace = null }, cancellationToken);
+        void Stop() => Kill(process);
+        var errors = new TextSink();
+        var reading = PumpAsync(
+            process.StandardOutput,
+            new PumpContext(budget, Stop, output),
+            cancellationToken);
+        var failing = PumpAsync(
+            process.StandardError,
+            new PumpContext(budget, Stop, errors),
+            cancellationToken);
         await WritePromptAsync(process, request.Prompt, cancellationToken);
-        var streams = await Task.WhenAll(output, error);
+        await Task.WhenAll(reading, failing);
         await process.WaitForExitAsync(cancellationToken);
         return new AgentRunOutcome
         {
             ExitCode = process.ExitCode,
-            StandardOutput = streams[0],
-            StandardError = streams[1],
+            StandardError = errors.ToString(),
             IsTruncated = budget.IsExhausted,
         };
     }
@@ -87,32 +94,30 @@ internal static class AgentProcessRunner
     }
 
     /// <summary>
-    /// Drains one stream, reporting what arrives so the interface can show a run in
-    /// progress rather than a spinner. Exhausting the budget stops the process rather than
-    /// only this loop: closing its pipes is what releases the other stream's pending read.
+    /// Drains one stream into the sink that asked for it, as it arrives, so the interface
+    /// can show a run in progress rather than a spinner. Nothing is kept here: what is worth
+    /// keeping differs per stream, and the sink is what knows. Exhausting the budget stops
+    /// the process rather than only this loop: closing its pipes is what releases the other
+    /// stream's pending read.
     /// </summary>
-    private static async Task<string> PumpAsync(
+    private static async Task PumpAsync(
         StreamReader reader,
         PumpContext context,
         CancellationToken cancellationToken)
     {
         var buffer = new char[ReadBufferSize];
-        var content = new StringBuilder();
         while (!context.Budget.IsExhausted)
         {
             var count = await reader.ReadAsync(buffer.AsMemory(), cancellationToken);
             if (count == 0)
             {
-                return content.ToString();
+                return;
             }
 
-            var chunk = new string(buffer, 0, context.Budget.Take(count));
-            content.Append(chunk);
-            context.Trace?.Report(chunk);
+            context.Sink.Report(new string(buffer, 0, context.Budget.Take(count)));
         }
 
         context.OnExhausted();
-        return content.ToString();
     }
 
     private static DiagnosticsProcess Start(AgentRunRequest request)
@@ -154,7 +159,20 @@ internal static class AgentProcessRunner
     private sealed record PumpContext(
         OutputBudget Budget,
         Action OnExhausted,
-        IProgress<string>? Trace);
+        IProgress<string> Sink);
+
+    /// <summary>
+    /// Keeps a stream whole, for the callers that read it back rather than watch it: the
+    /// failure an agent prints, and the version it answers with.
+    /// </summary>
+    public sealed class TextSink : IProgress<string>
+    {
+        private readonly StringBuilder _content = new();
+
+        public void Report(string value) => _content.Append(value);
+
+        public override string ToString() => _content.ToString();
+    }
 
     /// <summary>
     /// Shared between both streams, so a chatty stderr cannot starve the answer. Counted in
