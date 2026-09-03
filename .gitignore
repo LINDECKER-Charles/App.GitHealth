@@ -47,3 +47,5 @@ compose.override.yml
 # Operating systems
 .DS_Store
 Thumbs.db
+
+design
