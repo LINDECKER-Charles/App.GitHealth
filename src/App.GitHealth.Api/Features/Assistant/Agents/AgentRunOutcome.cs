@@ -8,12 +8,13 @@ internal enum AgentFailureCode
     Failed,
 }
 
-/// <summary>Everything the process left behind once it exited.</summary>
+/// <summary>
+/// What the process left behind once it exited. Its standard output is not here: it is read
+/// as it arrives by whoever asked for the run, and what is worth keeping of it is theirs.
+/// </summary>
 internal sealed record AgentRunOutcome
 {
     public required int ExitCode { get; init; }
-
-    public required string StandardOutput { get; init; }
 
     public required string StandardError { get; init; }
 
@@ -31,6 +32,9 @@ internal sealed record AgentRunOptions
 
     /// <summary>An allowlisted level, never a value taken straight from the request.</summary>
     public required string Effort { get; init; }
+
+    /// <summary>Where this run reaches the capture. Single-use, and dead once it settles.</summary>
+    public required Uri BridgeAddress { get; init; }
 }
 
 /// <summary>What GitHealth is about to run, and with what.</summary>

@@ -86,12 +86,13 @@ internal sealed class AgentAvailabilityService(
 
         try
         {
+            var printed = new AgentProcessRunner.TextSink();
             var outcome = await AgentProcessRunner.RunAsync(
                 CreateProbe(location),
-                trace: null,
+                printed,
                 cancellationToken);
             return outcome.IsSuccess
-                ? location with { Version = FirstLine(outcome.StandardOutput) }
+                ? location with { Version = FirstLine(printed.ToString()) }
                 : location;
         }
         catch (Exception exception) when (exception is AgentProcessException or IOException)

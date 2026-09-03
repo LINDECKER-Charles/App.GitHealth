@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using App.GitHealth.Api.Features.Assistant.Mcp;
 
 namespace App.GitHealth.Api.Features.Assistant.Agents;
 
@@ -11,6 +12,7 @@ namespace App.GitHealth.Api.Features.Assistant.Agents;
 internal sealed record AgentCommandLine
 {
     private const string WindowsInterpreter = "cmd.exe";
+    private const string RedactedToken = "<single-use-token>";
     private static readonly string[] ShimExtensions = [".cmd", ".bat"];
 
     public required string Executable { get; init; }
@@ -56,7 +58,41 @@ internal sealed record AgentCommandLine
                 StringComparison.Ordinal));
         }
 
-        return [argument == AgentDefinition.AnswerFileToken ? options.AnswerFilePath : argument];
+        return [Substitute(argument, options)];
+    }
+
+    /// <summary>
+    /// The bridge address sits inside a larger argument for one agent and stands alone for
+    /// the other, so it is replaced in place rather than matched as a whole token.
+    /// </summary>
+    private static string Substitute(string argument, AgentRunOptions options)
+    {
+        if (argument == AgentDefinition.AnswerFileToken)
+        {
+            return options.AnswerFilePath;
+        }
+
+        if (argument == AgentDefinition.BridgeConfigToken)
+        {
+            return AssistantBridge.DescribeForClaude(options.BridgeAddress);
+        }
+
+        return argument.Replace(
+            AgentDefinition.BridgeUrlToken,
+            options.BridgeAddress.ToString(),
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The command as it is shown and kept, with this run's bridge token blanked. The shape
+    /// of the command is what makes the feature auditable and is left whole; the token is a
+    /// secret that outlives nothing, and storing it in an exportable database would be the
+    /// one part of this line worth hiding.
+    /// </summary>
+    public string Describe(string token)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(token);
+        return ToString().Replace(token, RedactedToken, StringComparison.Ordinal);
     }
 
     /// <summary>Reads back as it would be typed, for the interface and for a diagnostic.</summary>

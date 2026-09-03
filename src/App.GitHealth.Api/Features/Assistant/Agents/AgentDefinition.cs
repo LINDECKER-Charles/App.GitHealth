@@ -3,11 +3,24 @@ namespace App.GitHealth.Api.Features.Assistant.Agents;
 /// <summary>Where the agent's actual answer is found once the process has exited.</summary>
 internal enum AgentAnswerSource
 {
-    /// <summary>Standard output carries the answer and nothing else.</summary>
-    StandardOutput,
+    /// <summary>The stream reports the answer along with everything else it reports.</summary>
+    EventStream,
 
-    /// <summary>Standard output is a running trace; the answer lands in a file we name.</summary>
+    /// <summary>The stream is a running commentary; the answer lands in a file we name.</summary>
     LastMessageFile,
+}
+
+/// <summary>
+/// Which JSON dialect the CLI speaks while it works. Both supported agents can narrate
+/// themselves; neither does it the same way, and this is what picks the reader.
+/// </summary>
+internal enum AgentEventFormat
+{
+    /// <summary>Anthropic's streamed messages, blocks and deltas.</summary>
+    ClaudeStream,
+
+    /// <summary>Codex's thread items, announced whole as they start and complete.</summary>
+    CodexItems,
 }
 
 /// <summary>
@@ -28,6 +41,12 @@ internal sealed record AgentDefinition
 
     /// <summary>Replaced by the chosen level inside <see cref="EffortArguments" />.</summary>
     public const string EffortToken = "{effort}";
+
+    /// <summary>Replaced, inside an argument, by the address of this run's bridge.</summary>
+    public const string BridgeUrlToken = "{bridgeUrl}";
+
+    /// <summary>Replaced by the inline server declaration Claude Code reads.</summary>
+    public const string BridgeConfigToken = "{bridgeConfig}";
 
     public required string Id { get; init; }
 
@@ -51,6 +70,9 @@ internal sealed record AgentDefinition
     public required string DefaultEffort { get; init; }
 
     public required AgentAnswerSource AnswerSource { get; init; }
+
+    /// <summary>How this CLI narrates a run, which is what the panel shows while it runs.</summary>
+    public required AgentEventFormat Events { get; init; }
 
     public required string InstallationUrl { get; init; }
 
