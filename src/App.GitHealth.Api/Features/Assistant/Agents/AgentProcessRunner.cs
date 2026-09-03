@@ -89,7 +89,24 @@ internal static class AgentProcessRunner
         }
         finally
         {
-            process.StandardInput.Close();
+            Close(process.StandardInput);
+        }
+    }
+
+    /// <summary>
+    /// Closing a writer flushes what it still holds, so it fails the same way writing does
+    /// against an agent that has already gone. The prompt is lost either way and the run is
+    /// read from what the process printed, so the close is allowed to fail in silence too.
+    /// </summary>
+    private static void Close(TextWriter input)
+    {
+        try
+        {
+            input.Close();
+        }
+        catch (IOException)
+        {
+            // Same broken pipe, one call later.
         }
     }
 
