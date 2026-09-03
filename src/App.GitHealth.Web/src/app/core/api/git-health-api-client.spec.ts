@@ -211,6 +211,7 @@ describe('GitHealthApiClient', () => {
       completedAtUtc: '2026-08-29T08:00:01Z',
       failureCode: null,
       failureMessage: null,
+      progress: null,
     };
     const statusResult = firstValueFrom(client.getAnalysis(analysisId));
     const statusRequest = http.expectOne(`/api/analyses/${analysisId}`);

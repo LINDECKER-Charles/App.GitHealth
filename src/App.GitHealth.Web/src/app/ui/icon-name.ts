@@ -37,6 +37,7 @@ export type IconName =
   | 'star'
   | 'star-filled'
   | 'sun'
+  | 'terminal'
   | 'trash-2'
   | 'triangle-alert'
   | 'x';

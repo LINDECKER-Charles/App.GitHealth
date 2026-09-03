@@ -11,6 +11,16 @@ built that way and what it costs.
 
 ### Added
 
+- **watching an analysis run, reference by reference**: launching an analysis hands the
+  Diagnostic tab to the run itself instead of a bar that fills. A five-stage header follows
+  the reading and the elapsed time; a ledger lists every reference in the order they will be
+  read and fills each line as the facts land — shared commit, ahead and behind, topology,
+  then the main author — highlighting and following the one being read; a drawing places the
+  references measured so far around the trunk; and a `git · read only` console names every
+  command actually run, with how long it took and the first line of Git's answer. That
+  console is the point: the promise that GitHealth only ever reads becomes something you
+  check rather than believe. **Show the last capture** folds the run into a one-line strip
+  and hands the tab back to the previous capture, without stopping anything;
 - **several comparison baselines per repository**: a project no longer declares a single
   reference branch but an ordered list of up to eight — `dev`, `test` and `main` side by
   side. Each baseline keeps its own analyses and its own history, so switching between them

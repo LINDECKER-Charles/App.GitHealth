@@ -11,6 +11,9 @@ export type AnalysisRunStatus = 'Running' | 'Completed' | 'Failed' | 'Cancelled'
 export type AnalysisPhase =
   'Waiting' | 'Topology' | 'Enrichment' | 'Persistence' | 'Finished' | 'Failed' | 'Cancelled';
 
+/** How far a running analysis has got with one reference. */
+export type ReferenceProgressState = 'Listed' | 'Measuring' | 'Measured' | 'Enriching' | 'Read';
+
 export type BranchRelationship =
   'SameCommit' | 'CommonAncestor' | 'BranchIsAncestorOfReference' | 'NoCommonAncestor';
 
@@ -195,6 +198,40 @@ export interface AnalysisStatusResponse {
   readonly completedAtUtc: UtcDateTime | null;
   readonly failureCode: string | null;
   readonly failureMessage: string | null;
+  /** What the run is doing right now; absent once it is no longer being followed. */
+  readonly progress: AnalysisProgressResponse | null;
+}
+
+export interface AnalysisProgressResponse {
+  /** Every reference of the run, in read order, each with what is known of it so far. */
+  readonly references: readonly AnalysisReferenceProgress[];
+  /** Tail of the Git commands run, oldest first. */
+  readonly commands: readonly AnalysisCommandTrace[];
+  /** Commands run since the start, including those no longer in the tail. */
+  readonly commandCount: number;
+}
+
+export interface AnalysisReferenceProgress {
+  readonly referenceName: string;
+  readonly commitId: string;
+  readonly state: ReferenceProgressState;
+  readonly lastActivityAtUtc: UtcDateTime | null;
+  readonly tipAuthor: string | null;
+  readonly mergeBaseCommit: string | null;
+  readonly aheadCount: number | null;
+  readonly behindCount: number | null;
+  readonly topology: BranchTopology | null;
+  readonly topContributor: string | null;
+  readonly contributorCount: number | null;
+}
+
+export interface AnalysisCommandTrace {
+  /** Rank of the command in the run: what lets the console append without repeating. */
+  readonly sequence: number;
+  readonly commandLine: string;
+  readonly durationMs: number;
+  readonly exitCode: number;
+  readonly output: string | null;
 }
 
 export interface AnalysisHistoryItem {

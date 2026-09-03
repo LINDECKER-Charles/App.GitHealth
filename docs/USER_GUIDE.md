@@ -253,8 +253,24 @@ nothing; closing the desktop window stops GitHealth, and the analyses in flight 
 
 ## Reading an analysis
 
-Select **Run an analysis** from the dashboard. The visible phases distinguish reading the
-topology, enrichment and persistence.
+Select **Run an analysis** from the dashboard. The tab is then taken over by the run itself,
+which shows, live, what is being asked of the repository:
+
+- a **five-stage header** — waiting, topology, contributors, saving, finished — where the
+  current stage fills with the references it has read, next to the elapsed time;
+- a **ledger**, one line per reference, in the order they will be read. A line starts as a
+  name and fills in as the facts land: the shared commit, ahead and behind, the topology,
+  then the main author. The line being read is highlighted and stays under the eye;
+- a **topology drawing** of the references already placed, each one set further from the
+  trunk the further ahead it has run. On a large repository it is a window on what is being
+  read, not a map of everything: the ledger beside it is the exhaustive list;
+- a **`git · read only` console** listing every command actually run, with how long it took
+  and the first line of what Git answered. Every one of them is a read.
+
+**Show the last capture** folds the run into a one-line strip and hands the tab back to the
+previous capture; the run carries on, and **Show the analysis** brings it back. Nothing is
+lost by folding it away. When the run lands, the scene holds its last frame for a moment —
+every stage green, every reference read — then the tab returns to the fresh capture.
 
 For a baseline `R` and a branch `B`:
 

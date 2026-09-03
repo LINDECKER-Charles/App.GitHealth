@@ -52,17 +52,6 @@ internal sealed class ProjectOperationReservation(
     }
 }
 
-internal sealed record AnalysisProgressSnapshot
-{
-    public required Guid AnalysisId { get; init; }
-
-    public required AnalysisPhase Phase { get; init; }
-
-    public required DateTimeOffset UpdatedAtUtc { get; init; }
-
-    public string? Message { get; init; }
-}
-
 /// <summary>
 /// Launching stays a bodyless POST, as it has always been: the baseline travels in the query
 /// string like every other selector in this API.
@@ -110,4 +99,57 @@ internal sealed record AnalysisStatusResponse
     public string? FailureCode { get; init; }
 
     public string? FailureMessage { get; init; }
+
+    /// <summary>What the run is doing right now; absent once it is no longer running.</summary>
+    public AnalysisProgressResponse? Progress { get; init; }
+}
+
+internal sealed record AnalysisProgressResponse
+{
+    /// <summary>Every reference of the run, in read order, each with what is known of it.</summary>
+    public required IReadOnlyList<AnalysisReferenceResponse> References { get; init; }
+
+    /// <summary>Tail of the Git commands run, oldest first.</summary>
+    public required IReadOnlyList<AnalysisCommandResponse> Commands { get; init; }
+
+    /// <summary>Commands run since the start, including those no longer in the tail.</summary>
+    public required int CommandCount { get; init; }
+}
+
+internal sealed record AnalysisReferenceResponse
+{
+    public required string ReferenceName { get; init; }
+
+    public required string CommitId { get; init; }
+
+    public required string State { get; init; }
+
+    public DateTimeOffset? LastActivityAtUtc { get; init; }
+
+    public string? TipAuthor { get; init; }
+
+    public string? MergeBaseCommit { get; init; }
+
+    public int? AheadCount { get; init; }
+
+    public int? BehindCount { get; init; }
+
+    public string? Topology { get; init; }
+
+    public string? TopContributor { get; init; }
+
+    public int? ContributorCount { get; init; }
+}
+
+internal sealed record AnalysisCommandResponse
+{
+    public required int Sequence { get; init; }
+
+    public required string CommandLine { get; init; }
+
+    public required int DurationMs { get; init; }
+
+    public required int ExitCode { get; init; }
+
+    public string? Output { get; init; }
 }

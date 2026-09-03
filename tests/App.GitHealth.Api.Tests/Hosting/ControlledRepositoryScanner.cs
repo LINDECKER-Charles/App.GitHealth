@@ -62,21 +62,25 @@ public sealed class ControlledRepositoryScanner(
     public Task<RepositoryResult<RepositoryScan>> ScanAsync(
         RepositoryScanRequest request,
         CancellationToken cancellationToken) =>
-        ScanAsync(request, new Progress<RepositoryScanStage>(), cancellationToken);
+        ScanAsync(request, new Progress<RepositoryScanEvent>(), cancellationToken);
 
     public async Task<RepositoryResult<RepositoryScan>> ScanAsync(
         RepositoryScanRequest request,
-        IProgress<RepositoryScanStage> progress,
+        IProgress<RepositoryScanEvent> progress,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(progress);
         _requests.Enqueue(request);
         TrackScanStart();
         try
         {
-            progress.Report(RepositoryScanStage.Topology);
+            progress.Report(new ScanReferencesListed(Listings()));
+            progress.Report(new ScanStageStarted(RepositoryScanStage.Topology));
+            ReportTopology(progress);
             _started.TrySetResult();
             await _advance.Task.WaitAsync(cancellationToken);
-            progress.Report(RepositoryScanStage.Enrichment);
+            progress.Report(new ScanStageStarted(RepositoryScanStage.Enrichment));
+            ReportEnrichment(progress);
             _enrichment.TrySetResult();
             await _finish.Task.WaitAsync(cancellationToken);
         }
@@ -89,6 +93,56 @@ public sealed class ControlledRepositoryScanner(
     }
 
     public void AdvanceToEnrichment() => _advance.TrySetResult();
+
+    /// <summary>The ledger the run announces, in the order the real scanner would read it.</summary>
+    private ScannedReferenceListing[] Listings() => scan.Branches
+        .Select(branch => new ScannedReferenceListing
+        {
+            ReferenceName = branch.Facts.Reference.FullName,
+            CommitId = branch.Facts.Commit.Value,
+            LastActivityAtUtc = branch.Facts.LastActivityAt,
+            TipAuthor = branch.Facts.TipAuthor,
+        })
+        .ToArray();
+
+    private void ReportTopology(IProgress<RepositoryScanEvent> progress)
+    {
+        foreach (var branch in scan.Branches)
+        {
+            var reference = branch.Facts.Reference.FullName;
+            progress.Report(new ScanCommandCompleted
+            {
+                CommandLine = $"git merge-base main {reference}",
+                Duration = TimeSpan.FromMilliseconds(4),
+                ExitCode = 0,
+                Output = branch.Facts.Commit.Value,
+            });
+            progress.Report(new ScanReferenceStarted(reference, RepositoryScanStage.Topology));
+            progress.Report(new ScanReferenceMeasured
+            {
+                ReferenceName = reference,
+                Divergence = branch.Facts.Divergence,
+                MergeBaseCommit = branch.Facts.Commit.Value,
+            });
+        }
+    }
+
+    private void ReportEnrichment(IProgress<RepositoryScanEvent> progress)
+    {
+        foreach (var branch in scan.Branches)
+        {
+            var reference = branch.Facts.Reference.FullName;
+            progress.Report(new ScanReferenceStarted(reference, RepositoryScanStage.Enrichment));
+            progress.Report(new ScanReferenceEnriched
+            {
+                ReferenceName = reference,
+                TopContributor = branch.Contributors.Count == 0
+                    ? null
+                    : branch.Contributors[0].Name,
+                ContributorCount = branch.Contributors.Count,
+            });
+        }
+    }
 
     public void Release()
     {

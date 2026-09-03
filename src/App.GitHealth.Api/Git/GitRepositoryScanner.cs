@@ -24,7 +24,7 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
         _runner = runner;
         _options = options.Value;
         _clock = clock;
-        _contributors = new GitContributorReader(runner);
+        _contributors = new GitContributorReader();
     }
 
     public async Task<RepositoryResult<RepositoryDescriptor>> InspectAsync(
@@ -81,20 +81,35 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
         RepositoryScanRequest request,
         CancellationToken cancellationToken)
     {
-        return await ScanAsync(request, progress: null, cancellationToken);
+        return await ScanAsync(request, ScanReporter.Silent, cancellationToken);
     }
 
     public async Task<RepositoryResult<RepositoryScan>> ScanAsync(
         RepositoryScanRequest request,
-        IProgress<RepositoryScanStage>? progress,
+        IProgress<RepositoryScanEvent> progress,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+        return await ScanAsync(request, new ScanReporter(progress), cancellationToken);
+    }
+
+    private async Task<RepositoryResult<RepositoryScan>> ScanAsync(
+        RepositoryScanRequest request,
+        ScanReporter reporter,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         try
         {
-            var repository = await CaptureAsync(request.RepositoryPath, cancellationToken);
-            var execution = new RepositoryScanExecution(request, progress);
+            var runner = reporter.IsFollowed
+                ? new TracedGitProcessRunner(_runner, reporter)
+                : _runner;
+            var execution = new RepositoryScanExecution(request, reporter, runner);
+            var repository = await CaptureAsync(
+                runner,
+                request.RepositoryPath,
+                cancellationToken);
             var scan = await ScanCapturedAsync(repository, execution, cancellationToken);
             return RepositoryResults.Success(scan);
         }
@@ -113,12 +128,18 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
 
     private Task<CapturedRepository> CaptureAsync(
         string repositoryPath,
+        CancellationToken cancellationToken) =>
+        CaptureAsync(_runner, repositoryPath, cancellationToken);
+
+    private Task<CapturedRepository> CaptureAsync(
+        IGitProcessRunner runner,
+        string repositoryPath,
         CancellationToken cancellationToken)
     {
         var request = new GitRepositoryCaptureRequest(
             repositoryPath,
             _options.RepositoriesRoot);
-        return GitRepositoryReader.CaptureAsync(_runner, request, cancellationToken);
+        return GitRepositoryReader.CaptureAsync(runner, request, cancellationToken);
     }
 
     private async Task<bool> ContainsCapturedCommitAsync(
@@ -144,26 +165,31 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
         CancellationToken cancellationToken)
     {
         var request = execution.Request;
+        var reporter = execution.Reporter;
         var reference = FindReference(repository, request.Reference);
         var branches = SelectBranches(repository, request, reference);
-        var topologyReader = new GitTopologyReader(_runner, _options);
+        reporter.ReferencesListed(branches.Select(ToListing).ToArray());
+        var topologyReader = new GitTopologyReader(execution.Runner, _options, reporter);
         var topologyScan = new TopologyScan(repository, reference, branches);
-        execution.Progress?.Report(RepositoryScanStage.Topology);
+        reporter.StageStarted(RepositoryScanStage.Topology);
         var topology = await topologyReader.ReadAsync(topologyScan, cancellationToken);
-        execution.Progress?.Report(RepositoryScanStage.Enrichment);
-        var scanned = await EnrichAsync(topologyScan, topology, cancellationToken);
+        reporter.StageStarted(RepositoryScanStage.Enrichment);
+        var scanned = await EnrichAsync(execution, topologyScan, topology, cancellationToken);
         var metadata = new RepositoryScanMetadata(_clock.UtcNow, repository.GitVersion);
         return new RepositoryScan(metadata, reference.Commit, scanned);
     }
 
     private async Task<IReadOnlyList<ScannedBranch>> EnrichAsync(
+        RepositoryScanExecution execution,
         TopologyScan scan,
         IReadOnlyDictionary<string, BranchDivergence> topology,
         CancellationToken cancellationToken)
     {
+        var reporter = execution.Reporter;
         var scanned = new List<ScannedBranch>(scan.Branches.Count);
         foreach (var branch in scan.Branches)
         {
+            reporter.ReferenceStarted(branch.Reference, RepositoryScanStage.Enrichment);
             var divergence = topology[branch.Reference.FullName];
             var comparison = new GitComparison(
                 scan.Repository.Context,
@@ -171,12 +197,21 @@ internal sealed class GitRepositoryScanner : IRepositoryScanner
                 branch.Commit);
             var contributors = divergence.AheadCount == 0
                 ? []
-                : await _contributors.ReadAsync(comparison, cancellationToken);
+                : await _contributors.ReadAsync(execution.Runner, comparison, cancellationToken);
+            reporter.ReferenceEnriched(branch.Reference, contributors);
             scanned.Add(ToScannedBranch(branch, divergence, contributors));
         }
 
         return scanned;
     }
+
+    private static ScannedReferenceListing ToListing(CapturedReference branch) => new()
+    {
+        ReferenceName = branch.Reference.FullName,
+        CommitId = branch.Commit.Value,
+        LastActivityAtUtc = branch.LastActivityAt,
+        TipAuthor = branch.TipAuthor,
+    };
 
     private static CapturedReference FindReference(
         CapturedRepository repository,

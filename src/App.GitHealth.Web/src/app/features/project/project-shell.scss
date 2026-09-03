@@ -91,52 +91,6 @@
   flex: none;
 }
 
-.project-progress {
-  margin: 12px 20px 0;
-  padding: 10px 12px;
-  border: 1px solid var(--status-info-border);
-  background: var(--status-info-bg);
-  border-radius: var(--radius-md);
-  animation: gh-in var(--dur-base) var(--ease-out);
-}
-
-.project-progress-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font: var(--type-small);
-  color: var(--status-info-fg);
-}
-
-.project-progress-head strong {
-  font-weight: var(--weight-medium);
-}
-
-.project-progress-spacer {
-  flex: 1;
-}
-
-.project-progress-step {
-  font: var(--type-code-sm);
-}
-
-.project-progress-bars {
-  display: flex;
-  gap: 3px;
-  margin-top: 8px;
-}
-
-.project-progress-bars span {
-  flex: 1;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--border-default);
-}
-
-.project-progress-bars span.is-done {
-  background: var(--status-info-solid);
-}
-
 .project-notice {
   margin: 12px 20px 0;
 }

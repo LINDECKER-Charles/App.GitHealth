@@ -26,8 +26,8 @@ public sealed class GitTopologyReaderTests
             new Dictionary<string, CapturedReference>());
         var scan = new TopologyScan(repository, reference, [branch]);
 
-        var result = await new GitTopologyReader(runner, new GitScannerOptions())
-            .ReadAsync(scan, default);
+        var reader = new GitTopologyReader(runner, new GitScannerOptions(), ScanReporter.Silent);
+        var result = await reader.ReadAsync(scan, default);
 
         Assert.Equal(
             BranchDivergence.Create(1, 0, BranchRelationship.CommonAncestor),
