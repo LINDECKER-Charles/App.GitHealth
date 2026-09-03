@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { parseMarkdown } from '../../core/markdown/markdown-blocks';
 
 /**
@@ -9,6 +9,10 @@ import { parseMarkdown } from '../../core/markdown/markdown-blocks';
  *
  * Headings carry `role="heading"` with a level rather than being real `h1`…`h6`: an answer
  * lives inside a page that already has its own outline, and must not rewrite it.
+ *
+ * An agent names branches in inline code. When such a name is one the host knows about, the
+ * span becomes a control that reports the choice instead of a dead `<code>`: the reader goes
+ * from the sentence to the row it talks about without searching for it.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -117,6 +121,21 @@ import { parseMarkdown } from '../../core/markdown/markdown-blocks';
     a {
       color: var(--text-link);
     }
+
+    .md-target {
+      padding: 0;
+      border: 0;
+      background: none;
+      font: var(--type-code-sm);
+      color: var(--text-link);
+      text-underline-offset: 2px;
+      cursor: pointer;
+    }
+
+    .md-target:hover {
+      color: var(--text-link-hover);
+      text-decoration: underline;
+    }
   `,
   template: `
     @for (block of blocks(); track $index) {
@@ -192,7 +211,19 @@ import { parseMarkdown } from '../../core/markdown/markdown-blocks';
             <em>{{ span.text }}</em>
           }
           @case ('code') {
-            <code>{{ span.text }}</code>
+            @if (targetNamed(span.text); as target) {
+              <button
+                type="button"
+                class="md-target"
+                [title]="openTargetLabel(target)"
+                [attr.aria-label]="openTargetLabel(target)"
+                (click)="targetSelected.emit(target)"
+              >
+                {{ target }}
+              </button>
+            } @else {
+              <code>{{ span.text }}</code>
+            }
           }
           @case ('link') {
             <a [href]="span.href" target="_blank" rel="noreferrer noopener">{{ span.text }}</a>
@@ -208,5 +239,30 @@ import { parseMarkdown } from '../../core/markdown/markdown-blocks';
 export class DsMarkdown {
   readonly text = input.required<string>();
 
+  /** Branch names the host can open. A code span naming one of them becomes a control. */
+  readonly targets = input<readonly string[]>([]);
+
+  /** The branch the reader picked, exactly as the host spelled it in `targets`. */
+  readonly targetSelected = output<string>();
+
   protected readonly blocks = computed(() => parseMarkdown(this.text()));
+
+  /**
+   * A set rather than the array: an answer holds many code spans, and each one has to be
+   * answered in constant time rather than by walking the branches of the whole capture.
+   */
+  private readonly targetNames = computed(() => new Set(this.targets()));
+
+  /**
+   * The branch a code span names, or `null` when it names none. The comparison is exact —
+   * branch names differ by case, and half a name is another branch.
+   */
+  protected targetNamed(text: string): string | null {
+    const name = text.trim();
+    return this.targetNames().has(name) ? name : null;
+  }
+
+  protected openTargetLabel(branch: string): string {
+    return $localize`:@@ui.markdown.openBranch:Open the row of the branch ${branch}:branchName:`;
+  }
 }

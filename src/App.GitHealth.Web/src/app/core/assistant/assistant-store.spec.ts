@@ -1,12 +1,18 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { AssistantAgent, AssistantBriefing, AssistantRun } from '../api/api.models';
+import {
+  AssistantAgent,
+  AssistantBriefing,
+  AssistantRun,
+  AssistantRunStep,
+} from '../api/api.models';
 import { AssistantStore, assistantPollIntervalMs } from './assistant-store';
 
 const projectId = '11111111-1111-1111-1111-111111111111';
 const runId = '22222222-2222-2222-2222-222222222222';
 const baseline = 'refs/heads/release';
+const conversationId = '33333333-3333-3333-3333-333333333333';
 const question = 'Which branches can go?';
 
 const claude: AssistantAgent = {
@@ -31,6 +37,20 @@ const codex: AssistantAgent = {
   unavailableReason: 'Codex CLI was not found.',
   efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
   defaultEffort: 'low',
+};
+
+const waiting: AssistantRunStep = {
+  kind: 'Waiting',
+  label: '',
+  detail: null,
+  atUtc: '2026-09-02T10:40:01Z',
+};
+
+const reading: AssistantRunStep = {
+  kind: 'Tool',
+  label: 'list_branches',
+  detail: 'verdict=merged',
+  atUtc: '2026-09-02T10:40:03Z',
 };
 
 const briefing: AssistantBriefing = {
@@ -79,21 +99,19 @@ describe('AssistantStore', () => {
   });
 
   /**
-   * The consent is what turns a capture into something that may leave the machine. Without
-   * it the button stays out of reach, whatever else is filled in.
+   * Consent belongs to the repository, not to this store: it is read from the API and added
+   * by the panel. A well-formed question is all this store is entitled to judge.
    */
-  it('refuses to run until the capture has been agreed to', () => {
+  it('is ready as soon as an agent and a question are there', () => {
     loadAgents();
-    store.question.set(question);
     expect(store.canRun()).toBe(false);
 
-    store.hasConsented.set(true);
+    store.question.set(question);
     expect(store.canRun()).toBe(true);
   });
 
   it('refuses to run on an empty question', () => {
     loadAgents();
-    store.hasConsented.set(true);
     store.question.set('   ');
 
     expect(store.canRun()).toBe(false);
@@ -109,7 +127,19 @@ describe('AssistantStore', () => {
       question,
       baseline,
       effort: 'medium',
+      conversationId: null,
     });
+    request.flush(run());
+  });
+
+  /** A follow-up joins the thread it answers, rather than opening a second one beside it. */
+  it('names the thread a follow-up continues', () => {
+    loadAgents();
+    store.question.set(question);
+    store.start({ projectId, baseline, conversationId });
+
+    const request = http.expectOne(`/api/projects/${projectId}/assistant/runs`);
+    expect(request.request.body).toMatchObject({ conversationId });
     request.flush(run());
   });
 
@@ -126,15 +156,46 @@ describe('AssistantStore', () => {
     expect(store.trace()).toBe('Reading the capture');
   });
 
-  it('shows the answer once it exists, and the live trace until then', () => {
+  it('holds the trace while the agent writes, and the answer once it has', () => {
     start({ trace: 'partial', traceOffset: 7 });
-    expect(store.output()).toBe('partial');
+    expect(store.trace()).toBe('partial');
     expect(store.isRunning()).toBe(true);
 
     poll({ status: 'Completed', answer: 'Two branches can go.', traceOffset: 7 });
 
-    expect(store.output()).toBe('Two branches can go.');
+    expect(store.run()?.answer).toBe('Two branches can go.');
     expect(store.isRunning()).toBe(false);
+  });
+
+  /**
+   * The steps come whole on every poll, so they are stated rather than accumulated: a list
+   * that grew by appending would double every step the moment a poll repeated one.
+   */
+  it('replaces the steps with what the poll says the agent is doing', () => {
+    start({ steps: [waiting] });
+    expect(store.steps()).toEqual([waiting]);
+
+    poll({ steps: [waiting, reading] });
+
+    expect(store.steps()).toEqual([waiting, reading]);
+  });
+
+  it('drops the steps once the thread has been read back', () => {
+    start({ steps: [waiting, reading] });
+
+    store.clear();
+
+    expect(store.steps()).toEqual([]);
+  });
+
+  /** The elapsed time is what moves while nothing else does; it stops when the run does. */
+  it('counts the time a run has been going, and stops counting once it has settled', () => {
+    start();
+    expect(store.elapsedMs()).not.toBeNull();
+
+    poll({ status: 'Completed', answer: 'done' });
+
+    expect(store.elapsedMs()).toBeNull();
   });
 
   it('stops polling once the run has settled', () => {
@@ -147,14 +208,22 @@ describe('AssistantStore', () => {
     expect(store.run()?.status).toBe('Failed');
   });
 
-  it('clears the answer without clearing the question', () => {
+  /** The question becomes a turn of the thread, so a copy left in the box would double it. */
+  it('empties the composer once the question has been sent', () => {
+    start();
+
+    expect(store.question()).toBe('');
+  });
+
+  it('drops the settled run without touching what is in the composer', () => {
     start({ status: 'Completed', answer: 'done' });
+    store.question.set('And by author?');
 
     store.clear();
 
     expect(store.run()).toBeNull();
-    expect(store.output()).toBe('');
-    expect(store.question()).toContain(question);
+    expect(store.trace()).toBe('');
+    expect(store.question()).toBe('And by author?');
   });
 
   it('offers the levels the selected agent declares, starting on its default', () => {
@@ -227,9 +296,8 @@ describe('AssistantStore', () => {
   }
 
   function ask(): void {
-    store.hasConsented.set(true);
     store.question.set(`  ${question}  `);
-    store.start(projectId, baseline);
+    store.start({ projectId, baseline, conversationId: null });
   }
 
   function start(overrides: Partial<AssistantRun> = {}): void {
@@ -253,9 +321,12 @@ describe('AssistantStore', () => {
       effort: 'medium',
       question,
       commandLine: '/usr/local/bin/claude --print',
+      conversationId,
+      branchCount: 12,
       status: 'Running',
       startedAtUtc: '2026-09-02T10:40:00Z',
       completedAtUtc: null,
+      steps: [],
       trace: '',
       traceOffset: 0,
       answer: null,

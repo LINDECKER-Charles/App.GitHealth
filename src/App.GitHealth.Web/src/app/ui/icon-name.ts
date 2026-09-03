@@ -18,6 +18,7 @@ export type IconName =
   | 'command'
   | 'copy'
   | 'download'
+  | 'external-link'
   | 'eye'
   | 'eye-off'
   | 'folder'
@@ -38,6 +39,7 @@ export type IconName =
   | 'star'
   | 'star-filled'
   | 'sun'
+  | 'terminal'
   | 'trash-2'
   | 'triangle-alert'
   | 'x';

@@ -8,8 +8,12 @@ import {
   AnalysisStatusResponse,
   AssistantAgentList,
   AssistantBriefing,
+  AssistantConversation,
+  AssistantConversationList,
+  AssistantPurgeResult,
   AssistantRun,
   AssistantRunRequest,
+  AssistantStatus,
   BaselineListResponse,
   CreateProjectRequest,
   DirectoryListing,
@@ -232,6 +236,40 @@ export class GitHealthApiClient {
     return this.request(
       this.http.post<AssistantRun>(`${apiRoot}/assistant/runs/${id}/cancel`, null),
     );
+  }
+
+  /** Consent and how much history is stored, which both the panel and Policies show. */
+  getAssistantStatus(projectId: string): Observable<AssistantStatus> {
+    const url = `${projectUrl(projectId)}/assistant/status`;
+    return this.request(this.http.get<AssistantStatus>(url));
+  }
+
+  setAssistantConsent(projectId: string, granted: boolean): Observable<AssistantStatus> {
+    const url = `${projectUrl(projectId)}/assistant/consent`;
+    return this.request(this.http.put<AssistantStatus>(url, { granted }));
+  }
+
+  /** Every thread of the repository, newest first, across all its baselines. */
+  listAssistantConversations(projectId: string): Observable<AssistantConversationList> {
+    const url = `${projectUrl(projectId)}/assistant/conversations`;
+    return this.request(this.http.get<AssistantConversationList>(url));
+  }
+
+  getAssistantConversation(conversationId: string): Observable<AssistantConversation> {
+    const id = encodeURIComponent(conversationId);
+    const url = `${apiRoot}/assistant/conversations/${id}`;
+    return this.request(this.http.get<AssistantConversation>(url));
+  }
+
+  deleteAssistantConversation(conversationId: string): Observable<void> {
+    const id = encodeURIComponent(conversationId);
+    return this.request(this.http.delete<void>(`${apiRoot}/assistant/conversations/${id}`));
+  }
+
+  /** Empties the history of one repository, and says how many threads went. */
+  purgeAssistantConversations(projectId: string): Observable<AssistantPurgeResult> {
+    const url = `${projectUrl(projectId)}/assistant/conversations`;
+    return this.request(this.http.delete<AssistantPurgeResult>(url));
   }
 
   private request<T>(source: Observable<T>): Observable<T> {

@@ -20,12 +20,14 @@ import { DsIcon } from '../../ui/core/ds-icon';
 import { DsSpinner } from '../../ui/core/ds-spinner';
 import { DsSelect } from '../../ui/forms/ds-select';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
+import { AssistantPanelState } from '../../core/assistant/assistant-panel-state';
+import { AssistantPanel } from '../assistant/assistant-panel';
 import { BranchCard } from '../branch-card/branch-card';
 import { BaselineStore } from './baseline/baseline-store';
 import { CaptureStore } from './capture-store';
 import { ProjectContext } from './project-context';
 
-type TabId = 'diagnostic' | 'visualisation' | 'history' | 'assistant' | 'settings';
+type TabId = 'diagnostic' | 'visualisation' | 'history' | 'settings';
 
 const readingRepositoryLabel = $localize`:@@project.state.reading:Reading the repository…`;
 
@@ -33,14 +35,18 @@ const readingRepositoryLabel = $localize`:@@project.state.reading:Reading the re
 const tabSegments: readonly (readonly [string, TabId])[] = [
   ['/visualisation', 'visualisation'],
   ['/history', 'history'],
-  ['/assistant', 'assistant'],
   ['/settings', 'settings'],
 ];
+
+/** The assistant opens beside the table rather than replacing it, so it answers to a key. */
+const assistantShortcutKey = 'j';
 
 /** Frame of a repository: identity, actions, tabs and the side branch card. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown)': 'onKeydown($event)' },
   imports: [
+    AssistantPanel,
     BranchCard,
     DsBadge,
     DsButton,
@@ -60,6 +66,7 @@ export class ProjectShell {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  protected readonly assistant = inject(AssistantPanelState);
   protected readonly baselines = inject(BaselineStore);
   protected readonly captures = inject(CaptureStore);
   protected readonly context = inject(ProjectContext);
@@ -172,6 +179,14 @@ export class ProjectShell {
       relativeTo: this.route,
       replaceUrl: true,
     });
+  }
+
+  /** ⌘J anywhere in a repository: the assistant is a companion, not a destination. */
+  protected onKeydown(event: KeyboardEvent): void {
+    if (event.key === assistantShortcutKey && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      this.assistant.toggle();
+    }
   }
 
   protected openBranch(snapshotId: string): void {

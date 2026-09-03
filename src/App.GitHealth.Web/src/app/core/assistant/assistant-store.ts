@@ -3,11 +3,25 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, switchMap, timer } from 'rxjs';
 import { apiErrorMessage } from '../api/api-error';
 import { GitHealthApiClient } from '../api/git-health-api-client';
-import { AssistantAgent, AssistantBriefing, AssistantRun, Uuid } from '../api/api.models';
+import {
+  AssistantAgent,
+  AssistantBriefing,
+  AssistantRun,
+  AssistantRunStep,
+  Uuid,
+} from '../api/api.models';
 import { SelectOption } from '../../ui/forms/ds-select';
 
 /** Re-read cadence of a running agent, shared with the tests. */
 export const assistantPollIntervalMs = 700;
+
+/** What a question needs beyond its text: which capture, and which thread it joins. */
+export interface AssistantAskRequest {
+  readonly projectId: Uuid;
+  readonly baseline: string | null;
+  /** Null opens a thread; the identifier of the new one comes back on the run. */
+  readonly conversationId: Uuid | null;
+}
 
 const agentsFailureMessage = $localize`:@@apiError.assistant.agents:The installed agents could not be listed.`;
 const briefingFailureMessage = $localize`:@@apiError.assistant.briefing:The capture could not be prepared.`;
@@ -40,20 +54,17 @@ export class AssistantStore {
   private traceOffset = 0;
   private loadedAgents = false;
 
+  /** Moves with each poll, which is what makes the elapsed time move with it. */
+  private readonly polledAt = signal(0);
+
   readonly isEnabled = signal(true);
   readonly agents = signal<readonly AssistantAgent[]>([]);
   readonly agentId = signal('');
   readonly question = signal('');
   readonly briefing = signal<AssistantBriefing | null>(null);
-  readonly isBriefingOpen = signal(false);
-
-  /**
-   * Agreement that the capture may leave the machine. Kept for the session rather than
-   * asked on every question: the briefing stays one click away the whole time.
-   */
-  readonly hasConsented = signal(false);
 
   readonly run = signal<AssistantRun | null>(null);
+  readonly steps = signal<readonly AssistantRunStep[]>([]);
   readonly trace = signal('');
   readonly error = signal<string | null>(null);
   readonly isLoadingAgents = signal(false);
@@ -87,18 +98,33 @@ export class AssistantStore {
 
   readonly isRunning = computed(() => this.run()?.status === 'Running');
 
+  /**
+   * How long the agent has been at it. Read from the poll rather than from a timer of its
+   * own: the run is already re-read every 700 ms, which is finer than a figure in seconds.
+   */
+  readonly elapsedMs = computed(() => {
+    const run = this.run();
+    if (run === null || run.status !== 'Running') {
+      return null;
+    }
+
+    const started = Date.parse(run.startedAtUtc);
+    return Number.isNaN(started) ? null : Math.max(0, this.polledAt() - started);
+  });
+
+  /**
+   * Everything but the permission to send. Consent belongs to the repository rather than to
+   * this run, so the panel adds it: the store must not read as though a question were
+   * askable merely because it is well formed.
+   */
   readonly canRun = computed(
     () =>
       this.isEnabled() &&
       this.selectedAgent() !== null &&
       this.question().trim().length > 0 &&
-      this.hasConsented() &&
       !this.isRunning() &&
       !this.isStarting(),
   );
-
-  /** The answer once it exists, the live trace until then: the panel is never blank. */
-  readonly output = computed(() => this.run()?.answer ?? this.trace());
 
   loadAgents(refresh = false): void {
     if (this.loadedAgents && !refresh) {
@@ -135,11 +161,7 @@ export class AssistantStore {
       });
   }
 
-  toggleBriefing(): void {
-    this.isBriefingOpen.update((open) => !open);
-  }
-
-  start(projectId: Uuid, baseline: string | null): void {
+  start(request: AssistantAskRequest): void {
     const agent = this.selectedAgent();
     if (agent === null || !this.canRun()) {
       return;
@@ -148,14 +170,16 @@ export class AssistantStore {
     this.stopPolling();
     this.traceOffset = 0;
     this.trace.set('');
+    this.steps.set([]);
     this.error.set(null);
     this.isStarting.set(true);
     this.api
-      .startAssistantRun(projectId, {
+      .startAssistantRun(request.projectId, {
         agentId: agent.id,
         question: this.question().trim(),
-        baseline,
+        baseline: request.baseline,
         effort: this.effort(),
+        conversationId: request.conversationId,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -179,10 +203,11 @@ export class AssistantStore {
       .subscribe({ error: () => this.stopPolling() });
   }
 
-  /** Clears the answer without clearing the question: asking again is the common case. */
+  /** Drops the live run once its thread has been read back, so no answer is drawn twice. */
   clear(): void {
     this.stopPolling();
     this.run.set(null);
+    this.steps.set([]);
     this.trace.set('');
     this.traceOffset = 0;
     this.error.set(null);
@@ -203,8 +228,10 @@ export class AssistantStore {
     this.error.set(apiErrorMessage(error, agentsFailureMessage));
   }
 
+  /** The question moves into the thread, so the box it was typed in is emptied. */
   private applyStarted(run: AssistantRun): void {
     this.isStarting.set(false);
+    this.question.set('');
     this.apply(run);
     this.ensurePolling();
   }
@@ -232,9 +259,15 @@ export class AssistantStore {
     }
   }
 
-  /** The payload carries the trace since the offset asked for, so it is appended, not set. */
+  /**
+   * The payload carries the trace since the offset asked for, so it is appended, not set.
+   * The steps come whole every time and are replaced: there are few of them, and a list
+   * that is stated rather than accumulated cannot drift out of step with the run.
+   */
   private apply(run: AssistantRun): void {
     this.run.set(run);
+    this.steps.set(run.steps);
+    this.polledAt.set(Date.now());
     this.traceOffset = run.traceOffset;
     if (run.trace.length > 0) {
       this.trace.update((current) => current + run.trace);
