@@ -1,0 +1,38 @@
+<div class="ledger-head" aria-hidden="true">
+  <span i18n="@@analysisRun.ledger.reference">Reference</span>
+  <span i18n="@@analysisRun.ledger.mergeBase">Merge base</span>
+  <span class="is-right" i18n="@@analysisRun.ledger.distance">Ahead / behind</span>
+  <span i18n="@@analysisRun.ledger.topology">Topology</span>
+  <span i18n="@@analysisRun.ledger.contributors">Contributors</span>
+  <span i18n="@@analysisRun.ledger.activity">Activity</span>
+</div>
+<div class="ledger-body" #body>
+  @for (row of rows(); track row.id) {
+    <div class="ledger-row" [class.is-reading]="row.isReading">
+      <span class="ledger-reference">
+        <span
+          class="ledger-dot"
+          [class.is-reading]="row.isReading"
+          [class.is-read]="row.isRead"
+        ></span>
+        <span class="ledger-name" [class.is-pending]="!row.isReading && !row.isRead">{{
+          row.name
+        }}</span>
+      </span>
+      <span class="ledger-base">{{ row.mergeBase }}</span>
+      <span class="ledger-distance">
+        <span>{{ row.ahead }}</span>
+        @if (row.behind !== '') {
+          <span class="is-muted"> / {{ row.behind }}</span>
+        }
+      </span>
+      <span class="ledger-topology">
+        @if (row.topologyLabel; as label) {
+          <ds-badge size="sm" [tone]="row.topologyTone">{{ label }}</ds-badge>
+        }
+      </span>
+      <span class="ledger-contributors">{{ row.contributors }}</span>
+      <span class="ledger-age">{{ row.age }}</span>
+    </div>
+  }
+</div>

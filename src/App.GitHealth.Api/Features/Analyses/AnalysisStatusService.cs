@@ -23,9 +23,8 @@ internal sealed class AnalysisStatusService(
 
     private AnalysisStatusResponse Map(AnalysisRunEntity analysis)
     {
-        var phase = queue.TryGetProgress(analysis.Id, out var progress)
-            ? progress!.Phase
-            : MapPersistedPhase(analysis.Status);
+        var isTracked = queue.TryGetProgress(analysis.Id, out var progress);
+        var phase = isTracked ? progress!.Phase : MapPersistedPhase(analysis.Status);
         return new AnalysisStatusResponse
         {
             AnalysisId = analysis.Id,
@@ -36,6 +35,7 @@ internal sealed class AnalysisStatusService(
             CompletedAtUtc = analysis.CompletedAtUtc,
             FailureCode = analysis.FailureCode,
             FailureMessage = analysis.FailureMessage,
+            Progress = isTracked ? AnalysisProgressMapper.ToResponse(progress!) : null,
         };
     }
 

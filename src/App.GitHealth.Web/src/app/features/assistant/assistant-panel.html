@@ -1,0 +1,289 @@
+<div class="panel-head">
+  <div class="panel-head-row">
+    <span class="panel-label">{{ panelLabel() }}</span>
+    <button
+      dsIconButton
+      size="sm"
+      icon="clock"
+      type="button"
+      i18n-label="@@assistant.action.conversations"
+      label="Conversations"
+      [active]="panel.isHistory()"
+      (click)="panel.toggleHistory()"
+    ></button>
+    <button
+      dsIconButton
+      size="sm"
+      icon="plus"
+      type="button"
+      i18n-label="@@assistant.action.newConversation"
+      label="New conversation"
+      (click)="newConversation()"
+    ></button>
+    <button
+      dsIconButton
+      size="sm"
+      icon="x"
+      type="button"
+      i18n-label="@@assistant.action.close"
+      label="Close the assistant"
+      (click)="panel.close()"
+    ></button>
+  </div>
+
+  @if (isReady()) {
+    <div class="panel-agent">
+      <ds-status-dot tone="success" [size]="7" />
+      <ds-select
+        class="panel-agent-select"
+        size="sm"
+        i18n-ariaLabel="@@assistant.agent.aria"
+        ariaLabel="Agent that answers"
+        [options]="store.agentOptions()"
+        [value]="store.agentId()"
+        (valueChange)="store.agentId.set($event)"
+      />
+      @if (store.selectedAgent(); as agent) {
+        <ds-badge size="sm" [mono]="true">{{ agentVersion() }}</ds-badge>
+      }
+      <ds-select
+        class="panel-effort-select"
+        size="sm"
+        i18n-ariaLabel="@@assistant.effort.aria"
+        ariaLabel="How hard the agent thinks"
+        [options]="store.effortOptions()"
+        [value]="store.effort()"
+        [disabled]="store.isRunning()"
+        (valueChange)="store.effort.set($event)"
+      />
+      <span class="panel-spacer"></span>
+      <span
+        class="panel-readonly"
+        i18n-title="@@assistant.readonly.title"
+        title="No shell, no file access, no network: the capture is the only thing it can read"
+        i18n="@@assistant.readonly"
+        >read-only</span
+      >
+    </div>
+
+    @if (store.briefing(); as briefing) {
+      <div class="panel-context">
+        <ds-badge size="sm" tone="info" icon="git-branch" [mono]="true">
+          {{ baselineLabel() }}
+        </ds-badge>
+        <span>{{ captureLabel() }}</span>
+        <span class="panel-spacer"></span>
+        <button type="button" class="panel-link" (click)="panel.toggleBriefing()">
+          <ds-icon [name]="panel.isBriefingOpen() ? 'eye-off' : 'eye'" [size]="12" />
+          {{ briefingLabel() }}
+        </button>
+      </div>
+    }
+  }
+</div>
+
+@if (panel.isBriefingOpen() && store.briefing(); as briefing) {
+  <section class="panel-briefing">
+    <header class="panel-briefing-head">
+      <span i18n="@@assistant.briefing.head">what the agent can query</span>
+      <span class="panel-spacer"></span>
+      <span>{{ captureLabel() }}</span>
+    </header>
+    <pre class="panel-briefing-text">{{ briefing.text }}</pre>
+  </section>
+}
+
+<div class="panel-body" #body>
+  @if (!store.isEnabled()) {
+    <ds-callout
+      tone="neutral"
+      i18n-title="@@assistant.disabled.title"
+      title="Turned off on this installation"
+      i18n="@@assistant.disabled.body"
+    >
+      Every other GitHealth feature works without a network. This one does not, and
+      <code>GitHealth:Assistant:Enabled</code> is set to false here. No interface can re-enable it.
+    </ds-callout>
+  } @else if (store.isLoadingAgents()) {
+    <p class="panel-state" i18n="@@assistant.looking">Looking for installed agents…</p>
+  } @else if (!store.hasAvailableAgent()) {
+    <div class="panel-none">
+      <span class="panel-none-icon"><ds-icon name="terminal" [size]="18" /></span>
+      <strong i18n="@@assistant.none.title">No agent found on this machine</strong>
+      <p i18n="@@assistant.none.description">
+        GitHealth drives a command-line agent you already have. It never installs one.
+      </p>
+    </div>
+    <div class="panel-agents">
+      @for (agent of store.agents(); track agent.id) {
+        <div class="panel-agent-card">
+          <div class="panel-agent-name">
+            <span>{{ agent.name }}</span>
+            <span class="panel-spacer"></span>
+            <a [href]="agent.installationUrl" target="_blank" rel="noreferrer noopener">
+              <ng-container i18n="@@assistant.none.install">Install</ng-container>
+              <ds-icon name="external-link" [size]="11" />
+            </a>
+          </div>
+          <p class="panel-agent-reason">{{ agent.unavailableReason }}</p>
+        </div>
+      }
+    </div>
+    <div class="panel-none-action">
+      <button
+        dsButton
+        size="sm"
+        variant="secondary"
+        iconLeft="refresh-cw"
+        type="button"
+        (click)="lookAgain()"
+        i18n="@@assistant.none.retry"
+      >
+        Look again
+      </button>
+    </div>
+  } @else if (!hasCapture()) {
+    <ds-callout
+      tone="warning"
+      i18n-title="@@assistant.briefing.missing.title"
+      title="No capture to read yet"
+      i18n="@@assistant.briefing.missing.body"
+    >
+      Run an analysis on this baseline first. The assistant reads measurements already taken; it
+      never takes them itself.
+    </ds-callout>
+  } @else if (panel.isHistory()) {
+    <app-assistant-history
+      [conversations]="history.conversations()"
+      [selectedId]="history.conversationId()"
+      (opened)="openConversation($event)"
+      (removed)="removeConversation($event)"
+    />
+  } @else if (!history.hasConsented()) {
+    <section class="panel-consent">
+      <strong i18n="@@assistant.consent.title">Before the first question</strong>
+      <p i18n="@@assistant.consent.what">
+        This capture — branch names, dates, verdicts and tip authors — is read by the agent you
+        chose and sent to its provider, on your own account. Never an email address, never the
+        repository itself.
+      </p>
+      <p i18n="@@assistant.consent.how">
+        The agent runs read-only, in an empty folder, and GitHealth answers it with this capture and
+        nothing else. Claude Code additionally runs with its own tools switched off; Codex CLI keeps
+        the tools its plugins give it, which GitHealth cannot take away.
+      </p>
+      <div class="panel-consent-actions">
+        <button
+          dsButton
+          size="sm"
+          variant="primary"
+          iconLeft="check"
+          type="button"
+          (click)="allow()"
+          i18n="@@assistant.consent.allow"
+        >
+          Allow for this repository
+        </button>
+        <button
+          dsButton
+          size="sm"
+          variant="ghost"
+          iconLeft="eye"
+          type="button"
+          (click)="panel.toggleBriefing()"
+          i18n="@@assistant.consent.read"
+        >
+          See what it can query
+        </button>
+      </div>
+      <p class="panel-consent-note" i18n="@@assistant.consent.once">
+        Asked once per repository. Revoke it any time in Policies → Assistant.
+      </p>
+    </section>
+  } @else if (turns().length === 0) {
+    <div class="panel-suggestions">
+      <div class="panel-section-label" i18n="@@assistant.suggestion.label">
+        Suggested from this capture
+      </div>
+      @for (suggestion of suggestions; track suggestion) {
+        <button type="button" class="panel-suggestion" (click)="useSuggestion(suggestion)">
+          <span>{{ suggestion }}</span>
+          <ds-icon name="arrow-right" [size]="13" />
+        </button>
+      }
+      <p class="panel-suggestion-note" i18n="@@assistant.suggestion.note">
+        The agent answers from this capture and nothing else. Branch names in its answers open the
+        matching rows.
+      </p>
+    </div>
+  } @else {
+    <app-assistant-turns
+      [turns]="turns()"
+      [targets]="branches().names"
+      [branchCount]="store.briefing()?.branchCount ?? 0"
+      [liveTrace]="store.trace()"
+      [steps]="store.steps()"
+      [elapsedMs]="store.elapsedMs()"
+      (branchSelected)="openBranch($event)"
+      (stopRequested)="store.cancel()"
+      (retryRequested)="retry()"
+    />
+  }
+
+  @if (store.error(); as message) {
+    <ds-callout
+      tone="danger"
+      i18n-title="@@assistant.error.title"
+      title="The assistant could not be reached"
+      >{{ message }}</ds-callout
+    >
+  }
+</div>
+
+@if (showComposer()) {
+  <div class="panel-composer">
+    <textarea
+      class="panel-textarea"
+      rows="2"
+      i18n-aria-label="@@assistant.question.aria"
+      aria-label="Question about this capture"
+      [placeholder]="turns().length === 0 ? askPlaceholder : followPlaceholder"
+      [value]="store.question()"
+      (input)="store.question.set($any($event.target).value)"
+      (keydown)="onComposerKey($event)"
+    ></textarea>
+    <div class="panel-composer-row">
+      <span class="panel-composer-hint" i18n="@@assistant.composer.hint">
+        Enter sends · Shift+Enter starts a line
+      </span>
+      <span class="panel-spacer"></span>
+      @if (store.isRunning()) {
+        <button
+          dsButton
+          size="sm"
+          variant="secondary"
+          iconLeft="x"
+          type="button"
+          (click)="store.cancel()"
+          i18n="@@assistant.action.stop"
+        >
+          Stop
+        </button>
+      } @else {
+        <button
+          dsButton
+          size="sm"
+          variant="primary"
+          iconLeft="sparkles"
+          type="button"
+          [disabled]="!canAsk()"
+          [loading]="store.isStarting()"
+          (click)="ask()"
+          i18n="@@assistant.action.ask"
+        >
+          Ask
+        </button>
+      }
+    </div>
+  </div>
+}

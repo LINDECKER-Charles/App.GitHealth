@@ -19,6 +19,6 @@ public interface IRepositoryScanner
 
     Task<RepositoryResult<RepositoryScan>> ScanAsync(
         RepositoryScanRequest request,
-        IProgress<RepositoryScanStage> progress,
+        IProgress<RepositoryScanEvent> progress,
         CancellationToken cancellationToken) => ScanAsync(request, cancellationToken);
 }

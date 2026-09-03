@@ -5,6 +5,16 @@ internal static class ApiErrorCodes
     public const string AnalysisNotFound = "analysis.not_found";
     public const string AnalysisNotAvailable = "analysis.no_successful_result";
     public const string AnalysisRunning = "analysis.running";
+    public const string AssistantAgentUnavailable = "assistant.agent_unavailable";
+    public const string AssistantBusy = "assistant.busy";
+    public const string AssistantConsentRequired = "assistant.consent_required";
+    public const string AssistantConversationNotFound = "assistant.conversation_not_found";
+    public const string AssistantDisabled = "assistant.disabled";
+    public const string AssistantEffortUnsupported = "assistant.effort_unsupported";
+    public const string AssistantQuestionRequired = "assistant.question_required";
+    public const string AssistantRunFailed = "assistant.run_failed";
+    public const string AssistantRunNotFound = "assistant.run_not_found";
+    public const string AssistantTimedOut = "assistant.timed_out";
     public const string DatabaseBusy = "database.busy";
     public const string DirectoryInaccessible = "runtime.directory_inaccessible";
     public const string DirectoryNotAllowed = "runtime.directory_not_allowed";

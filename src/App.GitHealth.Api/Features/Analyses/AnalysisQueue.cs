@@ -10,15 +10,24 @@ namespace App.GitHealth.Api.Features.Analyses;
 internal sealed class AnalysisQueue : IDisposable
 {
     /// <summary>
+    /// Endings kept readable after the fact. A launch measures every baseline of a project
+    /// at once, so the window has to hold a whole fan-out and not just the last run.
+    /// </summary>
+    private const int RetainedEndedRuns = 8;
+
+    /// <summary>
     /// Keyed by baseline, not by project: the baselines of one project are separate
     /// measurements and must be allowed to run together.
     /// </summary>
     private readonly Dictionary<AnalysisTarget, Guid> _activeByTarget = [];
 
+    private readonly Queue<Guid> _ended = new();
+    private readonly Lock _endedGate = new();
+
     private readonly Channel<AnalysisWorkItem> _channel;
     private readonly IClock _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly ConcurrentDictionary<Guid, AnalysisProgressSnapshot> _progress = new();
+    private readonly ConcurrentDictionary<Guid, AnalysisRunProgress> _progress = new();
     private readonly HashSet<Guid> _reservedProjects = [];
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeSpan _timeout;
@@ -107,19 +116,24 @@ internal sealed class AnalysisQueue : IDisposable
 
     public bool TryRead(out AnalysisWorkItem? item) => _channel.Reader.TryRead(out item);
 
-    public bool TryGetProgress(Guid analysisId, out AnalysisProgressSnapshot? progress) =>
-        _progress.TryGetValue(analysisId, out progress);
-
-    public void Update(Guid analysisId, AnalysisPhase phase, string? message = null)
+    public bool TryGetProgress(Guid analysisId, out AnalysisProgressSnapshot? progress)
     {
-        _progress[analysisId] = new AnalysisProgressSnapshot
+        if (_progress.TryGetValue(analysisId, out var live))
         {
-            AnalysisId = analysisId,
-            Phase = phase,
-            UpdatedAtUtc = _clock.UtcNow,
-            Message = message,
-        };
+            progress = live.Snapshot(_clock.UtcNow);
+            return true;
+        }
+
+        progress = null;
+        return false;
     }
+
+    /// <summary>Live state of a run, created on first mention and released by <see cref="Forget"/>.</summary>
+    public AnalysisRunProgress Track(Guid analysisId) =>
+        _progress.GetOrAdd(analysisId, _ => new AnalysisRunProgress());
+
+    public void Update(Guid analysisId, AnalysisPhase phase, string? message = null) =>
+        Track(analysisId).SetPhase(phase, message);
 
     public async Task ReleaseAsync(AnalysisTarget target)
     {
@@ -136,7 +150,22 @@ internal sealed class AnalysisQueue : IDisposable
 
     public void Complete() => _channel.Writer.TryComplete();
 
-    public void Forget(Guid analysisId) => _progress.TryRemove(analysisId, out _);
+    /// <summary>
+    /// A run ends between two polls. Dropping its reading right away would leave a reader
+    /// with a half-filled ledger under a header saying the whole thing was read, so the
+    /// last few endings stay legible and are pushed out by the runs that follow.
+    /// </summary>
+    public void Forget(Guid analysisId)
+    {
+        lock (_endedGate)
+        {
+            _ended.Enqueue(analysisId);
+            while (_ended.Count > RetainedEndedRuns)
+            {
+                _progress.TryRemove(_ended.Dequeue(), out _);
+            }
+        }
+    }
 
     public void Dispose() => _gate.Dispose();
 

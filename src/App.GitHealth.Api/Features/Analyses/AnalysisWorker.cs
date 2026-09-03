@@ -105,7 +105,7 @@ internal sealed partial class AnalysisWorker(
             return;
         }
 
-        var progress = new InlineScanProgress(stage => Report(item.AnalysisId, stage));
+        var progress = new AnalysisProgressRecorder(queue.Track(item.AnalysisId));
         var result = await scanner.ScanAsync(request, progress, cancellationToken);
         if (!result.TryGetValue(out var scan))
         {
@@ -264,14 +264,6 @@ internal sealed partial class AnalysisWorker(
             or RepositoryErrorCode.NotARepository
             ? projects.MarkUnavailableAsync(projectId, queue.UtcNow, CancellationToken.None)
             : Task.CompletedTask;
-    }
-
-    private void Report(Guid analysisId, RepositoryScanStage stage)
-    {
-        var phase = stage == RepositoryScanStage.Topology
-            ? AnalysisPhase.Topology
-            : AnalysisPhase.Enrichment;
-        queue.Update(analysisId, phase);
     }
 
     [LoggerMessage(

@@ -40,6 +40,13 @@ internal sealed class ProjectEntity
 
     public Guid? LastSuccessfulAnalysisId { get; set; }
 
+    /// <summary>
+    /// When sending this repository's captures to an agent was allowed, or null while it
+    /// never has been. It lives on the project because the question is asked once per
+    /// repository and holds for every baseline of it.
+    /// </summary>
+    public DateTimeOffset? AssistantConsentAtUtc { get; private set; }
+
     public ICollection<AnalysisRunEntity> AnalysisRuns { get; } = [];
 
     /// <summary>
@@ -105,6 +112,18 @@ internal sealed class ProjectEntity
     {
         UtcDate.Require(changedAtUtc, nameof(changedAtUtc));
         IsRepositoryAccessible = true;
+        UpdatedAtUtc = changedAtUtc;
+    }
+
+    /// <summary>
+    /// Records or withdraws the permission to send this repository's captures to an agent.
+    /// Withdrawing keeps the conversations already stored: the consent governs what leaves
+    /// the machine next, not what was read of it before.
+    /// </summary>
+    public void SetAssistantConsent(DateTimeOffset? grantedAtUtc, DateTimeOffset changedAtUtc)
+    {
+        UtcDate.Require(changedAtUtc, nameof(changedAtUtc));
+        AssistantConsentAtUtc = grantedAtUtc;
         UpdatedAtUtc = changedAtUtc;
     }
 

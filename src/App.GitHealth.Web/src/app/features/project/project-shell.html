@@ -20,6 +20,20 @@
         <button
           dsButton
           size="sm"
+          variant="secondary"
+          iconLeft="sparkles"
+          type="button"
+          i18n-title="@@project.action.assistantTitle"
+          title="Ask the assistant · ⌘J"
+          [attr.aria-pressed]="assistant.isOpen()"
+          (click)="assistant.toggle()"
+          i18n="@@project.action.assistant"
+        >
+          Assistant
+        </button>
+        <button
+          dsButton
+          size="sm"
           variant="primary"
           iconLeft="refresh-cw"
           [loading]="context.isRunning()"
@@ -73,20 +87,8 @@
     </div>
   </div>
 
-  @if (context.isRunning()) {
-    <div class="project-progress" role="status" aria-live="polite">
-      <div class="project-progress-head">
-        <ds-spinner [size]="13" />
-        <strong>{{ currentPhaseLabel() }}</strong>
-        <span class="project-progress-spacer"></span>
-        <span class="project-progress-step">{{ progressStep() }}</span>
-      </div>
-      <div class="project-progress-bars">
-        @for (phase of phases; track phase) {
-          <span [class.is-done]="$index <= currentPhaseIndex()"></span>
-        }
-      </div>
-    </div>
+  @if (isRunCollapsed()) {
+    <app-analysis-run-strip />
   }
 
   @if (context.project()?.isRepositoryAccessible === false) {
@@ -169,7 +171,11 @@
     </nav>
   </div>
 
-  <router-outlet />
+  @if (isSceneVisible()) {
+    <app-analysis-run-scene />
+  } @else {
+    <router-outlet />
+  }
 </div>
 
 @if (branchId(); as snapshotId) {
@@ -178,5 +184,13 @@
     [snapshotId]="snapshotId"
     (closed)="closeBranch()"
     (moved)="openBranch($event)"
+  />
+}
+
+@if (assistant.isOpen()) {
+  <app-assistant-panel
+    class="project-panel"
+    [projectId]="projectId()"
+    (branchOpened)="openBranch($event)"
   />
 }

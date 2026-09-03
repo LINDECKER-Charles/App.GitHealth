@@ -9,17 +9,20 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { AnalysisRunStore } from '../../core/analysis/analysis-run-store';
 import { displayReference } from '../../core/branches/branch-labels';
 import { SnapshotExporter } from '../../core/branches/snapshot-export';
 import { pluralMessage } from '../../core/i18n/plural-message';
-import { analysisPhases, phaseIndex, phaseLabel } from '../../core/workspace/analysis-phases';
 import { relativeTime } from '../../core/workspace/relative-time';
 import { DsBadge } from '../../ui/core/ds-badge';
 import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
-import { DsSpinner } from '../../ui/core/ds-spinner';
 import { DsSelect } from '../../ui/forms/ds-select';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
+import { AssistantPanelState } from '../../core/assistant/assistant-panel-state';
+import { AnalysisRunScene } from '../analysis-run/analysis-run-scene';
+import { AnalysisRunStrip } from '../analysis-run/analysis-run-strip';
+import { AssistantPanel } from '../assistant/assistant-panel';
 import { BranchCard } from '../branch-card/branch-card';
 import { BaselineStore } from './baseline/baseline-store';
 import { CaptureStore } from './capture-store';
@@ -36,17 +39,23 @@ const tabSegments: readonly (readonly [string, TabId])[] = [
   ['/settings', 'settings'],
 ];
 
+/** The assistant opens beside the table rather than replacing it, so it answers to a key. */
+const assistantShortcutKey = 'j';
+
 /** Frame of a repository: identity, actions, tabs and the side branch card. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown)': 'onKeydown($event)' },
   imports: [
+    AnalysisRunScene,
+    AnalysisRunStrip,
+    AssistantPanel,
     BranchCard,
     DsBadge,
     DsButton,
     DsCallout,
     DsIcon,
     DsSelect,
-    DsSpinner,
     RouterLink,
     RouterOutlet,
   ],
@@ -59,12 +68,25 @@ export class ProjectShell {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  private readonly run = inject(AnalysisRunStore);
+
+  protected readonly assistant = inject(AssistantPanelState);
   protected readonly baselines = inject(BaselineStore);
   protected readonly captures = inject(CaptureStore);
   protected readonly context = inject(ProjectContext);
-  protected readonly phases = analysisPhases;
-  protected readonly phaseLabel = phaseLabel;
   protected readonly readingRepository = readingRepositoryLabel;
+
+  /**
+   * The scene takes the tab over; folded away, the run keeps going behind the capture. It
+   * outlives the run by one frame, so a reader sees it close rather than vanish.
+   */
+  protected readonly isSceneVisible = computed(
+    () => (this.context.isRunning() || this.run.isClosing()) && !this.run.isCollapsed(),
+  );
+
+  protected readonly isRunCollapsed = computed(
+    () => this.context.isRunning() && this.run.isCollapsed(),
+  );
 
   private readonly params = toSignal(this.route.paramMap, { requireSync: true });
   private readonly queryParams = toSignal(this.route.queryParamMap, { requireSync: true });
@@ -129,22 +151,6 @@ export class ProjectShell {
       : $localize`:@@project.action.run:Run an analysis`,
   );
 
-  protected readonly currentPhaseIndex = computed(() => {
-    const phase = this.context.analysis()?.phase;
-    return phase === undefined ? 0 : Math.max(0, phaseIndex(phase));
-  });
-
-  protected readonly progressStep = computed(() => {
-    const step = this.currentPhaseIndex() + 1;
-    const total = this.phases.length;
-    return $localize`:@@project.progress.step:step ${step} of ${total}`;
-  });
-
-  protected readonly currentPhaseLabel = computed(() => {
-    const phase = this.context.analysis()?.phase;
-    return phase === undefined ? $localize`:@@project.progress.waiting:Waiting` : phaseLabel(phase);
-  });
-
   constructor() {
     effect(() => this.context.open(this.projectId()));
     effect(() => this.context.setBaseline(this.baselines.requested()));
@@ -171,6 +177,14 @@ export class ProjectShell {
       relativeTo: this.route,
       replaceUrl: true,
     });
+  }
+
+  /** ⌘J anywhere in a repository: the assistant is a companion, not a destination. */
+  protected onKeydown(event: KeyboardEvent): void {
+    if (event.key === assistantShortcutKey && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      this.assistant.toggle();
+    }
   }
 
   protected openBranch(snapshotId: string): void {

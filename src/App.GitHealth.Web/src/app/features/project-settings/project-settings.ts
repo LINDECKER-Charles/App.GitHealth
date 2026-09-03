@@ -29,6 +29,7 @@ import {
   moveBaseline,
   removeBaseline,
 } from './baseline-draft';
+import { AssistantPolicy } from './assistant-policy/assistant-policy';
 import { BranchPicker } from './branch-picker/branch-picker';
 import { BranchPatternKind } from './branch-picker/branch-picker-options';
 import { PolicyMatch, PolicyStat, projectMatches, projectStats } from './policy-projection';
@@ -40,6 +41,7 @@ const bandHeadroom = 1.6;
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    AssistantPolicy,
     BranchPicker,
     DsBadge,
     DsButton,
@@ -59,6 +61,9 @@ export class ProjectSettings {
   private readonly dialogs = inject(WorkspaceDialogs);
 
   protected readonly context = inject(ProjectContext);
+
+  /** The assistant section is scoped to one repository, so it is handed the one on screen. */
+  protected readonly projectId = computed(() => this.context.project()?.id ?? '');
 
   protected readonly mergedActiveUntilDays = mergedActiveUntilDays;
   protected readonly mergedInactiveAfterDays = mergedInactiveAfterDays;

@@ -14,7 +14,7 @@ public sealed class BranchClassifier(IClock clock)
         ArgumentNullException.ThrowIfNull(thresholds);
         ArgumentNullException.ThrowIfNull(policy);
 
-        var topology = ClassifyTopology(facts);
+        var topology = ClassifyTopology(facts.Divergence);
         var applied = AppliedThresholds(topology, thresholds);
         var assessment = new Assessment(
             topology,
@@ -55,6 +55,34 @@ public sealed class BranchClassifier(IClock clock)
         return topology is not (BranchTopology.Merged or BranchTopology.Synchronized);
     }
 
+    /// <summary>
+    /// Where a reference sits against the baseline. Public because a running scan names the
+    /// topology of each reference as soon as it is measured, long before the verdict.
+    /// </summary>
+    public static BranchTopology ClassifyTopology(BranchDivergence divergence)
+    {
+        ArgumentNullException.ThrowIfNull(divergence);
+
+        if (divergence.Relationship == BranchRelationship.NoCommonAncestor)
+        {
+            return BranchTopology.Unrelated;
+        }
+
+        if (divergence.Relationship == BranchRelationship.SameCommit)
+        {
+            return BranchTopology.Synchronized;
+        }
+
+        if (divergence.AheadCount > 0 && divergence.BehindCount == 0)
+        {
+            return BranchTopology.Ahead;
+        }
+
+        return divergence.Relationship == BranchRelationship.BranchIsAncestorOfReference
+            ? BranchTopology.Merged
+            : BranchTopology.Diverged;
+    }
+
     private ActivityStatus ClassifyActivity(
         DateTimeOffset? lastActivityAt,
         ActivityThresholds thresholds)
@@ -75,28 +103,6 @@ public sealed class BranchClassifier(IClock clock)
         return ageInDays <= thresholds.InactiveAfterDays
             ? ActivityStatus.Aging
             : ActivityStatus.Inactive;
-    }
-
-    private static BranchTopology ClassifyTopology(BranchFacts facts)
-    {
-        if (facts.Divergence.Relationship == BranchRelationship.NoCommonAncestor)
-        {
-            return BranchTopology.Unrelated;
-        }
-
-        if (facts.Divergence.Relationship == BranchRelationship.SameCommit)
-        {
-            return BranchTopology.Synchronized;
-        }
-
-        if (facts.AheadCount > 0 && facts.BehindCount == 0)
-        {
-            return BranchTopology.Ahead;
-        }
-
-        return facts.Divergence.Relationship == BranchRelationship.BranchIsAncestorOfReference
-            ? BranchTopology.Merged
-            : BranchTopology.Diverged;
     }
 
     private static RecommendationKind Recommend(Assessment assessment)

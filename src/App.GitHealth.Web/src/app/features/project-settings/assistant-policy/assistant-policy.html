@@ -1,0 +1,78 @@
+<ds-panel i18n-title="@@settings.assistant.title" title="Assistant" icon="sparkles">
+  <div class="panel-content">
+    <p class="panel-intro" i18n="@@settings.assistant.intro">
+      The assistant hands this repository's captures to an agent installed on this machine, which
+      calls its own provider on your account. Nothing leaves the machine without the permission
+      below.
+    </p>
+
+    <div class="consent" [class.consent--on]="history.hasConsented()">
+      <ds-status-dot [tone]="history.hasConsented() ? 'success' : 'neutral'" [size]="7" />
+      <div class="consent-text">
+        <div class="consent-title">{{ consentTitle() }}</div>
+        <div class="consent-detail">{{ consentDetail() }}</div>
+      </div>
+      @if (history.hasConsented()) {
+        <button
+          dsButton
+          size="sm"
+          variant="secondary"
+          iconLeft="x"
+          type="button"
+          (click)="revoke()"
+          i18n="@@settings.assistant.revoke"
+        >
+          Revoke
+        </button>
+      } @else {
+        <button
+          dsButton
+          size="sm"
+          variant="secondary"
+          iconLeft="sparkles"
+          type="button"
+          (click)="allow()"
+          i18n="@@settings.assistant.allow"
+        >
+          Allow
+        </button>
+      }
+    </div>
+
+    <dl class="facts">
+      <dt i18n="@@settings.assistant.fact.agent">agent</dt>
+      <dd>{{ agentDetail() }}</dd>
+      <dt i18n="@@settings.assistant.fact.sent">what it reads</dt>
+      <dd i18n="@@settings.assistant.fact.sentValue">
+        Branch names, dates, verdicts and tip authors of the capture being read, served one query at
+        a time. Never an email address, never the repository itself.
+      </dd>
+      <dt i18n="@@settings.assistant.fact.stored">stored</dt>
+      <dd>{{ storedDetail() }}</dd>
+    </dl>
+
+    <div class="purge">
+      <p class="panel-footnote" i18n="@@settings.assistant.purge.note">
+        Deleting a capture already deletes the conversations that read it. This empties the history
+        of the whole repository at once, and cannot be undone.
+      </p>
+      <button
+        dsButton
+        size="sm"
+        variant="danger"
+        iconLeft="trash-2"
+        type="button"
+        [disabled]="!hasConversations()"
+        (click)="purge()"
+        i18n="@@settings.assistant.purge.action"
+      >
+        Delete every conversation
+      </button>
+    </div>
+
+    <p class="panel-footnote" i18n="@@settings.assistant.disable">
+      To remove the feature from this installation entirely, set
+      <code>GitHealth:Assistant:Enabled</code> to false.
+    </p>
+  </div>
+</ds-panel>
