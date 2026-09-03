@@ -46,7 +46,7 @@ public sealed class AssistantMcpSessionRegistryTests
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    [InlineData("5f1c0e9a2b7d4c6e8f0a1b2c3d4e5f60")]
+    [InlineData("not-a-real-token-never-issued")]
     public void ATokenTheRegistryNeverHandedOutFindsNothing(string? token)
     {
         Assert.Null(new AssistantMcpSessionRegistry().Find(token));

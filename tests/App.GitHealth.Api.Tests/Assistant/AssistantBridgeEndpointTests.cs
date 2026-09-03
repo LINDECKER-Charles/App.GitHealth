@@ -7,7 +7,7 @@ namespace App.GitHealth.Api.Tests.Assistant;
 
 public sealed class AssistantBridgeEndpointTests
 {
-    private const string UnopenedToken = "5f1c0e9a2b7d4c6e8f0a1b2c3d4e5f60";
+    private const string UnopenedToken = "not-a-real-token-never-issued";
     private const string JsonRpcError = "error";
 
     /// <summary>

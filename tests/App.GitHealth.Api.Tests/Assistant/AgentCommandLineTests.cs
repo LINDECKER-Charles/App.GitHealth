@@ -5,7 +5,7 @@ namespace App.GitHealth.Api.Tests.Assistant;
 public sealed class AgentCommandLineTests
 {
     private const string AnswerFile = "/tmp/githealth-assistant-abc/answer.md";
-    private const string BridgeToken = "5f1c0e9a2b7d4c6e8f0a1b2c3d4e5f60";
+    private const string BridgeToken = "not-a-real-token-never-issued";
     private const string BridgeUrl = "http://127.0.0.1:8420/agent-bridge/" + BridgeToken;
 
     /// <summary>
