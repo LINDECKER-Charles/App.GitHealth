@@ -20,6 +20,20 @@
         <button
           dsButton
           size="sm"
+          variant="secondary"
+          iconLeft="sparkles"
+          type="button"
+          i18n-title="@@project.action.assistantTitle"
+          title="Ask the assistant · ⌘J"
+          [attr.aria-pressed]="assistant.isOpen()"
+          (click)="assistant.toggle()"
+          i18n="@@project.action.assistant"
+        >
+          Assistant
+        </button>
+        <button
+          dsButton
+          size="sm"
           variant="primary"
           iconLeft="refresh-cw"
           [loading]="context.isRunning()"
@@ -170,5 +184,13 @@
     [snapshotId]="snapshotId"
     (closed)="closeBranch()"
     (moved)="openBranch($event)"
+  />
+}
+
+@if (assistant.isOpen()) {
+  <app-assistant-panel
+    class="project-panel"
+    [projectId]="projectId()"
+    (branchOpened)="openBranch($event)"
   />
 }

@@ -28,6 +28,8 @@ internal sealed class ProjectEntityConfiguration : IEntityTypeConfiguration<Proj
             .HasConversion<UtcDateTimeOffsetConverter>();
         builder.Property(project => project.UpdatedAtUtc)
             .HasConversion<UtcDateTimeOffsetConverter>();
+        builder.Property(project => project.AssistantConsentAtUtc)
+            .HasConversion<NullableUtcDateTimeOffsetConverter>();
         builder.Property(project => project.GroupName).HasMaxLength(GroupNameLength);
         builder.HasIndex(project => project.GroupName);
         builder.HasIndex(project => project.LastSuccessfulAnalysisId);

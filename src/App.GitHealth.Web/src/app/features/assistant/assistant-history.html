@@ -1,0 +1,39 @@
+<div class="history-label" i18n="@@assistant.history.scope">This repository · all baselines</div>
+
+@if (conversations().length === 0) {
+  <p class="history-empty" i18n="@@assistant.history.empty">
+    Nothing kept yet. A conversation is stored once the agent has finished answering.
+  </p>
+} @else {
+  <ul class="history-list">
+    @for (conversation of conversations(); track conversation.id) {
+      <li class="history-row" [class.history-row--on]="conversation.id === selectedId()">
+        <button type="button" class="history-open" (click)="opened.emit(conversation.id)">
+          <span class="history-title">{{ conversation.title }}</span>
+          <span class="history-meta">
+            <span class="history-when">{{ when(conversation) }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ conversation.agentName }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ answers(conversation.answerCount) }}</span>
+            <span class="history-spacer"></span>
+            <span class="history-baseline">{{ baselineOf(conversation.baseline) }}</span>
+          </span>
+        </button>
+        <button
+          dsIconButton
+          size="sm"
+          icon="trash-2"
+          type="button"
+          [label]="removeLabel(conversation)"
+          (click)="removed.emit(conversation)"
+        ></button>
+      </li>
+    }
+  </ul>
+}
+
+<p class="history-note" i18n="@@assistant.history.note">
+  Conversations stay in the local database, next to the captures they read. Deleting a capture
+  deletes them.
+</p>

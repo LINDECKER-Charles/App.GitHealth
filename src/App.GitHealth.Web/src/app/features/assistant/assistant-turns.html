@@ -1,0 +1,124 @@
+@for (turn of turns(); track turn.key) {
+  <article class="turn">
+    <div class="turn-head">
+      <span class="turn-who" [class.turn-who--agent]="!turn.isUser">{{ turn.who }}</span>
+      <span aria-hidden="true">·</span>
+      <span class="turn-time">{{ turn.at | date: 'HH:mm' }}</span>
+      @if (turn.durationMs !== null) {
+        <span aria-hidden="true">·</span>
+        <span class="turn-time">{{ durationLabel(turn.durationMs) }}</span>
+      }
+    </div>
+
+    @if (turn.isUser) {
+      <p class="turn-question">{{ turn.text }}</p>
+    } @else if (turn.state === 'running') {
+      <ol class="turn-steps" role="status" aria-live="polite">
+        @for (line of activity(); track line.key) {
+          <li class="turn-step" [class.turn-step--current]="line.isCurrent">
+            @if (line.isCurrent) {
+              <ds-spinner [size]="11" />
+            } @else {
+              <ds-icon class="turn-step-done" name="check" [size]="11" />
+            }
+            <span class="turn-step-text">{{ line.text }}</span>
+            @if (line.detail !== null) {
+              <code class="turn-step-detail">{{ line.detail }}</code>
+            }
+          </li>
+        }
+      </ol>
+      @if (liveTrace().length > 0) {
+        <pre class="turn-trace">{{ liveTrace() }}</pre>
+      }
+      <div class="turn-running">
+        <span class="turn-running-text">{{ footnote() }}</span>
+        @if (elapsedLabel(); as elapsed) {
+          <span class="turn-elapsed">{{ elapsed }}</span>
+        }
+        <button
+          dsButton
+          size="sm"
+          variant="ghost"
+          iconLeft="x"
+          type="button"
+          (click)="stopRequested.emit()"
+          i18n="@@assistant.action.stop"
+        >
+          Stop
+        </button>
+      </div>
+    } @else if (turn.state === 'failed') {
+      <ds-callout
+        tone="danger"
+        i18n-title="@@assistant.turn.failed"
+        title="The agent stopped without answering"
+        >{{ turn.failureMessage }}</ds-callout
+      >
+      <div>
+        <button
+          dsButton
+          size="sm"
+          variant="secondary"
+          iconLeft="refresh-cw"
+          type="button"
+          (click)="retryRequested.emit()"
+          i18n="@@assistant.action.retry"
+        >
+          Try again
+        </button>
+      </div>
+    } @else if (turn.state === 'cancelled') {
+      <ds-callout tone="neutral" i18n="@@assistant.turn.cancelled">
+        Stopped. Nothing further was sent.
+      </ds-callout>
+    } @else {
+      @if (turn.isTruncated) {
+        <ds-callout
+          tone="warning"
+          i18n-title="@@assistant.turn.truncated"
+          title="The answer was cut short"
+          i18n="@@assistant.turn.truncatedBody"
+        >
+          The agent wrote past the budget allowed for one answer and was stopped there.
+        </ds-callout>
+      }
+      <ds-markdown
+        [text]="turn.text"
+        [targets]="targets()"
+        (targetSelected)="branchSelected.emit($event)"
+      />
+      <div class="turn-actions">
+        <button
+          dsButton
+          size="sm"
+          variant="ghost"
+          iconLeft="copy"
+          type="button"
+          (click)="copy(turn.text)"
+          i18n="@@assistant.action.copy"
+        >
+          Copy
+        </button>
+        @if (turn.commandLine !== null) {
+          <button
+            dsButton
+            size="sm"
+            variant="ghost"
+            iconLeft="terminal"
+            type="button"
+            (click)="toggleCommand(turn.key)"
+            i18n="@@assistant.action.command"
+          >
+            Command
+          </button>
+        }
+        <span class="turn-spacer"></span>
+        <span class="turn-footnote">{{ footnote() }}</span>
+      </div>
+      @if (isCommandOpen(turn.key) && turn.commandLine !== null) {
+        <pre class="turn-command">{{ turn.commandLine }}</pre>
+      }
+    }
+  </article>
+}

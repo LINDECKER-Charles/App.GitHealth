@@ -1,5 +1,5 @@
 # GitHealth technical architecture
-> Status: MVP implemented, published version `0.1.0` — updated: 30 August 2026
+> Status: MVP implemented, published version `0.1.0` — updated: 2 September 2026
 ## Overview
 
 GitHealth is a local web application that helps diagnose Git branches. The user selects a
@@ -8,7 +8,8 @@ local or remote branches.
 
 The application must:
 
-- work offline, with no mandatory external service;
+- work offline, with no mandatory external service — the sole exception being the local
+  agent assistant, which is allowed per repository and removable for an installation;
 - start from a single entry point;
 - be distributable on Windows and macOS;
 - analyse repositories without a checkout and without modifying their references;
@@ -31,11 +32,15 @@ therefore talks to a single process and a single origin.
 - Sort, filter and inspect the detail of branches.
 - Configure inactivity thresholds and protected branch patterns.
 - Keep several analyses and export the database consistently.
+- Let an agent CLI already installed on the machine query a stored capture, and keep the
+  conversation that follows.
 - Provide a native executable and a Docker Compose launch.
 
 ### Outside the MVP scope
 
 - Delete, merge, check out or push a branch.
+- Install, update or authenticate an agent CLI, or call a model provider directly.
+- Let an agent reach the repository, or any path other than its own scratch directory.
 - Automatically run `git fetch` or `git remote prune`.
 - Clone a remote repository and manage its credentials.
 - Host a multi-user instance on a network.
@@ -57,6 +62,13 @@ therefore talks to a single process and a single origin.
 | Front-end state | Angular services and Signals | No external global store for the MVP |
 | Long-running tasks | Queue and background service | Non-blocking API and visible progress |
 | Cleanup | Recommendations only | GitHealth never deletes a branch |
+| Agent assistant | An agent CLI already installed, driven headless | The user's own tool and account, no key to hold |
+| Agent input | A read-only tool bridge over a stored capture | The agent queries measurements; it never opens the repository |
+| Agent bridge | Streamable-HTTP MCP on the host's own loopback port | Nothing new listens, and the route lives outside `/api` |
+| Agent authorisation | One 256-bit token per run, closed when it settles | A capture is reachable only while its run is alive |
+| Agent sandbox | Empty scratch directory, the CLI's read-only mode | The read-only guarantee survives a foreign process |
+| Assistant history | Conversations in SQLite, cascading from the capture | A record the user can read, export and delete |
+| Assistant consent | A moment stored on the project, checked by the API | The screen asks; the API is what refuses |
 
 ## Git semantics
 
@@ -157,10 +169,11 @@ src/
 ├── App.GitHealth.Core/{Analysis,Branches,Common,Projects,Shared}/
 ├── App.GitHealth.Api/
 │   ├── Features/{Projects,Analyses,Discovery,Policies,Snapshots,Exports,Runtime,Security,Updates}/
+│   ├── Features/Assistant/{Agents,Conversations,Mcp}/
 │   └── {Git,Persistence,Hosting,Hosting/Desktop}/
 └── App.GitHealth.Web/src/app/
-    ├── core/{api,branches,desktop,scan,updates,workspace}/
-    └── features/{home,dashboard,branch-details,project-settings,analysis-history}/
+    ├── core/{api,assistant,branches,desktop,markdown,scan,updates,workspace}/
+    └── features/{home,dashboard,branch-details,project-settings,analysis-history,assistant}/
 tests/
 ├── App.GitHealth.Core.Tests/
 ├── App.GitHealth.Api.Tests/
@@ -205,7 +218,10 @@ inline scripts, and the `onload` handler it generates would not run.
 - reachability state of the path;
 - analysed branch space;
 - activity thresholds, exclusions and protected patterns;
-- creation and last modification dates, identifier of the last successful analysis.
+- creation and last modification dates, identifier of the last successful analysis;
+- `AssistantConsentAtUtc`: the moment sending this repository's captures to an agent was
+  allowed, null while it never was. Nullable, so every repository predating the column starts
+  with no permission granted.
 
 **ProjectBaseline**
 
@@ -238,6 +254,30 @@ list never detaches a baseline from the captures already taken against it.
 - name and address canonicalised by mailmap;
 - number of own commits excluding merges;
 - rank within the branch.
+
+**AssistantConversation**
+
+- analysis run read — *not* the project: a thread is only meaningful next to the
+  measurements it argued about, so the foreign key cascades and deleting a capture deletes
+  the conversations about it;
+- identifier and display name of the agent that last answered;
+- title, which is the first question shortened to 300 characters;
+- number of branches the agent could read, so a stored answer keeps the scale it was given;
+- started and last updated dates.
+
+**AssistantMessage**
+
+- conversation and position in it — timestamps collide, positions do not, and the pair is
+  unique;
+- role, `user` or `agent`, and the text as it was typed or as it was written;
+- on an agent turn only: status, effort, the command line with its bridge token blanked,
+  failure code and message, duration and whether the answer was cut short.
+
+Both tables come from `20260902163530_AddAssistantConversations`, which also adds
+`Projects.AssistantConsentAtUtc`. A question and its answer are written together, once the
+run has settled, whichever way it settled — a refusal and a stop are part of a repository's
+history too. That write never fails a run: the answer is already on screen, so a history
+that could not be kept is a log line rather than an error.
 
 Snapshots are immutable. A failed analysis never replaces the last successful analysis. A
 branch recreated under the same name is distinguished in the history by the discontinuity
@@ -307,6 +347,46 @@ repository rejected because the queue was full is retried as soon as a slot free
 If a reference changes during the scan, the analysis keeps the captured SHAs. A later
 scan will reflect the new state.
 
+### Asking an agent, and the bridge it reads through
+
+1. `POST /api/projects/{id}/assistant/runs` resolves the agent from the catalog — only a
+   catalog identifier resolves to an executable, so no caller can name a command — then the
+   effort against what that agent declares, then the capture of the requested baseline.
+2. The project's consent is read from that capture. Without it the run is refused with `403`
+   and `assistant.consent_required`, before any process exists.
+3. The bridge opens a session: a 256-bit token, the capture it is bound to, and an address
+   built from the port Kestrel reports it is bound to. It opens *before* the process starts,
+   so the agent's first tool call cannot race the session that authorises it.
+4. The command line is materialised from the catalog entry, with the bridge address inlined —
+   as a `--mcp-config` JSON document for Claude Code, as a `-c mcp_servers=…` override for
+   Codex — and the token never lands in a file.
+5. The process starts in an empty scratch directory, with the prompt on standard input. That
+   prompt is the brief, the tool list, the rules and the question: the capture is not in it.
+6. The agent calls back over `POST /agent-bridge/{token}`. Each call is answered from the
+   capture already held in the session — no database read, no Git call, and no parameter
+   naming a project, so a call cannot widen what it sees.
+7. Its standard output is read line by line as it arrives. Both CLIs are launched in their
+   JSON mode — `--output-format stream-json` for Claude Code, `--json` for Codex — so what
+   would have been a human log is read into steps the panel narrates: waiting on the model,
+   thinking, a tool call with the arguments it chose, writing. Nothing is retained of that
+   stream beyond the steps and the answer, and the steps live with the run rather than with
+   the conversation.
+8. The run settles. The bridge session is closed, the scratch directory is deleted, and the
+   exchange is written to the conversation — the question and the answer, not the steps.
+
+The bridge speaks the subset of JSON-RPC the two supported CLIs use — `initialize`,
+`tools/list`, `tools/call`, `ping`, `resources/list`, `prompts/list` — and refuses anything
+else by name rather than answering it with something plausible. A notification carries no
+reply and is answered `202`. `GET` on the route is `405`: this server never pushes. A tool
+refusal travels as a result rather than as a protocol error, so the agent can read it,
+correct itself and call again.
+
+Its four tools — `get_capture`, `list_branches`, `get_branch`, `count_branches` — read a
+capture and nothing else. There is deliberately no tool that runs Git, reaches the file
+system or writes. `list_branches` pages with `skip` and `take`, 50 by default and 500 at
+most, and an unknown filter value matches nothing rather than falling back to everything: an
+agent notices an empty page, a silent fallback it would not.
+
 ### Git command strategy
 
 - Executable resolved once at startup, first hit wins: configured path (`--git-path` or
@@ -348,6 +428,26 @@ Routes are grouped under `/api` and return dedicated DTOs.
 | `GET /api/exports/database` | Download a consistent SQLite backup |
 | `GET /api/updates` | Read the application update state |
 | `POST /api/updates/apply` | Download then apply the available update |
+| `GET /api/assistant/agents` | List the agent CLIs found, their versions and effort levels |
+| `GET /api/projects/{id}/assistant/briefing` | The capture as text, shown before anything is allowed |
+| `POST /api/projects/{id}/assistant/runs` | Start a run, optionally continuing a conversation |
+| `GET /api/assistant/runs/{id}` | Read a run: its steps, and the answer since `?from=` |
+| `POST /api/assistant/runs/{id}/cancel` | Stop a run in flight |
+| `GET /api/projects/{id}/assistant/status` | Consent moment and number of stored conversations |
+| `PUT /api/projects/{id}/assistant/consent` | Grant or withdraw the permission for a repository |
+| `GET /api/projects/{id}/assistant/conversations` | The threads of a repository, every baseline |
+| `DELETE /api/projects/{id}/assistant/conversations` | Empty that history, reporting how many went |
+| `GET /api/assistant/conversations/{id}` | Read one thread, messages in order |
+| `DELETE /api/assistant/conversations/{id}` | Delete one thread |
+
+One route deliberately sits outside `/api`: `POST /agent-bridge/{token}`, the tool bridge an
+agent reads a capture through. `/api` is the browser's prefix — it rejects a foreign origin
+and a cross-site `Sec-Fetch-Site` context, and every mutation on it must carry the session
+cookie and the anti-forgery token. A command-line agent has none of those, and relaxing the
+guard for one route would relax it for the browser too. The bridge authorises on its
+single-run token instead, and the loopback `Host` check still applies to it like it does to
+everything else the host serves. It is excluded from the OpenAPI description: it is not part
+of the public contract.
 
 `GET /api/runtime` describes the execution mode. It also exposes Git availability, the
 executable path that was selected and an actionable diagnostic: without Git, the
@@ -492,9 +592,14 @@ root requires recreating the container with a different configuration.
 - Docker repositories mounted read-only; no branch deletion API.
 - Branch and author names escaped by Angular.
 - No telemetry and no transmission of author addresses by default.
+- The agent bridge is reachable only with a single-run token, on loopback, for the length of
+  one run, and serves four read-only questions about one capture.
+- Sending a repository's captures to an agent requires a permission stored on the project and
+  checked by the API; the stored conversations are readable and deletable from the interface.
 
-The database potentially contains names and business addresses. It stays local, and
-exporting it is an explicit user action.
+The database potentially contains names and business addresses — and, once the assistant has
+been used, the questions asked and the answers given. It stays local, and exporting it is an
+explicit user action.
 
 ## Reliability and performance
 

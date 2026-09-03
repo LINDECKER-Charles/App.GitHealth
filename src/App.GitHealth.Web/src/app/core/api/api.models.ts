@@ -331,3 +331,154 @@ export type AnalysisStatus = AnalysisStatusResponse;
 export type BranchSnapshot = BranchSnapshotResponse;
 
 export type SnapshotPage = SnapshotPageResponse;
+
+export type AssistantRunStatus = 'Running' | 'Completed' | 'Failed' | 'Cancelled';
+
+/** One command-line agent GitHealth knows how to drive, and whether it can be driven here. */
+export interface AssistantAgent {
+  readonly id: string;
+  readonly name: string;
+  readonly isAvailable: boolean;
+  /** What the CLI answered to its version flag, or `null` when it never answered. */
+  readonly version: string | null;
+  readonly executablePath: string | null;
+  readonly installationUrl: string;
+  /** Where the search looked and what to set, when the agent was not found. */
+  readonly unavailableReason: string | null;
+  /** Effort levels this agent accepts, cheapest first. */
+  readonly efforts: readonly string[];
+  readonly defaultEffort: string;
+}
+
+export interface AssistantAgentList {
+  /** False turns the feature off for the installation, whatever is on the machine. */
+  readonly isEnabled: boolean;
+  readonly agents: readonly AssistantAgent[];
+}
+
+/** The capture as it would be handed to an agent, shown before anything is sent. */
+export interface AssistantBriefing {
+  readonly baseline: string;
+  readonly capturedAtUtc: UtcDateTime;
+  readonly branchCount: number;
+  readonly omittedBranchCount: number;
+  readonly text: string;
+}
+
+export interface AssistantRunRequest {
+  readonly agentId: string;
+  readonly question: string;
+  readonly baseline?: string | null;
+  /** One of the agent's declared levels; anything else is refused by the API. */
+  readonly effort: string;
+  /** Thread to continue. Absent opens a new one, whose id comes back on the run. */
+  readonly conversationId?: Uuid | null;
+}
+
+/** What the agent is busy with. The interface phrases it; the API only names it. */
+export type AssistantStepKind = 'Waiting' | 'Thinking' | 'Tool' | 'Writing';
+
+/** One thing the agent did, sent while it runs and never kept once it has. */
+export interface AssistantRunStep {
+  readonly kind: AssistantStepKind;
+  /** The capture tool that was called. Empty for every other kind. */
+  readonly label: string;
+  /** What the call asked for, or what the agent said of its own reasoning. */
+  readonly detail: string | null;
+  readonly atUtc: UtcDateTime;
+}
+
+export interface AssistantRun {
+  readonly runId: Uuid;
+  readonly projectId: Uuid;
+  readonly agentId: string;
+  readonly agentName: string;
+  /** The level actually used, which may be the agent's default. */
+  readonly effort: string;
+  readonly question: string;
+  /** The command as it was run, with this run's bridge token blanked. */
+  readonly commandLine: string;
+  /** Thread this run belongs to, whether it opened it or continued one. */
+  readonly conversationId: Uuid;
+  /** Rows of the capture the agent may read, which bounds any count it gives. */
+  readonly branchCount: number;
+  readonly status: AssistantRunStatus;
+  readonly startedAtUtc: UtcDateTime;
+  readonly completedAtUtc: UtcDateTime | null;
+  /** What the agent has been doing, oldest first, whole on every poll. */
+  readonly steps: readonly AssistantRunStep[];
+  /** What the agent wrote since the offset asked for, not the whole log. */
+  readonly trace: string;
+  /** Offset to send on the next poll. */
+  readonly traceOffset: number;
+  readonly answer: string | null;
+  readonly failureCode: string | null;
+  readonly failureMessage: string | null;
+  /** The agent wrote past the budget and was stopped short. */
+  readonly isTruncated: boolean;
+}
+
+/** What the panel and the policy screen both need before showing anything. */
+export interface AssistantStatus {
+  /** Null while sending this repository's captures has never been allowed. */
+  readonly consentGrantedAtUtc: UtcDateTime | null;
+  readonly conversationCount: number;
+}
+
+export interface AssistantConsentRequest {
+  readonly granted: boolean;
+}
+
+/** One line of the conversation list, across every baseline of a repository. */
+export interface AssistantConversationSummary {
+  readonly id: Uuid;
+  readonly analysisId: Uuid;
+  readonly baseline: string;
+  readonly agentId: string;
+  readonly agentName: string;
+  readonly title: string;
+  readonly answerCount: number;
+  readonly startedAtUtc: UtcDateTime;
+  readonly updatedAtUtc: UtcDateTime;
+}
+
+export interface AssistantConversationList {
+  readonly conversations: readonly AssistantConversationSummary[];
+}
+
+export type AssistantMessageRole = 'user' | 'agent';
+
+/** One stored turn. A question and an answer share a shape, so a thread reads in order. */
+export interface AssistantMessage {
+  readonly id: Uuid;
+  readonly position: number;
+  readonly role: AssistantMessageRole;
+  readonly text: string;
+  readonly writtenAtUtc: UtcDateTime;
+  /** How an agent turn ended. Null on a question, which cannot fail. */
+  readonly status: AssistantRunStatus | null;
+  readonly effort: string | null;
+  readonly commandLine: string | null;
+  readonly failureCode: string | null;
+  readonly failureMessage: string | null;
+  readonly durationMs: number | null;
+  readonly isTruncated: boolean;
+}
+
+export interface AssistantConversation {
+  readonly id: Uuid;
+  readonly analysisId: Uuid;
+  readonly baseline: string;
+  readonly agentId: string;
+  readonly agentName: string;
+  readonly title: string;
+  /** Rows the agent could read when the thread was written. */
+  readonly branchCount: number;
+  readonly startedAtUtc: UtcDateTime;
+  readonly updatedAtUtc: UtcDateTime;
+  readonly messages: readonly AssistantMessage[];
+}
+
+export interface AssistantPurgeResult {
+  readonly deleted: number;
+}

@@ -86,6 +86,104 @@ namespace App.GitHealth.Api.Persistence.Migrations
                     b.ToTable("AnalysisRuns", (string)null);
                 });
 
+            modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.AssistantConversationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AnalysisRunId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("BranchCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("StartedAtUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("UpdatedAtUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnalysisRunId");
+
+                    b.HasIndex("UpdatedAtUtc");
+
+                    b.ToTable("AssistantConversations", (string)null);
+                });
+
+            modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.AssistantMessageEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CommandLine")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Effort")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsTruncated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("WrittenAtUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "Position")
+                        .IsUnique();
+
+                    b.ToTable("AssistantMessages", (string)null);
+                });
+
             modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.BranchSnapshotEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -191,6 +289,9 @@ namespace App.GitHealth.Api.Persistence.Migrations
                     b.Property<int>("ActiveUntilDays")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("AssistantConsentAtUtc")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("BranchNamespace")
                         .IsRequired()
                         .HasMaxLength(1024)
@@ -263,6 +364,28 @@ namespace App.GitHealth.Api.Persistence.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.AssistantConversationEntity", b =>
+                {
+                    b.HasOne("App.GitHealth.Api.Persistence.Entities.AnalysisRunEntity", "AnalysisRun")
+                        .WithMany()
+                        .HasForeignKey("AnalysisRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AnalysisRun");
+                });
+
+            modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.AssistantMessageEntity", b =>
+                {
+                    b.HasOne("App.GitHealth.Api.Persistence.Entities.AssistantConversationEntity", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+                });
+
             modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.BranchSnapshotEntity", b =>
                 {
                     b.HasOne("App.GitHealth.Api.Persistence.Entities.AnalysisRunEntity", "AnalysisRun")
@@ -299,6 +422,11 @@ namespace App.GitHealth.Api.Persistence.Migrations
             modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.AnalysisRunEntity", b =>
                 {
                     b.Navigation("Branches");
+                });
+
+            modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.AssistantConversationEntity", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("App.GitHealth.Api.Persistence.Entities.BranchSnapshotEntity", b =>

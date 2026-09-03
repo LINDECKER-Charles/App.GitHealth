@@ -19,8 +19,10 @@ import { DsButton } from '../../ui/core/ds-button';
 import { DsIcon } from '../../ui/core/ds-icon';
 import { DsSelect } from '../../ui/forms/ds-select';
 import { DsCallout } from '../../ui/surfaces/ds-callout';
+import { AssistantPanelState } from '../../core/assistant/assistant-panel-state';
 import { AnalysisRunScene } from '../analysis-run/analysis-run-scene';
 import { AnalysisRunStrip } from '../analysis-run/analysis-run-strip';
+import { AssistantPanel } from '../assistant/assistant-panel';
 import { BranchCard } from '../branch-card/branch-card';
 import { BaselineStore } from './baseline/baseline-store';
 import { CaptureStore } from './capture-store';
@@ -37,12 +39,17 @@ const tabSegments: readonly (readonly [string, TabId])[] = [
   ['/settings', 'settings'],
 ];
 
+/** The assistant opens beside the table rather than replacing it, so it answers to a key. */
+const assistantShortcutKey = 'j';
+
 /** Frame of a repository: identity, actions, tabs and the side branch card. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown)': 'onKeydown($event)' },
   imports: [
     AnalysisRunScene,
     AnalysisRunStrip,
+    AssistantPanel,
     BranchCard,
     DsBadge,
     DsButton,
@@ -63,6 +70,7 @@ export class ProjectShell {
 
   private readonly run = inject(AnalysisRunStore);
 
+  protected readonly assistant = inject(AssistantPanelState);
   protected readonly baselines = inject(BaselineStore);
   protected readonly captures = inject(CaptureStore);
   protected readonly context = inject(ProjectContext);
@@ -169,6 +177,14 @@ export class ProjectShell {
       relativeTo: this.route,
       replaceUrl: true,
     });
+  }
+
+  /** ⌘J anywhere in a repository: the assistant is a companion, not a destination. */
+  protected onKeydown(event: KeyboardEvent): void {
+    if (event.key === assistantShortcutKey && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      this.assistant.toggle();
+    }
   }
 
   protected openBranch(snapshotId: string): void {

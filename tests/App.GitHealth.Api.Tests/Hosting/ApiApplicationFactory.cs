@@ -34,6 +34,9 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
 
     public int MaximumParallelAnalyses { get; init; } = DefaultParallelAnalyses;
 
+    /// <summary>Mirrors the installation-wide switch of the local agent assistant.</summary>
+    public bool AssistantEnabled { get; init; } = true;
+
     public Action<IServiceCollection>? TestServices { get; init; }
 
     public Task StopHostAsync(CancellationToken cancellationToken) =>
@@ -59,6 +62,8 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
                 ["AnalysisQueue:TimeoutSeconds"] = AnalysisTimeoutSeconds.ToString(
                     CultureInfo.InvariantCulture),
                 ["AnalysisQueue:MaximumParallelAnalyses"] = MaximumParallelAnalyses.ToString(
+                    CultureInfo.InvariantCulture),
+                ["GitHealth:Assistant:Enabled"] = AssistantEnabled.ToString(
                     CultureInfo.InvariantCulture),
             });
         });

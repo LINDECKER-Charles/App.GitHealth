@@ -16,6 +16,7 @@ database.
 - [Reading an analysis](#reading-an-analysis)
 - [Comparing against several baselines](#comparing-against-several-baselines)
 - [Filtering by author](#filtering-by-author)
+- [Asking a local agent](#asking-a-local-agent)
 - [Understanding the recommendations](#understanding-the-recommendations)
 - [Explaining a branch](#explaining-a-branch)
 - [Configuring policies](#configuring-policies)
@@ -38,13 +39,19 @@ branches. It decides nothing on your behalf and performs no cleanup action.
 | Compare each branch to a chosen baseline | Check out anything or modify the worktree |
 | Measure ahead, behind, merge state and activity | Run `git fetch` or `git remote prune` |
 | Identify the contributors of a branch | Clone a repository or handle credentials |
-| Offer a recommendation and explain it | Send your data anywhere |
+| Offer a recommendation and explain it | Send your data anywhere on its own |
 | Keep the analysis history locally | Write anything into the repository |
 | Copy the deletion command for you | Run that command |
 
 No analysis writes to the repository: references, index, worktree and reflogs stay
 untouched. These guarantees are detailed in the
 [security model](SECURITY_MODEL.md).
+
+One feature is opt-in and does reach a network: the [Assistant](#asking-a-local-agent) panel
+lets an agent CLI you installed yourself read a capture and answer questions about it. It
+asks your permission once per repository, before the first question, and shows you the whole
+of what it can read. It is off unless you use it, and can be removed from an installation
+entirely.
 
 ## Install and start
 
@@ -186,6 +193,7 @@ The screen has three zones:
 | Shortcut | Effect |
 | --- | --- |
 | `⌘K` / `Ctrl+K` | open the command palette |
+| `⌘J` / `Ctrl+J` | open or close the assistant panel, anywhere in a repository |
 | `↑` `↓` | move through the palette results |
 | `Enter` | confirm the highlighted result |
 | `Esc` | close the palette or a panel, or cut the opening sequence |
@@ -324,6 +332,129 @@ people who appear in it, and it combines with every other filter.
 The branch detail panel also names the **top contributor**: whoever wrote most of the commits
 the branch adds to its baseline. That one is empty for a merged branch, which by definition
 adds none — which is why the filter uses the tip author, the only one always present.
+
+## Asking a local agent
+
+The **Assistant** panel lets an AI agent **you have already installed on this machine** —
+[Claude Code](https://claude.com/claude-code) or
+[Codex CLI](https://developers.openai.com/codex/cli) — read the capture you are looking at
+and answer questions about it. GitHealth installs nothing, holds no API key, and has no
+account of its own: it drives your tool, on your subscription.
+
+> [!IMPORTANT]
+> This is the only part of GitHealth that uses a network. Everything else works offline.
+
+**Opening it.** The **Assistant** button in the repository header opens the panel beside the
+branch table; `⌘J` / `Ctrl+J` does the same from anywhere in a repository, and closes it
+again. It stays next to the table on purpose: an answer names branches, and a branch name in
+an answer opens that branch's row.
+
+**Finding the agent.** The panel lists what it found, with the version each CLI answered and
+the path it was found at. A windowed application does not inherit the `PATH` your shell
+builds, so GitHealth also looks in the usual installation directories — `~/.local/bin`,
+`/opt/homebrew/bin`, `~/.claude/local`, the npm prefix. If it still finds nothing, it says
+exactly where it looked; **Look again** re-checks without restarting the application, and
+`GitHealth:Assistant:Agents:claude:ExecutablePath` points at a CLI installed somewhere else.
+
+**Allowing it, once per repository.** Before the first question on a repository, the panel
+asks. It names what the agent reads — branch names, dates, verdicts and tip authors of the
+capture, never an email address, never the repository itself — and says the call is billed to
+your own account with the agent's provider. **Read what it can see** unfolds the whole
+capture as text: repository name, baseline, capture date, the thresholds and patterns in
+force, then one row per branch, with ahead, behind, relationship, last commit, topology,
+activity, GitHealth's own verdict and its reason, the protected and excluded flags and the
+tip author's name. **Allow for this repository** grants the permission.
+
+The permission is stored on the repository and checked by GitHealth itself, not by the
+screen: without it, a run is refused. It applies to every baseline of that repository, and
+**Policies** → **Assistant** shows when it was granted and takes it back at any time.
+
+**How the agent reads the capture.** It is not handed the table. GitHealth opens a small
+read-only door onto that one capture, on the loopback address it already listens on, and the
+agent asks it questions: the capture as a whole, one named branch, a list filtered by
+verdict, topology, activity, author, name fragment or the protected and excluded flags, or a
+count of branches per verdict, per topology, per activity or per author. So a question about
+three branches reads three branches, and a count is a count over the whole capture rather
+than over a page of it.
+
+That door is cut for one run. It opens when the run starts and closes the moment it ends,
+whether it answered, failed or was stopped. There is nothing behind it but the capture: no
+shell, no Git, no files, nothing that writes.
+
+**Choosing how hard it thinks.** Next to the agent, a selector goes from **Quick** to
+**Maximum**, through **Balanced**, **Thorough** and **Very thorough**. Both agents accept the
+same five levels, so the one you pick is the one the CLI receives. A deeper level reads the
+same capture more carefully; it is slower and spends more of your quota, which is why
+**Balanced** is the default rather than the top of the scale.
+
+**Watching it work.** A question takes anything from a few seconds to a couple of minutes,
+and the panel says what is happening for the whole of it rather than showing a spinner. Each
+step appears as the agent reaches it — asking the model, thinking, reading the capture,
+reading the branches with the filter it chose, counting them, writing — with the elapsed time
+next to **Stop**. The answer then appears as it is written.
+
+The steps are shown, never stored: they are gone once the answer is there, and a conversation
+reopened later holds the questions and the answers alone.
+
+Reading is as far as it goes. Claude Code does not publish the text of its own reasoning, so
+"thinking" says that it is thinking and nothing more; Codex CLI shows the summary of its
+reasoning when it produces one.
+
+**Asking.** Type a question, or take one of the suggestions. `Enter` sends it and
+`Shift`+`Enter` starts a line. **Stop** ends a run at any point. The answer is rendered as it
+was written — headings, lists, tables, quotes and code all read as themselves rather than as
+raw Markdown — and **Command** unfolds the exact command line that produced it, with this
+run's single-use secret replaced by `<single-use-token>`. **Copy** takes the answer as
+Markdown.
+
+Every branch name the agent writes is a control: selecting one opens that branch's row in the
+detail panel, whether the agent spelled it `refs/heads/feature/x` or `feature/x`.
+
+Links in an answer are only clickable when they point at `http`, `https` or `mailto`.
+Anything else stays visible as plain text: an agent's answer is text to read, not a place to
+follow instructions from.
+
+**Following up, and coming back to it.** The panel keeps a thread: the next question is asked
+in the same conversation, and both sides of it stay on screen. The clock icon lists every
+conversation held about this repository, across all its baselines, newest change first;
+selecting one reopens it, and the bin next to it deletes that one. **+** starts a fresh
+conversation.
+
+Conversations are stored in the local SQLite database, next to the captures they read. Two
+consequences are worth knowing:
+
+- **deleting a capture deletes the conversations about it** — an answer about measurements
+  that no longer exist is not kept;
+- **a data backup carries them** — the questions you typed, the answers you were given, the
+  branch names in them and the redacted command lines. **Policies** → **Assistant** →
+  **Delete every conversation** empties the whole repository's history in one action and says
+  how many went. Revoking the permission does *not* delete them: stopping the sending and
+  forgetting what was already said are two separate decisions, on two separate buttons.
+
+**What the agent can and cannot do.** It runs in an empty temporary directory — never in your
+repository — created for the run and deleted after it, and it is started in the CLI's own
+read-only mode. Claude Code additionally runs with **every one of its own tools switched
+off**, GitHealth's four questions being the only ones granted back: that run has no shell, no
+file access and no network of its own. Codex CLI cannot be shut down that far. GitHealth
+replaces its whole server list, so the servers configured on your machine are not carried
+into the run, but tools Codex gets from its own plugins and connectors stay within its reach,
+and no option removes them without also removing the credentials the run needs. If that
+matters for a repository, use Claude Code for it, or leave the permission ungranted.
+
+The agent may disagree with a GitHealth verdict, and it is told to say so and on which fact
+when it does. It is told never to invent a branch that is not in the capture, and to say
+which fact is missing rather than guess when the capture does not hold it.
+
+**Turning it off.** Set `GitHealth:Assistant:Enabled` to `false` in `appsettings.json`. The
+panel then explains that the feature is disabled and no interface can re-enable it. In Docker
+the container has no agent CLI, so there is nothing to disable.
+
+> [!NOTE]
+> **No answer streams in.** While a run is in flight the panel says how many rows are being
+> read and offers **Stop**; the answer then appears whole. GitHealth follows only what the
+> agent prints on standard output, and what an agent writes on standard error is kept for
+> the failure message rather than shown as it runs — so an agent that reports its progress
+> that way is silent until it is done either way.
 
 ## Understanding the recommendations
 

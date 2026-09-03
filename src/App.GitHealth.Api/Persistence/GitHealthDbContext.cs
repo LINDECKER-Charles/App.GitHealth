@@ -17,6 +17,11 @@ internal sealed class GitHealthDbContext(DbContextOptions<GitHealthDbContext> op
     public DbSet<ContributorSnapshotEntity> ContributorSnapshots =>
         Set<ContributorSnapshotEntity>();
 
+    public DbSet<AssistantConversationEntity> AssistantConversations =>
+        Set<AssistantConversationEntity>();
+
+    public DbSet<AssistantMessageEntity> AssistantMessages => Set<AssistantMessageEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GitHealthDbContext).Assembly);

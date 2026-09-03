@@ -1,0 +1,147 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.turn-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.turn-who {
+  font-weight: 500;
+  color: var(--text-primary);
+
+  &--agent {
+    color: var(--primary-soft-fg);
+  }
+}
+
+.turn-time {
+  font: var(--type-code-sm);
+}
+
+.turn-question {
+  margin: 0;
+  font: var(--type-body-strong);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.turn-running {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+
+.turn-running-text {
+  flex: 1;
+}
+
+.turn-elapsed {
+  font: var(--type-code-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* What the agent is doing, while it does it. Read top-down, newest last. */
+.turn-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.turn-step {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+
+  /* The spinner has no baseline of its own; this puts it on the text's. */
+  ds-spinner {
+    align-self: center;
+  }
+
+  &--current {
+    color: var(--text-primary);
+  }
+}
+
+.turn-step-done {
+  align-self: center;
+  color: var(--status-success-fg);
+}
+
+.turn-step-text {
+  white-space: nowrap;
+}
+
+/* The arguments of the call. It is the part worth reading, and the part that overflows. */
+.turn-step-detail {
+  overflow: hidden;
+  font: var(--type-code-sm);
+  color: var(--text-code);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The answer as it is being written. It scrolls rather than pushing the composer away. */
+.turn-trace {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  max-height: 12rem;
+  overflow: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-code);
+  font: var(--type-code-sm);
+  color: var(--text-code);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.turn-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.turn-spacer {
+  flex: 1;
+}
+
+.turn-footnote {
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+
+.turn-command {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-code);
+  font: var(--type-code-sm);
+  color: var(--text-code);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

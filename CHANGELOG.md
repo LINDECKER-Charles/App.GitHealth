@@ -21,6 +21,45 @@ built that way and what it costs.
   console is the point: the promise that GitHealth only ever reads becomes something you
   check rather than believe. **Show the last capture** folds the run into a one-line strip
   and hands the tab back to the previous capture, without stopping anything;
+- **asking a local agent about a capture**: an **Assistant** panel, opened from the
+  repository header or with `⌘J`, where an agent already installed on the machine — Claude
+  Code or Codex CLI — reads the branches GitHealth has measured and answers a question about
+  them in plain language. GitHealth finds the CLI itself, including outside the `PATH` a
+  windowed application sees, and says where it looked when it finds nothing rather than
+  greying out a button. The agent is not handed a wall of text: GitHealth opens a small
+  read-only door onto the capture and the agent queries it — the whole capture, one branch, a
+  filtered list, or a count by verdict, topology, activity or author — so it asks for what
+  your question needs instead of reading a table someone truncated for it. It still runs in an
+  empty scratch directory, never in the repository, so the guarantee that GitHealth changes
+  nothing in your repository holds even though the process running is somebody else's. You can
+  read the whole of what it can reach before allowing anything — repository, baseline, policy
+  and one row per branch, without contributor email addresses — and you choose how hard the
+  agent should think, from quick to maximum, on a ladder both agents share. The answer is
+  rendered as it was written — headings, lists, tables and code, not a wall of asterisks —
+  with the command that was run readable underneath and a stop button throughout, and every
+  branch name in it opens that branch's row. This is the one feature that reaches a network,
+  it is billed to your own account with the agent's provider, and it can be removed from an
+  installation entirely with `GitHealth:Assistant:Enabled=false`;
+- **assistant conversations, kept and deletable**: a question and its answer are stored in the
+  local database, so the panel keeps a thread, lets you ask a follow-up, lists everything
+  asked about this repository and reopens any of it. A conversation is stored next to the
+  capture it read: deleting that capture deletes the conversations about it, a single thread
+  can be deleted from the list, and **Policies → Assistant** empties the whole repository's
+  history in one action and says how many went. Because they are in the database, they follow
+  the SQLite backup — the questions you typed, the answers you were given, the branch names
+  in them and the command lines that produced them;
+- **permission to use the assistant, asked once per repository**: the first question on a
+  repository asks whether its captures may be sent, naming what is sent and to whom it is
+  billed. The answer is stored on the repository and enforced by the API, not by the screen:
+  a run without it is refused. **Policies → Assistant** shows when it was granted and revokes
+  it, which stops any further sending and deliberately leaves the stored conversations alone —
+  deleting those is a separate button;
+- **watching the agent work**: a question no longer sits behind a spinner. The panel lists
+  what the agent is doing as it does it — asking the model, thinking, reading the capture,
+  reading the branches with the filter it chose, counting them, writing — with the arguments
+  of each call, the time elapsed and a stop button, and the answer appearing underneath as it
+  is written. Those steps are shown and never stored: they go with the run, and a conversation
+  reopened later holds the questions and the answers alone;
 - **several comparison baselines per repository**: a project no longer declares a single
   reference branch but an ordered list of up to eight — `dev`, `test` and `main` side by
   side. Each baseline keeps its own analyses and its own history, so switching between them
@@ -74,7 +113,45 @@ built that way and what it costs.
   error message, the launcher `--help` output and the whole documentation are written
   in English, so the guides quote the exact wording shown on screen;
 - dates, numbers and byte sizes follow the locale declared by the interface instead of a
-  hard-coded French format, which prepares GitHealth for additional locales.
+  hard-coded French format, which prepares GitHealth for additional locales;
+- **the repository header gains an "Assistant" button, and `⌘J` opens the same panel from
+  anywhere in a repository.** The assistant sits beside the branch table rather than replacing
+  it, because an answer names branches and naming them is only useful if you can look at the
+  rows without leaving the answer.
+
+### Security
+
+- **the agent reads the capture through a door that closes behind it.** GitHealth serves it
+  on the loopback address it already listens on, deliberately outside `/api` — that prefix is
+  the browser's, guarded by a session cookie and an anti-forgery token a command-line tool
+  does not have, and loosening it for one route would have loosened it for the browser too.
+  Each run gets its own 256-bit single-use address, bound to that one capture, closed the
+  moment the run ends whichever way it ends; the command line shown on screen and stored in
+  the database has that secret replaced by `<single-use-token>`. What the agent can ask for is
+  four read-only questions about branches already measured — no shell, no Git, no file access,
+  nothing that writes;
+- **Claude Code now runs with every one of its own tools switched off**, and only GitHealth's
+  granted back, which is a narrower grant than the plan mode it replaces. **Codex CLI cannot
+  be locked down as far**: GitHealth replaces its whole server table so the machine's own are
+  not inherited, but tools it gets from its plugins and connectors stay within its reach, and
+  no flag removes them without also removing the credentials the run needs. The panel says so
+  before you allow anything, and the [security model](docs/SECURITY_MODEL.md) says it in full;
+- **permission to send a repository's captures is enforced by the API**, stored on the
+  repository, and revocable at any time.
+
+### Limitations
+
+- **an answer does not stream in.** While a run is in flight the panel says how many rows are
+  being read and offers **Stop**; the answer arrives whole. GitHealth follows only what the
+  agent prints on standard output, and what it writes on standard error is kept to explain a
+  failure rather than shown as it happens — so an agent that reports its progress that way
+  says nothing until it is finished;
+- **assistant conversations are part of the exportable database.** A backup copied off the
+  machine carries the questions, the answers, the branch names in them and the redacted
+  command lines. **Delete every conversation** in Policies → Assistant is how you empty that
+  before exporting;
+- **Docker gets no assistant**: the container has no agent CLI, so the panel says both are
+  unavailable and nothing is installed to fix it.
 
 ## [0.1.0] - 2026-08-30
 
