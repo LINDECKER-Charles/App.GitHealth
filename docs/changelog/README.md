@@ -55,5 +55,5 @@ without opening every file.
 
 | Version | Released | Entries | Contents |
 |---|---|---|---|
-| [unreleased](unreleased/README.md) | — | 7 | Baselines, capture selector, visualisation, English interface, deletion |
+| [unreleased](unreleased/README.md) | — | 9 | Baselines, capture selector, visualisation, English interface, deletion, agent assistant |
 | [0.1.0](0.1.0/README.md) | 2026-08-30 | 27 | First public release: the whole MVP, from the domain to the installers |
