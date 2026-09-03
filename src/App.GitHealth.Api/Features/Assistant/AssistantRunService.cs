@@ -29,16 +29,22 @@ internal sealed class AssistantRunService(
     {
         ArgumentNullException.ThrowIfNull(request);
         var question = AssistantPrompt.NormalizeQuestion(request.Question);
-        var agent = await ResolveAsync(request.AgentId, question, cancellationToken);
+        var agent = Accept(request.AgentId, question);
         if (!agent.IsSuccess)
         {
             return ApiOutcome<AssistantRunSnapshot>.Failed(agent.Failure!);
         }
 
-        var effort = ResolveEffort(agent.Value!.Agent, request.Effort);
+        var effort = ResolveEffort(agent.Value!, request.Effort);
         if (!effort.IsSuccess)
         {
             return ApiOutcome<AssistantRunSnapshot>.Failed(effort.Failure!);
+        }
+
+        var location = await LocateAsync(request.AgentId, cancellationToken);
+        if (!location.IsSuccess)
+        {
+            return ApiOutcome<AssistantRunSnapshot>.Failed(location.Failure!);
         }
 
         var briefing = await briefings.BuildAsync(projectId, request.Baseline, cancellationToken);
@@ -52,7 +58,7 @@ internal sealed class AssistantRunService(
         return briefing.IsSuccess
             ? Launch(new LaunchRequest(
                 projectId,
-                agent.Value!,
+                location.Value!,
                 question,
                 effort.Value!,
                 briefing.Value!,
@@ -80,25 +86,39 @@ internal sealed class AssistantRunService(
         return ApiOutcome<AssistantRunSnapshot>.Success(run.Read(from: 0));
     }
 
-    private async Task<ApiOutcome<AgentLocation>> ResolveAsync(
-        string? agentId,
-        string question,
-        CancellationToken cancellationToken)
+    /// <summary>
+    /// What the request asks for, judged against the catalog alone, before the machine is
+    /// looked at. "This installation has no such agent" and "this request names an effort
+    /// that does not exist" are two different answers, and the second one does not depend on
+    /// what happens to be installed: a malformed request is refused the same way everywhere.
+    /// </summary>
+    private ApiOutcome<AgentDefinition> Accept(string? agentId, string question)
     {
         if (!availability.IsEnabled)
         {
-            return ApiOutcome<AgentLocation>.Failed(ApiProblems.Forbidden(
+            return ApiOutcome<AgentDefinition>.Failed(ApiProblems.Forbidden(
                 ApiErrorCodes.AssistantDisabled,
                 "The assistant is disabled on this installation."));
         }
 
         if (question.Length == 0)
         {
-            return ApiOutcome<AgentLocation>.Failed(ApiProblems.BadRequest(
+            return ApiOutcome<AgentDefinition>.Failed(ApiProblems.BadRequest(
                 ApiErrorCodes.AssistantQuestionRequired,
                 "A question is required to start a run."));
         }
 
+        var agent = AgentCatalog.Find(agentId);
+        return agent is null
+            ? ApiOutcome<AgentDefinition>.Failed(AgentUnavailable(agentId))
+            : ApiOutcome<AgentDefinition>.Success(agent);
+    }
+
+    /// <summary>Where the accepted agent actually is, or nothing if it is not installed.</summary>
+    private async Task<ApiOutcome<AgentLocation>> LocateAsync(
+        string? agentId,
+        CancellationToken cancellationToken)
+    {
         var location = await availability.FindAvailableAsync(agentId, cancellationToken);
         return location is null
             ? ApiOutcome<AgentLocation>.Failed(AgentUnavailable(agentId))
