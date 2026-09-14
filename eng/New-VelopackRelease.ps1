@@ -31,6 +31,10 @@ param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
+# Dot-sourced here rather than inherited from eng/build.ps1: continuous integration
+# calls this script directly, without going through the dispatcher.
+. (Join-Path $PSScriptRoot "BuildEnvironment.ps1")
+
 $packId = "App.GitHealth"
 $packTitle = "GitHealth"
 $packAuthors = "Charles LINDECKER"
@@ -74,17 +78,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $resolvedPublish $mainExecutable) -P
     throw "The $RuntimeIdentifier publication does not contain '$mainExecutable'."
 }
 
-# --icon expects a .ico on Windows and a .icns on macOS: only the Windows target
-# has the expected format today.
-$iconArguments = @()
-if ($RuntimeIdentifier -eq "win-x64") {
-    $iconPath = Join-Path $PSScriptRoot "../src/App.GitHealth.Api/githealth.ico"
-    if (-not (Test-Path -LiteralPath $iconPath -PathType Leaf)) {
-        throw "Icon '$iconPath' cannot be found: the shortcuts would have no icon."
-    }
-
-    $iconArguments = @("--icon", (Resolve-Path -LiteralPath $iconPath).Path)
-}
+$iconArguments = @("--icon", (Get-PackageIconPath -RuntimeIdentifier $RuntimeIdentifier))
 
 $destination = Join-Path ([System.IO.Path]::GetFullPath($OutputRoot)) $RuntimeIdentifier
 [System.IO.Directory]::CreateDirectory($destination) | Out-Null

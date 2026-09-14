@@ -62,6 +62,19 @@ produces a target's installer from its publish folder, and both
 `eng/New-ScoopManifest.ps1` and `eng/New-WingetManifest.ps1` derive the distribution
 manifests from it.
 
+That script passes the packager the icon of the target system: `githealth.ico` on Windows,
+`githealth.icns` on macOS, both kept next to the launcher in `src/App.GitHealth.Api/`. The
+`.icns` is the one macOS reads for the `.app` bundle, the Dock and Finder; without it
+Velopack silently falls back to its own generic icon. Only the `.ico` ships in the
+publication — the window on Windows reads it at runtime — while the `.icns` stays a
+packaging asset, which is why it carries no `Content` entry in the project file.
+
+Both derive from `src/App.GitHealth.Web/public/icons/icon-512x512.png`. Regenerating the
+`.icns` after an artwork change happens on macOS: lay the artwork out on Apple's grid — the
+rounded square fills 824 of a 1024 canvas, centred, the rest transparent — in the ten sizes
+of an `.iconset` folder, then `iconutil --convert icns`. The inset is not decoration: a
+full-bleed icon shows up visibly larger than its neighbours in the Dock.
+
 The archives are not single-file executables: extract them completely and keep their
 files together. The launcher pins its content root to the executable's folder; it can
 therefore be called from any current directory. The macOS artefacts of the MVP are

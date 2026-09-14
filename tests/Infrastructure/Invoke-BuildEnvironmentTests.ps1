@@ -110,6 +110,21 @@ Invoke-TestCase "rejects the Linux installer, even on a Linux host" {
     }
 }
 
+Invoke-TestCase "hands each packaged target the icon format its system reads" {
+    Assert-Equal -Expected ".ico" -Actual ([System.IO.Path]::GetExtension(
+        (Get-PackageIconPath -RuntimeIdentifier "win-x64")))
+    foreach ($identifier in @("osx-x64", "osx-arm64")) {
+        Assert-Equal -Expected ".icns" -Actual ([System.IO.Path]::GetExtension(
+            (Get-PackageIconPath -RuntimeIdentifier $identifier)))
+    }
+}
+
+Invoke-TestCase "refuses a target whose packaging icon is not defined" {
+    Assert-Throws -ExpectedPattern "No packaging icon" -Body {
+        Get-PackageIconPath -RuntimeIdentifier "linux-x64"
+    }
+}
+
 Invoke-TestCase "reads a semantic version from Directory.Build.props" {
     $version = Get-RepositoryVersion
     if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') {

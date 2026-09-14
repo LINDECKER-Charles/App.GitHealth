@@ -3,9 +3,10 @@
     Describes the host machine and its toolchain for GitHealth's local builds.
 
 .DESCRIPTION
-    Meant to be dot-sourced by eng/build.ps1. It answers two questions without
-    drawing any conclusion from them — "which target can this machine build for?"
-    and "what is missing?" — the decisions stay in the dispatcher.
+    Meant to be dot-sourced by eng/build.ps1 and by the packaging scripts it calls.
+    It answers two questions without drawing any conclusion from them — "which target
+    can this machine build for?" and "what is missing?" — the decisions stay in the
+    dispatcher.
 
     Compatible with Windows PowerShell 5.1 and PowerShell 7. The automatic variables
     $IsWindows / $IsMacOS / $IsLinux, the ternary operator and Join-Path with more
@@ -22,6 +23,11 @@ $SupportedRuntimeIdentifiers = @("win-x64", "osx-x64", "osx-arm64", "linux-x64")
 
 # Minimum version documented in .github/CONTRIBUTING.md.
 $MinimumGitVersion = "2.38"
+
+# The launcher's artwork, in the format each packager reads. Same drawing, two
+# containers: Windows reads a .ico, macOS an .icns placed in the .app bundle.
+$PackageIconDirectory = "src/App.GitHealth.Api"
+$PackageIconFileNames = @{ win = "githealth.ico"; osx = "githealth.icns" }
 
 function Get-RepositoryRoot {
     return (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
@@ -127,6 +133,38 @@ A $RuntimeIdentifier installer cannot be produced from a '$HostOperatingSystem'
 host: Velopack relies on the target system's toolchain. Go through
 .github/workflows/release.yml, whose matrix builds each target on its own runner.
 "@
+}
+
+<#
+.SYNOPSIS
+    Returns the icon the installer of a target must carry.
+
+.DESCRIPTION
+    Velopack does not fail when it is handed no icon: it silently substitutes its
+    own generic one, and the release then ships an unbranded application — a default
+    icon in the Dock, in Finder and in the Start menu. Nothing in the packaging
+    reports it, hence a rule that refuses rather than a flag that could be forgotten.
+
+    Linux is outside the map: it has no installer, and therefore no icon to hand over.
+#>
+function Get-PackageIconPath {
+    param([Parameter(Mandatory)][string]$RuntimeIdentifier)
+
+    $target = Get-RuntimeOperatingSystem $RuntimeIdentifier
+    if (-not $PackageIconFileNames.ContainsKey($target)) {
+        throw "No packaging icon is defined for the target '$RuntimeIdentifier'."
+    }
+
+    $directory = Join-Path (Get-RepositoryRoot) $PackageIconDirectory
+    $iconPath = Join-Path $directory $PackageIconFileNames[$target]
+    if (-not (Test-Path -LiteralPath $iconPath -PathType Leaf)) {
+        throw @"
+Icon '$iconPath' cannot be found: the $RuntimeIdentifier package would carry the
+packager's default icon. Regeneration is described in docs/DEVOPS.md.
+"@
+    }
+
+    return (Resolve-Path -LiteralPath $iconPath).Path
 }
 
 <#

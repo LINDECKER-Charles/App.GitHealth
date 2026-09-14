@@ -4,6 +4,7 @@
 # Binary assets: no end-of-line normalisation, on any system.
 *.ttf binary
 *.ico binary
+*.icns binary
 
 # Build entry points: the shebang requires LF line endings, cmd.exe requires CRLF.
 *.sh text eol=lf

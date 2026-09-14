@@ -23,6 +23,7 @@ the `[<version>]` section of the root [`CHANGELOG.md`](../../../CHANGELOG.md).
 | 2026-09-02 | [Asking a local agent about a capture](2026-09-02-local-agent-assistant.md) | `feat` | An installed CLI reads the capture and answers |
 | 2026-09-02 | [The agent connects to GitHealth, and the conversation is kept](2026-09-02-agent-bridge-and-conversations.md) | `feat` | A tool bridge, stored threads, consent per repository |
 | 2026-09-03 | [Watching the agent work](2026-09-03-watching-the-agent-work.md) | `feat` | The steps of a run, shown while it runs and never stored |
+| 2026-09-14 | [GitHealth carries its own icon on macOS](2026-09-14-macos-application-icon.md) | `fix` | An `.icns` in the bundle, in place of the packager's default |
 
 ## Watch out when releasing
 

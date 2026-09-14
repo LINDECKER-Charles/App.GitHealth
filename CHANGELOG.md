@@ -119,6 +119,14 @@ built that way and what it costs.
   it, because an answer names branches and naming them is only useful if you can look at the
   rows without leaving the answer.
 
+### Fixed
+
+- **the macOS application shows GitHealth's icon** — in the Dock, in Finder and in the
+  application switcher — instead of the grey placeholder it shipped with in `0.1.0`. The
+  packaging now refuses to build a target whose icon is missing rather than quietly
+  substituting the packager's own. An installation already on disk keeps the old icon until
+  it is updated: macOS caches it per bundle.
+
 ### Security
 
 - **the agent reads the capture through a door that closes behind it.** GitHealth serves it
