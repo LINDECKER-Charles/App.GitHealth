@@ -9,7 +9,17 @@ built that way and what it costs.
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- **the buttons that did nothing in the desktop window**: the guide, the data backup and
+  both CSV exports were dead on macOS and Linux. The system engine drawing the window
+  answers a link opening outside it with nothing, and drops a download for want of a
+  destination — so the click landed nowhere, without a word. The guide now opens in the
+  system browser, and so does every other external link in the product, including the ones
+  the assistant writes. Exports and backups are written to the downloads folder, under the
+  name the application chose, and a message says where the file landed; a name already
+  taken is numbered rather than overwritten. In a browser and under Docker, nothing
+  changes.
 
 ## [0.2.0] - 2026-09-14
 

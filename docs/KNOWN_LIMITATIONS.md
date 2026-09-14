@@ -140,6 +140,11 @@ anything about your repository. Everything below is unchanged in kind from `0.1.
   WebView2 on Windows, WKWebView on macOS, WebKitGTK on Linux. When it is unusable,
   GitHealth writes a warning on `stderr` and opens the interface in the system browser
   instead; it never stops for lack of a webview, and it downloads nothing to fix one.
+- None of those engines lets a page open a window outside itself or write a download on
+  its own, so the desktop window asks the application instead: external links go to the
+  system browser, and exports are written to the downloads folder. Backing up the database
+  from the window therefore reads it into memory first — a few times its size, briefly. In
+  a browser it is streamed straight to disk.
 - macOS caches the icon of a bundle it has already seen. An installation sitting in
   `/Applications` keeps showing the old grey placeholder until a release built from `0.2.0`
   replaces the bundle; `killall Dock` refreshes it once the new bundle is in place.

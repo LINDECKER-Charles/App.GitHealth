@@ -584,6 +584,12 @@ Three exports serve different needs:
 - **Export the selection** takes only the ticked rows;
 - **Back up the data** downloads a consistent copy of the entire SQLite database.
 
+Where the file lands depends on how GitHealth is being used. In the desktop window the
+application writes it to your downloads folder, under the name it chose, and a message
+names the full path; a name already taken is numbered — `branches (2).csv` — rather than
+overwritten. In a browser and under Docker, the download follows the rules your browser
+already applies.
+
 The CSV is UTF-8 encoded and neutralises cells a spreadsheet could interpret as formulas.
 It contains branch names and author identities: treat it as internal data.
 

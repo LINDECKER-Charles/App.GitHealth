@@ -9,4 +9,6 @@ the `[<version>]` section of the root [`CHANGELOG.md`](../../../CHANGELOG.md).
 
 ## Entries
 
-Nothing yet.
+| Entry | Type | Scope | Landed |
+| --- | --- | --- | --- |
+| [Exports and the guide, working inside the desktop window](2026-09-14-desktop-downloads-and-external-links.md) | `fix` | `api`, `front` | 2026-09-14 |
