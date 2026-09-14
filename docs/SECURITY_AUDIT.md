@@ -9,8 +9,8 @@ This is a revision, not a new audit. The `0.1.0` audit closed by recommending th
 redone "after a forge integration, a managed clone or an automatic update, as these
 features would substantially change the trust boundary". A feature did change the trust
 boundary — the local agent assistant — and the update path, present but uncovered at
-`0.1.0`, is now stated. Seventy-four commits landed between the two documents
-(`git rev-list --count <last commit touching docs/SECURITY_AUDIT.md>..HEAD`).
+`0.1.0`, is now stated. It covers the whole `0.2.0` window: everything merged since the
+previous audit, which is dated 30 August 2026.
 
 ## Summary
 
@@ -34,9 +34,12 @@ exceptions now exist:
    registered only for the native launcher on Windows and macOS, and every call returns
    `Unsupported` unless `UpdateManager.IsInstalled` — a portable archive never reaches the
    network. This was already true at `0.1.0` and the previous audit did not say so.
-3. **The WebView2 runtime on Windows.** When the runtime is missing, the desktop window
-   tries to download it before the application is usable. Documented in
-   `docs/KNOWN_LIMITATIONS.md`; the download is the host component's, not GitHealth's code.
+3. **The desktop window's rendering engine.** The window is drawn by a system engine —
+   WebView2 on Windows, WKWebView on macOS, WebKitGTK on Linux — that GitHealth neither
+   ships nor installs. When it is unusable, `DesktopWindow` catches the native load
+   failure, writes a warning on `stderr` and falls back to the system browser. It downloads
+   nothing. Whether the host platform fetches a missing runtime by itself is outside this
+   code and was not observed here.
 
 Everything else is unchanged: no analysis, export, snapshot or policy operation reaches a
 network.
@@ -59,11 +62,12 @@ CLI that GitHealth starts but does not own.
   `App.GitHealth.Git.IntegrationTests` 43/43, `App.GitHealth.Api.Tests` 272 of 278. The six
   failures are one environmental defect, not a finding: on this macOS host the temporary
   directory is `/var/folders/…`, a symlink to `/private/var/folders/…`, and the assertions
-  compare the requested path against the resolved one. They are
-  `ProjectEndpointTests.ProjectCanBeValidatedCreatedListedAndUpdated`,
-  `ProjectEndpointTests.ValidateAcceptsPhysicalPathBehindConfiguredRootLink` and four cases
-  in `ProjectRelocationEndpointTests`. Path resolution is behaving correctly; the tests
-  encode the host's unresolved spelling. CI runs on Linux, where the two paths coincide;
+  compare the requested path against the resolved one. Five of them —
+  `ProjectEndpointTests.ProjectCanBeValidatedCreatedListedAndUpdated` and four cases in
+  `ProjectRelocationEndpointTests` — diff the two spellings directly; the sixth,
+  `ProjectEndpointTests.ValidateAcceptsPhysicalPathBehindConfiguredRootLink`, fails earlier
+  still, on a `400` from the validation endpoint, for the same reason one level up. Path
+  resolution is behaving correctly; the tests encode the host's unresolved spelling. CI runs on Linux, where the two paths coincide;
 - HTTP security scenarios: `tests/App.GitHealth.Api.Tests/Security/LocalRequestSecurityTests.cs`
   declares 8 `[Fact]` and 2 `[Theory]` with 6 `[InlineData]` rows — **14 executed cases**,
   the same figure as `0.1.0`, against a larger surface;
@@ -80,6 +84,11 @@ CLI that GitHealth starts but does not own.
   carries are discussed under P5;
 - the Docker smoke test was **not replayed**, for the same reason as at `0.1.0`: no engine
   on this host. The Compose configuration was reviewed statically;
+- acceptance testing on two real repositories, replayed for this release: 4,432 and 1,021
+  commits, 59 and 62 branches analysed, five branches per repository cross-checked against
+  `git rev-list --left-right --count`, and both repositories verified byte-identical
+  afterwards on references, index, worktree diff and reflogs
+  ([`docs/release/acceptance-0.2.0.json`](release/acceptance-0.2.0.json));
 - no agent run was executed against a live provider during this audit. The containment
   flags were read from `AgentCatalog.cs` and asserted by `AgentCommandLineTests`; see P7.
 
@@ -159,16 +168,20 @@ argument — no shell, no string concatenation. The bridge token travels inline,
 `--mcp-config` JSON document for Claude Code and a `-c mcp_servers=…` override for Codex, so
 it never lands in a configuration file on disk. On Windows only, an npm `.cmd`/`.bat` shim
 is run through `cmd.exe /c` because `CreateProcess` refuses a shim; the shim path and the
-arguments remain separate `ArgumentList` entries, so this does not reintroduce a shell
-parsing surface for repository-derived values — and none of these arguments is
-repository-derived in any case.
+arguments are handed over as separate `ArgumentList` entries. On Windows those entries are
+then joined into one command line that `cmd.exe` re-parses with its own metacharacter rules,
+so the separation is not by itself a guarantee. What makes it safe here is that none of
+these arguments is repository-derived: the shim path comes from the resolved executable, the
+effort from the catalogue, and the token from `RandomNumberGenerator`.
 
 **The agent's Markdown answer.** This is untrusted model output rendered inside the
 application's own origin, which is a stored-XSS surface in the ordinary sense. It is parsed
 by `src/App.GitHealth.Web/src/app/core/markdown/` into a typed block and span tree, then
 rendered by `ds-markdown.ts` through ordinary Angular interpolation and structural
-directives. There is no `innerHTML` anywhere in `src/App.GitHealth.Web/src` — the only two
-occurrences of the word are comments stating that there must not be one. Links are filtered
+directives. There is no `innerHTML` anywhere in `src/App.GitHealth.Web/src` — the word
+appears twice, both times in a comment: `ds-markdown.ts` states that there is none and that
+there must not be one, and `shell-tokenizer.ts` describes itself as rendering without one.
+Links are filtered
 by scheme: `markdown-inline.ts` tests `/^(https?:\/\/|mailto:)/i` and emits a `link` span
 only on a match; anything else — `javascript:`, `data:`, `file:` — is emitted as literal
 text spelled `[label](target)`, inert. Rendered anchors carry `target="_blank"` and
@@ -393,7 +406,7 @@ Withdrawing consent deliberately does **not** purge: stopping the sending and fo
 was already said are two decisions on two buttons.
 
 Status for `0.2.0`: **accepted with the purge paths as the mitigation**. Encryption at rest
-is still not implemented and is still recommended below.
+is still not implemented; it is recommendation 8 below.
 
 ### P3 — Local service without user authentication — low within the model
 
@@ -474,7 +487,9 @@ no privilege of its own.
 New. The read-only containment of a run rests entirely on flags a third party defines:
 `--tools ""`, `--allowedTools` and `--strict-mcp-config` for Claude Code; `--sandbox read-only`
 and the `mcp_servers` replacement for Codex CLI. GitHealth asserts that it *passes* those
-flags — `AgentCommandLineTests` pins the exact argument vectors — but nothing asserts that
+flags — `AgentCommandLineTests` checks them one by one, that `claude` still carries
+`--tools ""`, `--strict-mcp-config` and `--allowedTools mcp__githealth` and that `codex`
+still carries `--sandbox read-only` — but nothing asserts that
 the installed CLI still *honours* them.
 
 Three ways this degrades silently. A vendor renames a flag: most CLIs reject an unknown
@@ -482,9 +497,10 @@ option, which fails loudly, so this is the benign case. A vendor changes what a 
 `--tools ""` coming to mean "defaults" rather than "none", or the sandbox gaining an exception
 — and the run keeps succeeding while granting more than intended. A vendor adds a capability
 outside the flags entirely, as Codex plugins and connectors already are. Nothing in GitHealth
-would detect any of the last two. The version each was verified against is recorded in the
-source comments — Claude Code 2.1.220 for the tool restriction — and this revision did not
-re-verify against an installed CLI.
+would detect any of the last two. The version the Claude Code flags were verified against is
+recorded in `docs/SECURITY_MODEL.md` — 2.1.220 for the tool restriction — rather than beside
+the flags in `AgentCatalog.cs`, and no version is recorded for Codex CLI at all. This
+revision did not re-verify against an installed CLI.
 
 Impact: a run could read or reach more than the audited grant, with no signal to the user or
 to the code. Bounded by the fact that the CLI runs as the user and with the user's own

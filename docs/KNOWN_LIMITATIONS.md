@@ -1,14 +1,18 @@
 # Known limitations of `0.2.0`
 
-`0.2.0` adds the assistant, and with it the first feature that reaches a network. That
-section is listed first because it is the one that moves the trust boundary; everything
-below it is unchanged in kind from `0.1.0`.
+`0.2.0` adds the assistant, and with it the feature that moves the trust boundary
+furthest: it hands a repository's measurements to a process that calls someone else's
+service. That section is listed first for that reason. It is not the only thing here that
+reaches the network — a managed installation also asks GitHub whether a newer release
+exists, which is under **Packaging and platforms** — but it is the only one that sends
+anything about your repository. Everything below is unchanged in kind from `0.1.0`.
 
 ## The assistant
 
-- The assistant is the only feature that sends anything off the machine. Every other
-  feature works with no network at all, and the application code still opens no outbound
-  connection of its own: what leaves is a child process the user already runs themselves.
+- The assistant is the only feature that sends anything *about a repository* off the
+  machine. No analysis, export, snapshot or policy operation reaches a network, and
+  GitHealth opens no outbound connection of its own for the assistant either: what leaves
+  is a child process the user already runs themselves.
 - GitHealth holds no API key and has no account. It starts an agent CLI installed on the
   machine — Claude Code or Codex CLI — and the call that agent makes is billed to the
   user's own account with their own provider.
@@ -21,12 +25,14 @@ below it is unchanged in kind from `0.1.0`.
 - Branch names and tip author names leave the machine when a question is asked.
   Contributor email addresses do not: they are excluded from the briefing and from every
   bridge tool by construction.
-- Conversations are kept in the local SQLite database, so they travel in
+- The database is not encrypted at rest. It is an ordinary SQLite file, readable by
+  anything running with the user's rights, and `0.2.0` widened what it holds.
+- Conversations are kept in that same local database, so they travel in
   `GET /api/exports/database` and in any copy of that file. Per thread, that is: the
   questions as they were typed, the answers as the agent wrote them — branch names and tip
   author names included — which agent answered and at which effort, the command line with
-  its bridge token blanked, the durations, the statuses, and the failure messages of runs
-  that produced no answer. Three things remove them, all real deletes: deleting the capture
+  its bridge token blanked, the durations, the statuses, a truncation flag for answers cut
+  off by the output budget, and the failure messages of runs that produced no answer. Three things remove them, all real deletes: deleting the capture
   the thread hangs off, deleting one thread from the panel's history, and
   **Policies → Assistant → Delete every conversation**.
 - Withdrawing consent does not delete anything. "Stop sending this repository's captures"
@@ -49,8 +55,10 @@ below it is unchanged in kind from `0.1.0`.
   call sends back — not just the answer. An installation that pinned it at the old 512 KiB
   should raise it, or a run reading a large capture is stopped mid-answer.
 - Tool isolation differs by agent, and the difference is real. Claude Code runs with
-  `--tools ""`, `--allowedTools mcp__githealth` and `--strict-mcp-config`, which leaves it
-  no shell, no file access and no network beyond the bridge. Codex CLI runs with
+  `--tools ""`, `--allowedTools mcp__githealth` and `--strict-mcp-config`, which on the
+  version those flags were verified against leaves it no shell, no file access and no
+  network beyond the bridge — and holds only as long as the installed CLI keeps honouring
+  them, which nothing here checks at runtime. Codex CLI runs with
   `--sandbox read-only` and its `mcp_servers` table replaced rather than added to, but
   tools it gets from its own plugins and connectors stay reachable and no flag removes
   them. GitHealth serves it one capture; it does not control what else that process can
@@ -107,9 +115,9 @@ below it is unchanged in kind from `0.1.0`.
 - Once fetched, the whole filtered list is rendered as DOM rows. There is no row
   virtualisation yet, so filtering and sorting stay local and fast while the initial render
   of a very large capture does not.
-- The drift view compares only the last six captures, and says so in its legend. If either
-  side's branch list was cut at the read cap, the drift is partial and the legend says that
-  too.
+- The drift view loads only the last six captures, and the legend says so once there are
+  more than six. If any of those captures had its branch list cut at the read cap, the
+  comparison is partial and the legend says that too.
 
 ## Packaging and platforms
 
@@ -120,11 +128,18 @@ below it is unchanged in kind from `0.1.0`.
   until a code signing certificate is in place. The SHA-256 checksums, the SPDX SBOM and
   the provenance attestations allow an archive to be verified, but they do not replace
   signing or notarisation.
-- In-app updates exist only on Windows and macOS. On Linux, only portable archives are
+- In-app updates exist only on Windows and macOS, and only for an installation made with
+  the installer. A portable archive extracted by hand is not a managed installation, so it
+  is never offered an update and no button appears. On Linux, only portable archives are
   published and updating stays manual.
-- The window depends on the system rendering engine: WebView2 on Windows, WKWebView on
-  macOS, WebKitGTK on Linux. When it is unusable, GitHealth writes a warning on `stderr`
-  and falls back to the system browser; it never stops for lack of a webview.
+- A managed installation asks GitHub whether a newer release exists, at startup. The query
+  is anonymous and carries nothing about your repositories, but it does tell GitHub that an
+  installation exists and which version it runs. Nothing else in the product contacts a
+  forge.
+- The desktop window is drawn by a system engine GitHealth neither ships nor installs:
+  WebView2 on Windows, WKWebView on macOS, WebKitGTK on Linux. When it is unusable,
+  GitHealth writes a warning on `stderr` and opens the interface in the system browser
+  instead; it never stops for lack of a webview, and it downloads nothing to fix one.
 - macOS caches the icon of a bundle it has already seen. An installation sitting in
   `/Applications` keeps showing the old grey placeholder until a release built from `0.2.0`
   replaces the bundle; `killall Dock` refreshes it once the new bundle is in place.

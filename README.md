@@ -257,12 +257,13 @@ Docker infrastructure and the browser journey.
 ## 07 — Project status
 
 The published version is **`0.2.0`**. It includes the desktop application with its Windows
-and macOS installers, the Windows, macOS and Linux portable archives, the Scoop manifest,
-Docker Compose, CI qualification, a security audit and a performance baseline up to 1,000
-branches. Being a `0.x`, the public contract is not frozen: a minor
-version may still break it. The [known limitations](docs/KNOWN_LIMITATIONS.md) are part of
-that contract — no code signing or notarisation, no in-app update on Linux, and Git still
-has to be installed separately.
+and macOS installers, the Windows, macOS and Linux portable archives, the Scoop and winget
+manifests, Docker Compose, CI qualification, a security audit and a performance baseline up
+to 1,000 branches. Being a `0.x`, the public contract is not frozen: a minor version may
+still break it, and `0.2.0` did. The [known limitations](docs/KNOWN_LIMITATIONS.md) are part
+of that contract — no code signing or notarisation, no in-app update on Linux, Git still has
+to be installed separately, and the Assistant is the one feature that reaches a network,
+opt-in per repository.
 
 Contributions are welcome. Start with
 [CONTRIBUTING.md](.github/CONTRIBUTING.md), read the

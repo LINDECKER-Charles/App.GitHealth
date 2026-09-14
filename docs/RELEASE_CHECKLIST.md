@@ -41,9 +41,11 @@ say so.
       a false claim. For `0.2.0` it was redone: the `0.1.0` document asserted "no outbound
       application communication", which the assistant falsifies
 - [ ] `.github/ISSUE_TEMPLATE/bug_report.yml` — the version placeholder on the bug form
-- [ ] `tests/Infrastructure/Invoke-RealRepositoryAcceptance.ps1` — the `version` field the
-      script stamps into its report is a literal. Left alone it labels the 0.2.0 evidence
-      `0.1.0`, and the acceptance JSON is the one artefact nobody re-reads afterwards
+- [ ] `tests/Infrastructure/Invoke-RealRepositoryAcceptance.ps1` — nothing to edit here any
+      more. The `version` field the script stamps into its report used to be a literal, which
+      labelled the 0.1.0 evidence `0.1.0-rc.1` until somebody fixed the JSON by hand after
+      the fact; it now reads `Get-RepositoryVersion`, so it follows the bump above. Check
+      that the report it writes names the right version rather than editing the script
 - [ ] `docs/release/0.2.0.md` written, and `docs/README.md` pointing at it
 
 ## The changelog journal
@@ -62,7 +64,7 @@ steps; the release needs six.
       its own path:
 
       ```bash
-      git log --oneline v0.1.0..origin/test -- docs/changelog/unreleased/<entry>.md
+      git log --oneline v0.1.0..origin/dev -- docs/changelog/unreleased/<entry>.md
       ```
 
       and the feature's other commits over the paths the entry names. An entry covers an
@@ -134,9 +136,10 @@ Green on CI, on the `dev` push that carries the bump:
 
 The `test` matrix runs in rehearsal mode: four native targets and the Docker smoke test,
 no installer, no manifest, no attestation. It blocks nothing, because `release.yml` replays
-the same matrix from the tag before attaching a single artefact. Checksums, SBOMs,
-installers and manifests are produced by that second run, which is why they are verified
-after publication rather than here.
+the same matrix from the tag before attaching a single artefact. The rehearsal does build
+its own checksums and SBOMs and then throws them away — only the installers, the manifests
+and the attestations are gated on the release event — so every published asset comes from
+that second run, which is why they are verified after publication rather than here.
 
 ## Acceptance testing on real repositories
 
@@ -190,13 +193,17 @@ exercised by hand, on the same two repositories, in the same session:
 - [ ] the assistant on a repository where consent has been granted: an installed CLI is
       found and named with its version and path, the briefing is readable in full before
       anything is sent, and a run in flight can be stopped;
-- [ ] `GitHealth:Assistant:Enabled=false` removes the feature outright, with no interface
-      able to turn it back on. This is the answer offered to an installation whose branch
-      names are confidential, so it is verified rather than assumed;
+- [ ] `GitHealth:Assistant:Enabled=false` leaves no usable assistant and no interface able
+      to turn it back on. The bridge route stays mapped by design and answers `401`, because
+      no session is ever opened in that configuration. This is the answer offered to an
+      installation whose branch names are confidential, so it is verified rather than
+      assumed;
 - [ ] the exported SQLite file holds the conversations — questions, answers, which agent
-      answered, the command line with its token blanked — and no contributor email
-      address. That reverses what the previous version's model documented, so the backup is
-      opened and read, not trusted.
+      answered, the command line with its token blanked — and no bridge token. Contributor
+      email addresses are absent from the conversations but present in the export as they
+      always were, in `ContributorSnapshots`; the conversations are what is new. That
+      reverses what the previous version's model documented, so the backup is opened and
+      read, not trusted.
 
 ## Benchmark before the tag
 
@@ -277,12 +284,20 @@ git push origin origin/test:refs/heads/main
       *after* the release exists — it is triggered by `release: published` and uploads with
       `gh release upload`. An immutable release refuses that upload, and the result is a
       permanently empty release that no rerun can repair
-- [ ] GitHub release drafted on `v0.2.0`, left as a normal release. A pre-release is
-      skipped by `/releases/latest`, which the README badge link and the Scoop manifest
-      both rely on
-- [ ] release published — publishing is what triggers `release.yml`, which replays the four
-      native targets and the Docker smoke test, builds the installers and manifests, then
-      attaches everything once the matrix is green
+- [ ] release published on `v0.2.0` **as a pre-release**, then cleared once the assets are
+      attached. Publishing is what triggers `release.yml`, and that workflow attaches every
+      asset *after* the release already exists — so a release published straight as normal
+      is, for the length of the matrix, the newest release with nothing in it. During that
+      window `/releases/latest/download/...` answers 404, which is the URL the README and
+      the Scoop manifest both use. A pre-release is skipped by `/releases/latest`, so `0.1.0`
+      stays the latest until `0.2.0` is complete. The technique is safe on every axis that
+      matters: GitHub emits `published` for a pre-release too, so the workflow still fires;
+      the Velopack, winget, Scoop and attestation steps gate on `github.event_name ==
+      'release'` and not on the flag, so they all run; and installed applications ignore it
+      either way, because the update source is built with `prerelease: false`
+- [ ] the flag cleared with `gh release edit v0.2.0 --prerelease=false` once the assets are
+      verified below. That emits `released`, which `release.yml` does not listen to, so
+      nothing re-runs and the end state is an ordinary release
 
 ### The published assets
 
