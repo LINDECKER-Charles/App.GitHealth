@@ -258,7 +258,7 @@ the desktop window, static file serving, the content security policy, deep links
 
 Produces the installer, the packages and the update feed in
 `artifacts/velopack/<target>/`. Velopack refuses to overwrite a version that has already
-been packaged: to replay the operation, bump the version with `-Version 0.1.1`.
+been packaged: to replay the operation, bump the version with `-Version 0.2.1`.
 
 There is **no installer on Linux**, by choice: distribution there goes through the
 portable archive that `publish` has already produced.
@@ -297,7 +297,7 @@ published — the full journey is described in
 | `permission denied: ./eng/build.sh` | execute bit lost on copy | `chmod +x eng/build.sh` |
 | `Missing dependencies` | npm dependencies not installed | `npm ci --prefix src/App.GitHealth.Web` |
 | `No <target> publication` | `run` or `installer` before `publish` | run `publish` first |
-| `There is a release ... equal or greater` | version already packaged by Velopack | run again with `-Version 0.1.1` |
+| `There is a release ... equal or greater` | version already packaged by Velopack | run again with `-Version 0.2.1` |
 | Node.js showing `Mismatch` | patch level differs from the pinned version | nothing, it has no local effect |
 | .NET SDK showing `Mismatch` | major version differs from `global.json` | reinstall through the ".NET SDK" step |
 | Mangled characters in the messages | the UTF-8 byte order mark was stripped from a `.ps1` | restore it, see below |

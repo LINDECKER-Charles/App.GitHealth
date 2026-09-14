@@ -400,8 +400,8 @@ The tag is then placed on the validated commit, and `main` catches up:
 
 ```bash
 git fetch origin
-git tag -a v0.1.0 -m "GitHealth 0.1.0" origin/test
-git push origin v0.1.0
+git tag -a v0.2.0 -m "GitHealth 0.2.0" origin/test
+git push origin v0.2.0
 git push origin origin/test:refs/heads/main
 ```
 

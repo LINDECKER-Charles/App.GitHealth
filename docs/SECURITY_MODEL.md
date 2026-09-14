@@ -211,7 +211,7 @@ runs themselves.
 
 Conversations are kept, in the local SQLite database. This reverses an earlier decision to
 hold runs in memory only; the reasoning is in
-[the changelog entry](changelog/unreleased/2026-09-02-agent-bridge-and-conversations.md#why),
+[the changelog entry](changelog/0.2.0/2026-09-02-agent-bridge-and-conversations.md#why),
 and the short form is that a record the user cannot see is also a record they cannot delete.
 
 Two tables hold them — `AssistantConversations` and `AssistantMessages` — and a thread hangs

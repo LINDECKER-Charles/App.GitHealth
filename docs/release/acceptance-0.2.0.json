@@ -1,0 +1,88 @@
+{
+  "version": "0.2.0",
+  "executedAtUtc": "2026-09-14T06:48:12.8336980+00:00",
+  "platform": "macOS 26.6.2",
+  "restartPreservedProjects": true,
+  "restartPreservedSnapshots": true,
+  "csvAndDatabaseExports": true,
+  "repositories": [
+    {
+      "label": "real-repository-1",
+      "headCommit": "704e78e2cb28c28956310f5c88157ec679c6d3f2",
+      "commitCount": 4432,
+      "trackedFileCount": 3581,
+      "referenceCount": 94,
+      "analyzedBranchCount": 59,
+      "metricsCompared": 5,
+      "durationMilliseconds": 2423,
+      "topologies": [
+        {
+          "name": "Diverged",
+          "count": 40
+        },
+        {
+          "name": "Merged",
+          "count": 16
+        },
+        {
+          "name": "Synchronized",
+          "count": 3
+        }
+      ],
+      "activities": [
+        {
+          "name": "Active",
+          "count": 29
+        },
+        {
+          "name": "Aging",
+          "count": 28
+        },
+        {
+          "name": "Inactive",
+          "count": 2
+        }
+      ],
+      "repositoryUnchanged": true
+    },
+    {
+      "label": "real-repository-2",
+      "headCommit": "80e34006982342202b3da68d86d850d946f0af10",
+      "commitCount": 1021,
+      "trackedFileCount": 417,
+      "referenceCount": 112,
+      "analyzedBranchCount": 62,
+      "metricsCompared": 5,
+      "durationMilliseconds": 2827,
+      "topologies": [
+        {
+          "name": "Ahead",
+          "count": 9
+        },
+        {
+          "name": "Diverged",
+          "count": 52
+        },
+        {
+          "name": "Merged",
+          "count": 1
+        }
+      ],
+      "activities": [
+        {
+          "name": "Active",
+          "count": 28
+        },
+        {
+          "name": "Aging",
+          "count": 33
+        },
+        {
+          "name": "Inactive",
+          "count": 1
+        }
+      ],
+      "repositoryUnchanged": true
+    }
+  ]
+}

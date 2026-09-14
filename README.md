@@ -21,8 +21,8 @@
       src="https://github.com/LINDECKER-Charles/App.GitHealth/actions/workflows/security.yml/badge.svg">
   </a>
   <a href="https://github.com/LINDECKER-Charles/App.GitHealth/releases/latest">
-    <img alt="Version 0.1.0"
-      src="https://img.shields.io/badge/version-0.1.0-a87b27">
+    <img alt="Version 0.2.0"
+      src="https://img.shields.io/badge/version-0.2.0-a87b27">
   </a>
   <a href="LICENSE">
     <img alt="MIT license"
@@ -256,7 +256,7 @@ Docker infrastructure and the browser journey.
 
 ## 07 — Project status
 
-The published version is **`0.1.0`**. It includes the desktop application with its Windows
+The published version is **`0.2.0`**. It includes the desktop application with its Windows
 and macOS installers, the Windows, macOS and Linux portable archives, the Scoop manifest,
 Docker Compose, CI qualification, a security audit and a performance baseline up to 1,000
 branches. Being a `0.x`, the public contract is not frozen: a minor

@@ -17,7 +17,9 @@ abstract: >-
   a baseline branch. It measures how far ahead and behind each branch is, its
   merge state, its activity and its contributors, in order to spot the ones that
   are merged, inactive, diverged or probably abandoned — without ever modifying
-  the analysed repository or sending data to an external service.
+  the analysed repository. It runs with no network, the one exception being an
+  optional assistant panel, enabled per repository, which hands the measured
+  branches to an agent command line already installed on the machine.
 keywords:
   - git
   - branch-management
@@ -27,5 +29,5 @@ keywords:
   - angular
   - local-first
 license: MIT
-version: 0.1.0
-date-released: '2026-08-30'
+version: 0.2.0
+date-released: '2026-09-14'

@@ -1,5 +1,5 @@
 # GitHealth technical architecture
-> Status: MVP implemented, published version `0.1.0` — updated: 2 September 2026
+> Status: MVP implemented, published version `0.2.0` — updated: 14 September 2026
 ## Overview
 
 GitHealth is a local web application that helps diagnose Git branches. The user selects a

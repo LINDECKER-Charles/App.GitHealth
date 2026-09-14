@@ -12,6 +12,11 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot "Acceptance/ProcessHelpers.ps1")
 . (Join-Path $PSScriptRoot "Acceptance/RecipeHelpers.ps1")
 
+# For Get-RepositoryVersion alone: the report has to name the version it qualifies,
+# and a literal here would be a second source of truth that nothing reconciles. It
+# was already edited by hand once, after the fact, when 0.1.0-rc.1 became 0.1.0.
+. (Join-Path $PSScriptRoot "../../eng/BuildEnvironment.ps1")
+
 function Get-AvailableLoopbackPort {
     $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
     $listener.Start()
@@ -265,7 +270,7 @@ try {
     }
 
     $report = [ordered]@{
-        version = "0.1.0"
+        version = Get-RepositoryVersion
         executedAtUtc = [DateTimeOffset]::UtcNow.ToString("O")
         platform = [Runtime.InteropServices.RuntimeInformation]::OSDescription
         restartPreservedProjects = $true

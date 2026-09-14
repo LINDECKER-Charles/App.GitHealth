@@ -9,6 +9,16 @@ built that way and what it costs.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.2.0] - 2026-09-14
+
+The interface speaks English, a repository can be compared against several baselines at
+once, an analysis can be watched reference by reference while it runs, and an agent already
+installed on the machine can be asked about a capture — the first and only feature that
+reaches a network, opt-in per repository. Still a `0.x`: the public contract is not frozen,
+and this version breaks part of it.
+
 ### Added
 
 - **watching an analysis run, reference by reference**: launching an analysis hands the
@@ -263,4 +273,5 @@ minor version may still break it.
 - no network fetching and no forge integration;
 - a local, single-user product, not meant for network exposure.
 
+[0.2.0]: https://github.com/LINDECKER-Charles/App.GitHealth/releases/tag/v0.2.0
 [0.1.0]: https://github.com/LINDECKER-Charles/App.GitHealth/releases/tag/v0.1.0

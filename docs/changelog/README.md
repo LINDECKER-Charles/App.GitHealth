@@ -16,6 +16,7 @@ docs/changelog/
 ├── README.md          this page and the version index
 ├── TEMPLATE.md        the shape of an entry
 ├── unreleased/        merged, not attached to a version yet
+├── 0.2.0/             everything that shipped in 0.2.0
 └── 0.1.0/             everything that shipped in 0.1.0
 ```
 
@@ -55,5 +56,6 @@ without opening every file.
 
 | Version | Released | Entries | Contents |
 |---|---|---|---|
-| [unreleased](unreleased/README.md) | — | 12 | Baselines, capture selector, visualisation, English interface, deletion, live analysis run, agent assistant, macOS icon |
+| [unreleased](unreleased/README.md) | — | 0 | — |
+| [0.2.0](0.2.0/README.md) | 2026-09-14 | 15 | The agent assistant, the live analysis run, several baselines, deletion, the author filter, the capture selector, visualisation, the English interface |
 | [0.1.0](0.1.0/README.md) | 2026-08-30 | 27 | First public release: the whole MVP, from the domain to the installers |
