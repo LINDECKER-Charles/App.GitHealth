@@ -22,38 +22,38 @@ says. The assemblies take their version from `VersionPrefix` alone, stamped into
 binaries report `0.1.0` in their file properties, with nothing in the pipeline failing to
 say so.
 
-- [ ] `Directory.Build.props` — `<VersionPrefix>0.2.0</VersionPrefix>`
-- [ ] `CITATION.cff` — `version: 0.2.0` and `date-released: '2026-09-14'`, which is the
+- [x] `Directory.Build.props` — `<VersionPrefix>0.2.0</VersionPrefix>`
+- [x] `CITATION.cff` — `version: 0.2.0` and `date-released: '2026-09-14'`, which is the
       release date, not the day the field is edited
-- [ ] `src/App.GitHealth.Web/package.json` — `"version": "0.2.0"`
-- [ ] `tests/App.GitHealth.E2E/package.json` — `"version": "0.2.0"`
-- [ ] `src/App.GitHealth.Web/src/app/core/workspace/app-identity.ts` —
+- [x] `src/App.GitHealth.Web/package.json` — `"version": "0.2.0"`
+- [x] `tests/App.GitHealth.E2E/package.json` — `"version": "0.2.0"`
+- [x] `src/App.GitHealth.Web/src/app/core/workspace/app-identity.ts` —
       `appVersion = '0.2.0'`. That constant feeds the top bar and the boot sequence only;
       the version the update check compares comes from Velopack through `/api/updates`,
       which is why the two are bumped from different files and must not drift
-- [ ] `README.md` — the badge, both the `alt` text and the shields.io URL, and "The
+- [x] `README.md` — the badge, both the `alt` text and the shields.io URL, and "The
       published version is **`0.2.0`**" in section 07
-- [ ] the versioned documents: `docs/USER_GUIDE.md`, `docs/ARCHITECTURE.md`,
+- [x] the versioned documents: `docs/USER_GUIDE.md`, `docs/ARCHITECTURE.md`,
       `docs/KNOWN_LIMITATIONS.md`, and the two pointers to the release report in
       `docs/README.md`
-- [ ] `docs/SECURITY_AUDIT.md` — never re-titled on its own. The heading moves only
+- [x] `docs/SECURITY_AUDIT.md` — never re-titled on its own. The heading moves only
       when the audit is actually redone, because a version number on an unrevised audit is
       a false claim. For `0.2.0` it was redone: the `0.1.0` document asserted "no outbound
       application communication", which the assistant falsifies
-- [ ] `.github/ISSUE_TEMPLATE/bug_report.yml` — the version placeholder on the bug form
-- [ ] `tests/Infrastructure/Invoke-RealRepositoryAcceptance.ps1` — nothing to edit here any
+- [x] `.github/ISSUE_TEMPLATE/bug_report.yml` — the version placeholder on the bug form
+- [x] `tests/Infrastructure/Invoke-RealRepositoryAcceptance.ps1` — nothing to edit here any
       more. The `version` field the script stamps into its report used to be a literal, which
       labelled the 0.1.0 evidence `0.1.0-rc.1` until somebody fixed the JSON by hand after
       the fact; it now reads `Get-RepositoryVersion`, so it follows the bump above. Check
       that the report it writes names the right version rather than editing the script
-- [ ] `docs/release/0.2.0.md` written, and `docs/README.md` pointing at it
+- [x] `docs/release/0.2.0.md` written, and `docs/README.md` pointing at it
 
 ## The changelog journal
 
 The procedure is in `docs/changelog/README.md`, section "Releasing a version". It has five
 steps; the release needs six.
 
-- [ ] **fill every unresolved `Commits` header in `docs/changelog/unreleased/`, before
+- [x] **fill every unresolved `Commits` header in `docs/changelog/unreleased/`, before
       anything is moved.** This is the step the README does not state, and it is needed
       every release: an entry travels in the commit it documents, so it cannot name its own
       SHA when it is written. The SHA only exists once the commit lands, and the release is
@@ -70,14 +70,14 @@ steps; the release needs six.
       and the feature's other commits over the paths the entry names. An entry covers an
       implementation, not a commit, so a header may list several.
 
-- [ ] create `docs/changelog/0.2.0/`
-- [ ] move every file out of `unreleased/`, names unchanged — the date prefix is the day
+- [x] create `docs/changelog/0.2.0/`
+- [x] move every file out of `unreleased/`, names unchanged — the date prefix is the day
       the entry's last commit landed, not the release day, and it survives the move
-- [ ] write `docs/changelog/0.2.0/README.md`: release date, the tag and the commit it sits
+- [x] write `docs/changelog/0.2.0/README.md`: release date, the tag and the commit it sits
       on, the commit range, and the table of entries
-- [ ] synthesise the entries into the `[0.2.0]` section of the root `CHANGELOG.md`, and add
+- [x] synthesise the entries into the `[0.2.0]` section of the root `CHANGELOG.md`, and add
       the tag link at the foot of that file next to the `[0.1.0]` one
-- [ ] add the `0.2.0` row to the version index in `docs/changelog/README.md`, and reset
+- [x] add the `0.2.0` row to the version index in `docs/changelog/README.md`, and reset
       `unreleased/README.md` to an empty journal whose **Since** reads `v0.2.0`
 
 The "Watch out when releasing" list in `unreleased/README.md` is read at this point and
@@ -88,46 +88,46 @@ notes, or a limitation. Nothing on it is dropped by moving the file.
 
 Run locally, before the bump is pushed:
 
-- [ ] `dotnet format App.GitHealth.sln --verify-no-changes`
-- [ ] `dotnet build App.GitHealth.sln --configuration Release`
+- [x] `dotnet format App.GitHealth.sln --verify-no-changes`
+- [x] `dotnet build App.GitHealth.sln --configuration Release`
 - [ ] `dotnet test App.GitHealth.sln --configuration Release --no-build`
-- [ ] `npm run format:check --prefix src/App.GitHealth.Web`
-- [ ] `npm run test:ci --prefix src/App.GitHealth.Web`
+- [x] `npm run format:check --prefix src/App.GitHealth.Web`
+- [x] `npm run test:ci --prefix src/App.GitHealth.Web`
 - [ ] `npm run typecheck --prefix tests/App.GitHealth.E2E` and
       `npm run format:check --prefix tests/App.GitHealth.E2E`
-- [ ] `npm run i18n:extract --prefix src/App.GitHealth.Web` leaves
+- [x] `npm run i18n:extract --prefix src/App.GitHealth.Web` leaves
       `src/locale/messages.json` unchanged. CI checks that with `git diff --exit-code`, so
       a message added without re-extraction fails the build rather than shipping an
       untranslated string
-- [ ] `./tests/Infrastructure/Invoke-BuildEnvironmentTests.ps1`
+- [x] `./tests/Infrastructure/Invoke-BuildEnvironmentTests.ps1`
 - [ ] `./tests/Infrastructure/Assert-ComposeConfiguration.ps1`
 
 Green on CI, on the `dev` push that carries the bump:
 
-- [ ] `Verify the baseline` green, and the `promote` job has advanced `test` onto that
+- [x] `Verify the baseline` green, and the `promote` job has advanced `test` onto that
       exact commit — not onto the tip of `dev`, which may have moved
-- [ ] the Playwright journey: add a repository, analyse, explain a branch, save a policy,
+- [x] the Playwright journey: add a repository, analyse, explain a branch, save a policy,
       export, restart and find the data again. The spec also asserts that no external host
       was contacted and that the repository fingerprint is unchanged, which is the
       machine-checked half of the read-only promise
-- [ ] the Docker folder-browser spec: a repository selected and validated from the mounted
+- [x] the Docker folder-browser spec: a repository selected and validated from the mounted
       folder, then added and analysed
-- [ ] relocation: history, repository identity and exclusion of a concurrent scan
-- [ ] interrupted analyses resumed at startup with a terminal status
-- [ ] `Audit dependencies` green — NuGet with no vulnerable package, and
+- [x] relocation: history, repository identity and exclusion of a concurrent scan
+- [x] interrupted analyses resumed at startup with a terminal status
+- [x] `Audit dependencies` green — NuGet with no vulnerable package, and
       `npm audit --audit-level=high` clean in both `src/App.GitHealth.Web` and
       `tests/App.GitHealth.E2E`
 
 ## Distribution matrix
 
-- [ ] Windows x64: publication and native smoke test
-- [ ] macOS Intel (`osx-x64`): publication and native smoke test
-- [ ] macOS Apple Silicon (`osx-arm64`): publication and native smoke test
-- [ ] Linux x64: publication and native smoke test
-- [ ] Docker: startup, unprivileged UID, non-writable repository mount and persistence
+- [x] Windows x64: publication and native smoke test
+- [x] macOS Intel (`osx-x64`): publication and native smoke test
+- [x] macOS Apple Silicon (`osx-arm64`): publication and native smoke test
+- [x] Linux x64: publication and native smoke test
+- [x] Docker: startup, unprivileged UID, non-writable repository mount and persistence
       after recreation
-- [ ] Docker Compose: static configuration and confinement validated
-- [ ] the rehearsal `release.yml` run that the `promote` job dispatched on `test` is green
+- [x] Docker Compose: static configuration and confinement validated
+- [x] the rehearsal `release.yml` run that the `promote` job dispatched on `test` is green
       on all four targets and on the Docker job
 - [ ] the macOS `.app` installed from the Setup shows GitHealth's own icon in the Dock and
       in Finder. This is the 0.2.0 fix and it only exists in the packaged bundle, so no
@@ -146,12 +146,12 @@ that second run, which is why they are verified after publication rather than he
 For each of the two selected repositories, record the commit of the repository under test
 without publishing its content, its branch count and the total duration:
 
-- [ ] compare a sample against `git rev-list --left-right --count`;
-- [ ] compare `git for-each-ref` before and after;
-- [ ] compare the index, the worktree diff and the reflogs before and after;
-- [ ] check a merged branch, a diverged one and an inactive one;
-- [ ] export CSV and SQLite;
-- [ ] restart and find the last successful snapshot again.
+- [x] compare a sample against `git rev-list --left-right --count`;
+- [x] compare `git for-each-ref` before and after;
+- [x] compare the index, the worktree diff and the reflogs before and after;
+- [x] check a merged branch, a diverged one and an inactive one;
+- [x] export CSV and SQLite;
+- [x] restart and find the last successful snapshot again.
 
 Company repositories are never copied into the GitHealth repository. The acceptance report
 must contain no author name, no address and no sensitive local path.
@@ -211,8 +211,8 @@ exercised by hand, on the same two repositories, in the same session:
 gh workflow run benchmark.yml --ref test -f enforce_budgets=true
 ```
 
-- [ ] dispatched on `test`, on the commit about to be tagged
-- [ ] the 100, 500 and 1,000 branch results read against `benchmarks/budgets.json` and the
+- [x] dispatched on `test`, on the commit about to be tagged
+- [x] the 100, 500 and 1,000 branch results read against `benchmarks/budgets.json` and the
       verdict written into the release report
 
 `docs/DEVOPS.md` calls this the only step where human judgement is still required, and the
@@ -233,9 +233,9 @@ after the fast-forward, which is after the tag. The evidence has to be asked for
 gh workflow run security.yml --ref test
 ```
 
-- [ ] dispatched on `test` and green: `CodeQL · csharp` and `CodeQL · javascript-typescript`
+- [x] dispatched on `test` and green: `CodeQL · csharp` and `CodeQL · javascript-typescript`
       with no blocking alert
-- [ ] `Audit dependencies` green in that same run
+- [x] `Audit dependencies` green in that same run
 
 `Review dependencies` is skipped outside a pull request by design, so its absence from the
 dispatched run is expected and is not a gap.
@@ -248,17 +248,17 @@ wait for the fast-forward.
 
 ## Release decision
 
-- [ ] known limitations reviewed in `docs/KNOWN_LIMITATIONS.md`
-- [ ] security audit redone in `docs/SECURITY_AUDIT.md`, not merely reviewed. The `0.1.0`
+- [x] known limitations reviewed in `docs/KNOWN_LIMITATIONS.md`
+- [x] security audit redone in `docs/SECURITY_AUDIT.md`, not merely reviewed. The `0.1.0`
       audit closed by asking to be redone once a feature moved the trust boundary; the
       assistant is that feature. The revision names the three outbound exceptions, rates the
       containment asymmetry between the two agents and the dependence on vendor flags, and
       re-scopes the unencrypted-database finding around the stored conversations
-- [ ] `docs/SECURITY_MODEL.md` matches what the agent bridge actually does. It previously
+- [x] `docs/SECURITY_MODEL.md` matches what the agent bridge actually does. It previously
       claimed runs were held in memory and never entered the exportable database; that is
       now false, and the correction is part of this release
-- [ ] release notes reviewed
-- [ ] branch protection still consistent. `dev` and `main` currently carry `enforce_admins`
+- [x] release notes reviewed
+- [x] branch protection still consistent. `dev` and `main` currently carry `enforce_admins`
       with force pushes and deletions refused, and no required status check; the English
       pass renamed the CI job names that would double as required contexts, so if required
       checks are ever turned on, the new names are the ones to register
@@ -272,19 +272,19 @@ git push origin v0.2.0
 git push origin origin/test:refs/heads/main
 ```
 
-- [ ] the annotated tag sits on the `test` commit that CI and the matrix exercised, not on
+- [x] the annotated tag sits on the `test` commit that CI and the matrix exercised, not on
       the result of a merge — the published object is then exactly the one that was tested
-- [ ] `main` fast-forwarded from that same commit. The server refuses the push if it is not
+- [x] `main` fast-forwarded from that same commit. The server refuses the push if it is not
       a fast-forward, which is the guard, not a convention
 
 ### Publication
 
-- [ ] immutable releases still disabled on the repository, checked before the release is
+- [x] immutable releases still disabled on the repository, checked before the release is
       published. `release.yml` attaches every asset in a `publish-release` job that runs
       *after* the release exists — it is triggered by `release: published` and uploads with
       `gh release upload`. An immutable release refuses that upload, and the result is a
       permanently empty release that no rerun can repair
-- [ ] release published on `v0.2.0` **as a pre-release**, then cleared once the assets are
+- [x] release published on `v0.2.0` **as a pre-release**, then cleared once the assets are
       attached. Publishing is what triggers `release.yml`, and that workflow attaches every
       asset *after* the release already exists — so a release published straight as normal
       is, for the length of the matrix, the newest release with nothing in it. During that
@@ -295,7 +295,7 @@ git push origin origin/test:refs/heads/main
       the Velopack, winget, Scoop and attestation steps gate on `github.event_name ==
       'release'` and not on the flag, so they all run; and installed applications ignore it
       either way, because the update source is built with `prerelease: false`
-- [ ] the flag cleared with `gh release edit v0.2.0 --prerelease=false` once the assets are
+- [x] the flag cleared with `gh release edit v0.2.0 --prerelease=false` once the assets are
       verified below. That emits `released`, which `release.yml` does not listen to, so
       nothing re-runs and the end state is an ordinary release
 
@@ -303,27 +303,27 @@ git push origin origin/test:refs/heads/main
 
 Twenty-five files, the same set `v0.1.0` carried, with one name changed:
 
-- [ ] the four portable archives: `githealth-win-x64.zip`, `githealth-osx-x64.tar.gz`,
+- [x] the four portable archives: `githealth-win-x64.zip`, `githealth-osx-x64.tar.gz`,
       `githealth-osx-arm64.tar.gz`, `githealth-linux-x64.tar.gz`
-- [ ] their four `.sha256` sidecars, each verified against a freshly downloaded archive
+- [x] their four `.sha256` sidecars, each verified against a freshly downloaded archive
       rather than against the build output
-- [ ] the four SPDX SBOMs, `githealth-<rid>.spdx.json`
-- [ ] the three Velopack installers: `App.GitHealth-win-x64-Setup.exe`,
+- [x] the four SPDX SBOMs, `githealth-<rid>.spdx.json`
+- [x] the three Velopack installers: `App.GitHealth-win-x64-Setup.exe`,
       `App.GitHealth-osx-x64-Setup.pkg`, `App.GitHealth-osx-arm64-Setup.pkg`. Linux gets
       none by design and keeps its portable archive
-- [ ] the three packages, `App.GitHealth-0.2.0-<rid>-full.nupkg`
-- [ ] the three update feeds, `releases.win-x64.json`, `releases.osx-x64.json`,
+- [x] the three packages, `App.GitHealth-0.2.0-<rid>-full.nupkg`
+- [x] the three update feeds, `releases.win-x64.json`, `releases.osx-x64.json`,
       `releases.osx-arm64.json` — one per channel, because a shared `osx` channel would
       have the two macOS publications overwrite each other. This is the only asset
       `GithubSource` reads: an installed application that finds no feed for its runtime
       offers no update and says nothing about why
-- [ ] the Scoop manifest `githealth.json`
-- [ ] the three winget manifests, `LINDECKER-Charles.GitHealth.yaml`, `.installer.yaml` and
+- [x] the Scoop manifest `githealth.json`
+- [x] the three winget manifests, `LINDECKER-Charles.GitHealth.yaml`, `.installer.yaml` and
       `.locale.en-US.yaml`. The locale file was `.locale.fr-FR.yaml` in 0.1.0; the English
       pass moved the file, its `PackageLocale`, the version manifest's `DefaultLocale` and
       the generator together, so the asset name changes this release
-- [ ] provenance and SBOM attestations present on the archives
-- [ ] the full list matches, checked in one command rather than by eye:
+- [x] provenance and SBOM attestations present on the archives
+- [x] the full list matches, checked in one command rather than by eye:
 
       ```bash
       gh release view v0.2.0 --json assets --jq '.assets[].name'
@@ -331,3 +331,52 @@ Twenty-five files, the same set `v0.1.0` carried, with one name changed:
 
 - [ ] an installed `0.1.0` on Windows and on macOS is offered the `0.2.0` update and
       applies it — the end of the chain that started with `VersionPrefix`
+
+## What 0.2.0 shipped without, and why
+
+Left unticked deliberately. A box nobody ticked is worth more than a box somebody ticked
+generously, so each is accounted for here.
+
+**Three local checks did not pass on the release machine, for reasons that are the
+machine's rather than the product's.** `dotnet test` fails six `Api.Tests` cases because
+macOS resolves `/var/folders/…` to `/private/var/folders/…` and those tests assert the
+requested spelling against the resolved one — the canonicalisation is the path-hardening
+control working, and CI on Linux is green. `Assert-ComposeConfiguration.ps1` blanks
+`DOCKER_CONFIG` to a fresh directory, which on Docker Desktop drops the `desktop-linux`
+context and leaves the CLI talking to a socket it cannot reach, exiting 125; also green on
+CI. The `tests/App.GitHealth.E2E` typecheck was not run locally at all — CI runs the
+Playwright suite itself, which is the stronger signal.
+
+**The 0.2.0 capabilities were not re-walked by hand on the two acceptance repositories.**
+The scripted recipe covers the 0.1.0 journey and it passed; the baselines, the capture
+selector, deletion, the author filter, the live run and the assistant were exercised by
+their own tests and by the Playwright journey, not by a human on a real repository. That is
+a gap, and the honest place for it is here rather than in the release report.
+
+**The macOS icon was verified in the package, not in the Dock.** The `.pkg` built for
+`osx-arm64` was unpacked and checked: `lib/app/Contents/Resources/githealth.icns` is present,
+`CFBundleIconFile` names it, and its SHA-256 matches `src/App.GitHealth.Api/githealth.icns`
+byte for byte. Nobody installed it and looked at the Dock.
+
+**The in-app update itself was not exercised end to end.** The three `releases.<rid>.json`
+feeds are attached and each names its `0.2.0` full package, which is what an installed
+application reads — but no installation of `0.1.0` was actually stepped up to `0.2.0`.
+
+## Two things learned publishing this one
+
+**`/releases/latest` does not always follow the pre-release flag.** Clearing it with
+`gh release edit --prerelease=false` left `/releases/latest` answering `v0.1.0`, even though
+`v0.2.0` was then the newer non-prerelease. The deterministic fix is to say so explicitly:
+
+```bash
+gh api --method PATCH repos/LINDECKER-Charles/App.GitHealth/releases/<id> -f make_latest=true
+```
+
+Check `/releases/latest` after clearing the flag, rather than assuming it moved.
+
+**The Windows checksum sidecar cannot be checked on a Unix machine.** `release.yml` writes
+it with `Set-Content` on `windows-latest`, which ends the line `CRLF`; `shasum -c` and
+`sha256sum -c` then treat the trailing `\r` as part of the filename and report the archive
+missing. The hash itself is correct — stripping the carriage return makes it verify. The
+same is true of the `0.1.0` sidecar, so this is long-standing rather than new. Writing the
+file with an explicit `\n` would fix it for the next release.

@@ -1,8 +1,8 @@
 # 0.2.0 — an assistant, a visible run, and several ways to read a repository
 
 - **Released** — 2026-09-14
-- **Tag** — [`v0.2.0`](https://github.com/LINDECKER-Charles/App.GitHealth/releases/tag/v0.2.0)
-- **Range** — `c91d6c4` … `v0.2.0`, 62 commits without the merges
+- **Tag** — [`v0.2.0`](https://github.com/LINDECKER-Charles/App.GitHealth/releases/tag/v0.2.0) on `4cd740d`
+- **Range** — `c91d6c4` … `4cd740d`, 62 commits without the merges
 - **Reader's summary** — [`CHANGELOG.md`](../../../CHANGELOG.md#020---2026-09-14)
 - **Acceptance report** — [`docs/release/0.2.0.md`](../../release/0.2.0.md)
 
