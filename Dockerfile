@@ -8,7 +8,7 @@ RUN npm ci
 COPY src/App.GitHealth.Web/ ./
 RUN npm run build
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0.400-noble AS backend-build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.401-noble AS backend-build
 
 WORKDIR /source
 
