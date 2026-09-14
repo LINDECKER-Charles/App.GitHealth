@@ -206,7 +206,7 @@ export class Dashboard {
   protected exportSelection(): void {
     const project = this.context.project();
     if (project !== null) {
-      this.exporter.export(project.displayName, this.selectedBranches());
+      void this.exporter.export(project.displayName, this.selectedBranches());
     }
   }
 

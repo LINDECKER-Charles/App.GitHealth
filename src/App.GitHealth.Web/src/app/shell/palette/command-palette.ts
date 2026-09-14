@@ -158,7 +158,7 @@ export class CommandPalette {
               $localize`:@@palette.action.exportCsv:Export the snapshot as CSV`,
               () => {
                 this.dialogs.closePalette();
-                this.exporter.export(project.displayName, snapshot.branches);
+                void this.exporter.export(project.displayName, snapshot.branches);
               },
               branchCountMeta(snapshot.branches.length),
             ),

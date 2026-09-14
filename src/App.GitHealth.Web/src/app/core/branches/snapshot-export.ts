@@ -21,11 +21,14 @@ export class SnapshotExporter {
   private readonly downloader = inject(FileDownloader);
   private readonly toast = inject(ToastService);
 
-  export(projectName: string, branches: readonly BranchSnapshotResponse[]): void {
+  /** The toast follows the file: nothing is announced when nothing was written. */
+  async export(projectName: string, branches: readonly BranchSnapshotResponse[]): Promise<void> {
     const csv = toSnapshotCsv(branches);
     const size = formatBytes(csvByteLength(csv));
-    this.downloader.download(`${slug(projectName)}-branches.csv`, csv, csvMimeType);
-    this.toast.show(exportedToast(branches.length, size));
+    const fileName = `${slug(projectName)}-branches.csv`;
+    if ((await this.downloader.saveText(fileName, csv, csvMimeType)) !== null) {
+      this.toast.show(exportedToast(branches.length, size));
+    }
   }
 }
 

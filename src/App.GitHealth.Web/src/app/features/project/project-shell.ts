@@ -166,7 +166,7 @@ export class ProjectShell {
     const snapshot = this.captures.snapshot();
     const project = this.context.project();
     if (snapshot !== null && project !== null) {
-      this.exporter.export(project.displayName, snapshot.branches);
+      void this.exporter.export(project.displayName, snapshot.branches);
     }
   }
 

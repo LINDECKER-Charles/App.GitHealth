@@ -13,6 +13,8 @@
     "app.update.action": "Update",
     "app.alert.gitUnavailable": "Git is unavailable",
     "app.alert.updateFailed": "Update failed",
+    "app.backup.failed": "The backup could not be saved.",
+    "app.backup.saved": "Data backed up · {$path}",
     "analysisRun.target.database": "githealth.db",
     "analysisRun.target.repository": "opening the repository",
     "analysisRun.detail.finished": "· {$branches} read · no Git write",

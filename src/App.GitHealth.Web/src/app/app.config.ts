@@ -8,6 +8,7 @@ import {
 import { provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
+import { ExternalLinkInterceptor } from './core/desktop/external-link-interceptor';
 
 const localSessionUrl = '/api/session';
 
@@ -18,6 +19,7 @@ export const appConfig: ApplicationConfig = {
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
     ),
     provideAppInitializer(() => firstValueFrom(inject(HttpClient).get<void>(localSessionUrl))),
+    provideAppInitializer(() => inject(ExternalLinkInterceptor).start()),
     provideRouter(routes),
   ],
 };

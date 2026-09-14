@@ -8,6 +8,9 @@ import { UpdateStore } from './core/updates/update-store';
 import { ProjectsStore } from './core/workspace/projects-store';
 import { WorkspaceDialogs } from './core/workspace/workspace-dialogs';
 import { databaseBackupUrl } from './core/workspace/app-identity';
+import { DesktopBridge } from './core/desktop/desktop-bridge';
+import { DatabaseBackup } from './core/workspace/database-backup';
+import { ToastService } from './core/workspace/toast';
 
 const runtimeWithoutGit: RuntimeInfo = {
   mode: 'native',
@@ -36,6 +39,12 @@ describe('App', () => {
     return fixture;
   }
 
+  function clickOnBackup(compiled: HTMLElement): MouseEvent {
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    compiled.querySelector('.backup-action')!.dispatchEvent(event);
+    return event;
+  }
+
   it('mounts the shell: top bar, rail and routed area', async () => {
     const compiled = (await render()).nativeElement as HTMLElement;
     expect(compiled.querySelector('.topbar')).not.toBeNull();
@@ -48,6 +57,46 @@ describe('App', () => {
     const link = compiled.querySelector('.backup-action') as HTMLAnchorElement;
     expect(link.getAttribute('href')).toBe(databaseBackupUrl);
     expect(link.hasAttribute('download')).toBe(true);
+  });
+
+  it('hands the backup to the desktop host, which a webview download never reaches', async () => {
+    let savedCount = 0;
+    TestBed.overrideProvider(DesktopBridge, { useValue: { isAvailable: true } });
+    TestBed.overrideProvider(DatabaseBackup, {
+      useValue: {
+        save: () => {
+          savedCount += 1;
+          return Promise.resolve('/home/u/Downloads/githealth-backup-20260914-153000.db');
+        },
+      },
+    });
+    const fixture = await render();
+
+    const event = clickOnBackup(fixture.nativeElement as HTMLElement);
+    await fixture.whenStable();
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(savedCount).toBe(1);
+    expect(TestBed.inject(ToastService).message()).toContain('githealth-backup-20260914-153000.db');
+  });
+
+  it('leaves the backup to the browser when no desktop shell is there', async () => {
+    let savedCount = 0;
+    TestBed.overrideProvider(DatabaseBackup, {
+      useValue: {
+        save: () => {
+          savedCount += 1;
+          return Promise.resolve(null);
+        },
+      },
+    });
+    const fixture = await render();
+
+    const event = clickOnBackup(fixture.nativeElement as HTMLElement);
+    await fixture.whenStable();
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(savedCount).toBe(0);
   });
 
   it('opens the palette when the search field is clicked', async () => {

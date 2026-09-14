@@ -85,6 +85,75 @@ describe('DesktopBridge', () => {
     await expect(selection).resolves.toBe('D:\\kept');
   });
 
+  it('asks the shell to open an address outside the window', async () => {
+    const host = new FakeDesktopHost();
+    const bridge = bridgeWith(host);
+
+    const opening = bridge.openExternal('https://example.test/guide');
+    const request = JSON.parse(host.sent[0]) as { kind: string; url: string };
+    expect(request.kind).toBe('openExternal');
+    expect(request.url).toBe('https://example.test/guide');
+    host.reply({ id: host.lastRequestId(), kind: 'openExternal', isHandled: true });
+
+    await expect(opening).resolves.toBe(true);
+  });
+
+  it('reports an address the shell could not hand over', async () => {
+    const host = new FakeDesktopHost();
+    const bridge = bridgeWith(host);
+
+    const opening = bridge.openExternal('https://example.test/guide');
+    host.reply({ id: host.lastRequestId(), kind: 'openExternal', isHandled: false });
+
+    await expect(opening).resolves.toBe(false);
+  });
+
+  it('asks the shell to write a file and resolves where it landed', async () => {
+    const host = new FakeDesktopHost();
+    const bridge = bridgeWith(host);
+
+    const saving = bridge.saveFile('branches.csv', 'YSxi');
+    const request = JSON.parse(host.sent[0]) as {
+      kind: string;
+      fileName: string;
+      contents: string;
+    };
+    expect(request.kind).toBe('saveFile');
+    expect(request.fileName).toBe('branches.csv');
+    expect(request.contents).toBe('YSxi');
+    host.reply({
+      id: host.lastRequestId(),
+      kind: 'saveFile',
+      path: '/home/u/Downloads/branches.csv',
+    });
+
+    await expect(saving).resolves.toBe('/home/u/Downloads/branches.csv');
+  });
+
+  it('resolves null when nothing reached the disk', async () => {
+    const host = new FakeDesktopHost();
+    const bridge = bridgeWith(host);
+
+    const saving = bridge.saveFile('branches.csv', 'YSxi');
+    host.reply({ id: host.lastRequestId(), kind: 'saveFile', path: null });
+
+    await expect(saving).resolves.toBeNull();
+  });
+
+  it('keeps requests of different kinds independent', async () => {
+    const host = new FakeDesktopHost();
+    const bridge = bridgeWith(host);
+
+    const selection = bridge.pickFolder();
+    const opening = bridge.openExternal('https://example.test/guide');
+    const ids = host.sent.map((message) => (JSON.parse(message) as { id: string }).id);
+    host.reply({ id: ids[1], kind: 'openExternal', isHandled: true });
+    host.reply({ id: ids[0], kind: 'pickFolder', path: 'D:\\kept' });
+
+    await expect(opening).resolves.toBe(true);
+    await expect(selection).resolves.toBe('D:\\kept');
+  });
+
   it('drops the previous request: a single modal dialog at a time', async () => {
     const host = new FakeDesktopHost();
     const bridge = bridgeWith(host);

@@ -2,6 +2,8 @@ import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { databaseBackupUrl, appVersion, userGuideUrl } from './core/workspace/app-identity';
+import { DesktopBridge } from './core/desktop/desktop-bridge';
+import { DatabaseBackup } from './core/workspace/database-backup';
 import { ProjectsStore } from './core/workspace/projects-store';
 import { UpdateStore } from './core/updates/update-store';
 import { ThemeService } from './core/workspace/theme';
@@ -59,6 +61,8 @@ interface WorkspaceAlert {
 export class App {
   private readonly document = inject(DOCUMENT);
   private readonly store = inject(ProjectsStore);
+  private readonly backup = inject(DatabaseBackup);
+  private readonly desktop = inject(DesktopBridge);
 
   protected readonly dialogs = inject(WorkspaceDialogs);
   protected readonly theme = inject(ThemeService);
@@ -107,6 +111,24 @@ export class App {
     this.isIntroVisible.set(this.shouldPlayIntro());
     this.store.load();
     this.updates.load();
+  }
+
+  /**
+   * In a browser the anchor hands the file to the download flow on its own. Inside the
+   * desktop window it reaches nothing: the page reads the backup and the host writes it.
+   */
+  protected async backUpDatabase(event: MouseEvent): Promise<void> {
+    if (!this.desktop.isAvailable) {
+      return;
+    }
+
+    event.preventDefault();
+    const path = await this.backup.save();
+    this.toast.show(
+      path === null
+        ? $localize`:@@app.backup.failed:The backup could not be saved.`
+        : $localize`:@@app.backup.saved:Data backed up · ${path}:path:`,
+    );
   }
 
   protected dismissIntro(wasSkipped: boolean): void {
