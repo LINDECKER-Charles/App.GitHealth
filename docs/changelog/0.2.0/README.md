@@ -2,7 +2,7 @@
 
 - **Released** — 2026-09-14
 - **Tag** — [`v0.2.0`](https://github.com/LINDECKER-Charles/App.GitHealth/releases/tag/v0.2.0)
-- **Range** — `c91d6c4` … `v0.2.0`, 59 commits without the merges
+- **Range** — `c91d6c4` … `v0.2.0`, 61 commits without the merges
 - **Reader's summary** — [`CHANGELOG.md`](../../../CHANGELOG.md#020---2026-09-14)
 - **Acceptance report** — [`docs/release/0.2.0.md`](../../release/0.2.0.md)
 
