@@ -1,3 +1,4 @@
+using App.GitHealth.Api.Hosting.Desktop.Bridge;
 using Photino.NET;
 
 namespace App.GitHealth.Api.Hosting.Desktop;
@@ -68,7 +69,7 @@ internal static class DesktopWindow
             window = window.SetIconFile(iconPath);
         }
 
-        return DesktopFolderBridge.Register(window).Load(address);
+        return DesktopBridge.Register(window).Load(address);
     }
 
     /// <summary>
