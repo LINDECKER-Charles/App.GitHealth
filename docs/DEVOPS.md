@@ -5,7 +5,7 @@
 | Tool                 |     Version |
 | -------------------- | ----------: |
 | .NET SDK             |    10.0.400 |
-| ASP.NET Core runtime |     10.0.11 |
+| ASP.NET Core runtime |     10.0.12 |
 | Node.js              | 24.20.0 LTS |
 | npm                  |     11.19.0 |
 

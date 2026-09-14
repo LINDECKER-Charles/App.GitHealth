@@ -81,8 +81,8 @@ subject to their own terms:
 | Image | Role |
 | --- | --- |
 | `node:24.20.0-alpine3.24` | building the Angular bundle |
-| `mcr.microsoft.com/dotnet/sdk:10.0.400-noble` | .NET compilation |
-| `mcr.microsoft.com/dotnet/aspnet:10.0.11-noble` | runtime |
+| `mcr.microsoft.com/dotnet/sdk:10.0.401-noble` | .NET compilation |
+| `mcr.microsoft.com/dotnet/aspnet:10.0.12-noble` | runtime |
 
 The runtime image installs `ca-certificates`, `curl` and `git` from the Ubuntu
 repositories; those packages remain covered by their original licenses.
