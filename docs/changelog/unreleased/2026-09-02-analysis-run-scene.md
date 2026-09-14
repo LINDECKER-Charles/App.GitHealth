@@ -3,7 +3,7 @@
 - **Type** — `feat`
 - **Scope** — `core`, `api`, `front`, `docs`
 - **Landed** — 2026-09-02
-- **Commits** — _pending_
+- **Commits** — `a423f2b`, `4917bb1`, `5da254a`, `2bdaa35`
 
 ## What shipped
 

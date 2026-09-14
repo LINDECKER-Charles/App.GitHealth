@@ -3,7 +3,8 @@
 - **Type** — `feat`
 - **Scope** — `core`, `api`, `front`, `docs`
 - **Landed** — 2026-09-02
-- **Commits** — `9daefad`, `ae7fbfe`, `58a1beb`, `8dca00b`, `b97bf0c`, `11156dc`
+- **Commits** — `9daefad`, `ae7fbfe`, `58a1beb`, `8dca00b`, `b97bf0c`, `11156dc`,
+  `19aae7f`, `3056538`, `6be2975`
 
 ## What shipped
 

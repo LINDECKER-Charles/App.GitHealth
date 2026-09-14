@@ -3,7 +3,7 @@
 - **Type** — `feat`
 - **Scope** — `api`, `front`, `docs`
 - **Landed** — 2026-09-03
-- **Commits** — to be filled by the commit carrying this entry
+- **Commits** — `74b09fd`, `9a30e8c`, `fe1116b`
 
 ## What shipped
 

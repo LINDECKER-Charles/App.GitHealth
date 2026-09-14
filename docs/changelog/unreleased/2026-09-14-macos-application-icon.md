@@ -3,7 +3,7 @@
 - **Type** — `fix`
 - **Scope** — `eng`, `api`, `docs`
 - **Landed** — 2026-09-14
-- **Commits** — _pending_
+- **Commits** — `67ea91a`
 
 ## What shipped
 

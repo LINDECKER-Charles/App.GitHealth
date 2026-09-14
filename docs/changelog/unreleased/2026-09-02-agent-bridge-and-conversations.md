@@ -3,8 +3,7 @@
 - **Type** — `feat`
 - **Scope** — `core`, `api`, `front`, `docs`
 - **Landed** — 2026-09-02
-- **Commits** — not written yet; this entry travels with the commits that land the bridge,
-  the conversations and the consent
+- **Commits** — `7071370`, `69ee508`, `71f0cb7`, `9a30e8c`, `6592242`, `fe1116b`
 
 ## What shipped
 
