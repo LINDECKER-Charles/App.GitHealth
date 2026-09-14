@@ -29,7 +29,7 @@ COPY --from=frontend-build \
     /source/src/App.GitHealth.Web/dist/app-git-health-web/browser/ \
     /app/publish/wwwroot/
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.11-noble AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.12-noble AS runtime
 
 USER root
 
