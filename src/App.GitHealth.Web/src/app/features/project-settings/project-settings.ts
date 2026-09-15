@@ -33,6 +33,7 @@ import { AssistantPolicy } from './assistant-policy/assistant-policy';
 import { BranchPicker } from './branch-picker/branch-picker';
 import { BranchPatternKind } from './branch-picker/branch-picker-options';
 import { PolicyMatch, PolicyStat, projectMatches, projectStats } from './policy-projection';
+import { ScanSchedule } from './scan-schedule/scan-schedule';
 
 const minimumBandDays = 120;
 const bandHeadroom = 1.6;
@@ -52,6 +53,7 @@ const bandHeadroom = 1.6;
     DsPanel,
     DsStatusDot,
     DsTag,
+    ScanSchedule,
   ],
   selector: 'app-project-settings',
   styleUrl: './project-settings.scss',

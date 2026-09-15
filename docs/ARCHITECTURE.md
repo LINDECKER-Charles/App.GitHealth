@@ -222,6 +222,13 @@ inline scripts, and the `onload` handler it generates would not run.
 - `AssistantConsentAtUtc`: the moment sending this repository's captures to an agent was
   allowed, null while it never was. Nullable, so every repository predating the column starts
   with no permission granted.
+- `IsScheduleEnabled` and `ScheduleCron`: the scan schedule, stored as two columns rather
+  than one nullable string. A switched-off schedule keeps its expression, so turning it back
+  on does not ask the reader to write it again.
+- `ScheduleChangedAtUtc` and `ScheduleLastRunAtUtc`: the next firing is counted from the
+  **later** of the two. Counting from the edit stops a save firing a scan on the spot;
+  counting from the firing makes a window missed while the application was closed fire once
+  when it opens, rather than once per window gone by.
 
 **ProjectBaseline**
 
@@ -347,6 +354,27 @@ repository rejected because the queue was full is retried as soon as a slot free
 If a reference changes during the scan, the analysis keeps the captured SHAs. A later
 scan will reflect the new state.
 
+### Scheduled analysis
+
+1. `ScheduleWorker` ticks every `GitHealth:Schedule:TickSeconds` and asks
+   `ScheduledScanRunner` for one pass. It holds no state: what is due is decided from the
+   database each time, so a schedule written a second ago is honoured and one deleted a
+   second ago is not.
+2. A project is due when `CronExpression.GetNextOccurrence(anchor, zone)` names a moment at
+   or before now. The expression is read on the **wall clock of a zone** — the machine's own
+   unless `GitHealth:Schedule:TimeZone` says otherwise — because `0 9 * * *` means nine in the
+   morning where the reader is, not nine in Greenwich. A wall time the clock skipped forward
+   over still fires; a wall time replayed when the clock goes back does not fire twice.
+3. The firing is recorded **before** the launch. A launch that fails would otherwise leave
+   the window open and be retried on every tick.
+4. The launch goes through `AnalysisLaunchService`, the same door as the button: every
+   baseline, the same queue, the same refusal when the project is reserved.
+
+`CronExpression` is parsed in `App.GitHealth.Core/Scheduling/` rather than taken from a
+package: Core has no package reference at all, and a five-field parser with a
+next-occurrence search costs around two hundred testable lines against a dependency to
+carry, audit and declare.
+
 ### Asking an agent, and the bridge it reads through
 
 1. `POST /api/projects/{id}/assistant/runs` resolves the agent from the catalog — only a
@@ -421,6 +449,8 @@ Routes are grouped under `/api` and return dedicated DTOs.
 | `GET /api/projects/{id}/baselines` | List the comparison baselines and their latest capture |
 | `PUT /api/projects/{id}/baselines` | Replace the ordered baseline list |
 | `POST /api/projects/{id}/analyses` | Start an analysis, one run per baseline |
+| `GET /api/projects/{id}/schedule` | Read the scan schedule, its last firing and its next |
+| `PUT /api/projects/{id}/schedule` | Set or clear the cron expression a repository scans on |
 | `GET /api/analyses/{id}` | Read state, phase, reference ledger and Git command tail |
 | `DELETE /api/analyses/{id}` | Delete one capture and its measurements |
 | `GET /api/projects/{id}/analyses/latest/branches` | List the snapshots |

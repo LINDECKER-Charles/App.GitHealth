@@ -45,6 +45,16 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ProjectEntity>> ListScheduledAsync(
+        CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.Projects.AsNoTracking()
+            .Where(project => project.IsScheduleEnabled && project.ScheduleCron != null)
+            .OrderBy(project => project.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     /// <summary>
     /// Everything the project owns goes with it: the database cascade removes the baselines,
     /// the runs, their branch snapshots and the contributors in a single statement.
@@ -130,6 +140,28 @@ internal sealed class ProjectRepository(IDbContextFactory<GitHealthDbContext> co
         return UpdateAsync(
             update.ProjectId,
             project => project.UpdateOrganization(update.Organization, update.ChangedAtUtc),
+            cancellationToken);
+    }
+
+    public Task UpdateScheduleAsync(
+        ProjectScheduleUpdate update,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+        return UpdateAsync(
+            update.ProjectId,
+            project => project.UpdateSchedule(update.Schedule, update.ChangedAtUtc),
+            cancellationToken);
+    }
+
+    public Task MarkScheduleRunAsync(
+        Guid projectId,
+        DateTimeOffset ranAtUtc,
+        CancellationToken cancellationToken)
+    {
+        return UpdateAsync(
+            projectId,
+            project => project.MarkScheduleRun(ranAtUtc),
             cancellationToken);
     }
 

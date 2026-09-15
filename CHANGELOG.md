@@ -9,6 +9,20 @@ built that way and what it costs.
 
 ## [Unreleased]
 
+### Added
+
+- **scanning a repository on a schedule**: a repository can now re-measure itself instead of
+  waiting to be asked. The Policies page carries a **Scheduled scan** panel — a switch, a
+  rhythm to pick (every quarter of an hour, hourly, every four hours, daily, weekdays,
+  Mondays) and the cron expression itself, which stays visible and editable whichever rhythm
+  is chosen. A scheduled scan does exactly what the analysis button does: every baseline,
+  read only, no Git write. The hour fields are counted on your own clock, not UTC, and the
+  panel names the zone it used along with the last firing and the next one. A schedule only
+  fires while GitHealth is open — a window missed because the application was closed fires
+  once the next time it starts, not once per window gone by — and saving a schedule never
+  fires one on the spot. Switching a schedule off keeps its expression; setting
+  `GitHealth:Schedule:Enabled` to false turns the feature off for a whole installation.
+
 ### Fixed
 
 - **the buttons that did nothing in the desktop window**: the guide, the data backup and

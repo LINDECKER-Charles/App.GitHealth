@@ -30,6 +30,7 @@ internal static class ApiErrorCodes
     public const string InvalidReference = "repository.invalid_reference";
     public const string InvalidRepository = "repository.invalid";
     public const string InvalidRequest = "validation.invalid_request";
+    public const string InvalidSchedule = "schedule.invalid";
     public const string PathNotAllowed = "repository.path_not_allowed";
     public const string ProjectAlreadyExists = "project.already_exists";
     public const string ProjectBusy = "project.busy";

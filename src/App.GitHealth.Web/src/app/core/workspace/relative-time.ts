@@ -12,6 +12,11 @@ const secondsFormatter = new Intl.NumberFormat(sourceLocale, {
   maximumFractionDigits: 1,
 });
 
+const absoluteFormatter = new Intl.DateTimeFormat(sourceLocale, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
 const unknownDateLabel = $localize`:@@time.relative.unknownDate:unknown date`;
 
 /** Compact form: "just now", "12 min ago", "3 h ago", "2 d ago". */
@@ -44,6 +49,19 @@ export function relativeTime(instant: string | null): string {
 
   const dayCount = countFormatter.format(Math.floor(hours / hoursPerDay));
   return $localize`:@@time.relative.days:${dayCount}:dayCount: d ago`;
+}
+
+/**
+ * Wall-clock form, for an instant a reader has to act on rather than situate: "16 Sep 2026,
+ * 09:00". A schedule that fires "in 14 h" tells nobody whether to expect it before lunch.
+ */
+export function absoluteTime(instant: string | null): string {
+  if (instant === null) {
+    return unknownDateLabel;
+  }
+
+  const parsed = Date.parse(instant);
+  return Number.isNaN(parsed) ? unknownDateLabel : absoluteFormatter.format(parsed);
 }
 
 /** Duration of an analysis, in seconds formatted for the application locale. */
