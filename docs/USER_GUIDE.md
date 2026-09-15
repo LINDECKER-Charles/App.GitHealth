@@ -20,6 +20,7 @@ database.
 - [Understanding the recommendations](#understanding-the-recommendations)
 - [Explaining a branch](#explaining-a-branch)
 - [Configuring policies](#configuring-policies)
+- [Scanning on a schedule](#scanning-on-a-schedule)
 - [Relocating a repository that moved](#relocating-a-repository-that-moved)
 - [History and exports](#history-and-exports)
 - [Deleting captures and repositories](#deleting-captures-and-repositories)
@@ -555,6 +556,64 @@ The **Effect on the last snapshot** panel projects the policy being edited onto 
 already captured, without re-running Git: it compares each recommendation to the saved
 policy and lists the branches touched by the patterns. Saving recomputes the current
 interpretation, but changes neither the SHAs nor the counters already captured.
+
+## Scanning on a schedule
+
+A reading goes stale on its own: branches move while nobody is looking, and last Tuesday's
+capture still calls a branch active that has been abandoned since. The **Scheduled scan**
+panel on the **Policies** page lets a repository re-measure itself instead of waiting to be
+asked.
+
+Turn the switch on and pick a rhythm — every 15 minutes, hourly, every 4 hours, every day at
+09:00, weekdays at 09:00, Mondays at 09:00 — or write the cron expression yourself. The
+expression stays visible whichever rhythm you pick, so the shortcuts double as examples.
+
+A scheduled scan does exactly what the **Run an analysis** button does: every baseline the
+project declares, read only, no Git write. It is refused on the same terms too — a
+repository already being measured is not measured twice at once.
+
+### Writing an expression
+
+Five fields, separated by spaces:
+
+```
+minute  hour  day-of-month  month  day-of-week
+0-59    0-23  1-31          1-12   0-6 (Sunday is 0 or 7)
+```
+
+Each field takes `*` for "every", a number, a range `1-5`, a step `*/15`, a start with a
+step `9/2`, or a comma-separated list of those. Names such as `MON` are not accepted —
+write the number. When **both** day fields name days, a date matching either one fires, as
+it does in every cron.
+
+| expression | fires |
+| --- | --- |
+| `*/15 * * * *` | every quarter of an hour |
+| `0 * * * *` | on the hour |
+| `0 9 * * 1-5` | weekdays at nine in the morning |
+| `30 6 1 * *` | the first of each month at 06:30 |
+
+The hour fields are counted on **your machine's clock**, not UTC: `0 9 * * *` means nine in
+the morning where you are. The panel names the zone it used, alongside when the schedule
+last fired and when it will fire next.
+
+### What a schedule does not do
+
+**It only fires while GitHealth is running.** GitHealth is a local application, not a
+service: it installs nothing that keeps working after you close its window. A window missed
+because the application was closed fires **once** the next time you open it — three days
+offline on an hourly schedule is one scan, not seventy-two.
+
+**Saving is not firing.** The countdown restarts from the moment you save, so writing
+"every minute" at 12:00:30 waits for 12:01 like any other schedule.
+
+**A screen already open does not refresh itself** when a scheduled scan lands. The new
+capture is read the next time you open the repository or switch baseline.
+
+Switching the schedule off keeps the expression, so turning it back on costs nothing. To
+disable scheduled scanning for the whole installation — on a machine that must not spend
+its evenings reading repositories — set `GitHealth:Schedule:Enabled` to `false`. Saved
+schedules are then still shown, and the panel says plainly that nothing will fire.
 
 ## Relocating a repository that moved
 

@@ -12,3 +12,4 @@ the `[<version>]` section of the root [`CHANGELOG.md`](../../../CHANGELOG.md).
 | Entry | Type | Scope | Landed |
 | --- | --- | --- | --- |
 | [Exports and the guide, working inside the desktop window](2026-09-14-desktop-downloads-and-external-links.md) | `fix` | `api`, `front` | 2026-09-14 |
+| [Scanning a repository on a schedule](2026-09-15-scheduled-scans.md) | `feat` | `core`, `api`, `front`, `docs` | 2026-09-15 |
