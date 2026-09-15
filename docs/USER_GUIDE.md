@@ -22,6 +22,7 @@ database.
 - [Configuring policies](#configuring-policies)
 - [Relocating a repository that moved](#relocating-a-repository-that-moved)
 - [History and exports](#history-and-exports)
+- [Connecting another tool: the local API](#connecting-another-tool-the-local-api)
 - [Deleting captures and repositories](#deleting-captures-and-repositories)
 - [Stopping and resuming](#stopping-and-resuming)
 - [Frequently asked questions](#frequently-asked-questions)
@@ -595,6 +596,57 @@ It contains branch names and author identities: treat it as internal data.
 
 To restore a SQLite backup, stop GitHealth, keep a copy of the current database, replace
 `githealth.db`, then restart the application.
+
+## Connecting another tool: the local API
+
+If something else on this machine should read what GitHealth measures — an orchestrator, a
+nightly job, a dashboard, a script — open the **local API**. The gear in the top bar leads to
+**Settings** → **Local API access**.
+
+Turn the switch on. GitHealth issues a token, shows it once with a line you can paste, and
+starts listening on `127.0.0.1` on the port shown next to the switch — `7823` unless you
+change it. **Copy the token now**: only its fingerprint is kept, so it cannot be shown again.
+Losing it costs nothing serious — **Issue a new token** replaces it, immediately and without a
+restart, but whatever was using the old one stops working the moment you do.
+
+To listen somewhere else, type another port between 1024 and 65535 and use **Move the port**.
+The token is unaffected. A port already taken by something else is reported under the switch,
+with the system's reason; nothing else changes and GitHealth keeps running.
+
+Every call carries the token in an `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" http://127.0.0.1:7823/v1/projects
+```
+
+`GET /v1` lists every route. In short:
+
+| Call | What you get |
+| --- | --- |
+| `GET /v1/projects` | the observed repositories |
+| `GET /v1/projects/{id}` | one of them |
+| `GET /v1/projects/{id}/branches` | the branches of its latest capture |
+| `GET /v1/projects/{id}/analyses` | its capture history |
+| `POST /v1/projects/{id}/analyses` | **runs an analysis** — add `?baseline=refs/heads/main` for one baseline |
+| `GET /v1/analyses/{id}` | how a run is going, and how it ended |
+| `GET /v1/analyses/{id}/branches` | the branches one capture holds |
+
+The branch listing takes the same filters as the Diagnostic tab — `search`, `topology`,
+`activity`, `recommendation`, `isProtected`, `isExcluded`, `sort`, `pageSize`, `cursor` — so a
+script reads exactly what the screen shows.
+
+Launching an analysis answers `202` with the run's identifier and the address to follow it at;
+poll that address until `status` reads `Completed`, then read its branches. A scan launched
+this way is a real scan: it reads Git and writes a capture, exactly as the button does.
+
+A few things this access deliberately does not do. It listens on the loopback address only,
+never on your network. It never writes to a Git repository. It cannot add a repository, change
+a policy, delete a capture or open a port — opening, moving and closing the access stay in the
+Settings screen, in front of you. And it stays closed until you open it: a fresh installation
+has no port open and no token issued.
+
+What you left open is reopened the next time GitHealth starts. Turn the switch off to close
+it; the token survives, so turning it back on needs no new one.
 
 ## Deleting captures and repositories
 

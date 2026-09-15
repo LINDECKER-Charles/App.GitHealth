@@ -9,6 +9,19 @@ built that way and what it costs.
 
 ## [Unreleased]
 
+### Added
+
+- **a local API, so another tool can read GitHealth and ask it for a scan**: a new
+  **Settings** screen, behind the gear in the top bar, opens a second port on this machine
+  only — `7823` by default, any port from 1024 to 65535. An orchestrator, a nightly job or a
+  script reads the observed repositories, their captures and their branches through it, and
+  posts a scan the way the button does. It answers nothing without a bearer token: the token
+  is shown once, with the line to paste, and only its fingerprint is kept — so a copy of the
+  data directory, or of the database, is worth nothing to anybody else. Issuing another
+  token revokes the previous one at once. The access is closed until it is opened, it
+  reopens as it was left after a restart, and a port already taken is reported on the screen
+  instead of bringing the application down. Nothing here writes to a Git repository.
+
 ### Fixed
 
 - **the buttons that did nothing in the desktop window**: the guide, the data backup and

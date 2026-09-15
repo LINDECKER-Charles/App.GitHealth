@@ -15,7 +15,8 @@ the files the account can reach, and is therefore not stopped by GitHealth.
 - references, objects, index, worktree and reflogs of the analysed repositories;
 - author names and addresses present in the history;
 - the SQLite database, the policies, the snapshots and the stored assistant conversations;
-- the single-run tokens the agent bridge is reachable with;
+- the single-run tokens the agent bridge is reachable with, and the standing token the local
+  API is reachable with;
 - the local machine's compute capacity;
 - the integrity of the distributed archives.
 
@@ -265,6 +266,13 @@ verified, but do not replace code signing or macOS notarisation.
 - a bridge token is a bearer secret for the length of one run. Anything already running as
   the same user could read it from the agent's command line — the same software that could
   read the SQLite database directly;
+- the local API's token is a bearer secret with no expiry, and it is only as protected as
+  wherever the user pasted it. GitHealth keeps a fingerprint and cannot leak the token
+  itself; an orchestrator's own configuration file is outside its reach;
+- while the local API is open, anything running as the same user can reach that port and,
+  holding the token, read every capture and launch analyses. The port is loopback, and the
+  same software could read the SQLite database directly — but the ability to *start work* is
+  new, and a caller that polls it will keep the machine measuring;
 - an agent's answer is untrusted text. It is parsed into a typed tree and rendered through
   Angular bindings, never `innerHTML`, and a link whose target is not `http`, `https` or
   `mailto` stays inert text;
