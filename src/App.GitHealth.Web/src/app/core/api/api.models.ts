@@ -503,3 +503,34 @@ export interface AssistantConversation {
 export interface AssistantPurgeResult {
   readonly deleted: number;
 }
+
+/** Where the local API listener is, as opposed to what the user asked for. */
+export type LocalApiStatus = 'Closed' | 'Listening' | 'Failed';
+
+/**
+ * The local API access as the settings screen reads it. The token is never in here: it
+ * leaves exactly once, in the answer to the call that issues it.
+ */
+export interface LocalApiState {
+  readonly isEnabled: boolean;
+  /** Port asked for, which is not yet the one in use when the status is `Failed`. */
+  readonly port: number;
+  readonly status: LocalApiStatus;
+  /** Address to hand to an orchestrator; null unless the port is open. */
+  readonly address: string | null;
+  readonly failureMessage: string | null;
+  readonly hasToken: boolean;
+  readonly tokenPrefix: string | null;
+  readonly tokenIssuedAtUtc: UtcDateTime | null;
+}
+
+export interface LocalApiUpdateRequest {
+  readonly isEnabled: boolean;
+  readonly port: number;
+}
+
+/** The one answer a local API token ever appears in. */
+export interface LocalApiToken {
+  readonly token: string;
+  readonly access: LocalApiState;
+}

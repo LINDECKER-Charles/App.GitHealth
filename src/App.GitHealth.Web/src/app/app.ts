@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { databaseBackupUrl, appVersion, userGuideUrl } from './core/workspace/app-identity';
 import { DesktopBridge } from './core/desktop/desktop-bridge';
 import { DatabaseBackup } from './core/workspace/database-backup';
@@ -51,6 +51,7 @@ interface WorkspaceAlert {
     ProjectDeleteDialog,
     ProjectGroupDialog,
     ProjectRail,
+    RouterLink,
     RouterOutlet,
     ScanFolderDialog,
   ],

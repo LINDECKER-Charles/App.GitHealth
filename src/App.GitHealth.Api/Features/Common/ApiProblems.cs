@@ -13,6 +13,9 @@ internal static class ApiProblems
     public static ApiFailure NotFound(string code, string detail) =>
         Create(StatusCodes.Status404NotFound, code, detail);
 
+    public static ApiFailure Unauthorized(string code, string detail) =>
+        Create(StatusCodes.Status401Unauthorized, code, detail);
+
     public static ApiFailure Forbidden(string code, string detail) =>
         Create(StatusCodes.Status403Forbidden, code, detail);
 
@@ -50,6 +53,7 @@ internal static class ApiProblems
     internal static string TitleFor(int statusCode) => statusCode switch
     {
         StatusCodes.Status400BadRequest => "Bad request",
+        StatusCodes.Status401Unauthorized => "Authentication required",
         StatusCodes.Status403Forbidden => "Access denied",
         StatusCodes.Status404NotFound => "Not found",
         StatusCodes.Status409Conflict => "Conflict",

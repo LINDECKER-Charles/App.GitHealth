@@ -13,3 +13,4 @@ the `[<version>]` section of the root [`CHANGELOG.md`](../../../CHANGELOG.md).
 | --- | --- | --- | --- |
 | [Exports and the guide, working inside the desktop window](2026-09-14-desktop-downloads-and-external-links.md) | `fix` | `api`, `front` | 2026-09-14 |
 | [Scanning a repository on a schedule](2026-09-15-scheduled-scans.md) | `feat` | `core`, `api`, `front`, `docs` | 2026-09-15 |
+| [A local API another tool can read GitHealth through, and ask it for a scan](2026-09-15-local-api-access.md) | `feat` | `api`, `front`, `docs` | 2026-09-15 |

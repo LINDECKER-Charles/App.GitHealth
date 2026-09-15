@@ -8,6 +8,13 @@ export const routes: Routes = [
       import('./features/home/workspace-home').then(({ WorkspaceHome }) => WorkspaceHome),
   },
   {
+    path: 'settings',
+    loadComponent: () =>
+      import('./features/workspace-settings/workspace-settings').then(
+        ({ WorkspaceSettings }) => WorkspaceSettings,
+      ),
+  },
+  {
     path: 'projects/:projectId',
     loadComponent: () =>
       import('./features/project/project-shell').then(({ ProjectShell }) => ProjectShell),

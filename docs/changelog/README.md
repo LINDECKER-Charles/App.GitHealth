@@ -56,6 +56,6 @@ without opening every file.
 
 | Version | Released | Entries | Contents |
 |---|---|---|---|
-| [unreleased](unreleased/README.md) | — | 2 | Scanning on a schedule; the exports and the guide, working inside the desktop window |
+| [unreleased](unreleased/README.md) | — | 3 | Scanning on a schedule, a local API for other tools, and the exports and the guide working inside the desktop window |
 | [0.2.0](0.2.0/README.md) | 2026-09-14 | 15 | The agent assistant, the live analysis run, several baselines, deletion, the author filter, the capture selector, visualisation, the English interface |
 | [0.1.0](0.1.0/README.md) | 2026-08-30 | 27 | First public release: the whole MVP, from the domain to the installers |

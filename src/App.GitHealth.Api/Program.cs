@@ -1,6 +1,7 @@
 using System.Reflection;
 using App.GitHealth.Api.Features;
 using App.GitHealth.Api.Features.Common;
+using App.GitHealth.Api.Features.LocalApi;
 using App.GitHealth.Api.Features.Security;
 using App.GitHealth.Api.Features.Updates;
 using App.GitHealth.Api.Git;
@@ -140,6 +141,7 @@ public sealed partial class Program
         builder.Services.AddGitScanner(builder.Configuration);
         builder.Services.AddPersistence(builder.Configuration);
         builder.Services.AddGitHealthApi(builder.Configuration);
+        builder.Services.AddLocalApi();
         builder.Services.AddLocalRequestSecurity(builder.Configuration);
         builder.Services.AddUpdates(useNativeLauncher);
     }

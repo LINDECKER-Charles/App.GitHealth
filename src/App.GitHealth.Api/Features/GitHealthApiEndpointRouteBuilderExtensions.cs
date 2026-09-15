@@ -5,6 +5,7 @@ using App.GitHealth.Api.Features.Assistant.Mcp;
 using App.GitHealth.Api.Features.Baselines;
 using App.GitHealth.Api.Features.Discovery;
 using App.GitHealth.Api.Features.Exports;
+using App.GitHealth.Api.Features.LocalApi;
 using App.GitHealth.Api.Features.Policies;
 using App.GitHealth.Api.Features.Projects;
 using App.GitHealth.Api.Features.Runtime;
@@ -34,6 +35,7 @@ internal static class GitHealthApiEndpointRouteBuilderExtensions
         endpoints.MapAssistantConversationEndpoints();
         endpoints.MapAssistantMcpEndpoints();
         endpoints.MapUpdateEndpoints();
+        endpoints.MapLocalApiControlEndpoints();
         return endpoints;
     }
 }

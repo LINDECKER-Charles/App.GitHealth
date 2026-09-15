@@ -23,13 +23,27 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
     /// </summary>
     private const int DefaultScheduleTickSeconds = 3600;
 
-    private readonly string _directory = Path.Combine(
+    private readonly string _privateDirectory = Path.Combine(
         Path.GetTempPath(),
         "GitHealth-api-tests",
         Guid.NewGuid().ToString("N"));
     private IHost? _host;
 
-    public string DatabasePath => Path.Combine(_directory, "githealth.db");
+    /// <summary>
+    /// Data directory shared with another run of the application, and left to the caller to
+    /// delete. Unset, the factory gets one of its own and removes it: only a test that has to
+    /// observe what survives a restart needs two runs reading the same directory.
+    /// </summary>
+    /// <remarks>
+    /// An <c>init</c> property rather than a constructor parameter, deliberately: xUnit
+    /// refuses a class fixture that declares more than one public constructor, and most tests
+    /// here take this factory as one.
+    /// </remarks>
+    public string? SharedDataDirectory { get; init; }
+
+    public string DatabasePath => Path.Combine(
+        SharedDataDirectory ?? _privateDirectory,
+        "githealth.db");
 
     public string? InitialRepositoryPath { get; init; }
 
@@ -111,9 +125,9 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
         }
 
         SqliteConnection.ClearAllPools();
-        if (Directory.Exists(_directory))
+        if (SharedDataDirectory is null && Directory.Exists(_privateDirectory))
         {
-            Directory.Delete(_directory, recursive: true);
+            Directory.Delete(_privateDirectory, recursive: true);
         }
     }
 }

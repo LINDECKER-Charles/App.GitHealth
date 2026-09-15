@@ -170,10 +170,11 @@ src/
 ├── App.GitHealth.Api/
 │   ├── Features/{Projects,Analyses,Discovery,Policies,Snapshots,Exports,Runtime,Security,Updates}/
 │   ├── Features/Assistant/{Agents,Conversations,Mcp}/
+│   ├── Features/LocalApi/{,Surface}/
 │   └── {Git,Persistence,Hosting,Hosting/Desktop}/
 └── App.GitHealth.Web/src/app/
-    ├── core/{api,assistant,branches,desktop,markdown,scan,updates,workspace}/
-    └── features/{home,dashboard,branch-details,project-settings,analysis-history,assistant}/
+    ├── core/{api,assistant,branches,desktop,local-api,markdown,scan,updates,workspace}/
+    └── features/{home,dashboard,branch-details,project-settings,analysis-history,assistant,workspace-settings}/
 tests/
 ├── App.GitHealth.Core.Tests/
 ├── App.GitHealth.Api.Tests/
@@ -194,6 +195,8 @@ introduced if size or dependencies justify it.
 
 `Hosting/Desktop/` carries the desktop shell: window, display mode resolution and the
 message bridge. `Features/Updates/` carries the update state and its application.
+`Features/LocalApi/` carries the second listener — its settings file, its token, and the
+`Surface/` routes an orchestrator calls.
 
 ### `App.GitHealth.Web`
 
@@ -469,6 +472,36 @@ Routes are grouped under `/api` and return dedicated DTOs.
 | `DELETE /api/projects/{id}/assistant/conversations` | Empty that history, reporting how many went |
 | `GET /api/assistant/conversations/{id}` | Read one thread, messages in order |
 | `DELETE /api/assistant/conversations/{id}` | Delete one thread |
+| `GET /api/local-api` | Read the local API access: port, status, address, token fingerprint |
+| `PUT /api/local-api` | Open, close or move the access |
+| `POST /api/local-api/token` | Issue a token, revoking the previous one. The only answer it appears in |
+
+### The local API
+
+A second surface, on a second listener, serving `/v1` on its own loopback port when the user
+opens it from **Settings**. It is a `WebApplication` of its own — built, started and stopped
+by `LocalApiHost` — rather than a prefix on the interface's port, for the same reason the
+agent bridge sits outside `/api`, and because a port that can be moved is a host that can be
+restarted. Its pipeline is three steps: lend the application's `IServiceScope` to the
+request, weigh the bearer token, route. Nothing lives in that host's own container, so its
+handlers resolve services off `HttpContext.RequestServices` — minimal APIs decide what is a
+service at build time, against the container the routes were mapped in.
+
+| Method and route | Responsibility |
+|---|---|
+| `GET /v1` | Name the surface, the application version and every route below |
+| `GET /v1/projects` | The observed repositories |
+| `GET /v1/projects/{id}` | One of them |
+| `GET /v1/projects/{id}/branches` | The branches of its latest capture, same filters as the interface |
+| `GET /v1/projects/{id}/analyses` | Its capture history |
+| `POST /v1/projects/{id}/analyses` | Launch an analysis, one run per baseline |
+| `GET /v1/analyses/{id}` | How a run is going, and how it ended |
+| `GET /v1/analyses/{id}/branches` | The branches one capture holds |
+
+The payloads are the interface's own. The launch answer is the exception: its `statusUrl` is
+rewritten into `/v1`, because `/api` is not reachable from there. Driving the access —
+opening it, moving it, issuing a token — stays on `/api`, so nothing reachable through `/v1`
+can widen what `/v1` reaches.
 
 One route deliberately sits outside `/api`: `POST /agent-bridge/{token}`, the tool bridge an
 agent reads a capture through. `/api` is the browser's prefix — it rejects a foreign origin

@@ -31,6 +31,9 @@ internal static class ApiErrorCodes
     public const string InvalidRepository = "repository.invalid";
     public const string InvalidRequest = "validation.invalid_request";
     public const string InvalidSchedule = "schedule.invalid";
+    public const string LocalApiPortInvalid = "local_api.invalid_port";
+    public const string LocalApiTokenRejected = "local_api.token_rejected";
+    public const string LocalApiTokenRequired = "local_api.token_required";
     public const string PathNotAllowed = "repository.path_not_allowed";
     public const string ProjectAlreadyExists = "project.already_exists";
     public const string ProjectBusy = "project.busy";
