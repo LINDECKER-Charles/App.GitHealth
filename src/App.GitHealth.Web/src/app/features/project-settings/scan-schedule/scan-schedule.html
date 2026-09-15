@@ -1,0 +1,112 @@
+<ds-panel i18n-title="@@schedule.title" title="Scheduled scan" icon="clock">
+  <div class="panel-content">
+    <p class="panel-intro" i18n="@@schedule.intro">
+      A schedule re-measures this repository on its own, exactly as the analysis button does: every
+      baseline, read only, no Git write. It fires while GitHealth is open — a window missed because
+      the application was closed fires once the next time you open it.
+    </p>
+
+    <div class="state" [class.state--on]="store.isFiring()">
+      <ds-status-dot [tone]="store.isFiring() ? 'success' : 'neutral'" [size]="7" />
+      <div class="state-text">
+        <div class="state-title">{{ stateTitle() }}</div>
+        <div class="state-detail">{{ nextRunDetail() }}</div>
+      </div>
+      <ds-switch
+        [checked]="isEnabled()"
+        (checkedChange)="isEnabled.set($event)"
+        i18n-ariaLabel="@@schedule.switch.aria"
+        ariaLabel="Scan on a schedule"
+      />
+    </div>
+
+    <div class="rhythm">
+      <div class="rhythm-field">
+        <div class="field-label" i18n="@@schedule.rhythm.label">Rhythm</div>
+        <ds-select
+          size="sm"
+          [options]="presetOptions"
+          [value]="preset()"
+          (valueChange)="applyPreset($event)"
+          [disabled]="!isEnabled()"
+          i18n-ariaLabel="@@schedule.rhythm.aria"
+          ariaLabel="Scan rhythm"
+        />
+      </div>
+      <div class="rhythm-field">
+        <div class="field-label" i18n="@@schedule.expression.label">Cron expression</div>
+        <ds-input
+          size="sm"
+          [mono]="true"
+          [value]="expression()"
+          (valueChange)="editExpression($event)"
+          [disabled]="!isEnabled()"
+          [invalid]="!isValid()"
+          placeholder="0 9 * * 1-5"
+          i18n-ariaLabel="@@schedule.expression.aria"
+          ariaLabel="Cron expression, five fields"
+          (submit)="save()"
+        />
+      </div>
+    </div>
+
+    <dl class="facts">
+      <dt i18n="@@schedule.fact.fields">fields</dt>
+      <dd i18n="@@schedule.fact.fieldsValue">
+        minute · hour · day of month · month · day of week. Numbers only, with
+        <code>*</code>, <code>1-5</code>, <code>*/15</code> and lists.
+      </dd>
+      <dt i18n="@@schedule.fact.clock">clock</dt>
+      <dd>{{ timeZoneId() }}</dd>
+      <dt i18n="@@schedule.fact.last">last fired</dt>
+      <dd>{{ lastRunDetail() }}</dd>
+    </dl>
+
+    @if (!isValid()) {
+      <div class="panel-alert">
+        <ds-callout
+          tone="danger"
+          i18n-title="@@schedule.error.title"
+          title="Unreadable expression"
+          i18n="@@schedule.error.body"
+        >
+          A cron expression has five fields separated by spaces, for instance
+          <code>0 9 * * 1-5</code> for every weekday at nine.
+        </ds-callout>
+      </div>
+    }
+
+    @if (store.error(); as message) {
+      <div class="panel-alert">
+        <ds-callout tone="danger" i18n-title="@@schedule.failure.title" title="Schedule refused">
+          {{ message }}
+        </ds-callout>
+      </div>
+    }
+
+    <div class="actions">
+      <button
+        dsButton
+        size="sm"
+        variant="ghost"
+        [disabled]="!isDirty()"
+        (click)="reset()"
+        i18n="@@schedule.actions.cancel"
+      >
+        Cancel
+      </button>
+      <button
+        dsButton
+        size="sm"
+        variant="primary"
+        iconLeft="check"
+        [disabled]="!canSave()"
+        [loading]="store.isSaving()"
+        (click)="save()"
+        i18n="@@schedule.actions.save"
+      >
+        Save the schedule
+      </button>
+    </div>
+  </div>
+</ds-panel>

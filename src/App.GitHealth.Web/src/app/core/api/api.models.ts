@@ -158,6 +158,27 @@ export interface ProjectResponse {
   readonly lastSuccessfulAnalysisId: Uuid | null;
 }
 
+/** A repository's own timetable: when it re-measures itself without being asked. */
+export interface ScanScheduleResponse {
+  readonly isEnabled: boolean;
+  /** Five-field cron expression, normalised to one space between fields. */
+  readonly cronExpression: string | null;
+  /** When the scheduler last launched a scan on its own. */
+  readonly lastRunAtUtc: UtcDateTime | null;
+  /** When it will next launch one; null when the schedule is off or never comes round. */
+  readonly nextRunAtUtc: UtcDateTime | null;
+  /** Zone the hour fields are counted on — the machine's own unless configured otherwise. */
+  readonly timeZoneId: string;
+  /** False when the installation has scheduled scanning switched off outright. */
+  readonly isSchedulerRunning: boolean;
+}
+
+export interface ScanScheduleRequest {
+  readonly isEnabled: boolean;
+  /** Null clears the expression; anything unreadable is refused by the API. */
+  readonly cronExpression: string | null;
+}
+
 export interface AnalysisLaunchItem {
   readonly analysisId: Uuid;
   readonly referenceName: string;

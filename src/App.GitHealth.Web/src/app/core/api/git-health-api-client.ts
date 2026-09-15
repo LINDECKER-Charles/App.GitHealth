@@ -27,6 +27,8 @@ import {
   RepositoryDiscoveryResponse,
   RepositoryValidationResponse,
   RuntimeInfo,
+  ScanScheduleRequest,
+  ScanScheduleResponse,
   SnapshotDetailResponse,
   SnapshotPageResponse,
   SnapshotQuery,
@@ -118,6 +120,19 @@ export class GitHealthApiClient {
     const url = `${projectUrl(projectId)}/analyses`;
     const params = setParam(new HttpParams(), 'baseline', baseline);
     return this.request(this.http.post<AnalysisLaunchResponse>(url, null, { params }));
+  }
+
+  getSchedule(projectId: string): Observable<ScanScheduleResponse> {
+    return this.request(this.http.get<ScanScheduleResponse>(`${projectUrl(projectId)}/schedule`));
+  }
+
+  updateSchedule(
+    projectId: string,
+    request: ScanScheduleRequest,
+  ): Observable<ScanScheduleResponse> {
+    return this.request(
+      this.http.put<ScanScheduleResponse>(`${projectUrl(projectId)}/schedule`, request),
+    );
   }
 
   listBaselines(projectId: string): Observable<BaselineListResponse> {
