@@ -16,6 +16,13 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
     private const int DefaultQueueCapacity = 32;
     private const int DefaultAnalysisTimeoutSeconds = 300;
     private const int DefaultParallelAnalyses = 4;
+
+    /// <summary>
+    /// An hour: long enough that no test host ever ticks on its own. A test that wants a
+    /// scheduled pass asks the runner for one, which is the only way it stays deterministic.
+    /// </summary>
+    private const int DefaultScheduleTickSeconds = 3600;
+
     private readonly string _directory = Path.Combine(
         Path.GetTempPath(),
         "GitHealth-api-tests",
@@ -36,6 +43,17 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
 
     /// <summary>Mirrors the installation-wide switch of the local agent assistant.</summary>
     public bool AssistantEnabled { get; init; } = true;
+
+    /// <summary>Mirrors the installation-wide switch of scheduled scanning.</summary>
+    public bool SchedulingEnabled { get; init; } = true;
+
+    public int ScheduleTickSeconds { get; init; } = DefaultScheduleTickSeconds;
+
+    /// <summary>
+    /// Zone the cron expressions are read in. UTC by default, so what an expression names does
+    /// not depend on where the machine running the tests happens to be.
+    /// </summary>
+    public string ScheduleTimeZone { get; init; } = "UTC";
 
     public Action<IServiceCollection>? TestServices { get; init; }
 
@@ -65,6 +83,11 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
                     CultureInfo.InvariantCulture),
                 ["GitHealth:Assistant:Enabled"] = AssistantEnabled.ToString(
                     CultureInfo.InvariantCulture),
+                ["GitHealth:Schedule:Enabled"] = SchedulingEnabled.ToString(
+                    CultureInfo.InvariantCulture),
+                ["GitHealth:Schedule:TickSeconds"] = ScheduleTickSeconds.ToString(
+                    CultureInfo.InvariantCulture),
+                ["GitHealth:Schedule:TimeZone"] = ScheduleTimeZone,
             });
         });
         if (TestServices is not null)

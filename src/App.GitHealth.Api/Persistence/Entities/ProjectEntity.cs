@@ -4,7 +4,7 @@ using App.GitHealth.Core.Projects;
 
 namespace App.GitHealth.Api.Persistence.Entities;
 
-internal sealed class ProjectEntity
+internal sealed partial class ProjectEntity
 {
     private ProjectEntity()
     {

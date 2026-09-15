@@ -20,6 +20,12 @@ internal interface IProjectRepository
 
     Task<IReadOnlyList<ProjectEntity>> ListAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Every project whose schedule is switched on, whatever it says. Read once a tick, so it
+    /// carries no baseline: the launch reads the project again on its own scope.
+    /// </summary>
+    Task<IReadOnlyList<ProjectEntity>> ListScheduledAsync(CancellationToken cancellationToken);
+
     Task<bool> DeleteAsync(Guid projectId, CancellationToken cancellationToken);
 
     Task RelocateAsync(ProjectRelocation relocation, CancellationToken cancellationToken);
@@ -28,6 +34,14 @@ internal interface IProjectRepository
 
     Task UpdateOrganizationAsync(
         ProjectOrganizationUpdate update,
+        CancellationToken cancellationToken);
+
+    Task UpdateScheduleAsync(ProjectScheduleUpdate update, CancellationToken cancellationToken);
+
+    /// <summary>Records a firing, which closes the window the scheduler has just acted on.</summary>
+    Task MarkScheduleRunAsync(
+        Guid projectId,
+        DateTimeOffset ranAtUtc,
         CancellationToken cancellationToken);
 
     Task MarkUnavailableAsync(

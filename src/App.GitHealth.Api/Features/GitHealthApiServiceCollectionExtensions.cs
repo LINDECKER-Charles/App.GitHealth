@@ -6,6 +6,7 @@ using App.GitHealth.Api.Features.Common;
 using App.GitHealth.Api.Features.Discovery;
 using App.GitHealth.Api.Features.Policies;
 using App.GitHealth.Api.Features.Projects;
+using App.GitHealth.Api.Features.Schedules;
 using App.GitHealth.Api.Features.Snapshots;
 
 namespace App.GitHealth.Api.Features;
@@ -27,6 +28,7 @@ internal static class GitHealthApiServiceCollectionExtensions
             .Validate(IsParallelAnalysisCountValid, "Invalid analysis parallelism.")
             .ValidateOnStart();
         services.AddAssistant(configuration);
+        services.AddSchedules(configuration);
         services.AddSingleton<RepositoryValidator>();
         services.AddScoped<RepositoryDiscoveryService>();
         services.AddScoped<ProjectService>();
