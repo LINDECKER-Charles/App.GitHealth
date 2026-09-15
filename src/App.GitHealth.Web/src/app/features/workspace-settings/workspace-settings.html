@@ -1,0 +1,171 @@
+<div class="workspace-settings">
+  <header class="settings-head">
+    <h1 class="settings-title" i18n="@@workspaceSettings.title">Settings</h1>
+    <p class="settings-subtitle" i18n="@@workspaceSettings.subtitle">
+      What belongs to this installation, not to one repository.
+    </p>
+  </header>
+
+  <ds-panel i18n-title="@@settings.localApi.title" title="Local API access" icon="terminal">
+    <div class="panel-content">
+      <p class="panel-intro" i18n="@@settings.localApi.intro">
+        Opens a second port, on this machine only, that another tool — an orchestrator, a script, a
+        scheduler — can read GitHealth through and ask it for a scan. It answers nothing without a
+        bearer token, and it is closed until you open it here.
+      </p>
+
+      <div class="access-row">
+        <ds-switch
+          [checked]="isEnabled()"
+          [disabled]="access.isBusy() || hasInvalidPort()"
+          i18n-ariaLabel="@@settings.localApi.toggleAria"
+          ariaLabel="Open the local API access"
+          (checkedChange)="toggle($event)"
+        />
+        <div class="access-label">
+          <span class="field-label" i18n="@@settings.localApi.toggleLabel">Access</span>
+          <span class="access-status">
+            <ds-status-dot [tone]="statusTone()" [size]="7" />
+            <span>{{ statusLabel() }}</span>
+            @if (access.address(); as address) {
+              <ds-badge size="sm" [mono]="true">{{ address }}</ds-badge>
+            }
+          </span>
+        </div>
+        <span class="access-spacer"></span>
+        <div class="access-port">
+          <span class="field-label" i18n="@@settings.localApi.portLabel">Port</span>
+          <ds-input
+            size="sm"
+            type="number"
+            inputMode="numeric"
+            [min]="minimumPort"
+            [mono]="true"
+            [invalid]="hasInvalidPort()"
+            [disabled]="access.isBusy()"
+            i18n-ariaLabel="@@settings.localApi.portAria"
+            ariaLabel="Port the local API listens on"
+            [(value)]="port"
+            (submit)="rebind()"
+          />
+        </div>
+        @if (isPortDirty()) {
+          <button
+            dsButton
+            size="sm"
+            variant="secondary"
+            iconLeft="refresh-cw"
+            [disabled]="hasInvalidPort()"
+            [loading]="access.isBusy()"
+            i18n="@@settings.localApi.rebind"
+            (click)="rebind()"
+          >
+            Move the port
+          </button>
+        }
+      </div>
+
+      @if (hasInvalidPort()) {
+        <div class="panel-alert">
+          <ds-callout
+            tone="danger"
+            i18n-title="@@settings.localApi.portErrorTitle"
+            title="Port out of range"
+            i18n="@@settings.localApi.portErrorBody"
+          >
+            The port must be between 1024 and 65535. Below 1024 it belongs to the system.
+          </ds-callout>
+        </div>
+      }
+
+      @if (access.state()?.failureMessage; as failure) {
+        <div class="panel-alert">
+          <ds-callout
+            tone="danger"
+            i18n-title="@@settings.localApi.failureTitle"
+            title="The port could not be opened"
+            >{{ failure }}</ds-callout
+          >
+        </div>
+      }
+
+      @if (access.error(); as message) {
+        <div class="panel-alert">
+          <ds-callout
+            tone="danger"
+            i18n-title="@@settings.localApi.errorTitle"
+            title="The access did not answer"
+            >{{ message }}</ds-callout
+          >
+        </div>
+      }
+
+      <div class="token-block">
+        <div class="token-head">
+          <ds-icon name="lock" [size]="14" />
+          <span class="field-label" i18n="@@settings.localApi.tokenLabel">Token</span>
+          @if (access.state()?.hasToken) {
+            <ds-badge size="sm" [mono]="true">{{ access.state()?.tokenPrefix }}…</ds-badge>
+            @if (tokenAge(); as age) {
+              <span class="token-age" i18n="@@settings.localApi.tokenAge">issued {{ age }}</span>
+            }
+          } @else {
+            <span class="token-age" i18n="@@settings.localApi.tokenNone">none issued yet</span>
+          }
+          <span class="access-spacer"></span>
+          <button
+            dsButton
+            size="sm"
+            variant="ghost"
+            iconLeft="refresh-cw"
+            [loading]="access.isBusy()"
+            i18n="@@settings.localApi.issueToken"
+            (click)="access.issueToken()"
+          >
+            Issue a new token
+          </button>
+        </div>
+
+        @if (access.issuedToken(); as token) {
+          <ds-callout
+            tone="warning"
+            i18n-title="@@settings.localApi.tokenOnceTitle"
+            title="Copy it now"
+            i18n="@@settings.localApi.tokenOnceBody"
+          >
+            GitHealth keeps only a fingerprint of this token. It is shown here once and cannot be
+            read again — issuing another one replaces it.
+          </ds-callout>
+          <ds-code-block language="token" size="sm" [code]="token" />
+          <button
+            dsButton
+            size="sm"
+            variant="ghost"
+            iconLeft="check"
+            i18n="@@settings.localApi.tokenCopied"
+            (click)="access.forgetToken()"
+          >
+            I have copied it
+          </button>
+        } @else {
+          <p class="panel-footnote" i18n="@@settings.localApi.tokenNote">
+            A token is shown once, when it is issued. Only its fingerprint is kept, so a copy of the
+            settings file is worth nothing to anybody else — and a token you no longer have is
+            replaced rather than recovered.
+          </p>
+        }
+      </div>
+
+      <div class="token-block">
+        <span class="field-label" i18n="@@settings.localApi.exampleLabel">Calling it</span>
+        <ds-code-block size="sm" [code]="exampleCall()" />
+        <p class="panel-footnote" i18n="@@settings.localApi.exampleNote">
+          <code>GET /v1</code> lists every route the access answers. Reads cover the repositories,
+          their captures and their branches; the one action is a scan, posted to
+          <code>/v1/projects/&lbrace;id&rbrace;/analyses</code>. Nothing here writes to a Git
+          repository.
+        </p>
+      </div>
+    </div>
+  </ds-panel>
+</div>

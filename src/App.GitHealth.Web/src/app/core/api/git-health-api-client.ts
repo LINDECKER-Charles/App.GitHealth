@@ -17,6 +17,9 @@ import {
   BaselineListResponse,
   CreateProjectRequest,
   DirectoryListing,
+  LocalApiState,
+  LocalApiToken,
+  LocalApiUpdateRequest,
   PolicyPreviewResponse,
   PolicyUpdateRequest,
   ProjectOrganizationRequest,
@@ -35,6 +38,7 @@ import {
 
 const apiRoot = '/api';
 const projectsUrl = `${apiRoot}/projects`;
+const localApiUrl = `${apiRoot}/local-api`;
 
 @Injectable({ providedIn: 'root' })
 export class GitHealthApiClient {
@@ -54,6 +58,23 @@ export class GitHealthApiClient {
    */
   applyUpdate(): Observable<UpdateStatus | null> {
     return this.request(this.http.post<UpdateStatus | null>(`${apiRoot}/updates/apply`, null));
+  }
+
+  /** State of the local API access: whether it is open, on which port, under which token. */
+  getLocalApi(): Observable<LocalApiState> {
+    return this.request(this.http.get<LocalApiState>(localApiUrl));
+  }
+
+  updateLocalApi(request: LocalApiUpdateRequest): Observable<LocalApiState> {
+    return this.request(this.http.put<LocalApiState>(localApiUrl, request));
+  }
+
+  /**
+   * Issues a token and revokes the previous one. This is the only call that ever returns
+   * the secret itself — it is not readable again afterwards.
+   */
+  issueLocalApiToken(): Observable<LocalApiToken> {
+    return this.request(this.http.post<LocalApiToken>(`${localApiUrl}/token`, null));
   }
 
   browseDirectories(path: string | null): Observable<DirectoryListing> {
