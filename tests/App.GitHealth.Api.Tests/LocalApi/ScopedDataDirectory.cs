@@ -1,5 +1,4 @@
 using App.GitHealth.Api.Tests.Hosting;
-using Microsoft.Data.Sqlite;
 
 namespace App.GitHealth.Api.Tests.LocalApi;
 
@@ -18,7 +17,9 @@ internal sealed class ScopedDataDirectory : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        // No pool to clear here: every run built from this directory is a factory of its own,
+        // and each one releases its handles as it is disposed — before this, since the
+        // directory outlives them.
         if (Directory.Exists(_path))
         {
             Directory.Delete(_path, recursive: true);

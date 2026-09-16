@@ -51,8 +51,12 @@ internal sealed class SqliteTestDatabase : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        // Read before the provider goes: the factory is the only thing that knows the exact
+        // connection string the pool is keyed on.
+        var connectionString = Services.GetRequiredService<SqliteConnectionFactory>()
+            .ConnectionString;
         await Services.DisposeAsync();
-        SqliteConnection.ClearAllPools();
+        SqlitePool.Clear(connectionString);
         if (_ownsDirectory && Directory.Exists(RootPath))
         {
             Directory.Delete(RootPath, true);

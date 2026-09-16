@@ -1,9 +1,10 @@
 using System.Globalization;
+using App.GitHealth.Api.Persistence;
+using App.GitHealth.Api.Tests.Persistence;
 using App.GitHealth.Api.Tests.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -118,16 +119,41 @@ public sealed class ApiApplicationFactory : WebApplicationFactory<Program>
 
     protected override void Dispose(bool disposing)
     {
+        // Read while the host is still standing: once it is disposed, nothing can say which
+        // connection string this run's pool is keyed on.
+        var connectionString = disposing ? ReadConnectionString() : null;
         base.Dispose(disposing);
         if (!disposing)
         {
             return;
         }
 
-        SqliteConnection.ClearAllPools();
+        if (connectionString is not null)
+        {
+            SqlitePool.Clear(connectionString);
+        }
+
         if (SharedDataDirectory is null && Directory.Exists(_privateDirectory))
         {
             Directory.Delete(_privateDirectory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Null when this factory never built a host, or when the host is already gone — a run that
+    /// opened no connection has no pool to clear.
+    /// </summary>
+    private string? ReadConnectionString()
+    {
+        try
+        {
+            return _host?.Services
+                .GetRequiredService<SqliteConnectionFactory>()
+                .ConnectionString;
+        }
+        catch (ObjectDisposedException)
+        {
+            return null;
         }
     }
 }

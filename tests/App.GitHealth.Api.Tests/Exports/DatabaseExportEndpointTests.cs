@@ -1,5 +1,6 @@
 using System.Net;
 using App.GitHealth.Api.Tests.Hosting;
+using App.GitHealth.Api.Tests.Persistence;
 using Microsoft.Data.Sqlite;
 
 namespace App.GitHealth.Api.Tests.Exports;
@@ -29,21 +30,22 @@ public sealed class DatabaseExportEndpointTests
             Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         var databasePath = Path.Combine(directory, "backup.db");
+        var connectionString = $"Data Source={databasePath}";
         try
         {
             await File.WriteAllBytesAsync(databasePath, bytes);
-            await AssertSchemaAsync(databasePath);
+            await AssertSchemaAsync(connectionString);
         }
         finally
         {
-            SqliteConnection.ClearAllPools();
+            SqlitePool.Clear(connectionString);
             Directory.Delete(directory, recursive: true);
         }
     }
 
-    private static async Task AssertSchemaAsync(string databasePath)
+    private static async Task AssertSchemaAsync(string connectionString)
     {
-        await using var connection = new SqliteConnection($"Data Source={databasePath}");
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE name = 'Projects';";

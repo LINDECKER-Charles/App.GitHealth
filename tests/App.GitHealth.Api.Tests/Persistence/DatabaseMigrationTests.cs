@@ -111,7 +111,7 @@ public sealed class DatabaseMigrationTests
         }
         finally
         {
-            SqliteConnection.ClearAllPools();
+            SqlitePool.Clear(BuildConnectionString(databasePath));
             Directory.Delete(directory, true);
         }
     }
@@ -148,15 +148,18 @@ public sealed class DatabaseMigrationTests
 
     private static GitHealthDbContext CreateContext(string databasePath)
     {
-        var connectionString = new SqliteConnectionStringBuilder
+        return new GitHealthDbContext(new DbContextOptionsBuilder<GitHealthDbContext>()
+            .UseSqlite(BuildConnectionString(databasePath))
+            .Options);
+    }
+
+    /// <summary>The pool is keyed on this string: build it once, use it to open and to clear.</summary>
+    private static string BuildConnectionString(string databasePath) =>
+        new SqliteConnectionStringBuilder
         {
             DataSource = databasePath,
             ForeignKeys = true,
         }.ToString();
-        return new GitHealthDbContext(new DbContextOptionsBuilder<GitHealthDbContext>()
-            .UseSqlite(connectionString)
-            .Options);
-    }
 
     private static async Task<Guid> CreateRunningAnalysisAsync(SqliteTestDatabase database)
     {
