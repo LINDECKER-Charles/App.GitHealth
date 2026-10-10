@@ -102,7 +102,7 @@ jobs:
           -PublishDirectory artifacts/publish/${{ matrix.runtime }}
 
       - name: Generate the SBOM
-        uses: anchore/sbom-action@v0.24.2
+        uses: anchore/sbom-action@v0.24.3
         with:
           path: artifacts/publish/${{ matrix.runtime }}
           format: spdx-json
