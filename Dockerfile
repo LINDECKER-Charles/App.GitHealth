@@ -8,7 +8,7 @@ RUN npm ci
 COPY src/App.GitHealth.Web/ ./
 RUN npm run build
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0.401-noble AS backend-build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.402-noble AS backend-build
 
 WORKDIR /source
 
@@ -29,7 +29,7 @@ COPY --from=frontend-build \
     /source/src/App.GitHealth.Web/dist/app-git-health-web/browser/ \
     /app/publish/wwwroot/
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.12-noble AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.13-noble AS runtime
 
 USER root
 
