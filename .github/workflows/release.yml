@@ -185,6 +185,9 @@ jobs:
             artifacts/publish/releases.*.json
             artifacts/publish/LINDECKER-Charles.GitHealth*.yaml
           if-no-files-found: error
+          # On a release the files are attached to it by publish-release, so the artefact is
+          # only a relay; a manual run keeps it a little longer since it is the only output.
+          retention-days: ${{ github.event_name == 'release' && 1 || 3 }}
 
   docker:
     name: Docker
